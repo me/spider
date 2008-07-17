@@ -1,0 +1,4 @@
+
+class VirtualMethodError < RuntimeError
+    
+end

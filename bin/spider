@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+#TMP
+$:.unshift('/Users/cerebus/code/spiderfw/lib')
+require "spiderfw"
+require 'spiderfw/cmd/cmd'
+cmd = Spider::CommandLine::Cmd.new
+cmd.parse()
+
+
