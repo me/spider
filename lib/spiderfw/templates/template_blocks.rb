@@ -1,0 +1,106 @@
+module Spider
+    
+    module TemplateBlocks
+        
+        def self.parse_element(el, allowed_blocks=nil)
+            if (el.class == ::Hpricot::Text)
+                block = :Text
+            elsif (el.attributes['sp:each'])
+                block = :Each
+            elsif (el.name == 'sp:render')
+                block = :Render
+            elsif (el.name == 'sp:yield')
+                block = :Yield
+            elsif (Spider::Template.registered[el.name])
+                klass = const_get_full(Spider::Template.registered[el.name])
+                if (klass.has_ancestor?(::Spider::Widget))
+                    block = :Widget
+                else
+                    Spider.logger.debug("IS NOT A WIDGET!") # FIXME
+                end
+            else
+                block = :HTML
+            end
+            return nil unless (!allowed_blocks || allowed_blocks.include?(block))
+            return const_get(block).new(el, allowed_blocks)
+        end
+        
+        class Block
+            
+            def initialize(el, allowed_blocks=nil)
+                @el = el
+                @allowed_blocks = allowed_blocks
+                @content_blocks = []
+            end
+            
+            def parse_content(el)
+                content_blocks = []
+                last_block = nil
+                el.each_child do |ch|
+                    #Spider.logger.debug "TRAVERSING CHILD #{ch}"
+                    # Gives the preceding block the change to "eat" the next elements
+                    next if (last_block && last_block.get_following(ch))
+                    last_block = TemplateBlocks.parse_element(ch, @allowed_blocks)
+                    content_blocks << last_block
+                end
+                return content_blocks
+            end
+            
+            def compile_content(c, init)
+                blocks = parse_content(@el)
+                blocks.each do |block|
+                    compiled = block.compile
+                    c += compiled.run_code
+                    init += compiled.init_code if (compiled.init_code)
+                end
+                return [c, init]
+            end
+            
+            def get_following(el)
+                return false
+            end
+            
+            def escape_text(text)
+                res = text.gsub("'", "\\\\'")
+                return res
+            end
+            
+            
+            def inspect
+                ""
+            end
+            
+            def var_to_scene(var)
+                Spider.logger.debug("VAR_TO_SCENE:")
+                Spider.logger.debug(var)
+                first, rest = var.split('.', 2)
+                if (var[0].chr == '@')
+                    scene_var = "self[:#{first[1..-1]}]"
+                else
+                    scene_var = first
+                end
+                scene_var += '.'+rest if (rest)
+                return scene_var
+            end
+            
+        end
+        
+        class CompiledBlock
+            attr_accessor :init_code, :run_code
+            
+            def initialize(init_code, run_code)
+                @init_code = init_code
+                @run_code = run_code
+            end
+            
+        end
+        
+    end
+    
+end
+require 'spiderfw/templates/blocks/html'
+require 'spiderfw/templates/blocks/text'
+require 'spiderfw/templates/blocks/each'
+require 'spiderfw/templates/blocks/render'
+require 'spiderfw/templates/blocks/yield'
+require 'spiderfw/templates/blocks/widget'

@@ -9,6 +9,12 @@ class WebServerCommand < CmdParse::Command
         @description = _("")
         
         @port = 8080
+        @server_name = 'mongrel'
+        
+        servers = {
+            'webrick' => :WEBrick,
+            'mongrel' => :Mongrel
+        }
 
         # start
         start = CmdParse::Command.new( 'start', false )
@@ -17,17 +23,21 @@ class WebServerCommand < CmdParse::Command
             opt.on("--port N", _("The port the webserver should listen on"), "-p") { |port|
                 @port = port
             }
+            opt.on("--server name", _("Which webserver to use; the choices are 'webrick' and 'mongrel'"), "-s"){ |server_name|
+                raise CmdParse::InvalidArgumentError, _("The webserver %s is not supported") % server_name unless servers[server_name]
+                @server_name = server_name
+            }
+            opt.on("--cgi", _("Serve each request spawning a CGI subprocess. Useful in developement."), "-c"){
+                @cgi = true
+            }
         end
         start.set_execution_block do |args|
-            server_type = 'webrick'
-            #server_type = Spider.conf.get('webserver.server')
-            puts _("Using webserver %s") % server_type if $verbose
+            puts _("Using webserver %s") % @server_name if $verbose
             puts _("Listening on port %s") % @port if $verbose
-            case server_type
-            when 'webrick'
-                server = Spider::HTTP::WEBrick.new()
-                server.start(:port => @port)
-            end
+            server = Spider::HTTP.const_get(servers[@server_name]).new
+
+            server.start(:port => @port, :cgi => @cgi)
+            
         end
         self.add_command( start )
 

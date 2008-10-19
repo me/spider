@@ -1,0 +1,76 @@
+require 'spiderfw/controller/controller_mixin'
+
+module Spider
+    
+    module HTML
+        include ControllerMixin
+        
+        before do
+            @response.headers['Content-Type'] = 'text/html'
+            @response.register(:js, [])
+            begin
+                run_chain(:before)
+            # rescue NotFoundException
+            #     render('errors/404')
+            rescue => exc
+                top
+                print_backtrace(exc)
+                bottom
+                raise
+            end 
+        end
+        
+        execute do
+            top
+            run_chain(:execute)
+        end
+        
+        after do
+            run_chain(:after)
+            bottom
+        end
+        
+        def top
+            puts "<html>"
+            puts "<head>"
+            @response.js.each do |js|
+                puts "<script type=\"text/javascript\" src=\"#{js}\"></script>"
+            end
+            puts "</head>"
+            puts "<body>" 
+        end
+        
+        def bottom
+            puts "</body></html>"
+        end
+        
+        def try_rescue(exc)
+            print_backtrace(exc) if Spider.config.get('webserver.show_traces')
+        end
+        
+        
+        def print_backtrace(exc)
+            html = "<h3>Error: "+exc.to_s+"</h3>"
+            html += "<ul>"
+            client_editor = (Spider.config.get('client.text_editor') || '').downcase
+            prefix = ''
+            prefix = 'txmt://open?url=' if (client_editor == 'textmate')
+            trace = exc.backtrace
+            trace.each do |trace_line|
+                parts = trace_line.split(':')
+                file_path = parts[0]
+                line = parts[1]
+                method = parts[2]
+                suffix = ''
+                suffix = '&line='+line if (client_editor == 'textmate')
+                html += "<li>"
+                html += "<a href='#{prefix}file://#{file_path}#{suffix}'>#{file_path}</a>:#{line}:#{method}"
+                html += "</li>"
+            end
+            html += "</ul>"
+            puts html
+        end
+        
+    end
+    
+end

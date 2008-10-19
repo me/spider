@@ -1,92 +1,97 @@
+require 'spiderfw/controller/controller_io'
+require 'spiderfw/controller/environment'
+require 'spiderfw/controller/response'
+require 'spiderfw/controller/scene'
+require 'spiderfw/templates/visual'
+require 'spiderfw/widget/widget'
+require 'spiderfw/controller/controller_exceptions'
+
 module Spider
     
     class Controller
         include Dispatcher
+        include Visual
         
         class << self
-            #include Dispatcher
-            before_filters, after_filters = [], []
+            @routes = []
+            @layouts = nil
+            
+            def app
+                @app ||= self.parent_module(2)
+            end
+            
+            def template_path
+                return self.app.path+'/templates'
+            end
+            
+            def layout_path
+                return self.app.path+'/layouts'
+            end            
+            
+        end
+        
+        attr_reader :env, :response
+        attr_reader :action
+        
+        def initialize(env, response, scene)
+            @env = env
+            @response = response
+            @scene = scene || Scene.new
+            #@parent = parent
+        end
 
         
-            def before(filter, opts={}, &block)
-                add_filter(before_filters, filter || block, opts)
-            end
-        
-            def after(filter, opts={}, &block)
-                add_filter(after_filters, filter || block, opts)
-            end
-        
-            def add_filter(filters, filter, opts)
-                filters << [filter, opts]
-            end
+        def dispatched_object(route)
+            klass = route.dest
+            return klass if klass.class != Class
+            klass.new(@env, @response, @scene)
         end
         
-        attr_reader :status, :headers, :body
-        attr_reader :action
-        attr_accessor :_written
-        
-        def initialize(args={})
-            @env = args[:env] || {}
-            @status = 200
-            @headers = {
-                'Content-Type' => 'text/plain',
-                'Connection' => 'close'
-            }
-            @stage = args[:stage] || Stage.new
-            @parent = args[:parent] || nil
-            @action = nil
+        def before(action='', *arguments)
+            begin
+                run_chain(:before)
+                raise NotFoundException.new(action) unless 
+                    (can_dispatch?(:execute, action) || (action.to_s.length > 0 && respond_to?(action)))
+                return dispatch(:before, action, *arguments)
+            rescue => exc
+                try_rescue(exc)
+            end
         end
-        
-        def _call_filters(type, filters, action_name)
-            (filters || []).each do |filter, rule|
-                next if (rule.key?(:only) && !rule[:only].include?(action_name))
-                next if (rule.key?(:exclude) && rule[:only].include?(action_name))
-                case filter
-                when Symbol, String
-                    send(filter)
-                when Proc
-                    self.instance_eval(&filter)
+                
+        def execute(action='', *arguments)
+            begin
+                action = 'index' if (action == '')
+                if (self.class.method_defined?(action.to_sym))
+                    layout = self.class.get_layout(action)
+                    if (layout) 
+                        Spider.logger.debug("Execute got layout:")
+                        Spider.logger.debug(layout)
+                        layout = layout.render_and_yield(self, action.to_sym, arguments)
+                    else 
+                        send(action, *arguments)
+                    end
+                else
+                    run_chain(:execute, action, *arguments)
+                    dispatch(:execute, action, *arguments)
                 end
+            rescue => exc
+                try_rescue(exc)
             end
-            # Call before_action and similar if defined
-            send("#{type}_#{action_name}") if respond_to?("#{type}_#{action_name}")
-            return :filter_chain_completed
         end
         
-        def execute_before
-            p "Executing before"
+        def after(action='', *params)
+            begin
+                run_chain(:after)
+                dispatch(:after, action, params)
+            rescue => exc
+                try_rescue(exc)
+            end
         end
         
-        def execute_after
-            p "Executing after"
+        def try_rescue(exc)
+            raise exc
         end
-        
-        def execute_action(action_name)
-            # p "SENDING #{action_name}"
-            # p "I AM:"
-            # p self
-            send(action_name)
-        end
-        
-        
-        def handle(action=nil)
-            action = (!action || action.to_s.strip.length == 0) ? :index : action
-            @action = action
-            # caught = catch do
-            #     _call_filters('before', self.class.before_filters, action)
-            # end
-            #    
-            # case caught 
-            # when :filter_chain_completed
-            #     _call_action(action)
-            # end
-            # 
-            # _call_filters('after', self.class.after_filters, action)
-            execute_action(action)
-        end
-        
-        def render(view_name)
-        end
+
         
     end
     

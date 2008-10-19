@@ -1,5 +1,6 @@
 require 'webrick'
 require 'stringio'
+require 'spiderfw/controller/server_controller'
 
 module Spider; module HTTP
 
@@ -36,78 +37,62 @@ module Spider; module HTTP
     class WEBrickServlet < ::WEBrick::HTTPServlet::AbstractServlet
 
         def service(request, response)
-            env = request.meta_vars.clone
-            path = request.path.chomp('/')
-            controller = ::Spider.controller.new
+            server_vars = request.meta_vars.clone
+            env = Spider::Environment.new
+            env[:server] = server_vars
+            env[:protocol] = 'http'
+            env[:addr] = request.addr
+            Spider.logger.debug("Env:")
+            Spider.logger.debug(env)
+            Spider.logger.debug("Request:")
+            Spider.logger.debug(request)
             
             r, w = IO.pipe
-
-            # response.status = controller.status
-            #             controller.headers.each do |key, val|
-            #                 response[key] = val
-            #             end
             response.body = r
             
-            w.instance_eval { alias :_old_write :write }
-            w.instance_variable_set(:@controller, controller)
-            w.instance_variable_set(:@response, response)
-            #w.instance_variable_set(:@server_thread, Thread.current)
+            controller_response = Spider::Response.new
+            controller_response.body = w
             
-            def w.write(s)
-                $stderr << "Writing #{s}"
-                self.instance_eval do
-                    alias :write :_old_write
-                end
-                @controller.headers.each do |key, val|
-                    $stderr << "Adding header #{key}, #{val}"
-                    @response[key] = val
-                end
-                #@controller._wrote
-                @controller._written = true
-                @response.status = @controller.status || 200
-                #@server_thread.run()
-                self.instance_eval do
-                    remove_instance_variable(:@controller)
-                    #remove_instance_variable(:@server_thread)
-                    remove_instance_variable(:@response)
-                end
-                $stderr << "written"
-                super
-                $stderr << "called super"
-            end
+            #path = server_vars['REQUEST_URI'].chomp('/')
+            path = request.path.chomp('/')
+            
 
-            $stdout = w
+            #$stdout = w
+            
+            begin
+                controller = ::Spider::HTTPController.new(env, controller_response)
+                controller.before(path)
+            rescue => exc
+                Spider.logger.error("Error during before:")
+                Spider.logger.error(exc)
+                controller.ensure()
+                response.status = controller.response.status
+                controller.response.headers.each do |key, val|
+                    response[key] = val
+                end
+                $stdout = STDOUT
+                w.close
+                return
+            end
+            
+            response.status = controller.response.status
+            controller.response.headers.each do |key, val|
+                response[key] = val
+            end
+            
+           
             controllerThread = Thread.start do
                 begin
-                    $stderr << "dispatching"
-                    controller.dispatch(path, env)
-                    p "dispatched"
+                    controller.execute(path)
+                    controller.after(path)
                 rescue => exc
-                    status = 401
-                    headers = {}
-                    body = 'Error: '
-                    trace = exc.backtrace()
-                    trace.each do |trace_line|
-                        parts = trace_line.split(':')
-                        file_path = parts[0]
-                        line = parts[1]
-                        method = parts[2]
-                        body += "<li>"
-                        body += "<a href='file://#{file_path}'>#{file_path}</a>:#{line}:#{method}"
-                        body += "</li>"
-                    end
+                    Spider.logger.debug("Error:")
+                    Spider.logger.debug(exc)
                 ensure
                     $stdout = STDOUT
-                    $stderr << "Closing stream\n"
-                    controller._written = true
                     w.close
                 end
             end
-            while (!controller._written)
-                sleep(0.1) 
-                $stderr << "not written"
-            end
-            $stderr << "\nReturning\n"
         end
     end
 

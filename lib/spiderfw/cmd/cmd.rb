@@ -1,7 +1,7 @@
 require 'cmdparse'
 require 'spiderfw/cmd/commands/webserver'
-#require 'spiderfw/cmd/model'
-#require 'spiderfw/cmd/scaffold'
+require 'spiderfw/cmd/commands/init'
+
 module Spider; module CommandLine
 
     class Cmd
@@ -17,6 +17,7 @@ module Spider; module CommandLine
 
             @cmd.add_command(CmdParse::HelpCommand.new, true)
             @cmd.add_command(WebServerCommand.new)
+            @cmd.add_command(InitCommand.new)
             # @cmd.add_command(ModelCommand.new)
             # @cmd.add_command(ScaffoldCommand.new)
         end

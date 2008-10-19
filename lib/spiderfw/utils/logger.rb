@@ -1,3 +1,5 @@
+require 'logger'
+
 module Spider
     
     class Logger
@@ -7,8 +9,8 @@ module Spider
         end
         
         def open(dest, level=:WARN)
-            logger = Logger.new(dest)
-            loger.level = Logger.const_get(level)
+            logger = ::Logger.new(dest)
+            logger.level = ::Logger.const_get(level)
             @loggers << logger
         end
         
