@@ -1,0 +1,25 @@
+module Spider; module Model
+    
+    module Storage
+        
+        def self.get_storage(type, url)
+            case type
+            when 'db'
+                adapter = url.match(/^(.+?):\/\//)[1]
+                case adapter
+                when 'sqlite'
+                    storage = Db::SQLite.new(url)
+                end
+            end
+        end
+        
+        
+        ###############################
+        #   Autoload                  #
+        ###############################
+        
+        Storage.autoload(:Db, 'spider/model/storage/db/db')
+                
+    end
+    
+end; end
