@@ -30,6 +30,7 @@ module Spider
         
         def dispatch(method, action='', *arguments)
             return nil unless can_dispatch?(method, action)
+            @dispatched_action = action
             obj, route = @dispatch_next[action]
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
@@ -55,7 +56,7 @@ module Spider
         end
         
         def get_route(path)
-            Spider.logger.debug("Routing #{path}")
+            Spider.logger.debug("Routing '#{path}'")
             r = routes + self.class.routes 
             r.each do |route|
                 try, dest, options = route
@@ -86,7 +87,7 @@ module Spider
                     end
                     params ||= []
                     # no leading slash 
-                    action.slice!(0) if action[0].chr == '/'
+                    action.slice!(0) if action.length > 0 && action[0].chr == '/'
                     return Route.new(:path => path, :dest => dest, :action => action, 
                                      :params => params, :options => options)
                 end

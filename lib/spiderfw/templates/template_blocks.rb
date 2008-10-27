@@ -46,11 +46,15 @@ module Spider
                 return content_blocks
             end
             
-            def compile_content(c, init)
+            def compile_content(c='', init='')
+                c ||= ""
+                init ||= ""
                 blocks = parse_content(@el)
                 blocks.each do |block|
+                    Logger.debug("Compiling block #{block}")
                     compiled = block.compile
-                    c += compiled.run_code
+                    Logger.debug("compiled")
+                    c += compiled.run_code if (compiled.run_code)
                     init += compiled.init_code if (compiled.init_code)
                 end
                 return [c, init]

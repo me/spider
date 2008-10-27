@@ -5,20 +5,27 @@ module Spider; module TemplateBlocks
     class Widget < Block
         
         def compile
-            init = nil
             klass = const_get_full(Spider::Template.registered[@el.name])
-            params = []
+            init_params = []
+            run_params = []
+            id = @el.attributes['id']
             @el.attributes.each do |key, val|
                 if (val[0].chr == '@')
                     pval = "self[:#{val[1..-1]}]"
+                    sval = "scene[:#{val[1..-1]}]"
                 else
                     pval = '"'+val+'"'
+                    sval = pval
                 end
-                params << ":#{key} => #{val}"
+                init_params << ":#{key} => #{sval}"
+                run_params << ":#{key} => #{pval}"
+                
+                Spider::Logger.debug("PARAMS:")
+                Spider::Logger.debug(init_params)
             end
-            c = "w = #{klass}.new(nil, nil, {#{params.join(', ')}})\n" # FIXME: this must be in init,
+            init = "add_widget('#{id}', #{klass}.new(nil, nil, {#{init_params.join(', ')}}))\n" # FIXME: this must be in init,
                                                                        # and must pass env and scene
-            c += "w.run\n"
+            c = "self[:widgets][:#{id}].run\n"
             return CompiledBlock.new(init, c)
         end
         

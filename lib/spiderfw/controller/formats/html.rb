@@ -6,6 +6,7 @@ module Spider
         include ControllerMixin
         
         before do
+            Spider.logger.debug('HTML before')
             @response.headers['Content-Type'] = 'text/html'
             @response.register(:js, [])
             begin
@@ -21,13 +22,13 @@ module Spider
         end
         
         execute do
-            top
+            #top
             run_chain(:execute)
         end
         
         after do
             run_chain(:after)
-            bottom
+            #bottom
         end
         
         def top

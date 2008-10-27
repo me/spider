@@ -1,16 +1,18 @@
-require 'rubygems'
-require 'find'
-require 'spiderfw/autoload'
-require 'spiderfw/requires'
-
-require 'spiderfw/version'
-$SPIDER_VERSION = Spider.version
 
 $SPIDER_PATH = File.expand_path(File.dirname(__FILE__)+'/..')
 $SPIDER_LIB = $SPIDER_PATH+'/lib'
 #$:.push($SPIDER_LIB+'/spiderfw')
 $:.push(Dir.pwd)
 #p $:
+
+require 'rubygems'
+require 'find'
+require 'spiderfw/autoload'
+require 'spiderfw/requires'
+
+require 'spiderfw/version'
+
+$SPIDER_VERSION = Spider.version
 
 module Spider
     
@@ -24,7 +26,7 @@ module Spider
             @paths = {}
             @apps ||= {}
             @root = Dir.pwd
-            @logger = Spider::Logger.new
+            @logger = Spider::Logger
             @logger.open(STDERR, :DEBUG)
 #            @controller = Controller
             @server = {}

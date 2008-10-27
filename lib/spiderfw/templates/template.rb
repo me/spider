@@ -5,6 +5,10 @@ require 'spiderfw/templates/template_blocks'
 module Spider
     
     class Template
+        include Logger
+        
+        attr_accessor :widgets
+        
         @@registered = {}
         
         class << self
@@ -38,6 +42,7 @@ module Spider
         
         def initialize(scene={})
             @scene = scene
+            @widgets = {}
         end
         
         def bind(scene)
@@ -54,6 +59,16 @@ module Spider
             # Spider.logger.debug(@compiled)
         end
         
+        def add_widget(id, widget)
+            @widgets[id] ||= widget
+        end
+        
+        def init(env, scene)
+            debug("INIT:")
+            debug(@compiled.init_code)
+            instance_eval(@compiled.init_code)
+        end
+        
         
         def prepare
         end
@@ -62,14 +77,17 @@ module Spider
         end
         
         def render(scene=nil)
-            Spider.logger.debug("RENDERING:")
-            Spider.logger.debug(@compiled.run_code)
+            debug("RENDERING:")
+            debug(@compiled.run_code)
             scene ||= (@scene || Scene.new)
             scene = Scene.new(scene) if scene.class == Hash
             scene.instance_eval(@compiled.run_code)
         end
         
 
+        def inspect
+            self.class.to_s
+        end
         
     end
     

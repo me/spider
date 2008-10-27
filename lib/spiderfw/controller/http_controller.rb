@@ -7,8 +7,9 @@ module Spider
         include HTML
         
         def initialize(env, response, scene=nil)
-            response.status = 200
-            response.headers = {
+            @response = response
+            @response.status = 200
+            @response.headers = {
                 'Content-Type' => 'text/plain',
                 'Connection' => 'close'
             }

@@ -2,21 +2,56 @@ require 'logger'
 
 module Spider
     
-    class Logger
+    module Logger
         
-        def initialize
-            @loggers = []
+        class << self
+        
+            def open(dest, level=:WARN)
+                @@loggers ||= []
+                logger = ::Logger.new(dest)
+                logger.level = ::Logger.const_get(level)
+                @@loggers << logger
+            end
+        
+            def send_to_loggers(action, *args)
+                return unless @@loggers
+                @@loggers.each{ |logger| logger.send(action, *args) }
+            end
+        
+            def debug(*args)
+                send_to_loggers(:debug, *args)
+            end
+        
+            def info(*args)
+                send_to_loggers(:info, *args)
+            end
+        
+            def warn(*args)
+                send_to_loggers(:warn, *args)
+            end
+            
+            def error(*args)
+                send_to_loggers(:error, *args)
+            end
+
         end
         
-        def open(dest, level=:WARN)
-            logger = ::Logger.new(dest)
-            logger.level = ::Logger.const_get(level)
-            @loggers << logger
+        def debug(*args)
+            Spider::Logger.debug(*args)
         end
         
-        def method_missing(name, *args)
-            @loggers.each{ |logger| logger.send(name, *args) }
+        def info(*args)
+            Spider::Logger.info(*args)
         end
+        
+        def warn(*args)
+            Spider::Logger.warn(*args)
+        end
+        
+        def error(*args)
+            Spider::Logger.error(*args)
+        end
+        
         
     end
     

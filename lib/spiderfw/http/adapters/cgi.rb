@@ -4,6 +4,7 @@ require 'spiderfw/controller/controller_io'
 require 'spiderfw/controller/http_controller'
 
 class CGIIO < Spider::ControllerIO
+    attr_reader :headers_sent
     
     def initialize(out, controller_response)
         @out = out
@@ -12,11 +13,13 @@ class CGIIO < Spider::ControllerIO
     end
     
     def write(msg)
+        Spider::Logger.debug("sending headers with #{msg}") unless @headers_sent
         send_headers unless @headers_sent
         @out << msg
     end
     
     def send_headers
+        Spider::Logger.debug("sending headers")
         @headers_sent = true
         @out << "Status: #{@controller_response.status}\n"
         @controller_response.headers.each do |key, val|
@@ -50,6 +53,7 @@ def prepare_request
     }
 end
 
+Spider::Logger.debug('-----------')
 env = Spider::Environment.new
 env.request = prepare_request
 env.protocol = :http
@@ -58,10 +62,12 @@ controller_response = Spider::Response.new
 controller_response.body = CGIIO.new($stdout, controller_response)
 begin
     controller = ::Spider::HTTPController.new(env, controller_response)
-    controller.before(path)
+    #controller.before(path)
     controller.execute(path)
-    controller.after(path)                
+    #controller.after(path)                
 rescue => exc
     Spider.logger.error(exc)
     controller.ensure()
+ensure
+    controller_response.body.send_headers unless controller_response.body.headers_sent
 end

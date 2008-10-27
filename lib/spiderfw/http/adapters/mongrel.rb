@@ -85,9 +85,9 @@ module Spider; module HTTP
 
             begin
                 controller = ::Spider::HTTPController.new(env, controller_response)
-                controller.before(path)
+                #controller.before(path)
                 controller.execute(path)
-                controller.after(path)                
+                #controller.after(path)                
             rescue => exc
                 Spider.logger.error(exc)
                 controller.ensure()
@@ -141,6 +141,7 @@ module Spider; module HTTP
         end
         
         def parse_header(str, response)
+            Spider.logger.debug("HEADER #{str}")
             key, val = str.split(':', 2)
             return unless key
             key.strip!

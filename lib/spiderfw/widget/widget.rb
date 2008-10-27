@@ -1,11 +1,14 @@
-require 'spiderfw/templates/visual'
+require 'spiderfw/controller/controller'
 
 module Spider
     
-    class Widget
-        include Visual
+    class Widget < Controller
         
         class << self
+            
+            def default_action
+                'run'
+            end
             
             def app
                 @app ||= self.parent_module
@@ -21,6 +24,14 @@ module Spider
             @env = env
             @scene = scene || Scene.new
             @params = params
+        end
+        
+        def try_rescue(exc)
+            if (exc.is_a?(NotFoundException))
+                error("Widget path not found: #{exc.path}")
+            else
+                raise exc
+            end
         end
         
     end
