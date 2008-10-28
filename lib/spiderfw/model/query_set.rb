@@ -1,6 +1,6 @@
 module Spider; module Model
 
-    class ObjectSet
+    class QuerySet
         include Enumerable
         attr_reader :raw_data
         attr_accessor :query, :owner
@@ -19,7 +19,7 @@ module Spider; module Model
 
         # Adds an object to the set. Also stores the raw data if it is passed as the second parameter. 
         def <<(obj, raw=nil)
-            return merge(obj) if (obj.class == ObjectSet)
+            return merge(obj) if (obj.class == QuerySet)
             @objects << obj
             index_object(obj)
             @raw_data[@objects.length-1] = raw if raw
@@ -65,8 +65,8 @@ module Spider; module Model
             @objects.each_index{ |index| yield index }
         end
         
-        def merge(object_set)
-            @objects += object_set.instance_variable_get(:"@objects")
+        def merge(query_set)
+            @objects += query_set.instance_variable_get(:"@objects")
             reindex
         end
         
@@ -77,7 +77,7 @@ module Spider; module Model
             # TODO: implement find without index
             raise UnimplementedError, "find without an index is not yet implemented" unless @index_lookup[index]
             result = @index_lookup[index][search_key]
-            result = ObjectSet.new(result) if (result)
+            result = QuerySet.new(result) if (result)
             return result
         end
 

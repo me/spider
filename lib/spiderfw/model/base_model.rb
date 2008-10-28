@@ -47,7 +47,7 @@ module Spider; module Model
                 if primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
-                    instance_variable_set(ivar, ObjectSet.new)
+                    instance_variable_set(ivar, QuerySet.new)
                 elsif (self.class.elements[name].model?)
                     instance_variable_set(ivar, self.class.elements[name].type.new)
                 end
@@ -153,11 +153,11 @@ module Spider; module Model
          end
 
          def self.get_mapper(storage)
-             mapper = storage.get_default_mapper(self)
+             mapper = storage.get_mapper(self)
              return mapper
          end
          
-         # Finds objects according to query. Returns an ObjectSet.
+         # Finds objects according to query. Returns a QuerySet.
          def self.find(query)
              mapper.find(query)
          end

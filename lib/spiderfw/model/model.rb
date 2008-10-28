@@ -22,7 +22,7 @@ module Spider
     Model.autoload(:Request, 'spiderfw/model/request')
     Model.autoload(:Condition, 'spiderfw/model/condition')
     Model.autoload(:Query, 'spiderfw/model/query')
-    Model.autoload(:ObjectSet, 'spiderfw/model/object_set')
+    Model.autoload(:QuerySet, 'spiderfw/model/query_set')
     Model.autoload(:UnitOfWork, 'spiderfw/model/unit_of_work')
 
 end

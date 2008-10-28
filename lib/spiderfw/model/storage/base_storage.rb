@@ -1,6 +1,7 @@
 module Spider; module Model; module Storage
     
     class BaseStorage
+        include Spider::Logger
         
         def initialize(url)
             parse_url(url)
@@ -10,7 +11,7 @@ module Spider; module Model; module Storage
             raise StorageException, "Unimplemented"
         end
         
-        def get_default_mapper(model)
+        def get_mapper(model)
             raise StorageException, "Unimplemented"
         end
         

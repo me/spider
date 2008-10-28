@@ -1,4 +1,4 @@
-require 'spider/model/storage/base_storage'
+require 'spiderfw/model/storage/base_storage'
 
 module Spider; module Model; module Storage; module Db
     
@@ -13,8 +13,8 @@ module Spider; module Model; module Storage; module Db
             super
         end
         
-        def get_default_mapper(model)
-            require 'spider/model/mappers/db_mapper'
+        def get_mapper(model)
+            require 'spiderfw/model/mappers/db_mapper'
             mapper = Spider::Model::Mappers::DbMapper.new(model, self)
             return mapper
         end

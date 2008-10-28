@@ -18,7 +18,7 @@ module Spider; module Model
         #   Autoload                  #
         ###############################
         
-        Storage.autoload(:Db, 'spider/model/storage/db/db')
+        Storage.autoload(:Db, 'spiderfw/model/storage/db/db')
                 
     end
     

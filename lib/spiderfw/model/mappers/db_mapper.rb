@@ -1,4 +1,4 @@
-require 'spider/model/mappers/mapper'
+require 'spiderfw/model/mappers/mapper'
 require 'FileUtils'
 
 module Spider; module Model; module Mappers
@@ -345,8 +345,8 @@ module Spider; module Model; module Mappers
         
         
         # Load an external element, passing the query to it, and merge the results
-        # into an object or an ObjectSet, passed as the third param
-        # Returns the object or the ObjectSet
+        # into an object or an QuerySet, passed as the third param
+        # Returns the object or the QuerySet
         def get_external_element(element, query, objects)
             p "GETTING EXTERNAL ELEMENT #{element}"
             element_keys = element.model.primary_keys
@@ -408,25 +408,25 @@ module Spider; module Model; module Mappers
                 end
                 p "SUB QUERY:"
                 p sub_query
-                element_object_set = ObjectSet.new
-                element_object_set.index_by(*index_by)
-                element_object_set = element.mapper.find(sub_query, element_object_set)
+                element_query_set = QuerySet.new
+                element_query_set.index_by(*index_by)
+                element_query_set = element.mapper.find(sub_query, element_query_set)
                 p "ELEMENT OBJECT SET:"
-                p element_object_set
-                result = associate_external(element, objects, element_object_set, associations)
+                p element_query_set
+                result = associate_external(element, objects, element_query_set, associations)
             end
             return result
         end
         
-        # For each object in an Array or an ObjectSet ("objects" param), sets the value of element to the associated
-        # objects found in element_object_set
-        def associate_external(element, objects, element_object_set, associations=nil)
+        # For each object in an Array or an QuerySet ("objects" param), sets the value of element to the associated
+        # objects found in element_query_set
+        def associate_external(element, objects, element_query_set, associations=nil)
             print "ASSOCIATING EXTERNAL #{element}"
             primary_keys = @model.primary_keys
             element_keys = element.model.primary_keys
             if (associations) # n <-> n
                 objects.each do |obj|
-                    obj.set(element, ObjectSet.new)
+                    obj.set(element, QuerySet.new)
                     obj_key = primary_keys.map{ |key| obj.get(key) }.join(',')
                     obj_associations = associations[obj_key] || []
                     search_params = {}
@@ -434,7 +434,7 @@ module Spider; module Model; module Mappers
                         element_keys.each do |key|
                             search_params[key.name] = association_row[key.name]
                         end
-                        sub_obj = element_object_set.find(search_params)[0]
+                        sub_obj = element_query_set.find(search_params)[0]
                         element.type.added_elements.each do |added| 
                             sub_obj.set_loaded_value(added, element.mapper.prepare_integrate_value(added.type, association_row[added.name]))
                         end
@@ -446,7 +446,7 @@ module Spider; module Model; module Mappers
                 p "RAW:"
                 p @raw_data
                 # FIXME: why reindex?!?
-                element_object_set.reindex
+                element_query_set.reindex
                 objects.each do |obj|
                     search_params = {}
                     @model.primary_keys.each do |key|
@@ -457,7 +457,7 @@ module Spider; module Model; module Mappers
                     end
                     p "SEARCH PARAMS:"
                     p search_params
-                    obj.set_loaded_value(element, element_object_set.find(search_params))
+                    obj.set_loaded_value(element, element_query_set.find(search_params))
                 end
             else # 1|n <-> 1
                 objects.each do |obj|
@@ -468,7 +468,7 @@ module Spider; module Model; module Mappers
                     end
                     p "SEARCH PARAMS:"
                     p search_params
-                    found = element_object_set.find(search_params)
+                    found = element_query_set.find(search_params)
                     obj.set_loaded_value(element, found[0]) if found
                 end
             end

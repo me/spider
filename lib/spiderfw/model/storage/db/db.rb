@@ -4,7 +4,7 @@ module Spider; module Model; module Storage
         
     end
     
-    Db.autoload(:DbSchema, 'spider/model/storage/db/db_schema')
-    Db.autoload(:SQLite, 'spider/model/storage/db/adapters/sqlite')
+    Db.autoload(:DbSchema, 'spiderfw/model/storage/db/db_schema')
+    Db.autoload(:SQLite, 'spiderfw/model/storage/db/adapters/sqlite')
     
 end; end; end

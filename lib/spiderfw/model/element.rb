@@ -1,4 +1,4 @@
-require 'spider/model/type'
+require 'spiderfw/model/type'
 
 module Spider; module Model
 

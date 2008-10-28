@@ -1,4 +1,4 @@
-require 'spider/model/storage/schema'
+require 'spiderfw/model/storage/schema'
 
 module Spider; module Model; module Storage; module Db
     

@@ -1,5 +1,5 @@
-require 'spider/model/condition'
-require 'spider/model/request'
+require 'spiderfw/model/condition'
+require 'spiderfw/model/request'
 
 module Spider; module Model
     

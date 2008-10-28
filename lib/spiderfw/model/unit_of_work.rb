@@ -44,7 +44,7 @@ module Spider; module Model
                 
         
         def add(obj)
-            if (obj.class == ObjectSet)
+            if (obj.class == QuerySet)
                 obj.each do |item|
                     @objects[item.object_id] = item
                 end

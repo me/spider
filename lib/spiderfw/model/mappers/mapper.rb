@@ -53,14 +53,14 @@ module Spider; module Model
             return obj
         end
         
-        def find(query, object_set=nil)
+        def find(query, query_set=nil)
             if (query.class == String)
                 q = Query.new
                 q.parse_xsql(query)
                 query = q
             end
             result = fetch(query)
-            set = object_set || ObjectSet.new
+            set = query_set || QuerySet.new
             set.index_by(*@model.primary_keys)
             set.query = query
             return set unless result
@@ -82,10 +82,10 @@ module Spider; module Model
         end
         
         # Load external elements, according to query, 
-        # and merge them into an object or an ObjectSet
+        # and merge them into an object or an QuerySet
         def get_external(objects, query)
-            # Make "objects" an array if it is not an ObjectSet; the methods used are common to the two classes
-            objects = [objects] unless objects.kind_of?(Spider::Model::ObjectSet)
+            # Make "objects" an array if it is not an QuerySet; the methods used are common to the two classes
+            objects = [objects] unless objects.kind_of?(Spider::Model::QuerySet)
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
                 if element.model?

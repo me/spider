@@ -1,10 +1,11 @@
-require 'spider/model/storage/db/db_storage'
+require 'spiderfw/model/storage/db/db_storage'
 require 'rubygems'
 require 'sqlite3'
 
 module Spider; module Model; module Storage; module Db
     
     class SQLite < DbStorage
+        
         @reserved_keywords = superclass.reserved_keywords + []
         class << self; attr_reader :reserved_kewords; end
         
@@ -17,7 +18,7 @@ module Spider; module Model; module Storage; module Db
         end
         
          def connect()
-            $logger.debug "sqlite opening file #{@file}"
+            debug("sqlite opening file #{@file}")
             @db = SQLite3::Database.new(@file)
             @db.results_as_hash = true
         end
@@ -42,10 +43,10 @@ module Spider; module Model; module Storage; module Db
 
          def execute(sql, *bind_vars)
              connect unless connected?
-             $logger.debug("sqlite executing:\n#{sql}")
+             debug("sqlite executing:\n#{sql}")
              if (bind_vars && bind_vars.length > 0)
                  debug_vars = bind_vars.map{|var| var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
-                 $logger.debug("bind vars:\n[#{debug_vars}]") 
+                 debug("bind vars:\n[#{debug_vars}]") 
              end
              result = @db.execute(sql, *bind_vars)
              if block_given?
@@ -58,7 +59,7 @@ module Spider; module Model; module Storage; module Db
          end
 
          def prepare(sql)
-             $logger.debug("sqlite preparing: #{sql}")
+             debug("sqlite preparing: #{sql}")
              connect unless connected?
              return @db.prepare(sql)
          end

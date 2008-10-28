@@ -1,4 +1,4 @@
-require 'spider/model/model_hash'
+require 'spiderfw/model/model_hash'
 
 module Spider; module Model
     
