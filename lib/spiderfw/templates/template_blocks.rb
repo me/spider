@@ -13,7 +13,7 @@ module Spider
                 block = :Yield
             elsif (Spider::Template.registered[el.name])
                 klass = const_get_full(Spider::Template.registered[el.name])
-                if (klass.has_ancestor?(::Spider::Widget))
+                if (klass.subclass_of?(::Spider::Widget))
                     block = :Widget
                 else
                     Spider.logger.debug("IS NOT A WIDGET!") # FIXME
