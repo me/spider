@@ -1,5 +1,6 @@
 require 'hpricot'
 require 'spiderfw/templates/template_blocks'
+require 'spiderfw/cache/template_cache'
 
 
 module Spider
@@ -8,10 +9,16 @@ module Spider
         include Logger
         
         attr_accessor :widgets
+        attr_reader :path
         
         @@registered = {}
+        @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
         
         class << self
+            
+            def cache
+                @@cache
+            end
         
             def allow_blocks(*tags)
                 @allowed_blocks = tags
@@ -23,17 +30,27 @@ module Spider
 
             def load(path, scene={})
                 return nil unless File.exist?(path)
-                p = self.new(scene)
-                p.load(path)
-                return p
+                template = self.new(scene)
+                template.load(path)
+                return template
             end
             
-            def register(tag, symbol)
-                @@registered[tag] = symbol
+            def register(tag, symbol_or_class)
+                @@registered[tag] = symbol_or_class
             end
             
             def registered
                 @@registered
+            end
+            
+            def registered?(tag)
+                return @@registered[tag] ? true : false
+            end
+            
+            def get_registered_class(name)
+                klass = Spider::Template.registered[name]
+                klass = const_get_full(klass) if klass.is_a?(Symbol)
+                return klass
             end
             
         end
@@ -52,36 +69,43 @@ module Spider
         
         
         def load(path)
-            doc = open(path){ |f| Hpricot.XML(f) }
-            @root_block = TemplateBlocks.parse_element(doc.root, self.class.allowed_blocks)
-            @compiled = @root_block.compile
+            debug("TEMPLATE LOADING #{path}")
+            @path = path
+            cache_path = path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
+            @compiled = self.class.cache.fetch(cache_path, self) do
+                doc = open(path){ |f| Hpricot.XML(f) }
+                root_block = TemplateBlocks.parse_element(doc.root, self.class.allowed_blocks)
+                root_block.compile
+            end
+            @cache_path = self.class.cache.get_location(cache_path)
             # Spider.logger.debug("COMPILED:")
             # Spider.logger.debug(@compiled)
         end
         
-        def add_widget(id, widget)
-            @widgets[id] ||= widget
+        def add_widget(id, widget, env=nil, scene=nil, params=nil, content=nil)
+            @widgets[id.to_sym] ||= widget
+            widget.env = env if env
+            widget.scene = scene if scene
+            widget.params = params if params
+            widget.parse_content_xml(content) if content
         end
         
         def init(env, scene)
-            debug("INIT:")
-            debug(@compiled.init_code)
-            instance_eval(@compiled.init_code)
+            debug("Template init")
+            instance_eval(@compiled.init_code, @cache_path+'/init.rb')
         end
         
         
         def prepare
         end
         
-        def render
-        end
-        
         def render(scene=nil)
-            debug("RENDERING:")
-            debug(@compiled.run_code)
             scene ||= (@scene || Scene.new)
+            debug("Template rendering with scene:")
+            debug(scene)            
             scene = Scene.new(scene) if scene.class == Hash
-            scene.instance_eval(@compiled.run_code)
+            scene.instance_eval(@compiled.run_code, @cache_path+'/run.rb')
+            debug("Template rendered")
         end
         
 
@@ -89,6 +113,9 @@ module Spider
             self.class.to_s
         end
         
+    end
+    
+    class TemplateCompileError < RuntimeError
     end
     
 end

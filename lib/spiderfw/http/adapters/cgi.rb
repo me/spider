@@ -13,7 +13,6 @@ class CGIIO < Spider::ControllerIO
     end
     
     def write(msg)
-        Spider::Logger.debug("sending headers with #{msg}") unless @headers_sent
         send_headers unless @headers_sent
         @out << msg
     end

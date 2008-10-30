@@ -3,7 +3,7 @@ require 'ostruct'
 module Spider
     
     class Scene < OpenStruct
-        
+                
         def []=(key, val)
             self.send("#{key}=", val)
         end
@@ -11,7 +11,7 @@ module Spider
         def [](key)
             self.send(key)
         end
-        
+                
     end
     
     

@@ -11,8 +11,8 @@ module Spider
                 block = :Render
             elsif (el.name == 'sp:yield')
                 block = :Yield
-            elsif (Spider::Template.registered[el.name])
-                klass = const_get_full(Spider::Template.registered[el.name])
+            elsif (Spider::Template.registered?(el.name))
+                klass = Spider::Template.get_registered_class(el.name)
                 if (klass.subclass_of?(::Spider::Widget))
                     block = :Widget
                 else
@@ -51,9 +51,7 @@ module Spider
                 init ||= ""
                 blocks = parse_content(@el)
                 blocks.each do |block|
-                    Logger.debug("Compiling block #{block}")
                     compiled = block.compile
-                    Logger.debug("compiled")
                     c += compiled.run_code if (compiled.run_code)
                     init += compiled.init_code if (compiled.init_code)
                 end
@@ -75,8 +73,6 @@ module Spider
             end
             
             def var_to_scene(var)
-                Spider.logger.debug("VAR_TO_SCENE:")
-                Spider.logger.debug(var)
                 first, rest = var.split('.', 2)
                 if (var[0].chr == '@')
                     scene_var = "self[:#{first[1..-1]}]"

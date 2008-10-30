@@ -72,6 +72,12 @@ module Spider; module Model
 
         end
         
+        def self.has_many(name, type, attributes, &proc)
+            attributes[:multiple] = true
+            attributes[:association] = :has_many
+            element(name, type, attributes, &proc)
+        end
+        
         # Saves the element definition and evals it when first needed, avoiding problems with classes not
         # available yet when the model is defined.
         def self.define_elements(&proc)

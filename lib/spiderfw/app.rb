@@ -12,8 +12,8 @@ module Spider
                     end
                     
                     def controller_class
-                        controllers = self.const_get(:Controllers)
-                        controllers.const_defined?(@controller_class) ? controllers.const_get(@controller_class) : Spider::Controller
+                        #controllers = self.const_get(:Controllers)
+                        const_defined?(@controller_class) ? const_get(@controller_class) : Spider::Controller
                     end
                 end
                 

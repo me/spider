@@ -10,8 +10,12 @@ module Spider
             end
         end
     )
-    config_option('storage.type', '')
-    config_option('storage.url', '')
+    
+    # Storage
+    # config_option('storage.type', '')
+    # config_option('storage.url', '')
+    
+    # Web server
     config_option 'http.server', _("The internal server to use"), {
         :default => 'mongrel'
     }
@@ -21,6 +25,10 @@ module Spider
     config_option 'webserver.reload_sources', _("Reload application and spider sources on each request"), {
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
     }
+    # Client
     config_option 'client.text_editor', _("The text editor installed on the client")
+    
+    # Templates
+    config_option 'template.cache.disable', _("Refresh template cache every time"), { :default => false }
     
 end

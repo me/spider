@@ -17,7 +17,7 @@ module Spider
                 top
                 print_backtrace(exc)
                 bottom
-                raise
+                raise exc
             end 
         end
         
@@ -47,6 +47,7 @@ module Spider
         
         def try_rescue(exc)
             print_backtrace(exc) if Spider.config.get('webserver.show_traces')
+            raise exc
         end
         
         
@@ -56,8 +57,7 @@ module Spider
             client_editor = (Spider.config.get('client.text_editor') || '').downcase
             prefix = ''
             prefix = 'txmt://open?url=' if (client_editor == 'textmate')
-            trace = exc.backtrace
-            trace.each do |trace_line|
+            exc.backtrace.each do |trace_line|
                 parts = trace_line.split(':')
                 file_path = parts[0]
                 line = parts[1]

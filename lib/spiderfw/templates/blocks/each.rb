@@ -10,26 +10,20 @@ module Spider; module TemplateBlocks
         end
         
         def compile
-            Spider.logger.debug("COMPILING; REPEATED:")
-            Spider.logger.debug(@repeated)
             init = ""
             rep = @el.attributes['sp:each']
             @el.remove_attribute('sp:each')
-            Spider.logger.debug("REP: #{@el}")
             if (rep =~ /\s*(.+)\s*\|\s*(.+)\s*\|/)
                 repeated = $1.strip
                 arguments = $2.strip
             end
-            Spider.logger.debug("REPEATED:")
-            Spider.logger.debug(@el.attributes)
             c = "#{var_to_scene(repeated)}.each do |#{arguments}|\n"
-            c += "Spider.logger.debug('INPUT:')\nSpider.logger.debug(input)\n"
-            Spider.logger.debug("REPETITION:")
-            Spider.logger.debug(c)
             content = Spider::TemplateBlocks.parse_element(@el).compile
-            c += content.run_code
-            init += content.init_code
+            content.run_code.each_line do |line|
+                c += '  '+line
+            end
             c += "end\n"
+            init += content.init_code
             return CompiledBlock.new(init, c)
         end
         

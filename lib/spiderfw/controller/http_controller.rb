@@ -18,13 +18,13 @@ module Spider
             super
         end
         
-        def before(action, *params)
-            begin
-                super
-            rescue NotFoundException
-                @response.status = 404
-            end
-        end
+        # def before(action, *params)
+        #     begin
+        #         super
+        #     rescue NotFoundException
+        #         @response.status = 404
+        #     end
+        # end
         
         def ensure(action='', *arguments)
             dispatch(:ensure, action, *arguments)
@@ -35,6 +35,14 @@ module Spider
         def get_route(path)
             path.slice!(0) if path.length > 0 && path[0].chr == "/"
             return Route.new(:path => path, :dest => Spider::SpiderController, :action => path)
+        end
+        
+        def try_rescue(exc)
+            if (exc.is_a?(NotFoundException))
+                @response.status = 404
+            else
+                super
+            end
         end
         
         

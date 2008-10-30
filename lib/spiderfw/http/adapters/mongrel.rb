@@ -13,7 +13,9 @@ module Spider; module HTTP
             else 
                 @server.register("/", MongrelServlet.new(self))
             end
-            Spider.logger.info("Starting Mongrel on #{opts[:host]}:#{opts[:port]}")
+            info_string = "Starting Mongrel on #{opts[:host]}:#{opts[:port]}"
+            info_string += " (CGI mode)" if opts[:cgi]
+            Spider.logger.info(info_string)
             @server.run.join
         end
         

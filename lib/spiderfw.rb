@@ -1,6 +1,7 @@
 
 $SPIDER_PATH = File.expand_path(File.dirname(__FILE__)+'/..')
 $SPIDER_LIB = $SPIDER_PATH+'/lib'
+$SPIDER_RUN_PATH = Dir.pwd
 #$:.push($SPIDER_LIB+'/spiderfw')
 $:.push(Dir.pwd)
 #p $:
@@ -24,6 +25,7 @@ module Spider
         
         def init
             @paths = {}
+            @apps_to_load = []
             @apps ||= {}
             @root = Dir.pwd
             @logger = Spider::Logger
@@ -31,19 +33,20 @@ module Spider
 #            @controller = Controller
             @server = {}
             @configuration = Configuration.new
+            @paths[:spider] = $SPIDER_PATH
             setup_paths(@root)
             load_configuration($SPIDER_PATH+'/config')
             load_configuration(@root+'/config')
-
+            load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
 
             if (Spider.config['debugger.start'])
 
             end
             init_apps
-            routes_file = "#{@paths[:config]}/routes.rb"
-            if (File.exist?(routes_file))
-                load(routes_file)
-            end
+            # routes_file = "#{@paths[:config]}/routes.rb"
+            # if (File.exist?(routes_file))
+            #     load(routes_file)
+            # end
             # else
             #     @apps.each do |name, app|
             #         @controller.route('/'+app.name.gsub('::', '/'), app.controller_class, :ignore_case => true)
@@ -57,20 +60,42 @@ module Spider
         end
     
         def setup_paths_full(root)
+            @paths[:root] = root
             @paths[:apps] = root+'/apps'
             @paths[:config] = root+'/config'
             @paths[:layouts] = root+'/layouts'
+            @paths[:var] = root+'/var'
+        end
+        
+        def paths
+            @paths
+        end
+        
+        def load_apps(*l)
+            l.each { |app| @apps_to_load << app }
+        end
+        
+        def load_all_apps
+            Find.find(@paths[:apps]) do |path|
+                if (File.basename(path) == '_init.rb')
+                    @apps_to_load << File.dirname(path)[0..$SPIDER_RUN_PATH+'/apps/'.length-1]
+                    Find.prune
+                elsif (File.exist?("#{path}/_init.rb"))
+                    @apps_to_load << path[0..$SPIDER_RUN_PATH+'/apps/'.length-1]
+                    Find.prune
+                end
+            end
         end
         
         def init_apps
-            Find.find(@paths[:apps]) do |path|
-                if (File.basename(path) == '_init.rb')
-                    require(path)
-                    Find.prune
-                elsif (File.exist?("#{path}/_init.rb"))
-                    require("#{path}/_init.rb")
-                    Find.prune
+            Logger.debug("Loading apps:")
+            Logger.debug(@apps_to_load)
+            @apps_to_load.uniq.each do |app|
+                unless File.exist?($SPIDER_RUN_PATH+'/apps/'+app) && File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
+                    Logger.error("App #{app} not found")
+                    next
                 end
+                require($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
             end
         end
         

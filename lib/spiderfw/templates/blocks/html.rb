@@ -7,12 +7,10 @@ module Spider; module TemplateBlocks
         def compile
             c = ""
             init = ""
-            Spider.logger.debug(@el.attributes)
             start = "<"+@el.name
             @el.attributes.each do |key, val|
                 start += " #{key}=\""
                 if (val =~ /(.*)\{ (.+) \}(.*)/)
-                    Spider.logger.debug("VARIABLE ATTR: #{val}")
                     start += $1+"'+"+var_to_scene($2)+".to_s+'"+$3
                 else
                     start += val

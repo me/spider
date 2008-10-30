@@ -15,18 +15,25 @@ module Spider
             return template
         end
         
+        def init_template(path=nil)
+            path ||= self.class.current_default_template
+            template = load_template(path)
+            template.init(@env, @scene)
+            return template
+        end
+            
+        
         def render_layout(path, content={})
             layout = self.class.load_layout(path)
             layout.render(content)
         end
         
-        def render(template=nil, scene=nil)
-            template = self.class.current_default_template unless template
-            load_template(template).render(@scene)
+        def render(path=nil, scene=nil)
+            template = init_template(path)
+            template.render(scene || @scene)
         end
         
         module ClassMethods
-
             
             def layout(name, params={})
                 @layouts ||= []

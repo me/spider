@@ -20,7 +20,7 @@ module Spider
             end
             
             def app
-                @app ||= self.parent_module(2)
+                @app ||= self.parent_module
             end
             
             def template_path
@@ -56,7 +56,7 @@ module Spider
                 method = action
                 method = $1 if (method =~ /^([^:]+)(:.+)$/)
                 if (self.class.method_defined?(method.to_sym))
-                    layout = self.class.get_layout(method)
+                    layout = self.class.get_layout(method) # FIXME! move to visual somehow
                     if (layout) 
                         debug("Execute got layout:")
                         debug(layout)
