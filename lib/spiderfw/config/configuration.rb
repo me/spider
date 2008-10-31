@@ -38,8 +38,7 @@ module Spider
             first, rest = key.split('.', 2)
             if rest
                 begin
-                    @values[first] ||= Configuration.new(@prefix+".#{first}")
-                    @values[first].configure(rest, val)
+                    ( @values[first] ||= Configuration.new(@prefix+".#{first}") ).configure(rest, val)
                 rescue ConfigurationException # raise only top level exception
                     raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key
                 end
@@ -87,8 +86,7 @@ module Spider
             o = @options
             first, rest = name.split('.', 2)
             while (rest)
-                o[first] ||= {}
-                o = o[first]
+                o = (o[first] ||= {})
                 first, rest = rest.split('.', 2)
             end
             o[first] = {:description => description, :params => params}
@@ -116,20 +114,19 @@ module Spider
         def create_prefix(name)
             first, rest = name.split('.', 2)
             @options[first] ||= {}
-            @values[first] ||= Configuration.new(@prefix+".#{first}")
-            @values[first].create_prefix(rest) if rest
+            v = (@values[first] ||= Configuration.new(@prefix+".#{first}"))
+            v.create_prefix(rest) if rest
         end
         
         def configure_set(name, values)
-            @sets[name] ||= Configuration.new(@prefix)
-            @sets[name].options = @options
-            values.each { |k, v| @sets[name].configure(k, v) }
+            s = (@sets[name] ||= Configuration.new(@prefix))
+            s.options = @options
+            values.each { |k, v| s.configure(k, v) }
         end
         
         def include_set(name)
             return if (self == @sets[name])
-            @sets[name] ||= Configuration.new(@prefix)
-            @sets[name].each do |key, val|
+            ( @sets[name] ||= Configuration.new(@prefix) ).each do |key, val|
                 configure(key, val)
             end
             @sets[name] = self
