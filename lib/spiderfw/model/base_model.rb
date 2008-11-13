@@ -3,6 +3,7 @@ require 'spiderfw/model/element'
 module Spider; module Model
     
     class BaseModel
+        include Spider::Logger
         
         @@base_types = {
             'text' => {:klass => String},
@@ -11,6 +12,11 @@ module Spider; module Model
             'real' => {:klass => Float},
             'dateTime' => {:klass => Time},
             'binary' => {:klass => String}
+        }
+        
+        @@map_types = {
+            String => 'text',
+            Fixnum => 'int'
         }
         
         # Copies this class' elements to the subclass.
@@ -33,7 +39,11 @@ module Spider; module Model
                 {}
             end
             attributes = default_attributes.merge(attributes)
-            if type.class == String && !@@base_types[type]
+            if (type.class == Class && @@map_types[type]) 
+                type = @@map_types[type]
+            elsif (type.class == Hash)
+                type = create_inline_model(type)
+            elsif (type.class == String && !@@base_types[type])
                 require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
                 type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
             end
@@ -82,6 +92,24 @@ module Spider; module Model
         # available yet when the model is defined.
         def self.define_elements(&proc)
             @elements_definition = proc
+        end
+        
+        def self.create_inline_model(hash)
+            model = Class.new(BaseModel)
+            model.instance_eval do
+                hash.each do |key, val|
+                    element(:id, key.class, :primary_key => true)
+                    if (val.class == Hash)
+                        # TODO: allow to pass multiple values as {:element1 => 'el1', :element2 => 'el2'}
+                    else
+                        element(:desc, val.class)
+                    end
+                    break
+                end
+            end
+            Spider.logger.debug("Created inline model:")
+            Spider.logger.debug(model)
+            return model
         end
 
         
@@ -132,41 +160,45 @@ module Spider; module Model
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
         
+        def self.use_storage(name)
+            @use_storage = name
+        end
+        
         def self.storage
             return @storage if @storage
-            return get_storage()
+            return @use_storage ? get_storage(@use_storage) : get_storage
         end
         
         # Mixin!
-        def self.get_storage(storage_string=nil)
-             if (!storage_string)
-                 # TODO: implement per-model and per-namespace configuration
-                 type = Spider.conf.get('storage.type')
-                 url = Spider.conf.get('storage.url')
-             elsif (storage_string =~ /([\w\d]+?):(.+)/)
-                 type = $1
-                 url = $2
-             else
-                 # TODO: implement named storages
-             end
-             storage = Storage.get_storage(type, url)
-             return storage
-         end
+        def self.get_storage(storage_string='default')
+            storage_regexp = /([\w\d]+?):(.+)/
+            if (storage_string !~ storage_regexp)
+                orig_string = storage_string
+                storage_string = Spider.conf.get('storages')[storage_string]
+                if (!storage_string || storage_string !~ storage_regexp)
+                    raise ModelException, "No named storage found for #{orig_string}"
+                end
+            end
+            type, url = $1, $2
+            Spider.logger.debug("Got storage type #{type}, url #{url}")
+            storage = Storage.get_storage(type, url)
+            return storage
+        end
          
-         def self.mapper
-             return @mapper if @mapper
-             return get_mapper(storage)
-         end
+        def self.mapper
+            return @mapper if @mapper
+            return get_mapper(storage)
+        end
 
-         def self.get_mapper(storage)
-             mapper = storage.get_mapper(self)
-             return mapper
-         end
-         
-         # Finds objects according to query. Returns a QuerySet.
-         def self.find(query)
-             mapper.find(query)
-         end
+        def self.get_mapper(storage)
+            mapper = storage.get_mapper(self)
+            return mapper
+        end
+
+        # Finds objects according to query. Returns a QuerySet.
+        def self.find(query)
+            mapper.find(query)
+        end
         
         
         #################################################

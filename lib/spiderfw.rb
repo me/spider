@@ -21,6 +21,7 @@ module Spider
         # Everything here must be thread safe!!!
         attr_reader :logger, :controller, :apps, :server, :configuration
         alias :config :configuration
+        alias :conf :configuration
         
         
         def init
@@ -65,6 +66,7 @@ module Spider
             @paths[:config] = root+'/config'
             @paths[:layouts] = root+'/layouts'
             @paths[:var] = root+'/var'
+            @paths[:certs] = @paths[:config]+'/certs'
         end
         
         def paths

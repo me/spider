@@ -11,7 +11,6 @@ module Spider
             FileUtils.mkpath(root_path)
             @path = root_path
             @invalid = {}
-            sync_initialize
         end
         
         def fetch(path, template_obj, &block)

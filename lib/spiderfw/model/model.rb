@@ -18,6 +18,7 @@ module Spider
     Model.autoload(:BaseModel, 'spiderfw/model/base_model')
     Model.autoload(:Mixins, 'spiderfw/model/mixins/mixins')
     Model.autoload(:Managed, 'spiderfw/model/extended_models/managed')
+    Model.autoload(:InlineModel, 'spiderfw/model/inline_model')    
     Model.autoload(:Storage, 'spiderfw/model/storage')
     Model.autoload(:Request, 'spiderfw/model/request')
     Model.autoload(:Condition, 'spiderfw/model/condition')

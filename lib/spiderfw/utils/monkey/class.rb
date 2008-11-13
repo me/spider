@@ -11,5 +11,4 @@ class Class
         return false
     end
     
-    
 end

@@ -1,6 +1,8 @@
+require 'spiderfw/controller/app_controller'
+
 module Spider
 
-    class PageController < Controller
+    class PageController < AppController
 
         def initialize(env, response, scene=nil)
             super

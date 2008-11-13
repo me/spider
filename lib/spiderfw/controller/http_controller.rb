@@ -4,7 +4,7 @@ require 'spiderfw/controller/formats/html'
 module Spider
     
     class HTTPController < Controller
-        include HTML
+        
         
         def initialize(env, response, scene=nil)
             @response = response
@@ -16,6 +16,27 @@ module Spider
             @previous_stdout = $stdout
             $stdout = response.body
             super
+        end
+        
+        def execute(action='', *arguments)
+            @extensions = {
+                'js' => {:content_type => 'application/javascript'},
+                'html' => {:content_type => 'text/html', :mixin => HTML}
+            }
+            if (action =~ /\.(\w+)$/)
+                @extension = $1
+                if (ext = @extensions[$1])
+                    (content_type = ext[:content_type]) && @response.headers['Content-Type'] = content_type
+                    (mixin = ext[:mixin]) && extend(mixin)
+                end
+            end
+            super
+        end
+        
+        
+        def dispatched_object(route)
+            super
+            
         end
         
         # def before(action, *params)

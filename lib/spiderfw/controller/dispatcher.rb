@@ -34,8 +34,9 @@ module Spider
             obj, route = @dispatch_next[action]
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
-            return obj.send(method, route.action, *(new_arguments)) 
+            return obj.send(method, route.action, *(new_arguments))
         end
+
         
         def can_dispatch?(method, action)
             d_next = dispatch_next(action)
@@ -70,7 +71,7 @@ module Spider
                     end
                     if (test_path[0..(try.length-1)] == try)
                         action = test_path[(try.length)..(test_path.length-1)]
-                        params = []
+                        params = [path[(try.length)..(path.length-1)]]
                     end
                 when Regexp
                     action_index = options[:action_match]

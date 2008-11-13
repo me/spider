@@ -27,8 +27,9 @@ module Spider
         
         class Block
             
-            def initialize(el, allowed_blocks=nil)
+            def initialize(el, template, allowed_blocks=nil)
                 @el = el
+                @template = template
                 @allowed_blocks = allowed_blocks
                 @content_blocks = []
             end

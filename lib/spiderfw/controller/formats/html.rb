@@ -5,20 +5,33 @@ module Spider
     module HTML
         include ControllerMixin
         
-        before do
-            Spider.logger.debug('HTML before')
-            @response.headers['Content-Type'] = 'text/html'
+        # before do
+        #     Spider.logger.debug('HTML before')
+        #     #@response.headers['Content-Type'] = 'text/html'
+        #    
+        #     begin
+        #         run_chain(:before)
+        #     # rescue NotFoundException
+        #     #     render('errors/404')
+        #     rescue => exc
+        #         top
+        #         print_backtrace(exc)
+        #         bottom
+        #         raise exc
+        #     end 
+        # end
+        
+        def before(action='', *arguments)
+            Spider.logger.debug("HTML BEFORE")
             @response.register(:js, [])
             begin
-                run_chain(:before)
-            # rescue NotFoundException
-            #     render('errors/404')
+                super
             rescue => exc
                 top
                 print_backtrace(exc)
                 bottom
                 raise exc
-            end 
+            end
         end
         
         execute do

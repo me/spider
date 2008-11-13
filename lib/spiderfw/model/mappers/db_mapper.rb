@@ -445,7 +445,7 @@ module Spider; module Model; module Mappers
                 p "QUESTO!!!!"
                 p "RAW:"
                 p @raw_data
-                # FIXME: why reindex?!?
+                # FIXME: should be already indexed!
                 element_query_set.reindex
                 objects.each do |obj|
                     search_params = {}

@@ -48,7 +48,8 @@ module Spider
         end
         
         def execute(action='', *arguments)
-            debug("Controller #{self} executing #{action}")
+            debug("Controller #{self} executing #{action} with arguments")
+            debug(arguments)
             @call_path = action
             before(action, *arguments)
             begin
@@ -66,7 +67,7 @@ module Spider
                     end
                 elsif (can_dispatch?(:execute, action))
                     run_chain(:execute, action, *arguments)
-                    dispatch(:execute, action, *arguments)
+                    dispatch(:execute, action)
                     debug("Dispatched by #{self} ")
                     debug("Response is now:")
                     debug(@response)

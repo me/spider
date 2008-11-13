@@ -1,5 +1,6 @@
 require 'ruby-debug'
 require 'spiderfw/utils/monkey/kernel'
+require 'spiderfw/utils/monkey/module'
 require 'spiderfw/utils/monkey/class'
 require 'spiderfw/utils/monkey/symbol'
 require 'spiderfw/utils/inflector'

@@ -6,15 +6,26 @@ module Spider
             mod.module_eval do
                 @controller_class ||= :MainController
                 class << self
-                    attr_reader :path
+                    attr_reader :path, :pub_path, :test_path
                     
                     def init
+                        @pub_path ||= @path+'/public'
+                        @test_path ||= @path+'/test'
                     end
                     
                     def controller_class
                         #controllers = self.const_get(:Controllers)
                         const_defined?(@controller_class) ? const_get(@controller_class) : Spider::Controller
                     end
+                    
+                    def models
+                        self.constants.map{ |m| const_get(m) }.select{ |m| m.subclass_of? Spider::Model::BaseModel }
+                    end
+                    
+                    def controllers
+                        self.constants.map{ |m| const_get(m) }.select{ |m| m.subclass_of? Spider::Controller }
+                    end
+                    
                 end
                 
                 # controllers = Spider::App::Controllers.clone

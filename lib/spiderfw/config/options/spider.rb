@@ -31,4 +31,8 @@ module Spider
     # Templates
     config_option 'template.cache.disable', _("Refresh template cache every time"), { :default => false }
     
+    # Model
+    
+    config_option 'storages', _("A list of named storages"), {:type => Hash}
+    
 end
