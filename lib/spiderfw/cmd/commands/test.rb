@@ -1,4 +1,5 @@
 require 'test/unit/collector/dir'
+require 'test/unit'
 
 class TestCommand < CmdParse::Command
 
@@ -10,14 +11,14 @@ class TestCommand < CmdParse::Command
         @apps = []
 
         run = CmdParse::Command.new( 'run', false )
-        run.short_desc = "Run tests"
-        run.options = CmdParse::OptionParserWrapper.new do |opt|
-            opt.on("--app", 
-                   _("Run tests only for an app"),
-                   "-a"){ |app|
-                @apps << app
-            }
-        end
+        run.short_desc = _("Run tests")
+        # run.options = CmdParse::OptionParserWrapper.new do |opt|
+        #     opt.on("--app", 
+        #            _("Run tests only for an app"),
+        #            "-a"){ |app|
+        #         @apps << app
+        #     }
+        # end
         run.set_execution_block do |apps|
             apps = Spider.apps.keys if (!apps || apps.length < 1)
             collector = Test::Unit::Collector::Dir.new()
