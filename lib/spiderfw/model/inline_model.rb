@@ -15,6 +15,7 @@ module Spider; module Model
             end
             
             def mapper
+                Spider.logger.debug("CHIAMATO MAPPER PER INLINEMODEL")
                 return Mappers::HashMapper.new(self, self.data)
             end 
             

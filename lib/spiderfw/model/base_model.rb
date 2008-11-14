@@ -11,7 +11,8 @@ module Spider; module Model
             'int' => {:klass => Fixnum},
             'real' => {:klass => Float},
             'dateTime' => {:klass => Time},
-            'binary' => {:klass => String}
+            'binary' => {:klass => String},
+            'bool' => {:klass => FalseClass}
         }
         
         @@map_types = {
@@ -72,6 +73,13 @@ module Spider; module Model
                 #extend_element(name)
             end
             
+            # class element getter
+            (class << self; self; end).instance_eval do
+                define_method("#{name}") do
+                    @elements[name]
+                end
+            end
+            
             if (proc)
                 raise ModelException, "Element extension is implemented only for n <-> n elements" unless (@elements[name].multiple? && !@elements[name].has_single_reverse?)
                 @elements[name].clone_model
@@ -82,7 +90,7 @@ module Spider; module Model
 
         end
         
-        def self.has_many(name, type, attributes, &proc)
+        def self.has_many(name, type, attributes={}, &proc)
             attributes[:multiple] = true
             attributes[:association] = :has_many
             element(name, type, attributes, &proc)
@@ -107,8 +115,6 @@ module Spider; module Model
                     break
                 end
             end
-            Spider.logger.debug("Created inline model:")
-            Spider.logger.debug(model)
             return model
         end
 
@@ -196,8 +202,13 @@ module Spider; module Model
         end
 
         # Finds objects according to query. Returns a QuerySet.
-        def self.find(query)
-            mapper.find(query)
+        # Accepts a Query, or a Condition and a Request (optional)
+        def self.find(*params)
+            if (params[0] && params[0].is_a?(Query))
+                mapper.find(params[0])
+            else
+                mapper.find(Query.new(params[0], params[1]))
+            end
         end
         
         
@@ -212,8 +223,12 @@ module Spider; module Model
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
             end
             if (values)
-                values.each do |key, val|
-                    set(key, val)
+                if (values.is_a? Hash)
+                    values.each do |key, val|
+                        set(key, val)
+                    end
+                elsif (self.class.primary_keys.length == 1) # Single key, single value
+                    set(self.class.primary_keys[0], values)
                 end
             end
         end
@@ -253,7 +268,7 @@ module Spider; module Model
         # Returns true if the element instance variable is set
         def element_has_value?(element)
             element = element.name if (element.class == Element)
-            return instance_variable_get(:"@#{element}") ? true : false
+            return instance_variable_get(:"@#{element}") == nil ? false : true
         end
         
         # Returns true if all primary keys have a value; false if some primary key
@@ -298,7 +313,7 @@ module Spider; module Model
         end
         
         def mapper
-            @storage ||= self.class.get_storage()
+            @storage ||= self.class.storage
             @mapper ||= self.class.get_mapper(@storage)
             return @mapper
         end
@@ -365,6 +380,13 @@ module Spider; module Model
                 "#{self}:#{self.class.name}"
                 )
             end
+        end
+        
+        
+        def inspect
+            '{' +
+            self.class.elements.select{ |name, el| element_has_value?(el) } \
+                .map{ |name, el| ":#{name} => #{get(name)}"}.join(',') + '}'
         end
         
         

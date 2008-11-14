@@ -59,6 +59,15 @@ module Spider; module Model
             return model.mapper
         end
         
+        def query_set
+            return nil unless model?
+            set = QuerySet.new
+            set.query = Query.new
+            set.model = type
+            set.query.condition = @attributes[:condition] if @attributes[:condition]
+            return set
+        end
+        
         # Clones the current model, detaching it from the original class and allowing to modify
         # it (adding other elements)
         def clone_model

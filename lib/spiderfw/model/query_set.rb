@@ -3,10 +3,11 @@ module Spider; module Model
     class QuerySet
         include Enumerable
         attr_reader :raw_data
-        attr_accessor :query, :owner
+        attr_accessor :query, :model, :owner
 
         def initialize(source=nil)
             @query = Query.new
+            @model = nil
             if (source.class == Array)
                 @objects = source
             else
@@ -83,6 +84,10 @@ module Spider; module Model
 
         def order_by(*elements)
             @query.order_by *elements
+        end
+        
+        def load
+            @model.find(@query)
         end
 
         def save_all(params={})

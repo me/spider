@@ -2,6 +2,11 @@ module Spider; module Model
     
     class ModelHash < Hash
         
+        def initialize(hash=nil)
+            super()
+            merge!(hash) if (hash && hash.is_a?(Hash))
+        end
+        
         def get_deep_obj
             return self.class.new
         end

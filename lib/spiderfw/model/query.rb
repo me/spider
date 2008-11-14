@@ -4,16 +4,33 @@ require 'spiderfw/model/request'
 module Spider; module Model
     
     class Query
-        attr_accessor :condition, :request, :order
+        attr_accessor :order
+        attr_reader :condition, :request
        
-       def initialize(&proc)
-           @condition = Condition.new
-           @request = Request.new
+       def initialize(condition = nil, request=nil, &proc)
+           @condition = Condition.new(condition)
+           @request = Request.new(request)
            @order = []
            if (proc)
                defined_methods = define_helper_methods
                instance_eval(&proc) 
                undefine_helper_methods if (defined_methods)
+           end
+       end
+       
+       def condition=(val)
+           if (!val.is_a?(Condition))
+               @condition = Condition.new(val)
+           else
+               @condition = val
+           end
+       end
+       
+       def request=(val)
+           if (!val.is_a?(Request))
+               @request = Request.new(val)
+           else
+               @request = val
            end
        end
        

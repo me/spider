@@ -30,10 +30,11 @@ module Spider; module Model
             c << b
         end
         
-        def initialize
+        def initialize(hash=nil)
             @conjunction = :or
             @comparisons = {}
             @subconditions = []
+            super
             #@raw = {}
         end
         
@@ -98,7 +99,7 @@ module Spider; module Model
             return str
         end
         
-        def self.conj(conjunction, other)
+        def conj(conjunction, other)
             if (self.conjunction == conjunction)
                 c = self
             else
@@ -109,15 +110,17 @@ module Spider; module Model
             c << other
             return c
         end
-            
+        
                     
-        def |(other)
+        def or(other)
             return conj(:or, other)
         end
+        alias :| :or
         
-        def &(other)
+        def and(other)
             return conj(:and, other)
         end
+        alias :& :and
     
     end
     

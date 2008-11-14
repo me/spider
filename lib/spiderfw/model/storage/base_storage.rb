@@ -15,6 +15,10 @@ module Spider; module Model; module Storage
             raise StorageException, "Unimplemented"
         end
         
+        def prepare_value(type, value)
+            return value
+        end
+        
     end
     
     ###############################

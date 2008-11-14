@@ -50,6 +50,8 @@ module Spider; module Model; module Storage; module Db
                 'DATE'
             when 'binary'
                 'BLOB'
+            when 'bool'
+                'INT'
             end
         end
         
@@ -64,6 +66,8 @@ module Spider; module Model; module Storage; module Db
                 db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
             when 'binary'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
+            when 'bool'
+                db_attributes[:length] = 1
             end
             return db_attributes
         end

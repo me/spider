@@ -60,9 +60,10 @@ module Spider; module Model; module Mappers
             @model.each_element do |element|
                 if (!element.multiple? && obj.element_has_value?(element) && !element.added?)
                     if (element.model?)
+                        element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
                             keys.push(schema.foreign_key_field(element.name, key.name))
-                            val = obj.get(element.name).get(key.name)
+                            val = element_val.get(key.name)
                             val = prepare_value(key.type, val)
                             values.push(val)
                         end
@@ -111,6 +112,8 @@ module Spider; module Model; module Mappers
                      #value = "'#{value}'"
                  when 'dateTime'
                      value = value.strftime("%Y-%m-%d %H:%M:%S")
+                 when 'bool'
+                     value = value ? 1 : 0
                  end
                  value = value.to_s
              end
@@ -230,6 +233,10 @@ module Spider; module Model; module Mappers
                 where_sql += " #{condition.conjunction} " unless (where_sql.empty?)
                 element = @model.elements[k.to_sym]
                 if (element.model?)
+                    # If the condition is a value, and the model has only one primary key
+                    if (!v.is_a?(Condition) && element.model.primary_keys.length == 1)
+                        v = Condition.new({element.model.primary_keys[0].name => v})
+                    end
                     if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_sql = ""
@@ -335,6 +342,8 @@ module Spider; module Model; module Mappers
                 return value.to_f
             when 'dateTime'
                 return DateTime.parse(value)
+            when 'bool'
+                return value ? true : false
             end
             return value
         end
@@ -572,11 +581,11 @@ module Spider; module Model; module Mappers
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
                     if (!element.multiple?) # 1/n <-> 1
                         element.type.primary_keys.each do |key|
-                            key_column = element.mapper.schema.column(key.name)
+                            #key_column = element.mapper.schema.column(key.name)
                             schema.set_foreign_key(element.name, key.name, 
-                                :name => element.storage.column_name("#{element.name}_#{key.name}"),
-                                :type => key_column[:type],
-                                :attributes => key_column[:attributes]
+                                :name => @storage.column_name("#{element.name}_#{key.name}"),
+                                :type => @storage.column_type(key.type),
+                                :attributes => @storage.column_attributes(key.type, key.attributes)
                             )
                         end
                     elsif (!element.has_single_reverse?)
@@ -593,7 +602,7 @@ module Spider; module Model; module Mappers
                         end
                         element.type.primary_keys.each do |key|
                             junction_table[:theirs][key.name] ={
-                                :name => @storage.column_name("#{element.type.short_name}_#{key.name}"),
+                                :name => @storage.column_name("#{element.name}_#{key.name}"),
                                 :type => @storage.column_type(key.type),
                                 :attributes => @storage.column_attributes(key.type, key.attributes)
                             }

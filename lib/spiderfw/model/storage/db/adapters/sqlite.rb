@@ -28,6 +28,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
+            debug("sqlite closing file #{@file}")
             @db.close
             @db = nil
         end
@@ -43,11 +44,10 @@ module Spider; module Model; module Storage; module Db
 
          def execute(sql, *bind_vars)
              connect unless connected?
-             debug("sqlite executing:\n#{sql}")
              if (bind_vars && bind_vars.length > 0)
                  debug_vars = bind_vars.map{|var| var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
-                 debug("bind vars:\n[#{debug_vars}]") 
              end
+             debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
              result = @db.execute(sql, *bind_vars)
              if block_given?
                  result.each{ |row| yield row }

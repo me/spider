@@ -18,11 +18,25 @@ module Spider; module Model
             end
         end
         
+        def normalize(obj)
+            @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el) }.each do |name, element|
+                val = obj.get(name)
+                if (val.is_a? Array)
+                    val.each_index { |i| val[i] = @model.new(val[i]) }
+                    obj.set(name, val)
+                else
+                    val = @model.new(val)
+                    obj.set(name, val)
+                end
+            end
+        end
+        
         ##############################################################
         #   Save (insert and update)                                 #
         ##############################################################
         
         def save(obj)
+            normalize(obj)
             if (obj.primary_keys_set?)
                 update(obj)
             else
@@ -54,11 +68,11 @@ module Spider; module Model
         end
         
         def find(query, query_set=nil)
-            if (query.class == String)
-                q = Query.new
-                q.parse_xsql(query)
-                query = q
-            end
+            # if (query.class == String)
+            #     q = Query.new
+            #     q.parse_xsql(query)
+            #     query = q
+            # end
             result = fetch(query)
             set = query_set || QuerySet.new
             set.index_by(*@model.primary_keys)
@@ -91,6 +105,7 @@ module Spider; module Model
                 if element.model?
                     sub_query = Query.new
                     sub_query.request = ( query.request[element_name].class == Request ) ? query.request[element_name] : nil
+                    sub_query.condition = element.attributes[:condition] if element.attributes[:condition]
                     objects = get_external_element(element, sub_query, objects)
                 end
             end
@@ -100,8 +115,8 @@ module Spider; module Model
         
         def load_element(obj, element)
             query = Query.new
-            query.request[element] = Request.new
             if (element.model?)
+                query.request[element] = Request.new
                 element.model.elements.each do |name, el|
                     query.request[element.name][name] = true unless (el.model?)
                 end
