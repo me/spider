@@ -7,7 +7,6 @@ module Spider
         include Logger
    
         def initialize(root_path)
-            debug("Initializing TemplateCache in #{root_path}")
             FileUtils.mkpath(root_path)
             @path = root_path
             @invalid = {}
