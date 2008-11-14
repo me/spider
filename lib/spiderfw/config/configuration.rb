@@ -43,7 +43,7 @@ module Spider
                     raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key
                 end
             else
-                if (val.is_a?(Hash) && @options[key][:params][:type] != Hash)
+                if (val.is_a?(Hash) && @options[key] && @options[key][:params][:type] != Hash)
                     @values[key] ||= Configuration.new(@prefix+".#{key}")
                     val.each { |k, v| self[key][k.to_s] = v }
                 else
