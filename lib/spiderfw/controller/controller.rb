@@ -40,7 +40,13 @@ module Spider
             @env = env
             @response = response
             @scene = scene || Scene.new
+            init
             #@parent = parent
+        end
+        
+        # Override this for controller initialization
+        def init
+            
         end
         
         def inspect
