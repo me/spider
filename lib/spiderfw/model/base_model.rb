@@ -413,9 +413,9 @@ module Spider; module Model
         
         
         def inspect
-            '{' +
+            self.class.name+': {' +
             self.class.elements.select{ |name, el| element_has_value?(el) } \
-                .map{ |name, el| ":#{name} => #{get(name)}"}.join(',') + '}'
+                .map{ |name, el| ":#{name} => #{get(name).inspect}"}.join(',') + '}'
         end
         
         def self.clone
