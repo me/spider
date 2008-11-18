@@ -75,7 +75,7 @@ module Spider; module Model
             #     query = q
             # end
             result = fetch(query)
-            set = query_set || QuerySet.new
+            set = query_set || QuerySet.new(@model)
             set.index_by(*@model.primary_keys)
             set.query = query
             return set unless result

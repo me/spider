@@ -61,9 +61,7 @@ module Spider; module Model
         
         def queryset
             return nil unless model?
-            set = QuerySet.new
-            set.query = Query.new
-            set.model = type
+            set = QuerySet.new(type)
             set.query.condition = @attributes[:condition] if @attributes[:condition]
             if (@attributes[:request])
                 set.query.request = @attributes[:request]

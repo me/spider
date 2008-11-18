@@ -5,14 +5,10 @@ module Spider; module Model
         attr_reader :raw_data
         attr_accessor :query, :model, :owner
 
-        def initialize(source=nil)
-            @query = Query.new
-            @model = nil
-            if (source.class == Array)
-                @objects = source
-            else
-                @objects = []
-            end
+        def initialize(model, query=nil)
+            @query = query || Query.new
+            @model = model
+            @objects = []
             @raw_data = []
             @owner = nil
             @index_lookup = {}
@@ -82,7 +78,8 @@ module Spider; module Model
             # TODO: implement find without index
             raise UnimplementedError, "find without an index is not yet implemented" unless @index_lookup[index]
             result = @index_lookup[index][search_key]
-            result = QuerySet.new(result) if (result)
+            #result = QuerySet.new(result) if (result)
+            @objects = result
             return result
         end
 
@@ -103,7 +100,7 @@ module Spider; module Model
         end
         
         def inspect
-            return "Query:#{query.inspect}\nObjects:#{@objects.inspect}"
+            return "#{self.class.name}:\n@model=#{@model}, @query=#{query.inspect}, @objects=#{@objects.inspect}"
         end
         
         # def unit_of_work

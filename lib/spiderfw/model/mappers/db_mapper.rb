@@ -414,7 +414,7 @@ module Spider; module Model; module Mappers
                 end
                 p "SUB QUERY:"
                 p sub_query
-                element_query_set = QuerySet.new
+                element_query_set = QuerySet.new(element.model)
                 element_query_set.index_by(*index_by)
                 element_query_set = element.mapper.find(sub_query, element_query_set)
                 p "ELEMENT OBJECT SET:"
@@ -432,7 +432,7 @@ module Spider; module Model; module Mappers
             element_keys = element.model.primary_keys
             if (associations) # n <-> n
                 objects.each do |obj|
-                    obj.set(element, QuerySet.new)
+                    obj.set(element, QuerySet.new(element.model))
                     obj_key = primary_keys.map{ |key| obj.get(key) }.join(',')
                     obj_associations = associations[obj_key] || []
                     search_params = {}

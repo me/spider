@@ -56,13 +56,10 @@ module Spider; module Model
             define_method(name) do
                 val = instance_variable_get(ivar)
                 return val if val
-                # TODO PROX: bisogna associare il queryset caricato al model corretto
-                # forse è meglio passarlo direttamente al costruttore?
                 if primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
-                    qs = QuerySet.new
-                    qs.model = self.class.elements[name].model
+                    qs = QuerySet.new(self.class.elements[name].model) # or get the element queryset?
                     instance_variable_set(ivar, qs)
                 elsif (self.class.elements[name].model?)
                     instance_variable_set(ivar, self.class.elements[name].type.new)
@@ -229,6 +226,7 @@ module Spider; module Model
                 mapper.find(Query.new(params[0], params[1]))
             end
         end
+        
         
         
         #################################################
