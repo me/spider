@@ -120,23 +120,21 @@ module Spider; module Model; module Mappers
          end
          
          def save_associations(obj, element)
+             # FIXME: this is messy
              table = @schema.junction_table_name(element.name)
              local_values = {}
-             @model.primary_keys.each { |key| local_values[@schema.junction_table_our_field(element.name, key.name)] = obj.get(key) }
+             @model.primary_keys.each { |key| local_values[@schema.junction_table_our_field(element.name, key.name)] = prepare_condition_value(key.type, obj.get(key)) }
              sql = "DELETE FROM #{table} WHERE "
-             sql += local_values.map{ |field, val| "#{field} = #{val}"}.join(" AND ")
+             sql += local_values.map{ |field, val| "#{field} = ?"}.join(" AND ")
              #sql += "AND ("+element_values.map{ |field, val| "#{field} <> #{val}"}.join(" OR ")+")"
-             @storage.execute(sql)
+             @storage.execute(sql, local_values.map{ |val| val })
              obj.get(element).each do |sub_obj|
                  element_values = {}
-                 element.model.primary_keys.each { |key| element_values[@schema.junction_table_their_field(element.name, key.name)] = sub_obj.get(key)}
-                 element.model.added_elements.each { |added| element_values[@schema.junction_table_added_field(element.name, added.name)] = sub_obj.get(added) if (sub_obj.element_has_value?(added)) }
-                 #sql = "SELECT ID FROM #{table} WHERE "
-                 #sql += [local_values, element_values].map{ |values| values.map{ |field, val| "#{field} = #{val}"}.join(" AND ") }.join(" AND ")
-                 #result = execute(sql)
-                 #unless result
-                 sql = "INSERT INTO #{table} (#{local_values.keys.join(',')}, #{element_values.keys.join(',')}) VALUES (#{local_values.values.join(',')}, #{element_values.values.join(',')})"
-                 @storage.execute(sql)
+                 element.model.primary_keys.each { |key| element_values[@schema.junction_table_their_field(element.name, key.name)] = prepare_value(key.type, sub_obj.get(key))}
+                 element.model.added_elements.each { |added| element_values[@schema.junction_table_added_field(element.name, added.name)] = prepare_value(added.type, sub_obj.get(added)) if (sub_obj.element_has_value?(added)) }
+                 sql = "INSERT INTO #{table} (#{local_values.keys.join(',')}, #{element_values.keys.join(',')}) VALUES ("+
+                         (local_values.values+element_values.values).map{'?'}.join(',') + ")"
+                 @storage.execute(sql, local_values.values + element_values.values)
                  #end
              end
          end
