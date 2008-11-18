@@ -13,6 +13,9 @@ module Spider
             end
         end
         
+        class ControllerError < RuntimeError
+        end
+        
     end
     
 end
