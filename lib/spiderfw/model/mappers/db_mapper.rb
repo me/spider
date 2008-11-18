@@ -219,8 +219,6 @@ module Spider; module Model; module Mappers
         
         
         def prepare_condition(condition)
-            p "TOP CONDITION:"
-            p condition
             where_sql = ""
             bind_values = []
             joins = []
@@ -244,14 +242,8 @@ module Spider; module Model; module Mappers
                         end
                         where_sql += "(#{element_sql})"
                     else
-                        p "IS MODEL!"
                         if (true) # FIXME: check for (element.storage === self)
-                            p "PREPARE:"
-                            p element.mapper.prepare_condition(v)
-                            p "END PREPARE"
                             element_sql, element_values, element_joins = element.mapper.prepare_condition(v)
-                            p "ELEMENT JOINS:"
-                            p element_joins
                             joins += element_joins
                             joins << get_join(element)
                             where_sql += "(#{element_sql}) "
@@ -264,7 +256,6 @@ module Spider; module Model; module Mappers
                     field = schema.qualified_field(element.name)
                     op = comp ? comp : '='
                     where_sql += "#{field} #{op} ?"
-                    p "WHERE SQL NOW IS: #{where_sql}"
                     bind_values << prepare_condition_value(@model.elements[k.to_sym].type, v)
                 end
                 
@@ -273,8 +264,6 @@ module Spider; module Model; module Mappers
             sub_bind_values = []
             condition.subconditions.each do |sub|
                 sub_res = self.prepare_condition(sub)
-                p "SUB RES: "
-                p sub_res
                 sub_sqls << sub_res[0]
                 sub_bind_values << sub_res[1]
                 joins += sub_res[2]
@@ -289,23 +278,18 @@ module Spider; module Model; module Mappers
         end
         
         def get_join(element)
-            p "GETTING JOIN FOR #{element}"
             return unless element.model?
             element_table = element.mapper.schema.table
             
             if (element.multiple? && element.has_single_reverse?) # 1 <-> n
-                p "1<->n"
                 #buh
             elsif (element.multiple?) # n <-> n
-                p "n<->n"
                 #boh
             else # n <-> 1
                 keys = {}
                 element.model.primary_keys.each do |key|
                     keys[@schema.foreign_key_field(element.name, key.name)] = element.mapper.schema.field(key.name)
                 end
-                p "OK NOW KEYS:"
-                p keys
                 join = [schema.table, element.mapper.schema.table, keys]
             end
             return join
@@ -352,7 +336,6 @@ module Spider; module Model; module Mappers
         # into an object or an QuerySet, passed as the third param
         # Returns the object or the QuerySet
         def get_external_element(element, query, objects)
-            p "GETTING EXTERNAL ELEMENT #{element}"
             element_keys = element.model.primary_keys
             # If the element is not multiple and all requests are primary keys, we already have all we need
             if ( !element.multiple? &&  (query.request.keys - element_keys.map{ |key| key.name }).size == 0 )
@@ -367,14 +350,12 @@ module Spider; module Model; module Mappers
                 end
                 result = objects
             else
-                p "HELLO HERE"
                 # FIXME: have to merge the original query?
                 sub_query = Query.new
                 sub_query.request = query.request || Request.new
                 sub_query.condition.conjunction = 'or'
                 index_by = []
                 if (element.multiple? && !element.has_single_reverse?) # n <-> n
-                    p "N2N!!!"
                     element_keys.each { |key| index_by << key }
                     associations = get_associations(element, query, objects)
                     associations.each do |key, rows|
@@ -402,21 +383,15 @@ module Spider; module Model; module Mappers
                             sub_query.request[element.attributes[:reverse]] = sub_request
                             @model.primary_keys.each do |key|
                                 condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
-                                p "ROW"
-                                p condition_row
                             end
                             @model.primary_keys.each{ |key| index_by << "#{element.attributes[:reverse]}.#{key.name}" }
                         end
                         sub_query.condition << condition_row
                     end
                 end
-                p "SUB QUERY:"
-                p sub_query
                 element_query_set = QuerySet.new(element.model)
                 element_query_set.index_by(*index_by)
                 element_query_set = element.mapper.find(sub_query, element_query_set)
-                p "ELEMENT OBJECT SET:"
-                p element_query_set
                 result = associate_external(element, objects, element_query_set, associations)
             end
             return result
@@ -446,21 +421,14 @@ module Spider; module Model; module Mappers
                     end
                 end 
             elsif (element.multiple? && element.has_single_reverse?) # 1 <-> n"
-                p "QUESTO!!!!"
-                p "RAW:"
-                p @raw_data
                 # FIXME: should be already indexed!
                 element_query_set.reindex
                 objects.each do |obj|
                     search_params = {}
                     @model.primary_keys.each do |key|
                         field = @schema.field(key.name)
-                        p "FIELD FOR #{key}: #{field}"
-                        p "OBJECT: #{obj.object_id}"
                         search_params["#{element.attributes[:reverse]}.#{key.name}"] = @raw_data[obj.object_id][field]
                     end
-                    p "SEARCH PARAMS:"
-                    p search_params
                     obj.set_loaded_value(element, element_query_set.find(search_params))
                 end
             else # 1|n <-> 1
@@ -470,8 +438,6 @@ module Spider; module Model; module Mappers
                         field = schema.foreign_key_field(element.name, key.name)
                         search_params[key.name] = @raw_data[obj.object_id][field]
                     end
-                    p "SEARCH PARAMS:"
-                    p search_params
                     found = element_query_set.find(search_params)
                     obj.set_loaded_value(element, found[0]) if found
                 end
@@ -524,15 +490,12 @@ module Spider; module Model; module Mappers
                 elements = @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el)}
                 # n <-> n and n|1 <-> 1
                 elements.select{ |n, el| !el.has_single_reverse? }.each do |name, element|
-                    p "I NEED KEYS FOR #{element.name}"
                     if (element.multiple?)
                         set = obj.send(element.name)
                         set.each do |set_obj|
-                            p "1) ADDING DEP #{set_obj} TO #{task.object}"
                             deps << [task, MapperTask.new(set_obj, :keys)]
                         end
                     else
-                        p "2) ADDING DEP #{obj.send(element.name)} TO #{task.object}"
                         deps << [task, MapperTask.new(obj.send(element.name), :keys)]
                     end
                 end
@@ -540,7 +503,6 @@ module Spider; module Model; module Mappers
                     set = obj.send(element.name)
                     set.each do |set_obj|
                         sub_task = MapperTask.new(set_obj, :save)
-                        p "3) ADDING DEP #{task.object}_:keys TO #{sub_task.object}_save"
                         deps << [sub_task, MapperTask.new(obj, :keys)]
                     end
                 end
