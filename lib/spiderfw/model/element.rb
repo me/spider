@@ -59,12 +59,19 @@ module Spider; module Model
             return model.mapper
         end
         
-        def query_set
+        def queryset
             return nil unless model?
             set = QuerySet.new
             set.query = Query.new
             set.model = type
             set.query.condition = @attributes[:condition] if @attributes[:condition]
+            if (@attributes[:request])
+                set.query.request = @attributes[:request]
+            else
+                type.elements.each do |name, el|
+                    set.query.request[name] = true unless el.model?
+                end
+            end
             return set
         end
         
@@ -72,24 +79,8 @@ module Spider; module Model
         # it (adding other elements)
         def clone_model
             return if @cloned_model
-            @cloned_model = @type
             @type = @type.clone
-            @type.instance_variable_set(:"@name", @cloned_model.name)
-            @type.class_eval do
-                @elements = @elements.clone if @elements
-            end
-            @type.instance_eval do
-                def name
-                    return @name
-                end
-            end
-            @type.instance_variable_set(:@name, @type.name)
-            def @type.add_element(name, type, attributes={})
-                el = self.element(name, type, attributes)
-                el.attributes[:added] = true
-                @elements[name] = el
-                @added_elements ||= []; @added_elements << el
-            end
+            @cloned_model = true
         end
 
     end

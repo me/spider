@@ -30,6 +30,10 @@ module Spider; module Model
             @objects[key]
         end
         
+        def []=(key, val)
+            @objects[key] = @model.new(val)
+        end
+        
         def length
             @objects.length
         end
@@ -89,6 +93,7 @@ module Spider; module Model
         def load
             @model.find(@query)
         end
+        
 
         def save_all(params={})
             @objects.each do |obj| 

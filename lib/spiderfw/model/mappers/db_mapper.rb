@@ -7,7 +7,6 @@ module Spider; module Model; module Mappers
 
         def initialize(model, storage)
             super
-            @raw_data = {}
         end
         
         
@@ -166,9 +165,7 @@ module Spider; module Model; module Mappers
         end
         
         def prepare_query(query)
-            @model.primary_keys.each do |key|
-                query.request[key] = true
-            end
+            query = super
             @model.elements.select{ |name, element| !element.model? }.each do |name, element|
                 query.request[element] = true
             end
@@ -229,7 +226,7 @@ module Spider; module Model; module Mappers
             where_sql = ""
             bind_values = []
             joins = []
-            condition.each_with_comparision do |k, v, comp|
+            condition.each_with_comparison do |k, v, comp|
                 where_sql += " #{condition.conjunction} " unless (where_sql.empty?)
                 element = @model.elements[k.to_sym]
                 if (element.model?)
@@ -240,7 +237,7 @@ module Spider; module Model; module Mappers
                     if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_sql = ""
-                        v.each_with_comparision do |el_k, el_v, el_comp|
+                        v.each_with_comparison do |el_k, el_v, el_comp|
                             element_sql += " AND " unless element_sql.empty?
                             field = schema.foreign_key_field(element.name, el_k)
                             op = comp ? comp : '='
@@ -365,7 +362,7 @@ module Spider; module Model; module Mappers
                     sub_obj = element.model.new()
                     element_keys.each do |key|
                         val = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
-                        val = element.mapper.prepare_integrate_value(element.model.elements[key.name].type, val)
+                        val = prepare_integrate_value(element.model.elements[key.name].type, val)
                         sub_obj.set_loaded_value(key, val)
                         obj.set_loaded_value(element, sub_obj)
                     end

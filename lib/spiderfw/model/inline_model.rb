@@ -21,6 +21,10 @@ module Spider; module Model
             
         end
         
+        def mapper
+            return self.class.mapper
+        end
+        
         
         
     end

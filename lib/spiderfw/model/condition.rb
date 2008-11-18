@@ -38,9 +38,9 @@ module Spider; module Model
             #@raw = {}
         end
         
-        def each_with_comparision
+        def each_with_comparison
             self.each do |k, v|
-                yield k, v, @comparisons[k.to_sym]
+                yield k, v, @comparisons[k.to_sym] || '='
             end
         end
         
@@ -121,6 +121,10 @@ module Spider; module Model
             return conj(:and, other)
         end
         alias :& :and
+    
+        def empty?
+            return super && @subconditions.empty?
+        end
     
     end
     

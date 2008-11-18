@@ -20,6 +20,7 @@ module Spider; module Model
             Fixnum => 'int'
         }
         
+        
         # Copies this class' elements to the subclass.
         def self.inherited(subclass)
             # FIXME: might need to clone every element
@@ -55,10 +56,14 @@ module Spider; module Model
             define_method(name) do
                 val = instance_variable_get(ivar)
                 return val if val
+                # TODO PROX: bisogna associare il queryset caricato al model corretto
+                # forse è meglio passarlo direttamente al costruttore?
                 if primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
-                    instance_variable_set(ivar, QuerySet.new)
+                    qs = QuerySet.new
+                    qs.model = self.class.elements[name].model
+                    instance_variable_set(ivar, qs)
                 elsif (self.class.elements[name].model?)
                     instance_variable_set(ivar, self.class.elements[name].type.new)
                 end
@@ -96,6 +101,15 @@ module Spider; module Model
             element(name, type, attributes, &proc)
         end
         
+        # This should be used only on extended models
+        def self.add_element(name, type, attributes={})
+             el = self.element(name, type, attributes)
+             el.attributes[:added] = true
+             @elements[name] = el
+             @added_elements ||= []; @added_elements << el
+        end
+        
+        
         # Saves the element definition and evals it when first needed, avoiding problems with classes not
         # available yet when the model is defined.
         def self.define_elements(&proc)
@@ -103,7 +117,7 @@ module Spider; module Model
         end
         
         def self.create_inline_model(hash)
-            model = Class.new(BaseModel)
+            model = Class.new(InlineModel)
             model.instance_eval do
                 hash.each do |key, val|
                     element(:id, key.class, :primary_key => true)
@@ -115,7 +129,12 @@ module Spider; module Model
                     break
                 end
             end
+            model.data = hash
             return model
+        end
+        
+        def self.submodels
+            elements.select{ |name, el| el.model? }.map{ |name, el| el.model }
         end
 
         
@@ -227,6 +246,10 @@ module Spider; module Model
                     values.each do |key, val|
                         set(key, val)
                     end
+                elsif (values.is_a? BaseModel)
+                    values.each_val do |name, val|
+                        set(name, val) if self.class.has_element?(name)
+                    end
                 elsif (self.class.primary_keys.length == 1) # Single key, single value
                     set(self.class.primary_keys[0], values)
                 end
@@ -264,6 +287,12 @@ module Spider; module Model
         #   Methods for getting information about element values     #
         ##############################################################
 
+        def each_val
+            self.class.elements.select{ |name, el| element_has_value?(name) }.each do |name, el|
+                yield name, get(name)
+            end
+        end
+            
         
         # Returns true if the element instance variable is set
         def element_has_value?(element)
@@ -387,6 +416,21 @@ module Spider; module Model
             '{' +
             self.class.elements.select{ |name, el| element_has_value?(el) } \
                 .map{ |name, el| ":#{name} => #{get(name)}"}.join(',') + '}'
+        end
+        
+        def self.clone
+            cloned = super
+            cloned.instance_variable_set(:"@name", self.name)
+            cloned.class_eval do
+                 @elements = @elements.clone if @elements
+             end
+             cloned.instance_eval do
+                 def name
+                     return @name
+                 end
+             end
+             cloned.instance_variable_set(:'@use_storage', @use_storage)
+             return cloned
         end
         
         

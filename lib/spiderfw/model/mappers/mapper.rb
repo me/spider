@@ -5,6 +5,7 @@ module Spider; module Model
         def initialize(model, storage)
             @model = model
             @storage = storage
+            @raw_data = {}
         end
         
         def execute_action(action, object)
@@ -125,13 +126,27 @@ module Spider; module Model
             end
             @model.primary_keys.each do |key|
                 val = obj.instance_variable_get("@#{key.name}")
-                raise ModelException, "Object's primary keys don't have a value. Can't load object." unless val
+                raise MapperException, "Object's primary keys don't have a value. Can't load object." unless val
                 query.condition[key.name] = val
             end
             load(obj, query)
         end
         
+        def prepare_integrate_value(type, value)
+            raise MapperException, "Unimplemented"
+        end
+        
+        
+        ##############################################################
+        #   Strategy                                                 #
+        ##############################################################
 
+        def prepare_query(query)
+            @model.primary_keys.each do |key|
+                query.request[key] = true
+            end
+            return query
+        end
         
         
         ##############################################################
