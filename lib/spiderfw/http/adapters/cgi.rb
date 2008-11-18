@@ -30,7 +30,7 @@ class CGIIO < Spider::ControllerIO
     
 end
 
-def prepare_request
+def prepare_params
     return {
         'SERVER_NAME' => ENV['SERVER_NAME'],
         'PATH_INFO' => ENV['PATH_INFO'],
@@ -53,14 +53,14 @@ def prepare_request
 end
 
 Spider::Logger.debug('-----------')
-env = Spider::Environment.new
-env.request = prepare_request
-env.protocol = :http
-path = env.request['REQUEST_URI']+''
+controller_request = Spider::Request.new
+controller_request.params = prepare_params
+controller_request.protocol = :http
+path = controller_request.params['REQUEST_URI']+''
 controller_response = Spider::Response.new
 controller_response.body = CGIIO.new($stdout, controller_response)
 begin
-    controller = ::Spider::HTTPController.new(env, controller_response)
+    controller = ::Spider::HTTPController.new(controller_request, controller_response)
     #controller.before(path)
     controller.execute(path)
     #controller.after(path)                

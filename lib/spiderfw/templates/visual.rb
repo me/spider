@@ -18,7 +18,7 @@ module Spider
         def init_template(path=nil)
             path ||= self.class.current_default_template
             template = load_template(path)
-            template.init(@env, @scene)
+            template.init(@request, @scene)
             return template
         end
             

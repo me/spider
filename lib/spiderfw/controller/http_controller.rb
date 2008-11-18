@@ -6,7 +6,7 @@ module Spider
     class HTTPController < Controller
         
         
-        def initialize(env, response, scene=nil)
+        def initialize(request, response, scene=nil)
             @response = response
             @response.status = 200
             @response.headers = {
@@ -20,17 +20,21 @@ module Spider
         
         def execute(action='', *arguments)
             @extensions = {
-                'js' => {:content_type => 'application/javascript'},
-                'html' => {:content_type => 'text/html', :mixin => HTML}
+                'js' => {:format => :js, :content_type => 'application/javascript'},
+                'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
+                'json' => {:format => :json, :content_type => 'text/x-json'}
             }
-            if (action =~ /\.(\w+)$/)
-                @extension = $1
-                if (ext = @extensions[$1])
+            if (action =~ /(.+)\.(\w+)$/)
+                @request.extension = $2
+                if (ext = @extensions[$2])
+                    @request.format = ext[:format]
                     (content_type = ext[:content_type]) && @response.headers['Content-Type'] = content_type
                     (mixin = ext[:mixin]) && extend(mixin)
                 end
+                super($1, *arguments)
+            else
+                super
             end
-            super
         end
         
         

@@ -2,7 +2,7 @@ module Spider
     
     class SpiderController < Controller
         
-        def initialize(env, response, scene=nil)
+        def initialize(request, response, scene=nil)
             Spider.apps.each do |name, app|
                 app_path = app.name.gsub('::', '/')
                 route(Regexp.new("#{app_path}$", Regexp::IGNORECASE), :redirect_to_app)

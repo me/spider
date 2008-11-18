@@ -4,7 +4,7 @@ module Spider
 
     class PageController < AppController
 
-        def initialize(env, response, scene=nil)
+        def initialize(request, response, scene=nil)
             super
             @widgets = {}
         end
@@ -21,7 +21,7 @@ module Spider
         def init_template(path)
             template = load_template(path)
             template.widgets = @widgets
-            template.init(@env, @scene)
+            template.init(@request, @scene)
             return template
         end
         

@@ -8,7 +8,7 @@ module Spider
         route /([\w]+):\/\/([^:\/]+)(:\d+)?/, Spider::HTTPController, 
             :spawn => 1, :remove_params => true
     
-        def initialize(env, response, scene=nil)
+        def initialize(request, response, scene=nil)
             super
             @children = {}
         end

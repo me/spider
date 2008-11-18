@@ -82,15 +82,15 @@ module Spider
             # Spider.logger.debug(@compiled)
         end
         
-        def add_widget(id, widget, env=nil, scene=nil, params=nil, content=nil)
+        def add_widget(id, widget, request=nil, scene=nil, params=nil, content=nil)
             @widgets[id.to_sym] ||= widget
-            widget.env = env if env
+            widget.request = request if request
             widget.scene = scene if scene
             widget.params = params if params
             widget.parse_content_xml(content) if content
         end
         
-        def init(env, scene)
+        def init(request, scene)
             debug("Template init")
             instance_eval(@compiled.init_code, @cache_path+'/init.rb')
         end

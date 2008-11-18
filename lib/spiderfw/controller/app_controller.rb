@@ -2,7 +2,7 @@ module Spider
     
     class AppController < Controller
         
-        def initialize(env, response, scene=nil)
+        def initialize(request, response, scene=nil)
             route 'pub/', :serve_resource
             super
         end

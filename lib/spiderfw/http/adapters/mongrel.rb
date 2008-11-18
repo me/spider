@@ -77,16 +77,16 @@ module Spider; module HTTP
         def process(request, response)
             @server.request_received
             server_vars = request.params.clone
-            env = Spider::Environment.new
-            env.request = normalize_request(request.params.clone)
-            env.protocol = :http
+            controller_request = Spider::Request.new
+            controller_request.params = normalize_request(request.params.clone)
+            controller_request.protocol = :http
             path = request.params['REQUEST_URI']
 
             controller_response = Spider::Response.new
             controller_response.body = MongrelIO.new(response, controller_response)
 
             begin
-                controller = ::Spider::HTTPController.new(env, controller_response)
+                controller = ::Spider::HTTPController.new(controller_request, controller_response)
                 #controller.before(path)
                 controller.execute(path)
                 #controller.after(path)                

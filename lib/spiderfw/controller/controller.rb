@@ -1,5 +1,5 @@
 require 'spiderfw/controller/controller_io'
-require 'spiderfw/controller/environment'
+require 'spiderfw/controller/request'
 require 'spiderfw/controller/response'
 require 'spiderfw/controller/scene'
 require 'spiderfw/templates/visual'
@@ -33,11 +33,11 @@ module Spider
             
         end
         
-        attr_reader :env, :response
+        attr_reader :request, :response
         attr_reader :action
         
-        def initialize(env, response, scene=nil)
-            @env = env
+        def initialize(request, response, scene=nil)
+            @request = request
             @response = response
             @scene = scene || Scene.new
             init
@@ -92,7 +92,7 @@ module Spider
         def dispatched_object(route)
             klass = route.dest
             return klass if klass.class != Class
-            klass.new(@env, @response, @scene)
+            klass.new(@request, @response, @scene)
         end
         
         def before(action='', *arguments)

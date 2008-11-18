@@ -4,7 +4,7 @@ require 'spiderfw/templates/template'
 module Spider
     
     class Widget < Controller
-        attr_accessor :env, :scene, :params
+        attr_accessor :request, :scene, :params
         
         class << self
             
