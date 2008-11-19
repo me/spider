@@ -22,7 +22,8 @@ module Spider
             @extensions = {
                 'js' => {:format => :js, :content_type => 'application/javascript'},
                 'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
-                'json' => {:format => :json, :content_type => 'text/x-json'}
+                #'json' => {:format => :json, :content_type => 'text/x-json'}
+                'json' => {:format => :json, :content_type => 'text/plain'}
             }
             if (action =~ /(.+)\.(\w+)$/)
                 @request.extension = $2
