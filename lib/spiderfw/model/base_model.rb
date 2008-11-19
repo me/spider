@@ -17,7 +17,10 @@ module Spider; module Model
         
         @@map_types = {
             String => 'text',
-            Fixnum => 'int'
+            Text => 'longText',
+            Fixnum => 'int',
+            DateTime => 'dateTime',
+            Bool => 'bool'
         }
         
         

@@ -1,3 +1,5 @@
+require 'spiderfw/model/datatypes'
+
 module Spider 
     
     module Model
