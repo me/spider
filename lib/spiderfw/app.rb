@@ -6,11 +6,12 @@ module Spider
             mod.module_eval do
                 @controller_class ||= :MainController
                 class << self
-                    attr_reader :path, :pub_path, :test_path
+                    attr_reader :path, :pub_path, :test_path, :setup_path
                     
                     def init
                         @pub_path ||= @path+'/public'
                         @test_path ||= @path+'/test'
+                        @setup_path ||= @path+'/setup'
                     end
                     
                     def controller_class
