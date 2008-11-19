@@ -71,7 +71,7 @@ module Spider
                     end
                     if (test_path[0..(try.length-1)] == try)
                         action = test_path[(try.length)..(test_path.length-1)]
-                        params = [path[(try.length)..(path.length-1)]]
+                        params = []
                     end
                 when Regexp
                     action_index = options[:action_match]

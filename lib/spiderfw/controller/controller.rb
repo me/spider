@@ -61,7 +61,13 @@ module Spider
             begin
                 action = self.class.default_action if (action == '')
                 method = action
-                method = $1 if (method =~ /^([^:]+)(:.+)$/)
+                additional_arguments = []
+                if (action =~ /^([^:]+)(:.+)$/)
+                    method = $1
+                elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
+                    method = $1
+                    additional_arguments = [$2]
+                end
                 if (self.class.method_defined?(method.to_sym))
                     layout = self.class.get_layout(method) # FIXME! move to visual somehow
                     if (layout) 
@@ -69,7 +75,7 @@ module Spider
                         debug(layout)
                         layout = layout.render_and_yield(self, method.to_sym, arguments)
                     else 
-                        send(action, *arguments)
+                        send(method, *(arguments+additional_arguments))
                     end
                 elsif (can_dispatch?(:execute, action))
                     run_chain(:execute, action, *arguments)
