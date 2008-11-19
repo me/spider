@@ -105,7 +105,7 @@ module Spider; module Model
              el = self.element(name, type, attributes)
              el.attributes[:added] = true
              @elements[name] = el
-             @added_elements ||= []; @added_elements << el
+             (@added_elements ||= []) << el
         end
         
         

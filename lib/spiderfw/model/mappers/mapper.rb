@@ -22,7 +22,7 @@ module Spider; module Model
         def normalize(obj)
             @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el) }.each do |name, element|
                 val = obj.get(name)
-                next if (val.is_a? (BaseModel) || val.is_a? (QuerySet))
+                next if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
                 if (val.is_a? Array)
                     val.each_index { |i| val[i] = @model.new(val[i]) }
                     obj.set(name, val)

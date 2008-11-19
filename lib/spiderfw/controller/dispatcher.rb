@@ -39,7 +39,9 @@ module Spider
 
         
         def can_dispatch?(method, action)
+            Spider.logger.debug("Can dispatch? #{method}, #{action}")
             d_next = dispatch_next(action)
+            Spider.logger.debug(d_next)
             return false unless d_next && d_next[0].respond_to?(method)
             return true
         end
@@ -64,6 +66,7 @@ module Spider
                 action = nil
                 case try
                 when String
+                    Spider.logger.debug("TRY: #{try}")
                     test_path = path
                     if (options[:ignore_case])
                         test_path = path.downcase
