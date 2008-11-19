@@ -45,6 +45,7 @@ module Spider; module Model
                 type = @@map_types[type]
             elsif (type.class == Hash)
                 type = create_inline_model(type)
+                attributes[:inline] = true
             elsif (type.class == String && !@@base_types[type])
                 require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
                 type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
@@ -85,6 +86,7 @@ module Spider; module Model
             if (proc)
                 raise ModelException, "Element extension is implemented only for n <-> n elements" unless (@elements[name].multiple? && !@elements[name].has_single_reverse?)
                 @elements[name].clone_model
+                @elements[name].attributes[:extended] = true
                 @elements[name].model.class_eval(&proc)
             end
             

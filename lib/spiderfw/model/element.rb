@@ -22,7 +22,11 @@ module Spider; module Model
         end
         
         def multiple?
-            return true if @attributes[:multiple]
+            @attributes[:multiple] ? true : false
+        end
+        
+        def required?
+            @attributes[:required] ? true : false
         end
         
         def model?
@@ -34,7 +38,7 @@ module Spider; module Model
         end
         
         def primary_key?
-            return true if @attributes[:primary_key]
+            @attributes[:primary_key] ? true : false
         end
         
         def has_single_reverse?
@@ -42,7 +46,19 @@ module Spider; module Model
         end
         
         def added?
-            return true if @attributes[:added]
+            @attributes[:added] ? true : false
+        end
+        
+        def inline?
+            @attributes[:inline] ? true : false
+        end
+        
+        def extended?
+            @attributes[:extended] ? true : false
+        end
+        
+        def label
+            return @attributes[:label] || @name
         end
         
         def to_s
