@@ -2,6 +2,7 @@ $:.push(ENV['SPIDER_PATH']+'/lib')
 require 'spiderfw'
 require 'spiderfw/controller/controller_io'
 require 'spiderfw/controller/http_controller'
+require 'cgi'
 
 class CGIIO < Spider::ControllerIO
     attr_reader :headers_sent
@@ -48,15 +49,19 @@ def prepare_params
         'GATEWAY_INTERFACE' => ENV['GATEWAY_INTERFACE'],
         'HTTP_ACCEPT' => ENV['HTTP_ACCEPT'],
         'HTTP_CONNECTION' => ENV['HTTP_CONNECTION'],
-        'REQUEST_METHOD' => ENV['REQUEST_METHOD']
+        'REQUEST_METHOD' => ENV['REQUEST_METHOD'],
+        'QUERY_STRING' => ENV['QUERY_STRING']
     }
 end
 
 Spider::Logger.debug('-----------')
 controller_request = Spider::Request.new
-controller_request.params = prepare_params
+controller_request.env = prepare_params
+Spider::Logger.debug("ENV:")
+Spider::Logger.debug(controller_request.env)
 controller_request.protocol = :http
-path = controller_request.params['REQUEST_URI']+''
+controller_request.parse_query(controller_request.env['QUERY_STRING'])
+path = controller_request.env['REQUEST_PATH']+''
 controller_response = Spider::Response.new
 controller_response.body = CGIIO.new($stdout, controller_response)
 begin
