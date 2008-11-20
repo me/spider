@@ -2,8 +2,10 @@ module Spider; module Model; module Storage
     
     class BaseStorage
         include Spider::Logger
+        attr_reader :url
         
         def initialize(url)
+            @url = url
             parse_url(url)
         end
         
@@ -17,6 +19,12 @@ module Spider; module Model; module Storage
         
         def prepare_value(type, value)
             return value
+        end
+        
+        def ==(storage)
+            return false unless self.class == storage.class
+            return false unless self.url == storage.url
+            return true
         end
         
     end

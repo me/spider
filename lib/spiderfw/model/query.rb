@@ -4,7 +4,7 @@ require 'spiderfw/model/request'
 module Spider; module Model
     
     class Query
-        attr_accessor :order
+        attr_accessor :order, :offset, :limit
         attr_reader :condition, :request
        
        def initialize(condition = nil, request=nil, &proc)

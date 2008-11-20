@@ -44,6 +44,13 @@ module Spider; module Model
             end
         end
         
+        def +(condition)
+            @subconditions += condition.subconditions
+            condition.each_with_comparison do |k, v, c|
+                set(k, v, c)
+            end
+        end
+        
         def <<(condition)
             if (condition.class == self.class)
                 @subconditions << condition
@@ -70,6 +77,12 @@ module Spider; module Model
                 @comparisons[field.to_sym] = comparison
             end
         end
+        
+        def delete(field)
+            super
+            @comparisons.delete[field.to_sym]
+        end
+        
         
         def parse_comparison(comparison)
             if (comparison =~ Regexp.new("(.+)(#{self.class.comparison_operators_regexp})(.+)"))

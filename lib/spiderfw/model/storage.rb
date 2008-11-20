@@ -13,6 +13,11 @@ module Spider; module Model
             end
         end
         
+        module StorageResult
+            attr_accessor :total_rows
+            
+        end
+        
         
         ###############################
         #   Autoload                  #

@@ -1,5 +1,5 @@
 require 'spiderfw/model/mappers/mapper'
-require 'FileUtils'
+require 'fileutils'
 
 module Spider; module Model; module Mappers
 
@@ -22,6 +22,7 @@ module Spider; module Model; module Mappers
             res =  @model.data.map{ |id, val| {primary_key => id, desc => val} }.select do |row|
                 check_condition(query.condition, row)
             end
+            res.extend(Spider::Model::Storage::StorageResult)
             return res
         end
         
@@ -69,17 +70,17 @@ module Spider; module Model; module Mappers
             return query
         end
         
-        def integrate(request, result, obj)
+        def map(request, result, obj)
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
                 next if element.model?
                 result_value = result[element_name]
-                obj.set_loaded_value(element, prepare_integrate_value(element.type, result_value))
+                obj.set_loaded_value(element, prepare_map_value(element.type, result_value))
             end
             return obj
         end
         
-        def prepare_integrate_value(type, value)
+        def prepare_map_value(type, value)
             return value
         end
         

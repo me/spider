@@ -33,6 +33,14 @@ module Spider; module Model
             return true if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
         end
         
+        def integrated?
+            @attributes[:integrated_from] ? true : false
+        end
+        
+        def integrated_from
+            @attributes[:integrated_from]
+        end
+        
         def custom_type?
             return true if type.class.subclass_of?(Spider::Model::Type)
         end
@@ -58,7 +66,7 @@ module Spider; module Model
         end
         
         def label
-            return @attributes[:label] || @name
+            return @attributes[:label] || Inflector.underscore_to_upcasefirst(@name.to_s)
         end
         
         def to_s
@@ -77,12 +85,13 @@ module Spider; module Model
         
         def queryset
             return nil unless model?
-            set = QuerySet.new(type)
+            set_model = @attributes[:queryset_model] ? @attributes[:queryset_model] : type
+            set = QuerySet.new(set_model)
             set.query.condition = @attributes[:condition] if @attributes[:condition]
             if (@attributes[:request])
                 set.query.request = @attributes[:request]
             else
-                type.elements.each do |name, el|
+                set_model.elements.each do |name, el|
                     set.query.request[name] = true unless el.model?
                 end
             end
@@ -91,10 +100,30 @@ module Spider; module Model
         
         # Clones the current model, detaching it from the original class and allowing to modify
         # it (adding other elements)
-        def clone_model
-            return if @cloned_model
-            @type = @type.clone
-            @cloned_model = true
+        def extend_model
+            return if @extended_model
+            orig_type = @type
+            class_name = @type.name
+            @type = Class.new(BaseModel)
+            @type.extend_model(orig_type)
+            @type.instance_variable_set(:"@name", orig_type.name+'.'+@name.to_s)
+            @type.instance_eval do
+                def name
+                    @name
+                end
+                
+                @proxied_type = orig_type
+                # def storage
+                #     # it has only added elements, they will be merged in by the element owner
+                #     require 'spiderfw/model/storage/null_storage'
+                #     return Spider::Model::Storage::NullStorage.new
+                # end
+                def mapper
+                    require 'spiderfw/model/mappers/proxy_mapper'
+                    return @mapper ||= Spider::Model::Mappers::ProxyMapper.new(self, @proxied_type)
+                end
+            end
+            @extended_model = true
         end
 
     end

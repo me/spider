@@ -3,7 +3,7 @@ module Spider; module Model
     class QuerySet
         include Enumerable
         attr_reader :raw_data
-        attr_accessor :query, :model, :owner
+        attr_accessor :query, :model, :owner, :total_rows
 
         def initialize(model, query=nil)
             @query = query || Query.new
@@ -12,6 +12,11 @@ module Spider; module Model
             @raw_data = []
             @owner = nil
             @index_lookup = {}
+            @total_rows = nil
+        end
+        
+        def mapper
+            @model.mapper
         end
 
         # Adds an object to the set. Also stores the raw data if it is passed as the second parameter. 
@@ -88,7 +93,7 @@ module Spider; module Model
         end
         
         def load
-            @model.find(@query)
+            mapper.find(@query, self)
         end
         
 
@@ -101,6 +106,12 @@ module Spider; module Model
         
         def inspect
             return "#{self.class.name}:\n@model=#{@model}, @query=#{query.inspect}, @objects=#{@objects.inspect}"
+        end
+        
+        def to_json
+            return "[" +
+                @objects.map{ |obj| obj.to_json }.join(',') +
+                "]"
         end
         
         # def unit_of_work

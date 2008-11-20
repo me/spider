@@ -63,11 +63,12 @@ module Spider; module Model
             result = fetch(query)
             if (result && result[0])
                 @raw_data[obj.object_id] ||= {}; @raw_data[obj.object_id].merge!(result[0])
-                integrate(query.request, result[0], obj)
+                map(query.request, result[0], obj)
             end
             get_external(obj, query)
             return obj
         end
+        
         
         def find(query, query_set=nil)
             # if (query.class == String)
@@ -75,25 +76,34 @@ module Spider; module Model
             #     q.parse_xsql(query)
             #     query = q
             # end
+            query = prepare_query(query)
+            query.request.total_rows = true unless query.request.total_rows = false
             result = fetch(query)
             set = query_set || QuerySet.new(@model)
             set.index_by(*@model.primary_keys)
             set.query = query
             return set unless result
+            set.total_rows = result.total_rows
             result.each do |row|
-                obj = @model.new
+                obj = set.model.new
                 @raw_data[obj.object_id] = row
-                set << integrate(query.request, row, obj)
+                set << map(query.request, row, obj)
             end
             set = get_external(set, query)
             return set
+        end
+        
+        def count(condition)
+            query = Query.new(condition)
+            result = fetch(query)
+            return result.length
         end
         
         def fetch(query)
             raise MapperException, "Unimplemented"
         end
         
-        def integrate(request, result, obj)
+        def map(request, result, obj)
             raise MapperException, "Unimplemented"
         end
         
@@ -102,15 +112,25 @@ module Spider; module Model
         def get_external(objects, query)
             # Make "objects" an array if it is not an QuerySet; the methods used are common to the two classes
             objects = [objects] unless objects.kind_of?(Spider::Model::QuerySet)
+            get_integrated = {}
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
-                if element.model?
+                next unless element
+                if element.integrated?
+                   get_integrated[element.integrated_from] ||= Request.new
+                   get_integrated[element.integrated_from][element_name] = query.request[element_name]
+                elsif element.model?
                     sub_query = Query.new
                     sub_query.request = ( query.request[element_name].class == Request ) ? query.request[element_name] : nil
                     sub_query.condition = element.attributes[:condition] if element.attributes[:condition]
                     objects = get_external_element(element, sub_query, objects)
                 end
             end
+            get_integrated.each do |integrated, request|
+                sub_query = Query.new(nil, request)
+                objects = get_external_element(integrated, sub_query, objects)
+            end
+                
             return objects
         end
         
@@ -133,7 +153,8 @@ module Spider; module Model
             load(obj, query)
         end
         
-        def prepare_integrate_value(type, value)
+        
+        def prepare_map_value(type, value)
             raise MapperException, "Unimplemented"
         end
         
@@ -146,7 +167,22 @@ module Spider; module Model
             @model.primary_keys.each do |key|
                 query.request[key] = true
             end
+            prepare_query_condition(query.condition)
             return query
+        end
+        
+        # FIXME: better name, move somewhere else
+        def prepare_query_condition(condition)
+            condition.each_with_comparison do |k, v, c|
+                if (@model.elements[k].integrated?)
+                    condition.delete(k)
+                    integrated_from = @model.elements[k].integrated_from
+                    condition.set("#{integrated_from}.name", v, c)
+                end 
+            end
+            condition.subconditions.each do |sub|
+                prepare_query_condition(sub)
+            end
         end
         
         

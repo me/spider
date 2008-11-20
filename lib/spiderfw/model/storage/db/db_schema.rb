@@ -30,6 +30,7 @@ module Spider; module Model; module Storage; module Db
         end
 
         def foreign_key_field(element_name, key_name)
+            return nil unless @foreign_keys[element_name]
             return @foreign_keys[element_name][key_name][:name]
         end
         

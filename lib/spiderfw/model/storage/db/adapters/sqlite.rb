@@ -12,6 +12,7 @@ module Spider; module Model; module Storage; module Db
         def parse_url(url)
             if (url =~ /(.+?):\/\/(.+)/)
                 @file = $2
+                @file = Spider.paths[:root] + '/' + @file[2..-1] if (@file[0..1] == './')
             else
                 raise SQLiteException, "SQLite url '#{url}' is invalid"
             end
@@ -40,15 +41,23 @@ module Spider; module Model; module Storage; module Db
              end
              return value
          end
+         
+         def query(query)
+             @last_query = query
+             super
+         end
 
 
          def execute(sql, *bind_vars)
              connect unless connected?
              if (bind_vars && bind_vars.length > 0)
-                 debug_vars = bind_vars.map{|var| var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                 debug_vars = bind_vars.map{|var| var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
              end
              debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
+
              result = @db.execute(sql, *bind_vars)
+             result.extend(StorageResult)
+             @last_result = result
              if block_given?
                  result.each{ |row| yield row }
                  disconnect
@@ -57,6 +66,7 @@ module Spider; module Model; module Storage; module Db
                  return result
              end
          end
+         
 
          def prepare(sql)
              debug("sqlite preparing: #{sql}")
@@ -66,6 +76,18 @@ module Spider; module Model; module Storage; module Db
 
          def execute_statement(stmt, *bind_vars)
              stmt.execute(bind_vars)
+         end
+         
+         def total_rows
+             return nil unless @last_query
+             q = @last_query
+             unless (q[:offset] || q[:limit])
+                 return @last_result ? @last_result.length : nil
+             end
+             q[:offset] = q[:limit] = nil
+             q[:keys] = ["COUNT(*) AS N"]
+             res = execute(sql_select(q), q[:bind_vars])
+             return res[0]['N']
          end
          
          ##############################################################

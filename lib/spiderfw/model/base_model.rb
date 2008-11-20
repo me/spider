@@ -2,8 +2,10 @@ require 'spiderfw/model/element'
 
 module Spider; module Model
     
+    
     class BaseModel
         include Spider::Logger
+        include DataTypes
         
         @@base_types = {
             'text' => {:klass => String},
@@ -28,6 +30,7 @@ module Spider; module Model
         def self.inherited(subclass)
             # FIXME: might need to clone every element
             subclass.instance_variable_set("@elements", @elements.clone) if @elements
+            subclass.instance_variable_set("@elements_order", @elements_order.clone) if @elements_order
         end
         
         #######################################
@@ -37,6 +40,7 @@ module Spider; module Model
         # Defines an element belonging to the model.
         def self.element(name, type, attributes={}, &proc)
             @elements ||= {}
+            @elements_order ||= []
             default_attributes = case type
             when 'text'
                 {:length => 255}
@@ -54,12 +58,17 @@ module Spider; module Model
                 type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
             end
             @elements[name] = Element.new(name, type, attributes)
+            if (attributes[:element_position])
+                @elements_order.insert(attributes[:element_position], name)
+            else
+                @elements_order << name
+            end
             ivar = :"@#{ name }"
 
             #instance variable getter
             define_method(name) do
                 val = instance_variable_get(ivar)
-                return val if val
+                return val if val != nil
                 if primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
@@ -88,8 +97,9 @@ module Spider; module Model
             
             if (proc)
                 raise ModelException, "Element extension is implemented only for n <-> n elements" unless (@elements[name].multiple? && !@elements[name].has_single_reverse?)
-                @elements[name].clone_model
+                @elements[name].extend_model
                 @elements[name].attributes[:extended] = true
+                @elements[name].attributes[:queryset_model] = self
                 @elements[name].model.class_eval(&proc)
             end
             
@@ -103,9 +113,14 @@ module Spider; module Model
             element(name, type, attributes, &proc)
         end
         
+        def self.choice(name, type, attributes={}, &proc)
+            attributes[:association] = :choice
+            element(name, type, attributes, &proc)
+        end
+        
         # This should be used only on extended models
         def self.add_element(name, type, attributes={})
-             el = self.element(name, type, attributes)
+             el = element(name, type, attributes)
              el.attributes[:added] = true
              @elements[name] = el
              (@added_elements ||= []) << el
@@ -138,6 +153,16 @@ module Spider; module Model
         def self.submodels
             elements.select{ |name, el| el.model? }.map{ |name, el| el.model }
         end
+        
+        def self.extend_model(model, params={})
+            integrated_name = params[:name] || Spider::Inflector.underscore(model.name).gsub('/', '_')
+            integrated = element(integrated_name, model, :integrated_model => true)
+            model.each_element do |el|
+                attributes = el.attributes.clone
+                attributes[:integrated_from] = integrated
+                element(el.name, el.type, attributes)
+            end
+        end
 
         
         #####################################################
@@ -152,21 +177,31 @@ module Spider; module Model
             return false
         end
         
+        def self.to_s
+            self.name
+        end
+        
         ########################################################
         #   Methods returning information about the elements   #
         ########################################################
-        
-        def self.elements
+
+        def self.ensure_elements_eval
             if @elements_definition
                 instance_eval(&@elements_definition)
                 @elements_definition = nil
             end
-            return @elements
         end
         
+        def self.elements
+            ensure_elements_eval
+            return @elements
+        end
+
+        
         def self.each_element
-            elements.each_value do |element|
-                yield element
+            ensure_elements_eval
+            @elements_order.each do |name|
+                yield elements[name]
             end
         end
         
@@ -232,6 +267,9 @@ module Spider; module Model
             end
         end
         
+        def self.count(condition=nil)
+            mapper.count(condition)
+        end
         
         
         #################################################
@@ -335,8 +373,7 @@ module Spider; module Model
         ##############################################################
         
         def storage
-            @storage ||= self.class.storage
-            return @storage
+            return @storage ||= self.class.storage
         end
         
         def use_storage(storage)
@@ -346,8 +383,7 @@ module Spider; module Model
         
         def mapper
             @storage ||= self.class.storage
-            @mapper ||= self.class.get_mapper(@storage)
-            return @mapper
+            return @mapper ||= self.class.get_mapper(@storage)
         end
         
         ##############################################################
@@ -367,7 +403,7 @@ module Spider; module Model
                 raise ModelException, "Can't load object without a query or primary keys set" unless primary_keys_set?
                 query = Query.new
                 self.class.elements.each do |name, element|
-                    query.request[name] if element_has_value?(element)
+                    query.request[name]
                 end
                 self.class.primary_keys.each do |key|
                     query.condition[key.name] = get(key.name)
@@ -414,6 +450,29 @@ module Spider; module Model
             end
         end
         
+        # def self.clone
+        #     cloned = super
+        #     els = @elements
+        #     els_order = @elements_order
+        #     cloned.class_eval do
+        #          @elements = els.clone if els
+        #          @elements_order = els_order.clone if els_order
+        #      end
+        #      cloned.instance_eval do
+        #          def name
+        #              return @name
+        #          end
+        #      end
+        #      cloned.instance_variable_set(:'@use_storage', @use_storage)
+        #      return cloned
+        # end
+        
+        def to_s
+            self.class.each_element do |el|
+                return get(el) if (el.type == 'text' && !el.primary_key?)
+            end
+            return get(elements[@elements_order[0]])
+        end
         
         def inspect
             self.class.name+': {' +
@@ -421,21 +480,14 @@ module Spider; module Model
                 .map{ |name, el| ":#{name} => #{get(name).inspect}"}.join(',') + '}'
         end
         
-        def self.clone
-            cloned = super
-            cloned.instance_variable_set(:"@name", self.name)
-            cloned.class_eval do
-                 @elements = @elements.clone if @elements
-             end
-             cloned.instance_eval do
-                 def name
-                     return @name
-                 end
-             end
-             cloned.instance_variable_set(:'@use_storage', @use_storage)
-             return cloned
-        end
         
+        def to_json
+            return "{" +
+                self.class.elements.select{ |name, el| element_has_value? el }.map{ |name, el| 
+                    "#{name}: "+get(name).to_json
+                }.join(',') +
+                "}"
+        end
         
         
     end

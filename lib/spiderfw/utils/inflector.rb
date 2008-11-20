@@ -21,6 +21,21 @@ module Spider
             tr("-", "_").
             downcase
         end
+        
+        def self.underscore_to_upcasefirst(str)
+            upcasefirst(str.gsub(/_+/, ' '))
+        end
+        
+        def self.upcasefirst(str)
+            # FIXME: move to language specific!
+            no_upcase = ['di', 'da', 'a']
+            res = str.split(' ').map do | p | 
+                l = p.downcase
+                l.gsub(/^[a-z]/){ |a| a.upcase } unless no_upcase.include?(l)
+            end
+            res.join(' ')
+        end
+        
 
     end
 

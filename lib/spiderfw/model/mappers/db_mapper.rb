@@ -1,5 +1,5 @@
 require 'spiderfw/model/mappers/mapper'
-require 'FileUtils'
+require 'fileutils'
 
 module Spider; module Model; module Mappers
 
@@ -143,21 +143,27 @@ module Spider; module Model; module Mappers
         #   Loading methods                                          #
         ##############################################################
         
+        def count(condition)
+            storage_query = prepare_select(query)
+            storage_query[:type] = :count
+            return @storage.query(storage_query)
+        end
+        
         def fetch(query)
-            @model.primary_keys.each do |key|
-                query.request[key.name] = true
+            storage_query = prepare_select(query)
+            if (storage_query)
+                result = @storage.query(storage_query)
+                result.total_rows = @storage.total_rows if (query.request.total_rows) 
             end
-            sql, values = prepare_select(query)
-            result = @storage.execute(sql, values) unless (sql.empty?)
             return result
         end
         
-        def integrate(request, result, obj)
+        def map(request, result, obj)
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
-                next if element.model?
+                next if !element || element.model?
                 result_value = result[@schema.field(element_name)]
-                obj.set_loaded_value(element, prepare_integrate_value(element.type, result_value))
+                obj.set_loaded_value(element, prepare_map_value(element.type, result_value))
             end
             return obj
         end
@@ -175,6 +181,7 @@ module Spider; module Model; module Mappers
             keys = []
             elements.each do |el|
                 element = @model.elements[el.to_sym]
+                next unless element
                 if (element.model? && !element.multiple?)
                     keys += element.model.primary_keys.map{ |key| schema.foreign_key_field(el, key.name) }
                 elsif (!element.model? && !element.added?)
@@ -185,13 +192,22 @@ module Spider; module Model; module Mappers
             join_condition = prepare_join(joins)
             tables = ([@schema.table] + joins.map{ |join| join[0] } + joins.map{ |join| join[1] }).flatten.uniq
             condition = where_sql
-            condition += " AND (#{join_condition})" unless join_condition.empty?
+            unless join_condition.empty?
+                condition += " AND " if condition
+                condition += "(#{join_condition})" 
+            end
             order_sql = prepare_order_sql(query)
-            return "" if (keys.empty? || where_sql.empty?)
-            sql = "SELECT #{keys.join(', ')} FROM #{tables.join(', ')}";
-            sql += " WHERE #{condition}"
-            sql += " ORDER BY #{order_sql}" unless (order_sql.empty?)
-            [sql, bind_values]
+            return nil if (keys.empty?)
+            return {
+                :type => :select,
+                :keys => keys,
+                :tables => tables,
+                :condition => condition,
+                :order => order_sql,
+                :offset => query.offset,
+                :limit => query.limit,
+                :bind_vars => bind_values
+            }
         end
         
         def prepare_join(joins)
@@ -222,6 +238,7 @@ module Spider; module Model; module Mappers
             where_sql = ""
             bind_values = []
             joins = []
+            remaining_condition = Condition.new # TODO: implement
             condition.each_with_comparison do |k, v, comp|
                 where_sql += " #{condition.conjunction} " unless (where_sql.empty?)
                 element = @model.elements[k.to_sym]
@@ -242,14 +259,15 @@ module Spider; module Model; module Mappers
                         end
                         where_sql += "(#{element_sql})"
                     else
-                        if (true) # FIXME: check for (element.storage === self)
+                        if (element.storage == @storage)
                             element_sql, element_values, element_joins = element.mapper.prepare_condition(v)
                             joins += element_joins
                             joins << get_join(element)
                             where_sql += "(#{element_sql}) "
                             bind_values += element_values
                         else
-                            # TODO: add conditions to be checked later
+                           remaining_condition ||= Condition.new
+                           remaining_condition.set(k, comp, v)
                         end
                     end
                 else
@@ -267,6 +285,7 @@ module Spider; module Model; module Mappers
                 sub_sqls << sub_res[0]
                 sub_bind_values << sub_res[1]
                 joins += sub_res[2]
+                remaining_condition += sub_res[3]
             end
             sub_where_sql = sub_sqls.join(" #{condition.conjunction} ")
             unless (sub_where_sql.empty?)
@@ -274,7 +293,7 @@ module Spider; module Model; module Mappers
                 where_sql += "(#{sub_where_sql})"
                 bind_values += sub_bind_values
             end
-            return [where_sql, bind_values, joins]
+            return [where_sql, bind_values, joins, remaining_condition]
         end
         
         def get_join(element)
@@ -311,7 +330,7 @@ module Spider; module Model; module Mappers
             return prepare_value(type, value)
         end
 
-        def prepare_integrate_value(type, value)
+        def prepare_map_value(type, value)
             type = type.respond_to?('basic_type') ? type.basic_type : type
             value = value[0] if value.class == Array
             case type
@@ -319,10 +338,13 @@ module Spider; module Model; module Mappers
                 return value.to_i
             when 'real'
                 return value.to_f
-            when 'dateTime'
-                return DateTime.parse(value)
             when 'bool'
                 return value ? true : false
+            end
+            return nil unless value
+            case type
+            when 'dateTime'
+                return DateTime.parse(value)
             end
             return value
         end
@@ -343,7 +365,7 @@ module Spider; module Model; module Mappers
                     sub_obj = element.model.new()
                     element_keys.each do |key|
                         val = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
-                        val = prepare_integrate_value(element.model.elements[key.name].type, val)
+                        val = prepare_map_value(element.model.elements[key.name].type, val)
                         sub_obj.set_loaded_value(key, val)
                         obj.set_loaded_value(element, sub_obj)
                     end
@@ -389,18 +411,19 @@ module Spider; module Model; module Mappers
                         sub_query.condition << condition_row
                     end
                 end
-                element_query_set = QuerySet.new(element.model)
-                element_query_set.index_by(*index_by)
-                element_query_set = element.mapper.find(sub_query, element_query_set)
-                result = associate_external(element, objects, element_query_set, associations)
+                element_queryset = QuerySet.new(element.model)
+                unless (sub_query.condition.empty?)
+                    element_queryset.index_by(*index_by)
+                    element_queryset = element_queryset.mapper.find(sub_query, element_queryset)
+                end
+                result = associate_external(element, objects, element_queryset, associations)
             end
             return result
         end
         
-        # For each object in an Array or an QuerySet ("objects" param), sets the value of element to the associated
+        # For each object in an Array or a QuerySet ("objects" param), sets the value of element to the associated
         # objects found in element_query_set
         def associate_external(element, objects, element_query_set, associations=nil)
-            print "ASSOCIATING EXTERNAL #{element}"
             primary_keys = @model.primary_keys
             element_keys = element.model.primary_keys
             if (associations) # n <-> n
@@ -414,8 +437,8 @@ module Spider; module Model; module Mappers
                             search_params[key.name] = association_row[key.name]
                         end
                         sub_obj = element_query_set.find(search_params)[0]
-                        element.type.added_elements.each do |added| 
-                            sub_obj.set_loaded_value(added, element.mapper.prepare_integrate_value(added.type, association_row[added.name]))
+                        element.type.added_elements.each do |added|
+                            sub_obj.set_loaded_value(added, element.mapper.prepare_map_value(added.type, association_row[added.name]))
                         end
                         obj.get(element) << sub_obj
                     end
@@ -580,7 +603,8 @@ module Spider; module Model; module Mappers
         
         # Helper function that generates a suitable name for a junction table
         def generate_junction_table_name(element)
-            element_prefix = @storage.table_name(element.type.name.sub('::Models', ''))
+
+            element_prefix = @storage.table_name(element.type.name.sub('::Models', '').gsub('.', '_'))
             model_prefix = @storage.table_name(@model.name.sub('::Models', ''))
             common = -1
             common_prefix = ""

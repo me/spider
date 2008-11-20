@@ -71,6 +71,49 @@ module Spider; module Model; module Storage; module Db
             end
             return db_attributes
         end
+        
+        def query(query)
+            case query[:type]
+            when :select
+                execute(sql_select(query), query[:bind_vars])
+            when :count
+                query[:keys] = 'COUNT(*) AS N'
+                return execute(sql_select(query), query[:bind_vars])[0]['N']
+            end
+        end
+        
+        def sql_select(query)
+            sql = "SELECT #{sql_keys(query)} FROM #{sql_tables(query)} "
+            where = sql_where(query)
+            sql += "WHERE #{where} " if where && !where.empty?
+            order = sql_order(query)
+            sql += "ORDER BY #{order} " if order && !order.empty?
+            limit = sql_limit(query)
+            sql += limit if limit
+            return sql
+        end
+        
+        def sql_keys(query)
+            query[:keys].join(',')
+        end
+        
+        def sql_tables(query)
+            query[:tables].join(',')
+        end
+        
+        def sql_where(query)
+            query[:condition]
+        end
+        
+        def sql_order(query)
+            query[:order] if query[:order] && query[:order].length > 0
+        end
+        
+        def sql_limit(query)
+            sql = ""
+            sql += "LIMIT #{query[:limit]} " if query[:limit]
+            sql += "OFFSET #{query[:offset]} " if query[:offset]
+        end
             
             
         
