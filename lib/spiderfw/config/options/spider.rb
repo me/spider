@@ -37,4 +37,6 @@ module Spider
     
     config_option 'debugger.start', _("Start the debugger")
     
+    config_option 'locale', _("The locale to use")
+    
 end

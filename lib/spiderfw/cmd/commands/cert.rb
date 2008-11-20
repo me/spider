@@ -6,12 +6,12 @@ class CertCommand < CmdParse::Command
     def initialize
         super( 'cert', true, true )
         @short_desc = _("Manage certificates")
-        @description = _("")
+#        @description = _("")
         @path = Spider.paths[:certs]
    
         # start
         generate = CmdParse::Command.new( 'generate', false )
-        generate.short_desc = "Generate new X.509"
+        generate.short_desc = _("Generate new X.509")
         generate.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--path path", _("Where to generate the certificate"), "-p") { |path|
                 @path = path

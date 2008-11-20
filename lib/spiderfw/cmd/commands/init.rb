@@ -6,10 +6,10 @@ class InitCommand < CmdParse::Command
     def initialize
         super( 'init', true, true )
         @short_desc = _("Create a working dir for development or installation")
-        @description = _("")
+#        @description = _("")
 
         app = CmdParse::Command.new( 'app', false )
-        app.short_desc = "Create a new application"
+        app.short_desc = _("Create a new application")
         app.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--path", 
                    _("The path where to create the app (defaults to the app folder under the current path)"),

@@ -7,7 +7,7 @@ class TestCommand < CmdParse::Command
     def initialize
         super( 'test', true, true )
         @short_desc = _("Manage tests")
-        @description = _("")
+#        @description = _("")
         @apps = []
 
         run = CmdParse::Command.new( 'run', false )

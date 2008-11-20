@@ -1,0 +1,148 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Spider \n"
+"POT-Creation-Date: 2008-11-20 23:42+0100\n"
+"PO-Revision-Date: 2008-11-20 22:55+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: lib/spiderfw/cmd/cmd.rb:19
+msgid "Global options:"
+msgstr ""
+
+#: lib/spiderfw/cmd/cmd.rb:20
+msgid "Be verbose when outputting info"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/cert.rb:8
+msgid "Manage certificates"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/cert.rb:14
+msgid "Generate new X.509"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/cert.rb:16
+msgid "Where to generate the certificate"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/console.rb:6
+msgid "Open a console"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/console.rb:12
+msgid "Irb executable to use"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/init.rb:8
+msgid "Create a working dir for development or installation"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/init.rb:12
+msgid "Create a new application"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/init.rb:15
+msgid ""
+"The path where to create the app (defaults to the app folder under the "
+"current path)"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/init.rb:19
+msgid "The module name; by default, the app name will be camelized"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/setup.rb:8
+msgid "Setup an application"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/setup.rb:15
+msgid "Setup to a specific version"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/test.rb:9
+msgid "Manage tests"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/test.rb:14
+msgid "Run tests"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:8
+msgid "Manage internal webserver"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:23
+msgid "The port the webserver should listen on"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:26
+msgid "Which webserver to use; the choices are 'webrick' and 'mongrel'"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:27
+msgid "The webserver %s is not supported"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:30
+msgid "Serve each request spawning a CGI subprocess. Useful in developement."
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:35
+msgid "Using webserver %s"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:36
+msgid "Listening on port %s"
+msgstr ""
+
+#: lib/spiderfw/config/configuration.rb:28
+#: lib/spiderfw/config/configuration.rb:43
+msgid "%s is not a configuration option"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:19
+msgid "The internal server to use"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:22
+msgid "Whether to show the stack trace on error"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:25
+msgid "Reload application and spider sources on each request"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:29
+msgid "The text editor installed on the client"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:32
+msgid "Refresh template cache every time"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:36
+msgid "A list of named storages"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:38
+msgid "Start the debugger"
+msgstr ""
+
+#: lib/spiderfw/model/base_model.rb:365
+msgid "%s is not in the correct format"
+msgstr ""
+
+#: lib/spiderfw/model/datatypes/email.rb:7
+msgid "%s is not a valid e-mail address"
+msgstr ""

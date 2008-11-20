@@ -11,6 +11,7 @@ module Spider; module CommandLine
     class Cmd
 
         def initialize
+            Spider.init
             @cmd = CmdParse::CommandParser.new( true, true )
             @cmd.program_name = "spider"
             #@cmd.program_version = Spider.version.split('.')

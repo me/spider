@@ -6,7 +6,7 @@ class SetupCommand < CmdParse::Command
     def initialize
         super( 'setup', false, true )
         @short_desc = _("Setup an application")
-        @description = _("")
+#        @description = _("")
         @apps = []
         @version = nil
         

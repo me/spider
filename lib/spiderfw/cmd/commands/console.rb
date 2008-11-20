@@ -4,7 +4,7 @@ class ConsoleCommand < CmdParse::Command
     def initialize
         super( 'console', false )
         @short_desc = _("Open a console")
-        @description = _("")
+#        @description = _("")
         @opts = {:irb => 'irb'}
         
         options = CmdParse::OptionParserWrapper.new do |opt|

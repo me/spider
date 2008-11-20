@@ -6,7 +6,7 @@ class WebServerCommand < CmdParse::Command
     def initialize
         super( 'webserver', true, true )
         @short_desc = _("Manage internal webserver")
-        @description = _("")
+#        @description = _("")
         
         @port = 8080
         @server_name = 'mongrel'

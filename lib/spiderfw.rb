@@ -2,6 +2,9 @@
 $SPIDER_PATH = File.expand_path(File.dirname(__FILE__)+'/..')
 $SPIDER_LIB = $SPIDER_PATH+'/lib'
 $SPIDER_RUN_PATH = Dir.pwd
+ENV['GETTEXT_PATH'] += ',' if (ENV['GETTEXT_PATH'])
+ENV['GETTEXT_PATH'] ||= ''
+ENV['GETTEXT_PATH'] += $SPIDER_PATH+'/data/locale,'+$SPIDER_RUN_PATH+'/data/locale'
 #$:.push($SPIDER_LIB+'/spiderfw')
 $:.push(Dir.pwd)
 #p $:
@@ -40,6 +43,7 @@ module Spider
             load_configuration($SPIDER_PATH+'/config')
             load_configuration(@root+'/config')
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
+            GetText.locale = config.get('locale')
 
             if (Spider.config['debugger.start'])
 
@@ -177,15 +181,4 @@ end
 
 # load instead of require for reload_sources to work correctly
 load 'spiderfw/config/options/spider.rb'
-Spider::init()
-
-
-# TMP
-
-def _(string, *arguments)
-    if arguments && arguments.length > 0
-        string.%(arguments) 
-    else
-        string
-    end
-end
+#Spider::init()
