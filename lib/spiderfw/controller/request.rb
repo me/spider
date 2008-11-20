@@ -2,6 +2,7 @@ module Spider
     
     class Request
         attr_accessor :params, :env, :protocol, :format, :extension
+        @@multipart_regexp = /\Amultipart\/form-data.*boundary=\"?([^\";,]+)/n.freeze
         
         # ==== Parameters
         # qs<String>:: The query string.
@@ -77,7 +78,96 @@ module Spider
             parms[key] = normalize_params(parms[key], after, val)
           end
           parms
-        end        
+        end
+        
+        # ==== Parameters
+        # request<IO>:: The raw request.
+        # boundary<String>:: The boundary string.
+        # content_length<Fixnum>:: The length of the content.
+        #
+        # ==== Raises
+        # ControllerExceptions::MultiPartParseError:: Failed to parse request.
+        #
+        # ==== Returns
+        # Hash:: The parsed request.
+        #--
+        # from Merb
+        # da utilizzare
+        def parse_multipart(request, boundary, content_length)
+          boundary = "--#{boundary}"
+          paramhsh = {}
+          buf = ""
+          input = request
+          input.binmode if defined? input.binmode
+          boundary_size = boundary.size + EOL.size
+          bufsize = 16384
+          content_length -= boundary_size
+          status = input.read(boundary_size)
+          raise ControllerExceptions::MultiPartParseError, "bad content body:\n'#{status}' should == '#{boundary + EOL}'"  unless status == boundary + EOL
+          rx = /(?:#{EOL})?#{Regexp.quote(boundary,'n')}(#{EOL}|--)/
+          loop {
+            head = nil
+            body = ''
+            filename = content_type = name = nil
+            read_size = 0
+            until head && buf =~ rx
+              i = buf.index("\r\n\r\n")
+              if( i == nil && read_size == 0 && content_length == 0 )
+                content_length = -1
+                break
+              end
+              if !head && i
+                head = buf.slice!(0, i+2) # First \r\n
+                buf.slice!(0, 2)          # Second \r\n
+                filename = head[FILENAME_REGEX, 1]
+                content_type = head[CONTENT_TYPE_REGEX, 1]
+                name = head[NAME_REGEX, 1]
+
+                if filename && !filename.empty?
+                  body = Tempfile.new(:Merb)
+                  body.binmode if defined? body.binmode
+                end
+                next
+              end
+
+              # Save the read body part.
+              if head && (boundary_size+4 < buf.size)
+                body << buf.slice!(0, buf.size - (boundary_size+4))
+              end
+
+              read_size = bufsize < content_length ? bufsize : content_length
+              if( read_size > 0 )
+                c = input.read(read_size)
+                raise ControllerExceptions::MultiPartParseError, "bad content body"  if c.nil? || c.empty?
+                buf << c
+                content_length -= c.size
+              end
+            end
+
+            # Save the rest.
+            if i = buf.index(rx)
+              body << buf.slice!(0, i)
+              buf.slice!(0, boundary_size+2)
+
+              content_length = -1  if $1 == "--"
+            end
+
+            if filename && !filename.empty?   
+              body.rewind
+              data = { 
+                :filename => File.basename(filename),  
+                :content_type => content_type,  
+                :tempfile => body, 
+                :size => File.size(body.path) 
+              }
+            else
+              data = body
+            end
+            paramhsh = normalize_params(paramhsh,name,data)
+            break  if buf.empty? || content_length == -1
+          }
+          paramhsh
+        end
         
     end
     
