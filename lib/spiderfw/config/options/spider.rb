@@ -35,4 +35,6 @@ module Spider
     
     config_option 'storages', _("A list of named storages"), {:type => Hash}
     
+    config_option 'debugger.start', _("Start the debugger")
+    
 end
