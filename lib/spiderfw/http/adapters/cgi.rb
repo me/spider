@@ -50,17 +50,23 @@ def prepare_params
         'HTTP_ACCEPT' => ENV['HTTP_ACCEPT'],
         'HTTP_CONNECTION' => ENV['HTTP_CONNECTION'],
         'REQUEST_METHOD' => ENV['REQUEST_METHOD'],
-        'QUERY_STRING' => ENV['QUERY_STRING']
+        'QUERY_STRING' => ENV['QUERY_STRING'],
+        'CONTENT_TYPE' => ENV['CONTENT_TYPE'],
+        'CONTENT_LENGTH' => ENV['CONTENT_LENGTH']
     }
 end
 
 Spider::Logger.debug('-----------')
 controller_request = Spider::Request.new
 controller_request.env = prepare_params
-Spider::Logger.debug("ENV:")
-Spider::Logger.debug(controller_request.env)
+if (controller_request.env['REQUEST_METHOD'] == 'POST')
+    body = $stdin.read(controller_request.env['CONTENT_LENGTH'].to_i)
+    Spider::Logger.debug("CGI POST BODY: #{body}")
+    controller_request.parse_query(body)
+else
+    controller_request.parse_query(controller_request.env['QUERY_STRING'])
+end
 controller_request.protocol = :http
-controller_request.parse_query(controller_request.env['QUERY_STRING'])
 path = controller_request.env['REQUEST_PATH']+''
 controller_response = Spider::Response.new
 controller_response.body = CGIIO.new($stdout, controller_response)

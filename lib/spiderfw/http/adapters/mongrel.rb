@@ -115,12 +115,19 @@ module Spider; module HTTP
         end
         
         def process(request, response)
-            ENV['SPIDER_PATH'] = $SPIDER_PATH
-            request.params.each do |key, val|
-                ENV[key] = val
-            end
-            io = IO.popen("ruby "+$SPIDER_PATH+"/lib/spiderfw/http/adapters/cgi.rb")
             
+            ENV['SPIDER_PATH'] = $SPIDER_PATH
+            ['SERVER_NAME', 'PATH_INFO', 'HTTP_ACCEPT_ENCODING', 'HTTP_USER_AGENT', 'SCRIPT_NAME',
+             'SERVER_PROTOCOL', 'HTTP_HOST', 'HTTP_ACCEPT_LANGUAGE', 'SERVER_SOFTWARE', 'REQUEST_PATH',
+             'HTTP_VERSION', 'REQUEST_URI', 'SERVER_PORT', 'GATEWAY_INTERFACE', 'HTTP_ACCEPT', 'HTTP_CONNECTION',
+             'REQUEST_METHOD', 'QUERY_STRING', 'CONTENT_TYPE', 'CONTENT_LENGTH'].each do |key|
+                ENV[key] = request.params[key]
+            end
+            io = IO.popen("ruby "+$SPIDER_PATH+"/lib/spiderfw/http/adapters/cgi.rb", 'r+')
+            
+            while (request.body.gets)
+                io.write($_)
+            end
             headers_sent = false
             while(io.gets)
                 if !response.header_sent
