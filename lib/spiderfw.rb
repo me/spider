@@ -24,7 +24,8 @@ module Spider
         alias :conf :configuration
         
         
-        def init
+        def init(force=false)
+            return if @init_done && !force
             @paths = {}
             @apps_to_load = []
             @apps ||= {}
@@ -44,6 +45,7 @@ module Spider
 
             end
             init_apps
+            @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
             # if (File.exist?(routes_file))
             #     load(routes_file)
