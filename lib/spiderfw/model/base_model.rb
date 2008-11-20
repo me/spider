@@ -57,6 +57,17 @@ module Spider; module Model
                 require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
                 type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
             end
+            if (attributes[:add_reverse])
+                unless (type.elements[attributes[:add_reverse]])
+                    attributes[:reverse] = attributes[:add_reverse]
+                    type.element(attributes[:add_reverse], self, :reverse => name)
+                end
+            elsif (attributes[:add_multiple_reverse])
+                unless (type.elements[attributes[:add_reverse]])
+                    attributes[:reverse] = attributes[:add_multiple_reverse]
+                    type.element(attributes[:add_multiple_reverse], self, :reverse => name, :multiple => true)
+                end
+            end
             @elements[name] = Element.new(name, type, attributes)
             if (attributes[:element_position])
                 @elements_order.insert(attributes[:element_position], name)
@@ -165,6 +176,11 @@ module Spider; module Model
             model.each_element do |el|
                 attributes = el.attributes.clone
                 attributes[:integrated_from] = integrated
+                if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
+                    attributes[:reverse] = add_rev
+                    attributes.delete(:add_reverse)
+                    attributes.delete(:add_multiple_reverse)
+                end 
                 element(el.name, el.type, attributes)
             end
         end
