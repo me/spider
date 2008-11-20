@@ -113,6 +113,11 @@ module Spider; module Model
             element(name, type, attributes, &proc)
         end
         
+        def self.owns_many(name, type, attributes={}, &proc)
+            attributes[:owner] = true
+            has_many(name, type, attributes, &proc)
+        end
+        
         def self.choice(name, type, attributes={}, &proc)
             attributes[:association] = :choice
             element(name, type, attributes, &proc)
@@ -162,6 +167,20 @@ module Spider; module Model
                 attributes[:integrated_from] = integrated
                 element(el.name, el.type, attributes)
             end
+        end
+        
+        def self.group(name, &proc)
+            require 'spiderfw/model/proxy_model'
+            proxy = Class.new(ProxyModel).proxy(name.to_s+'_', self)
+            proxy.instance_eval(&proc)
+            proxy.each_element do |el|
+                element(name.to_s+'_'+el.name.to_s, el.type, el.attributes.clone)
+            end
+            define_method(name) do
+                @proxies ||= {}
+                return @proxies[name] ||= proxy.new
+            end
+            
         end
 
         
