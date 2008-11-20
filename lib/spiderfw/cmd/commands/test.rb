@@ -23,6 +23,7 @@ class TestCommand < CmdParse::Command
             apps = Spider.apps.keys if (!apps || apps.length < 1)
             collector = Test::Unit::Collector::Dir.new()
             apps.each do |name|
+                next unless File.exist?(Spider.apps[name].test_path)
                 collector.collect(Spider.apps[name].test_path)
             end
         end
