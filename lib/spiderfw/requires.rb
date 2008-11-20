@@ -1,4 +1,5 @@
 require 'ruby-debug'
+require 'spiderfw/exceptions'
 require 'spiderfw/utils/monkey/kernel'
 require 'spiderfw/utils/monkey/module'
 require 'spiderfw/utils/monkey/class'

@@ -1,4 +1,1 @@
-
-class VirtualMethodError < RuntimeError
-    
-end
+class FormatError < RuntimeError; end

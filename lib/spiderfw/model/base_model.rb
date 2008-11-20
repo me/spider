@@ -95,6 +95,7 @@ module Spider; module Model
             define_method("#{name}=") do |val|
                 old_val = instance_variable_get(ivar)
                 instance_variable_set(ivar, val)
+                check(name, val)
                 notify_observers(name, old_val)
                 #extend_element(name)
             end
@@ -356,6 +357,22 @@ module Spider; module Model
         # Sets a value without calling the associated setter; used by the mapper
         def set_loaded_value(element, value)
             instance_variable_set("@#{element.name}", value)
+        end
+        
+        def check(name, val)
+            self.class.elements[name].type.check(val) if (self.class.elements[name].type.respond_to?(:check))
+            if (checks = self.class.elements[name].attributes[:check])
+                checks = {(_("%s is not in the correct format") % val) => checks} unless checks.is_a?(Hash)
+                checks.each do |msg, check|
+                    test = case check
+                    when Regexp
+                        msg =~ check
+                    when Proc
+                        Proc.call(msg)
+                    end
+                    raise FormatError, msg unless test
+                end
+            end
         end
             
         
