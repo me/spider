@@ -22,6 +22,7 @@ class SetupCommand < CmdParse::Command
             apps = Spider.apps.keys if (!apps || apps.length < 1)
             apps.each do |name|
                 path = Spider.apps[name].setup_path
+                next unless File.exist?(path)
                 Dir.entries(path).sort.each do |entry|
                     next if (entry[0].chr == '.')
                     Spider.logger.info("Running setup task #{path+'/'+entry}")
