@@ -116,7 +116,7 @@ module Spider; module Model
         
         def table
             return print "Empty\n" if length < 1
-            columns = ENV['COLUMNS'] || 80
+            columns = ENV['COLUMNS'].to_i || 80
             a = to_flat_array
             m_sizes = Hash.new(0) # one separator column
             a.each do |row|
