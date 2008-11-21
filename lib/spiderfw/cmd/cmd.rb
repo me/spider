@@ -14,7 +14,6 @@ module Spider; module CommandLine
             Spider.init
             @cmd = CmdParse::CommandParser.new( true, true )
             @cmd.program_name = "spider"
-            #@cmd.program_version = Spider.version.split('.')
             @cmd.options = CmdParse::OptionParserWrapper.new do |opt|
                 opt.separator _("Global options:")
                 opt.on("--verbose", _("Be verbose when outputting info"), "-v" ) {|t| $verbose = true }

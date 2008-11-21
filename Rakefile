@@ -2,7 +2,7 @@ require 'spiderfw'
 desc "Update pot/po files."
 task :updatepo do
   require 'gettext/utils'
-  GetText.update_pofiles("spider", Dir.glob("{lib,bin}/**/*.{rb,rhtml}"), "Spider #{Spider.version}")
+  GetText.update_pofiles("spider", Dir.glob("{lib,bin}/**/*.{rb,rhtml}"), "Spider #{Spider::VERSION}")
 end
 
 desc "Create mo-files"
