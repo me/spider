@@ -2,7 +2,6 @@ $:.push(ENV['SPIDER_PATH']+'/lib')
 require 'spiderfw'
 require 'spiderfw/controller/controller_io'
 require 'spiderfw/controller/http_controller'
-require 'cgi'
 
 class CGIIO < Spider::ControllerIO
     attr_reader :headers_sent
