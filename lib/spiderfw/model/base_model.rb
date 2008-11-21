@@ -74,12 +74,19 @@ module Spider; module Model
             else
                 @elements_order << name
             end
+            
+            # class element getter
+            (class << self; self; end).instance_eval do
+                define_method("#{name}") do
+                    @elements[name]
+                end
+            end
+            
             ivar = :"@#{ name }"
 
             #instance variable getter
             define_method(name) do
-                val = instance_variable_get(ivar)
-                return val if val != nil
+                return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
                 if primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
@@ -98,13 +105,6 @@ module Spider; module Model
                 check(name, val)
                 notify_observers(name, old_val)
                 #extend_element(name)
-            end
-            
-            # class element getter
-            (class << self; self; end).instance_eval do
-                define_method("#{name}") do
-                    @elements[name]
-                end
             end
             
             if (proc)
@@ -262,6 +262,14 @@ module Spider; module Model
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
         
+        def self.with_mapper(*params, &proc)
+            @mapper_proc = proc
+        end
+        
+        def self.with_mapper_for(*params, &proc)
+            @mapper_proc = proc
+        end
+        
         def self.use_storage(name)
             @use_storage = name
         end
@@ -294,6 +302,9 @@ module Spider; module Model
 
         def self.get_mapper(storage)
             mapper = storage.get_mapper(self)
+            if (@mapper_proc)
+                mapper.instance_eval(&@mapper_proc)
+            end
             return mapper
         end
 
@@ -317,6 +328,7 @@ module Spider; module Model
         #################################################
 
         def initialize(values=nil)
+            @loaded_elements = {}
             @value_observers = {}
             @all_values_observers = []
             @all_values_observers << Proc.new do |element, old_value|
@@ -361,6 +373,7 @@ module Spider; module Model
         # Sets a value without calling the associated setter; used by the mapper
         def set_loaded_value(element, value)
             instance_variable_set("@#{element.name}", value)
+            @loaded_elements[element.name] = true
         end
         
         def check(name, val)
@@ -392,9 +405,18 @@ module Spider; module Model
             
         
         # Returns true if the element instance variable is set
+        #--
+        # FIXME: should probably try to get away without this method
+        # it is the only method that relies on the mapper
         def element_has_value?(element)
             element = element.name if (element.class == Element)
+            return get(element) == nil ? false : true unless mapper.mapped?(element)
             return instance_variable_get(:"@#{element}") == nil ? false : true
+        end
+        
+        def element_loaded?(element)
+            element = element.name if (element.class == Element)
+            return @loaded_elements[element]
         end
         
         # Returns true if all primary keys have a value; false if some primary key
@@ -454,19 +476,23 @@ module Spider; module Model
             mapper.save_all(self)
         end
         
-        def load(query=nil)
-            if (!query)
-                raise ModelException, "Can't load object without a query or primary keys set" unless primary_keys_set?
+        def load(*params)
+            if (params[0].is_a? Query)
+                query = params[0]
+            else
+                return false unless primary_keys_set?
                 query = Query.new
-                self.class.elements.each do |name, element|
+                elements = params.length > 0 ? params : self.class.elements.keys
+                return true unless elements.select{ |el| !element_loaded?(el) }.length > 0
+                elements.each do |name|
                     query.request[name]
                 end
                 self.class.primary_keys.each do |key|
                     query.condition[key.name] = get(key.name)
                 end
             end
-            clear_values()
-            mapper.load(self, query)
+            #clear_values()
+            return mapper.load(self, query) 
         end
         
         
@@ -533,8 +559,8 @@ module Spider; module Model
         
         def inspect
             self.class.name+': {' +
-            self.class.elements.select{ |name, el| element_has_value?(el) } \
-                .map{ |name, el| ":#{name} => #{get(name).inspect}"}.join(',') + '}'
+            self.class.elements_array.select{ |el| element_has_value?(el) && !el.hidden? } \
+                .map{ |el| ":#{el.name} => #{get(el.name).inspect}"}.join(',') + '}'
         end
         
         

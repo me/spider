@@ -1,42 +1,46 @@
 require 'spiderfw/model/storage/db/db_storage'
-require 'sqlite3'
+require 'oci8'
 
 module Spider; module Model; module Storage; module Db
     
-    class SQLite < DbStorage
+    class OCI8 < DbStorage
         
         @reserved_keywords = superclass.reserved_keywords + []
         class << self; attr_reader :reserved_kewords; end
         
         def parse_url(url)
-            if (url =~ /(.+?):\/\/(.+)/)
-                @file = $2
-                @file = Spider.paths[:root] + '/' + @file[2..-1] if (@file[0..1] == './')
+            # db:oracle://<username/password>:connect_role@<database>
+            # where database is
+            # the net8 connect string or
+            # for Oracle cliente 10g or later, //hostname_or_ip:port_no/oracle_sid
+            if (url =~ /.+:\/\/(?:(.+):(.+)(?::(.+))?@)?(.+)/)
+                @user = $1
+                @pass = $2
+                @role = $3
+                @dbname = $4
             else
-                raise ArgumentError, "SQLite url '#{url}' is invalid"
+                raise ArgumentError, "OCI8 url '#{url}' is invalid"
             end
         end
         
          def connect()
-            debug("sqlite opening file #{@file}")
-            @db = SQLite3::Database.new(@file)
-            @db.results_as_hash = true
+            @conn = ::OCI8.new(@user, @pass, @dbname, @role)
+            @conn.autocommit = true
         end
         
         def connected?
-            @db != nil
+            @conn != nil
         end
         
         def disconnect
-            debug("sqlite closing file #{@file}")
-            @db.close
-            @db = nil
+            @conn.logoff()
+            @conn = nil
         end
         
         def prepare_value(type, value)
              case type
              when 'binary'
-                 return SQLite3::Blob.new(value)
+                 return OCI8::BLOB.new(@conn, value)
              end
              return value
          end
@@ -48,36 +52,43 @@ module Spider; module Model; module Storage; module Db
 
 
          def execute(sql, *bind_vars)
+             sql = fix_bind_vars(sql)
              connect unless connected?
              if (bind_vars && bind_vars.length > 0)
                  debug_vars = bind_vars.map{|var| var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
              end
-             debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
-
-             result = @db.execute(sql, *bind_vars)
-             result.extend(StorageResult)
-             @last_result = result
-             if block_given?
-                 result.each{ |row| yield row }
-                 disconnect
-             else
-                 disconnect
+             debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
+             result = []
+             @cursor = @conn.exec(sql, *bind_vars)
+             return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
+             while (h = @cursor.fetch_hash)
+                 if block_given?
+                      yield h
+                  else
+                      result << h
+                  end
+             end
+             unless block_given?
+                 result.extend(StorageResult)
+                 @last_result = result
                  return result
              end
          end
          
 
          def prepare(sql)
-             debug("sqlite preparing: #{sql}")
+             sql = fix_bind_vars(sql)
+             debug("oci8 preparing: #{sql}")
              connect unless connected?
-             return @db.prepare(sql)
+             return @cursor = @conn.prepare(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
-             stmt.execute(bind_vars)
+             stmt.exec(bind_vars)
          end
          
          def total_rows
+             return @cursor.row_count
              return nil unless @last_query
              q = @last_query
              unless (q[:offset] || q[:limit])
@@ -89,26 +100,31 @@ module Spider; module Model; module Storage; module Db
              return res[0]['N']
          end
          
+         # FIXME! change the way queries are passed to storage to avoid this
+         def fix_bind_vars(sql)
+             cnt = 0
+             sql.gsub(/\s\?/){ |m| ':'+(cnt+=1).to_s}
+         end
+         
          ##############################################################
          #   Methods to get information from the db                   #
          ##############################################################
 
          def list_tables
-             return execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").flatten
+             return execute("SELECT table_name FROM user_tables ORDER BY table_name").flatten
          end
 
          def describe_table(table)
              columns = {}
-             stmt = prepare("select * from #{table}")
-             stmt.columns.each_index do |index|
-                 field = stmt.columns[index]
-                 columns[field] ||= {}
-                 if (stmt.types[index] =~ /([^\(]+)(?:\((\d+)\))?/)
-                     columns[field][:type] = $1
-                     columns[field][:length] = $2.to_i if $2
-                 end
+             t = OCI8.describe_table(table)
+             t.columns.each do |c|
+                 columns[c.name] = {
+                     :type => c.data_type,
+                     :length => c.data_size,
+                     :precision => c.precision,
+                     :null => c.nullable?
+                 }
              end
-             stmt.close
              return columns
          end
 
@@ -129,7 +145,7 @@ module Spider; module Model; module Storage; module Db
     #   Exceptions                #
     ###############################
     
-    class SQLiteException < RuntimeError
+    class OCI8Exception < RuntimeError
     end
     
 end; end; end; end

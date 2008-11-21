@@ -49,6 +49,10 @@ module Spider; module Model
             @attributes[:primary_key] ? true : false
         end
         
+        def read_only?
+            @attributes[:read_only] ? true : false
+        end
+        
         def has_single_reverse?
             return true if @attributes[:reverse] && !model.elements[@attributes[:reverse]].multiple?
         end
@@ -63,6 +67,14 @@ module Spider; module Model
         
         def extended?
             @attributes[:extended] ? true : false
+        end
+        
+        def method?
+            @attributes[:method] ? true : false
+        end
+        
+        def hidden?
+            @attributes[:hidden] ? true : false
         end
         
         def label

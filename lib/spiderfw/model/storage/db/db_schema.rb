@@ -18,6 +18,7 @@ module Spider; module Model; module Storage; module Db
         def table=(name)
             @table = name
         end
+        alias :set_table :table=
         
         def field(element_name)
             return nil unless @columns[element_name]

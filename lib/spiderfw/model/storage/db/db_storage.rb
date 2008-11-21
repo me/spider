@@ -75,10 +75,10 @@ module Spider; module Model; module Storage; module Db
         def query(query)
             case query[:type]
             when :select
-                execute(sql_select(query), query[:bind_vars])
+                execute(sql_select(query), *query[:bind_vars])
             when :count
                 query[:keys] = 'COUNT(*) AS N'
-                return execute(sql_select(query), query[:bind_vars])[0]['N']
+                return execute(sql_select(query), *query[:bind_vars])[0]['N']
             end
         end
         

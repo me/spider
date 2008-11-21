@@ -6,6 +6,27 @@ module Spider; module Model
             @model = model
             @storage = storage
             @raw_data = {}
+            @options = {}
+            @no_map_elements = {}
+        end
+        
+        
+        # Configuration methods
+        
+        def no_map(*els)
+            els.each{ |el| @no_map_elements[el] = true }
+        end
+        
+        def mapped?(element)
+            element = element.name if (element.is_a? Element)
+            return false if @no_map_elements[element]
+            return true
+        end
+        
+        # Utility methods
+        
+        def map_elements
+            @model.elements_array.select{ |el| !@no_map_elements[el.name] }
         end
         
         def execute_action(action, object)
@@ -20,7 +41,9 @@ module Spider; module Model
         end
         
         def normalize(obj)
-            @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el) }.each do |name, element|
+            @model.elements.select{ |n, el| 
+                    mapped?(el) &&  el.model? && obj.element_has_value?(el) 
+            }.each do |name, element|
                 val = obj.get(name)
                 next if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
                 if (val.is_a? Array)
@@ -115,7 +138,7 @@ module Spider; module Model
             get_integrated = {}
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
-                next unless element
+                next unless element && mapped?(element)
                 if element.integrated?
                    get_integrated[element.integrated_from] ||= Request.new
                    get_integrated[element.integrated_from][element_name] = query.request[element_name]

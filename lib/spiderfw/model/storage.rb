@@ -9,6 +9,8 @@ module Spider; module Model
                 case adapter
                 when 'sqlite'
                     storage = Db::SQLite.new(url)
+                when 'oci8'
+                    storage = Db::OCI8.new(url)
                 end
             end
         end

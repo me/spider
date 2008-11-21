@@ -15,12 +15,14 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def save(obj)
-            @model.elements.select{ |n, el| obj.element_has_value?(el) && el.has_single_reverse? }.each do |name, element|
+            @model.elements.select{ |n, el| 
+                mapped?(el) && obj.element_has_value?(el) && el.has_single_reverse? 
+            }.each do |name, element|
                 obj.send(name).each { |o| o.send("#{element.attributes[:reverse]}=", obj) }
             end
             super
             @model.elements.select{ |n, el| 
-                el.model? && obj.element_has_value?(el) && el.multiple? && !el.has_single_reverse?
+                mapped?(el) && el.model? && obj.element_has_value?(el) && el.multiple? && !el.has_single_reverse?
             }.each do |name, element|
                 save_associations(obj, element)
             end
@@ -30,7 +32,7 @@ module Spider; module Model; module Mappers
         def save_all(root)
             uow = UnitOfWork.new
             uow.add(root)
-            @model.elements.select{ |n, el| el.model? && root.element_has_value?(el) }.each do |name, element|
+            @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) }.each do |name, element|
                 uow.add(root.send(name))
             end
             uow.run()
@@ -57,7 +59,7 @@ module Spider; module Model; module Mappers
             keys = []
             values = []
             @model.each_element do |element|
-                if (!element.multiple? && obj.element_has_value?(element) && !element.added?)
+                if (mapped?(element) && !element.multiple? && obj.element_has_value?(element) && !element.added?)
                     if (element.model?)
                         element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
@@ -177,11 +179,11 @@ module Spider; module Model; module Mappers
         end
         
         def prepare_select(query)
-            elements = query.request.keys
+            elements = query.request.keys.select{ |k| mapped?(k) }
             keys = []
             elements.each do |el|
                 element = @model.elements[el.to_sym]
-                next unless element
+                next if !element || !element.type
                 if (element.model? && !element.multiple?)
                     keys += element.model.primary_keys.map{ |key| schema.foreign_key_field(el, key.name) }
                 elsif (!element.model? && !element.added?)
@@ -242,6 +244,7 @@ module Spider; module Model; module Mappers
             condition.each_with_comparison do |k, v, comp|
                 where_sql += " #{condition.conjunction} " unless (where_sql.empty?)
                 element = @model.elements[k.to_sym]
+                next unless mapped?(element)
                 if (element.model?)
                     # If the condition is a value, and the model has only one primary key
                     if (!v.is_a?(Condition) && element.model.primary_keys.length == 1)
@@ -538,6 +541,14 @@ module Spider; module Model; module Mappers
         #   Schema management                                        #
         ##############################################################
 
+        def with_schema(*params, &proc)
+            @schema_proc = proc
+        end
+        
+        def define_schema(*params, &proc)
+            @schema_define_proc = proc
+        end
+
         def schema
             @schema ||= get_schema()
             return @schema
@@ -545,7 +556,15 @@ module Spider; module Model; module Mappers
         
         def get_schema()
             schema =  Spider::Model::Storage::Db::DbSchema.new()
-            return generate_schema(schema)
+            if (@schema_define_proc)
+                schema.instance_eval(&@schema_define_proc)
+            else
+                generate_schema(schema)
+            end
+            if (@schema_proc)
+                schema.instance_eval(&@schema_proc)
+            end
+            return schema
         end
 
         def generate_schema(schema)
