@@ -114,6 +114,63 @@ module Spider; module Model
                 "]"
         end
         
+        def table
+            return print "Empty\n" if length < 1
+            columns = ENV['COLUMNS'] || 80
+            a = to_flat_array
+            m_sizes = Hash.new(0) # one separator column
+            a.each do |row|
+                row.each do |key, val|
+                    m_sizes[key] = val.length if val.length > m_sizes[key]
+                end
+            end
+            elements = @model.elements_array.select{ |el| m_sizes[el.name] > 0}
+            elements.each do |el|
+                m_sizes[el.name] = el.label.length if el.label.length > m_sizes[el.name] + 1
+            end
+            reduce = columns.to_f/(m_sizes.values.inject{ |sum, s| sum + s })
+            sizes = {}
+            m_sizes.each_key { |k| sizes[k] = m_sizes[k] * reduce }
+            avail = columns - sizes.values.inject{ |sum, s| sum + s }
+            while avail > 0 && (truncated = sizes.reject{ |k, v| v < m_sizes[k] }).length > 0
+                truncated.each_key do |k|
+                    break if avail < 1
+                    sizes[k] += 1; avail -= 1
+                end
+            end
+            print "\n"
+            1.upto(columns) { print "-" }
+            print "\n"
+            elements.each do |el|
+                print "|"
+                print el.label[0..sizes[el.name]].ljust(sizes[el.name])
+            end
+            print "\n"
+            1.upto(columns) { print "-" }
+            print "\n"
+            a.each do |row|
+                elements.each do |el|
+                    print "|"
+                    print row[el.name][0..sizes[el.name]].ljust(sizes[el.name])
+                end
+                print "\n"
+            end
+            1.upto(columns) { print "-" }
+            print "\n"
+            
+        end
+        
+        def to_flat_array
+            map do |obj|
+                h = {}
+                obj.class.each_element do |el|
+                    h[el.name] = obj.element_has_value?(el) ? obj.get(el).to_s : ''
+                end
+                h
+            end
+        end                    
+                    
+        
         # def unit_of_work
         #     return Spider::Model.unit_of_work
         # end

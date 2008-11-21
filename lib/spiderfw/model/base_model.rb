@@ -232,6 +232,10 @@ module Spider; module Model
             ensure_elements_eval
             return @elements
         end
+        
+        def self.elements_array
+            @elements_order.map{ |key| @elements[key] }
+        end
 
         
         def self.each_element
@@ -521,9 +525,10 @@ module Spider; module Model
         
         def to_s
             self.class.each_element do |el|
-                return get(el) if (el.type == 'text' && !el.primary_key?)
+                return get(el) if (element_has_value?(el) && el.type == 'text' && !el.primary_key?)
             end
-            return get(elements[@elements_order[0]])
+            return get(el) if element_has_value?(el = elements[@elements_order[0]])
+            return ''
         end
         
         def inspect
