@@ -1,6 +1,5 @@
 require 'webrick'
 require 'stringio'
-require 'spiderfw/controller/server_controller'
 
 module Spider; module HTTP
 
