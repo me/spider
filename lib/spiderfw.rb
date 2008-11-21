@@ -16,8 +16,6 @@ require 'spiderfw/requires'
 
 require 'spiderfw/version'
 
-$SPIDER_VERSION = Spider.version
-
 module Spider
     
     class << self
@@ -181,4 +179,4 @@ end
 
 # load instead of require for reload_sources to work correctly
 load 'spiderfw/config/options/spider.rb'
-#Spider::init()
+Spider::init()
