@@ -18,7 +18,12 @@ module Spider; module Model; module Mappers
             @model.elements.select{ |n, el| 
                 mapped?(el) && obj.element_has_value?(el) && el.has_single_reverse? 
             }.each do |name, element|
-                obj.send(name).each { |o| o.send("#{element.attributes[:reverse]}=", obj) }
+                # FIXME: cleanup
+                if (element.multiple?)
+                    obj.send(name).each { |o| o.send("#{element.attributes[:reverse]}=", obj) }
+                else
+                    obj.send(name).send("#{element.attributes[:reverse]}=", obj)
+                end
             end
             super
             @model.elements.select{ |n, el| 
@@ -69,6 +74,7 @@ module Spider; module Model; module Mappers
             @model.each_element do |element|
                 if (mapped?(element) && !element.multiple? && obj.element_has_value?(element) && !element.added?)
                     next if (save_mode == :update && element.primary_key?)
+                    next if (element.model? && !schema.has_foreign_fields?(element))
                     if (element.model?)
                         element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
