@@ -33,6 +33,26 @@ module Spider; module Model; module Storage; module Db
             @db = nil
         end
         
+        def supports_transactions?
+            true
+        end
+        
+        def start_transaction
+            @db.transaction
+        end
+        
+        def commit
+            @db.commit
+        end
+        
+        def rollback
+            @db.rollback
+        end
+        
+        def assigned_key(key)
+            @last_insert_row_id
+        end
+        
         def value_for_save(type, value, save_mode)
              case type
              when 'binary'
@@ -55,6 +75,7 @@ module Spider; module Model; module Storage; module Db
              debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
 
              result = @db.execute(sql, *bind_vars)
+             @last_insert_row_id = @db.last_insert_row_id
              result.extend(StorageResult)
              @last_result = result
              if block_given?

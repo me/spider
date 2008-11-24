@@ -30,27 +30,37 @@ module Spider; module Model; module Mappers
             
         
         def save_all(root)
+            @storage.start_transaction if @storage.supports_transactions?
             uow = UnitOfWork.new
             uow.add(root)
             @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) }.each do |name, element|
                 uow.add(root.send(name))
             end
             uow.run()
+            @storage.commit
         end
         
         # Inserts passed object into the database
         def insert(obj)
-            if (obj.class.managed?)
-                id = next_sequence('id')
-                obj.assign_id(id)
+            @storage.start_transaction if @storage.supports_transactions?
+            if (obj.class.managed? || !obj.primary_keys_set?)
+                assign_primary_keys(obj)
             end
             sql, values = prepare_insert(obj)
             @storage.execute(sql, *values)
+            if (delayed_primary_keys?)
+                @model.primary_keys.each do |key|
+                    obj.set_loaded_value(key, @storage.assigned_key(key))
+                end
+            end
+            @storage.commit
         end
         
         def update(obj)
+            @storage.start_transaction if @storage.supports_transactions?
             sql, values = prepare_update(obj)
             @storage.execute(sql, *values)
+            @storage.commit
         end
         
         
@@ -58,6 +68,7 @@ module Spider; module Model; module Mappers
             values = {}
             @model.each_element do |element|
                 if (mapped?(element) && !element.multiple? && obj.element_has_value?(element) && !element.added?)
+                    next if (save_mode == :update && element.primary_key?)
                     if (element.model?)
                         element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
@@ -165,13 +176,20 @@ module Spider; module Model; module Mappers
         def prepare_select(query)
             elements = query.request.keys.select{ |k| mapped?(k) }
             keys = []
+            types = {}
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type
                 if (element.model? && !element.multiple?)
-                    keys += element.model.primary_keys.map{ |key| schema.foreign_key_field(el, key.name) }
+                    element.model.primary_keys.each do |key|
+                        field = schema.foreign_key_field(el, key.name)
+                        keys << field
+                        types[field]  = map_type(key.type)
+                    end
                 elsif (!element.model? && !element.added?)
-                    keys << schema.qualified_field(el)
+                    field = schema.qualified_field(el)
+                    keys << field
+                    types[field] = map_type(element.type)
                 end
             end
             condition, joins = prepare_condition(query.condition)
@@ -180,8 +198,9 @@ module Spider; module Model; module Mappers
             order = prepare_order(query)
             return nil if (keys.empty?)
             return {
-                :type => :select,
+                :query_type => :select,
                 :keys => keys,
+                :types => types,
                 :tables => tables,
                 :condition => condition,
                 :joins => joins,
@@ -288,6 +307,13 @@ module Spider; module Model; module Mappers
             return o
         end
         
+        def map_type(type)
+            if (type.is_a? Spider::DataTypes::DataType)
+                return type.maps_to
+            end
+            return type
+        end
+        
         def map_value(type, value, mode=nil)
              if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
                  value = type.primary_keys.map{ |key| value.send(key.name) }
@@ -296,7 +322,6 @@ module Spider; module Model; module Mappers
                  when 'bool'
                      value = value ? 1 : 0
                  end
-                 value = value.to_s
              end
              return value
         end
@@ -485,6 +510,18 @@ module Spider; module Model; module Mappers
                 associations[obj_key] << element_values
             end
             return associations
+        end
+        
+        
+        ##############################################################
+        #   Primary keys                                             #
+        ##############################################################
+        
+        def assign_primary_keys(obj)
+        end
+        
+        def delayed_primary_keys?
+            false
         end
 
         

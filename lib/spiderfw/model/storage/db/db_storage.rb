@@ -18,6 +18,40 @@ module Spider; module Model; module Storage; module Db
             return mapper
         end
         
+        def supports_transactions?
+            return false
+        end
+        
+        def start_transaction
+           raise StorageException, "The current storage does not support transactions" 
+        end
+        
+        def in_transaction?
+            return false
+        end
+        
+        def commit
+        end
+        
+        def rollback
+            raise StorageException, "The current storage does not support transactions" 
+        end
+        
+        def lock(table, mode=:exclusive)
+            lockmode = case(mode)
+            when :shared
+                'SHARE'
+            when :row_exclusive
+                'ROW EXCLUSIVE'
+            else
+                'EXCLUSIVE'
+            end
+            execute("LOCK TABLE #{table} IN #{lockmode} MODE")
+        end
+        
+        def assigned_key(name)
+        end
+        
         ##############################################################
         #   Methods used to generate a schema                        #
         ##############################################################
@@ -88,7 +122,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def query(query)
-            case query[:type]
+            case query[:query_type]
             when :select
                 sql, bind_vars = sql_select(query)
                 execute(sql, *bind_vars)
@@ -132,10 +166,14 @@ module Spider; module Model; module Storage; module Db
                     !sql.empty? ? "(#{sql})" : nil
                 else
                     bind_vars << v[2]
-                    "#{v[0]} #{v[1]} ?"
+                    sql_condition_value(v[0], v[1], v[2])
                 end
             end
             return mapped.select{ |p| p != nil}.join(' '+condition[:conj]+' '), bind_vars
+        end
+        
+        def sql_condition_value(key, comp, value)
+            "#{key} #{comp} ?"
         end
         
         def sql_join(joins)
@@ -163,23 +201,32 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_insert(insert)
-            keys = insert[:values].keys
-            values = insert[:values].values
-            value_placeholders = keys.map{'?'}
-            sql = "INSERT INTO #{insert[:table]} (#{keys.join(',')}) VALUES (#{value_placeholders.join(',')})"
-            return [sql, values]
+            sql = "INSERT INTO #{insert[:table]} (#{sql_insert_keys(insert)}) VALUES (#{sql_insert_values(insert)})"
+            return [sql, insert[:values].values]
+        end
+        
+        def sql_insert_keys(insert)
+            insert[:values].keys.join(', ')
+        end
+        
+        def sql_insert_values(insert)
+            insert[:values].values.map{'?'}.join(', ')
         end
             
         def sql_update(update)
-            keys = update[:values].keys
             values = update[:values].values
-            
             sql = "UPDATE #{update[:table]} SET "
-            sql += keys.map{ |key| "#{key} = ?"}.join(',')
+            sql += sql_update_values(update)
             where, bind_vars = sql_condition(update)
             values += bind_vars
             sql += " WHERE #{where}"
             return [sql, values]
+        end
+        
+        def sql_update_values(update)
+            update[:values].map{ |k, v| 
+                "#{k} = ?"
+            }.join(', ')
         end
         
         def sql_delete(delete)
