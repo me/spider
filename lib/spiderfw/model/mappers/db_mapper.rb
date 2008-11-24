@@ -94,7 +94,7 @@ module Spider; module Model; module Mappers
         
         def prepare_update(obj)
             save = prepare_save(obj, :update)
-            condition = Condition.new
+            condition = Condition.new_and
             @model.primary_keys.each do |key|
                 condition[key.name] = map_condition_value(key.type, obj.get(key))
             end
@@ -166,10 +166,12 @@ module Spider; module Model; module Mappers
         end
         
         def prepare_query(query)
-            query = super
+            # FIXME: move to strategy
             @model.elements.select{ |name, element| !element.model? }.each do |name, element|
                 query.request[element] = true
             end
+            super(query)
+           
             return query
         end
         
@@ -179,7 +181,7 @@ module Spider; module Model; module Mappers
             types = {}
             elements.each do |el|
                 element = @model.elements[el.to_sym]
-                next if !element || !element.type
+                next if !element || !element.type || element.integrated?
                 if (element.model? && !element.multiple?)
                     element.model.primary_keys.each do |key|
                         field = schema.foreign_key_field(el, key.name)
@@ -226,6 +228,21 @@ module Spider; module Model; module Mappers
         
         
         def prepare_condition(condition)
+            condition.each_with_comparison do |k, v, comp|
+                # normalize condition values
+                element = @model.elements[k.to_sym]
+                if (!v.is_a?(Condition) && element.model?)
+                    condition.delete(element.name)
+                    if (v.is_a?(BaseModel)) 
+                        element.model.primary_keys.each do |primary_key|
+                            condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
+                        end
+                    elsif (element.model.primary_keys.length == 1)
+                        v = Condition.new({element.model.primary_keys[0].name => v})
+                        condition.set(element.name, '=', v)
+                    end
+                end
+            end 
             bind_values = []
             joins = []
             cond = {}
@@ -236,10 +253,6 @@ module Spider; module Model; module Mappers
                 element = @model.elements[k.to_sym]
                 next unless mapped?(element)
                 if (element.model?)
-                    # If the condition is a value, and the model has only one primary key
-                    if (!v.is_a?(Condition) && element.model.primary_keys.length == 1)
-                        v = Condition.new({element.model.primary_keys[0].name => v})
-                    end
                     if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_sql = ""
@@ -372,7 +385,8 @@ module Spider; module Model; module Mappers
             # If the element is not multiple and all requests are primary keys, we already have all we need
             if ( !element.multiple? &&  (query.request.keys - element_keys.map{ |key| key.name }).size == 0 )
                 objects.each do |obj|
-                    sub_obj = element.model.new()
+                    current_sub = obj.get(element)
+                    sub_obj = current_sub.is_a?(Spider::Model::BaseModel) ? current_sub : element.model.new()
                     element_keys.each do |key|
                         val = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
                         val = map_back_value(element.model.elements[key.name].type, val)
@@ -392,7 +406,7 @@ module Spider; module Model; module Mappers
                     associations = get_associations(element, query, objects)
                     associations.each do |key, rows|
                         rows.each do |row|
-                            condition_row = Condition.new
+                            condition_row = Condition.new_and
                             element_keys.each do |key|
                                 condition_row[key.name] = row[key.name]
                             end
@@ -403,7 +417,7 @@ module Spider; module Model; module Mappers
                     associations = nil
                     objects.each_index do |index|
                         obj = objects[index]
-                        condition_row = Condition.new
+                        condition_row = Condition.new_and
                         if (!element.multiple?) # 1|n <-> 1
                             element_keys.each do |key|
                                 condition_row[key.name] = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
@@ -465,6 +479,8 @@ module Spider; module Model; module Mappers
                     obj.set_loaded_value(element, element_query_set.find(search_params))
                 end
             else # 1|n <-> 1
+                # FIXME: should be already indexed, but is misssing associated objects
+                element_query_set.reindex
                 objects.each do |obj|
                     search_params = {}
                     element_keys.each do |key|

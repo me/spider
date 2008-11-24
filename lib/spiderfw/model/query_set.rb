@@ -58,10 +58,22 @@ module Spider; module Model
         def index_object(obj)
             @index_lookup.keys.each do |index_by|
                 names = index_by.split(',')
-                search_key = names.map{ |name| obj.get(name).to_s }.join(',')
+                search_key = names.map{ |name| 
+                    search_key(obj, name)
+                }.join(',')
                 @index_lookup[index_by][search_key] ||= [] << obj
             end
         end
+        
+        def search_key(obj, name)
+            sub = obj.is_a?(Hash) ? obj[name] : obj.get(name.to_sym)
+            if (sub.is_a?(Spider::Model::BaseModel))
+                @model.elements[name.to_sym].type.primary_keys.map{ |k| sub.get(k).to_s }.join(',')
+            else
+                sub.to_s
+            end
+        end
+                
 
         def each
             @objects.each{ |obj| yield obj }
@@ -77,9 +89,9 @@ module Spider; module Model
         end
         
         def find(params)
-            sorted_keys = params.keys.sort
+            sorted_keys = params.keys.map{|k| k.to_s}.sort.map{|k| k.to_sym}
             index = sorted_keys.map{ |key| key.to_s }.join(',')
-            search_key = sorted_keys.map{ |key| params[key].to_s }.join(',')
+            search_key = sorted_keys.map{ |key| search_key(params, key) }.join(',')
             # TODO: implement find without index
             raise UnimplementedError, "find without an index is not yet implemented" unless @index_lookup[index]
             result = @index_lookup[index][search_key]

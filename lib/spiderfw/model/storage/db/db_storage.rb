@@ -161,7 +161,7 @@ module Spider; module Model; module Storage; module Db
             bind_vars = []
             mapped = condition[:values].map do |v|
                 if (v.is_a? Hash) # subconditions
-                    sql, vals = sql_condition(v)
+                    sql, vals = sql_condition({:condition => v})
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
                 else

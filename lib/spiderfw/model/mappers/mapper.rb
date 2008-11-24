@@ -141,7 +141,7 @@ module Spider; module Model
                 next unless element && mapped?(element)
                 if element.integrated?
                    get_integrated[element.integrated_from] ||= Request.new
-                   get_integrated[element.integrated_from][element_name] = query.request[element_name]
+                   get_integrated[element.integrated_from][element.integrated_from_element] = query.request[element_name]
                 elsif element.model?
                     sub_query = Query.new
                     sub_query.request = ( query.request[element_name].class == Request ) ? query.request[element_name] : nil
@@ -160,6 +160,7 @@ module Spider; module Model
         
         def load_element(obj, element)
             query = Query.new
+            query.condition.conjunction = :and
             if (element.model?)
                 query.request[element] = Request.new
                 element.model.elements.each do |name, el|
@@ -190,6 +191,13 @@ module Spider; module Model
             @model.primary_keys.each do |key|
                 query.request[key] = true
             end
+            query.request.each do |k, v|
+                if (@model.elements[k].integrated?)
+                    integrated_from = @model.elements[k].integrated_from
+                    integrated_from_element = @model.elements[k].integrated_from_element
+                    query.request.request("#{integrated_from.name}.#{integrated_from_element}")
+                end
+            end
             prepare_query_condition(query.condition)
             return query
         end
@@ -200,7 +208,8 @@ module Spider; module Model
                 if (@model.elements[k].integrated?)
                     condition.delete(k)
                     integrated_from = @model.elements[k].integrated_from
-                    condition.set("#{integrated_from}.name", v, c)
+                    integrated_from_element = @model.elements[k].integrated_from_element
+                    condition.set("#{integrated_from}.#{integrated_from_element}", v, c)
                 end 
             end
             condition.subconditions.each do |sub|

@@ -68,6 +68,16 @@ module Spider; module Model
                     type.element(attributes[:add_multiple_reverse], self, :reverse => name, :multiple => true)
                 end
             end
+            if (attributes[:integrated_from])
+                if (attributes[:integrated_from].class == String)
+                    parts = attributes[:integrated_from].split('.')
+                    attributes[:integrated_from] = @elements[parts[0].to_sym]
+                    attributes[:integrated_from_element] = parts[1].to_sym if parts[1]
+                end
+                if (!attributes[:integrated_from_element])
+                    attributes[:integrated_from_element] = name
+                end
+            end
             @elements[name] = Element.new(name, type, attributes)
             if (attributes[:element_position])
                 @elements_order.insert(attributes[:element_position], name)
@@ -86,6 +96,10 @@ module Spider; module Model
 
             #instance variable getter
             define_method(name) do
+                element = self.class.elements[name]
+                if (element.integrated?)
+                    return send(element.integrated_from.name).send(element.integrated_from_element)
+                end
                 return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
                 if primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
@@ -100,6 +114,13 @@ module Spider; module Model
 
             #instance_variable_setter
             define_method("#{name}=") do |val|
+                element = self.class.elements[name]
+                if (element.integrated?)
+                    return element.integrated_from.send("#{element.integrated_from_element}=", val)
+                end
+                if (element.model? && !val.is_a?(BaseModel))
+                    val = element.model.new(val)
+                end
                 old_val = instance_variable_get(ivar)
                 instance_variable_set(ivar, val)
                 check(name, val)
@@ -234,6 +255,7 @@ module Spider; module Model
         end
         
         def self.elements_array
+            ensure_elements_eval
             @elements_order.map{ |key| @elements[key] }
         end
 
@@ -290,7 +312,6 @@ module Spider; module Model
                 end
             end
             type, url = $1, $2
-            Spider.logger.debug("Got storage type #{type}, url #{url}")
             storage = Storage.get_storage(type, url)
             return storage
         end
@@ -527,7 +548,7 @@ module Spider; module Model
             else
                 raise NoMethodError.new(
                 "undefined method `#{method}' for " +
-                "#{self}:#{self.class.name}"
+                "#{self.class.name}"
                 )
             end
         end
@@ -553,7 +574,7 @@ module Spider; module Model
             self.class.each_element do |el|
                 return get(el) if (element_has_value?(el) && el.type == 'text' && !el.primary_key?)
             end
-            return get(el) if element_has_value?(el = elements[@elements_order[0]])
+            return get(el) if element_has_value?(el = self.class.elements_array[0])
             return ''
         end
         

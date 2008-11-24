@@ -41,6 +41,10 @@ module Spider; module Model
             @attributes[:integrated_from]
         end
         
+        def integrated_from_element
+            @attributes[:integrated_from_element]
+        end
+        
         def custom_type?
             return true if type.class.subclass_of?(Spider::Model::Type)
         end

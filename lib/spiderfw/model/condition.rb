@@ -30,6 +30,12 @@ module Spider; module Model
             c << b
         end
         
+        def self.new_and(hash=nil)
+            c = self.new(hash)
+            c.conjunction = :and
+            return c
+        end
+        
         def initialize(hash=nil)
             @conjunction = :or
             @comparisons = {}
@@ -61,18 +67,16 @@ module Spider; module Model
         end
         
         def set(field, comparison, value)
+            field = field.to_s
             parts = field.split('.', 2)
             if (parts[1])
-                p "Parts"
                 self[parts[0]] = get_deep_obj() unless self[parts[0]]
                 self[parts[0]].set(parts[1], comparison, value)
             elsif (self[field])
-                p "has value"
                 c = Condition.new
                 c.set(field, comparison, value)
                 @subconditions << c
             else
-                p "normal"
                 self[field] = value
                 @comparisons[field.to_sym] = comparison
             end
@@ -80,7 +84,7 @@ module Spider; module Model
         
         def delete(field)
             super
-            @comparisons.delete[field.to_sym]
+            @comparisons.delete(field.to_sym)
         end
         
         
