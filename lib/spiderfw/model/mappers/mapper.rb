@@ -131,7 +131,7 @@ module Spider; module Model
         end
         
         # Load external elements, according to query, 
-        # and merge them into an object or an QuerySet
+        # and merge them into an object or a QuerySet
         def get_external(objects, query)
             # Make "objects" an array if it is not an QuerySet; the methods used are common to the two classes
             objects = [objects] unless objects.kind_of?(Spider::Model::QuerySet)

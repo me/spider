@@ -9,7 +9,6 @@ module Spider; module Model; module Storage; module Db
         end
         
         def initialize(url)
-            
             super
         end
         

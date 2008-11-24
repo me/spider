@@ -12,7 +12,7 @@ module Spider; module Model; module Storage; module Db
             # db:oracle://<username/password>:connect_role@<database>
             # where database is
             # the net8 connect string or
-            # for Oracle cliente 10g or later, //hostname_or_ip:port_no/oracle_sid
+            # for Oracle client 10g or later, //hostname_or_ip:port_no/oracle_sid
             if (url =~ /.+:\/\/(?:(.+):(.+)(?::(.+))?@)?(.+)/)
                 @user = $1
                 @pass = $2
@@ -44,12 +44,6 @@ module Spider; module Model; module Storage; module Db
              end
              return value
          end
-         
-         def query(query)
-             @last_query = query
-             super
-         end
-
 
          def execute(sql, *bind_vars)
              sql = fix_bind_vars(sql)
@@ -57,6 +51,7 @@ module Spider; module Model; module Storage; module Db
              if (bind_vars && bind_vars.length > 0)
                  debug_vars = bind_vars.map{|var| var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
              end
+             @last_executed = [sql, bind_vars]
              debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
              result = []
              @cursor = @conn.exec(sql, *bind_vars)
@@ -88,15 +83,10 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             return @cursor.row_count
-             return nil unless @last_query
-             q = @last_query
-             unless (q[:offset] || q[:limit])
-                 return @last_result ? @last_result.length : nil
-             end
-             q[:offset] = q[:limit] = nil
-             q[:keys] = ["COUNT(*) AS N"]
-             res = execute(sql_select(q), q[:bind_vars])
+             #return @cursor.row_count
+             return nil unless @last_executed
+             res = execute("SELECT COUNT(*) AS N FROM (#{@last_executed[0]})", *@last_executed[1])
+             return nil unless res && res[0]
              return res[0]['N']
          end
          
