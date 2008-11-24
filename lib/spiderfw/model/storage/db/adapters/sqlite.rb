@@ -33,7 +33,7 @@ module Spider; module Model; module Storage; module Db
             @db = nil
         end
         
-        def prepare_value(type, value)
+        def value_for_save(type, value, save_mode)
              case type
              when 'binary'
                  return SQLite3::Blob.new(value)

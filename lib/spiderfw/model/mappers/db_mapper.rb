@@ -54,89 +54,73 @@ module Spider; module Model; module Mappers
         end
         
         
-        
-        def prepare_save(obj)
-            keys = []
-            values = []
+        def prepare_save(obj, save_mode)
+            values = {}
             @model.each_element do |element|
                 if (mapped?(element) && !element.multiple? && obj.element_has_value?(element) && !element.added?)
                     if (element.model?)
                         element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
-                            keys.push(schema.foreign_key_field(element.name, key.name))
-                            val = element_val.get(key.name)
-                            val = prepare_value(key.type, val)
-                            values.push(val)
+                            store_key = schema.foreign_key_field(element.name, key.name)
+                            values[store_key] = map_save_value(key.type, element_val.get(key.name), save_mode)
                         end
                     else
-                        keys.push(schema.field(element.name))
-                        val = obj.send(element.name)
-                        val = prepare_value(element.type, val)
-                        values.push(val)
+                        store_key = schema.field(element.name)
+                        values[store_key] = map_save_value(element.type, obj.send(element.name), save_mode)
                     end
                 end
             end
-            keys.flatten!
-            return [keys, values]
+            return {
+                :values => values,
+            }
         end
         
         def prepare_insert(obj)
-            keys, values = prepare_save(obj)
-            value_placeholders = keys.map{'?'}
-            sql = "INSERT INTO #{@schema.table} (#{keys.join(',')}) VALUES (#{value_placeholders.join(',')})"
-            return [sql, values]
+            save = prepare_save(obj, :insert)
+            save[:table] = @schema.table
+            return @storage.sql_insert(save)
         end
         
         def prepare_update(obj)
-            keys, values = prepare_save(obj)
+            save = prepare_save(obj, :update)
             condition = Condition.new
             @model.primary_keys.each do |key|
-                condition[key.name] = obj.get(key)
-            end 
-            sql = "UPDATE #{@schema.table} SET "
-            sql += keys.map{ |key| "#{key} = ?"}.join(',')
-            where_sql, where_values = prepare_condition(condition)
-            sql += " WHERE #{where_sql}"
-            return [sql, values+where_values]
+                condition[key.name] = map_condition_value(key.type, obj.get(key))
+            end
+            save[:condition], save[:joins] = prepare_condition(condition)
+            save[:table] = @schema.table
+            return @storage.sql_update(save)
         end
-            
-        
-        # Prepares a value going to be bound to an insert or update statement
-        # This method is also called by prepare_condition_value
-         def prepare_value(type, value)
-             if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
-                 value = type.primary_keys.map{ |key| value.send(key.name) }
-             else
-                 case type
-                 when 'text'
-                     #value.gsub!("'", "''")
-                     #value = "'#{value}'"
-                 when 'dateTime'
-                     value = value.strftime("%Y-%m-%d %H:%M:%S")
-                 when 'bool'
-                     value = value ? 1 : 0
-                 end
-                 value = value.to_s
-             end
-             return @storage.prepare_value(type, value)
-         end
          
          def save_associations(obj, element)
              # FIXME: this is messy
              table = @schema.junction_table_name(element.name)
              local_values = {}
-             @model.primary_keys.each { |key| local_values[@schema.junction_table_our_field(element.name, key.name)] = prepare_condition_value(key.type, obj.get(key)) }
-             sql = "DELETE FROM #{table} WHERE "
-             sql += local_values.map{ |field, val| "#{field} = ?"}.join(" AND ")
+             @model.primary_keys.each { |key| local_values[@schema.junction_table_our_field(element.name, key.name)] = map_condition_value(key.type, obj.get(key)) }
+             delete = {
+                 :table => table,
+                 :condition => {
+                     :conj => 'AND',
+                     :values => local_values.map{ |field, val| [field, '=', val] }
+                 }
+             }
+             sql, bind_vars = @storage.sql_delete(delete)
+             @storage.execute(sql, *bind_vars)
              #sql += "AND ("+element_values.map{ |field, val| "#{field} <> #{val}"}.join(" OR ")+")"
-             @storage.execute(sql, local_values.map{ |val| val })
+#             @storage.execute(sql, local_values.map{ |val| val })
              obj.get(element).each do |sub_obj|
                  element_values = {}
-                 element.model.primary_keys.each { |key| element_values[@schema.junction_table_their_field(element.name, key.name)] = prepare_value(key.type, sub_obj.get(key))}
-                 element.model.added_elements.each { |added| element_values[@schema.junction_table_added_field(element.name, added.name)] = prepare_value(added.type, sub_obj.get(added)) if (sub_obj.element_has_value?(added)) }
-                 sql = "INSERT INTO #{table} (#{local_values.keys.join(',')}, #{element_values.keys.join(',')}) VALUES ("+
-                         (local_values.values+element_values.values).map{'?'}.join(',') + ")"
-                 @storage.execute(sql, local_values.values + element_values.values)
+                 element.model.primary_keys.each { |key| element_values[@schema.junction_table_their_field(element.name, key.name)] = map_save_value(key.type, sub_obj.get(key), :insert)}
+                 element.model.added_elements.each { |added| element_values[@schema.junction_table_added_field(element.name, added.name)] = map_save_value(added.type, sub_obj.get(added), :insert) if (sub_obj.element_has_value?(added)) }
+                 insert = {
+                     :table => table,
+                     # FIXME: local_values are prepared for condition
+                     :values => local_values.merge(element_values)
+                 }
+                 # sql = "INSERT INTO #{table} (#{local_values.keys.join(',')}, #{element_values.keys.join(',')}) VALUES ("+
+                 #         (local_values.values+element_values.values).map{'?'}.join(',') + ")"
+                 sql, bind_vars = @storage.sql_insert(insert)
+                 @storage.execute(sql, bind_vars)
                  #end
              end
          end
@@ -165,7 +149,7 @@ module Spider; module Model; module Mappers
                 element = @model.elements[element_name]
                 next if !element || element.model?
                 result_value = result[@schema.field(element_name)]
-                obj.set_loaded_value(element, prepare_map_value(element.type, result_value))
+                obj.set_loaded_value(element, map_back_value(element.type, result_value))
             end
             return obj
         end
@@ -190,29 +174,24 @@ module Spider; module Model; module Mappers
                     keys << schema.qualified_field(el)
                 end
             end
-            where_sql, bind_values, joins = prepare_condition(query.condition)
-            join_condition = prepare_join(joins)
+            condition, joins = prepare_condition(query.condition)
+            joins = prepare_joins(joins)
             tables = ([@schema.table] + joins.map{ |join| join[0] } + joins.map{ |join| join[1] }).flatten.uniq
-            condition = where_sql
-            unless join_condition.empty?
-                condition += " AND " if condition
-                condition += "(#{join_condition})" 
-            end
-            order_sql = prepare_order_sql(query)
+            order = prepare_order(query)
             return nil if (keys.empty?)
             return {
                 :type => :select,
                 :keys => keys,
                 :tables => tables,
                 :condition => condition,
-                :order => order_sql,
+                :joins => joins,
+                :order => order,
                 :offset => query.offset,
-                :limit => query.limit,
-                :bind_vars => bind_values
+                :limit => query.limit
             }
         end
         
-        def prepare_join(joins)
+        def prepare_joins(joins)
             h = {}
             joins.each do |join|
                 from_table, to_table, on_fields = join
@@ -223,26 +202,18 @@ module Spider; module Model; module Mappers
                     h[from_table][to_table] = on_fields
                 end
             end
-            sql = ""
-            h.each_key do |from_table|
-                h[from_table].each do |to_table, conditions|
-                    conditions.each do |from_key, to_key|
-                        sql += " AND " unless sql.empty?
-                        sql += "#{from_table}.#{from_key} = #{to_table}.#{to_key}"
-                    end
-                end
-            end
-            return sql
+            return h
         end
         
         
         def prepare_condition(condition)
-            where_sql = ""
             bind_values = []
             joins = []
+            cond = {}
             remaining_condition = Condition.new # TODO: implement
+            cond[:conj] = condition.conjunction.to_s
+            cond[:values] = []
             condition.each_with_comparison do |k, v, comp|
-                where_sql += " #{condition.conjunction} " unless (where_sql.empty?)
                 element = @model.elements[k.to_sym]
                 next unless mapped?(element)
                 if (element.model?)
@@ -253,21 +224,20 @@ module Spider; module Model; module Mappers
                     if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_sql = ""
+                        element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
-                            element_sql += " AND " unless element_sql.empty?
                             field = schema.foreign_key_field(element.name, el_k)
                             op = comp ? comp : '='
-                            element_sql += "#{field} #{op} ?"
-                            bind_values << prepare_condition_value(element.model.elements[el_k.to_sym].type, el_v)
+                            field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
+                            element_cond[:values] << field_cond
                         end
-                        where_sql += "(#{element_sql})"
+                        cond[:values] << element_cond
                     else
                         if (element.storage == @storage)
-                            element_sql, element_values, element_joins = element.mapper.prepare_condition(v)
+                            element_condition, element_joins = element.mapper.prepare_condition(v)
                             joins += element_joins
                             joins << get_join(element)
-                            where_sql += "(#{element_sql}) "
-                            bind_values += element_values
+                            cond[:values] << element_condition
                         else
                            remaining_condition ||= Condition.new
                            remaining_condition.set(k, comp, v)
@@ -276,8 +246,7 @@ module Spider; module Model; module Mappers
                 else
                     field = schema.qualified_field(element.name)
                     op = comp ? comp : '='
-                    where_sql += "#{field} #{op} ?"
-                    bind_values << prepare_condition_value(@model.elements[k.to_sym].type, v)
+                    cond[:values] << [field, op, map_condition_value(@model.elements[k.to_sym].type, v)]
                 end
                 
             end
@@ -285,18 +254,11 @@ module Spider; module Model; module Mappers
             sub_bind_values = []
             condition.subconditions.each do |sub|
                 sub_res = self.prepare_condition(sub)
-                sub_sqls << sub_res[0]
-                sub_bind_values << sub_res[1]
-                joins += sub_res[2]
-                remaining_condition += sub_res[3]
+                cond[:values] << sub_res[0]
+                joins += sub_res[1]
+                remaining_condition += sub_res[2]
             end
-            sub_where_sql = sub_sqls.join(" #{condition.conjunction} ")
-            unless (sub_where_sql.empty?)
-                where_sql = "(#{where_sql}) #{condition.conjunction} " unless (where_sql.empty?)
-                where_sql += "(#{sub_where_sql})"
-                bind_values += sub_bind_values
-            end
-            return [where_sql, bind_values, joins, remaining_condition]
+            return [cond, joins, remaining_condition]
         end
         
         def get_join(element)
@@ -317,23 +279,43 @@ module Spider; module Model; module Mappers
             return join
         end
         
-        def prepare_order_sql(query)
-            sql = ''
+        def prepare_order(query)
+            o = []
             query.order.each do |order|
                 dir = order[1] ? order[1] : ''
-                sql += ', ' unless sql.empty?
-                sql += "#{order[0]} #{dir}"
+                o << [order[0], dir]
             end
-            return sql
+            return o
         end
+        
+        def map_value(type, value, mode=nil)
+             if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
+                 value = type.primary_keys.map{ |key| value.send(key.name) }
+             else
+                 case type
+                 when 'bool'
+                     value = value ? 1 : 0
+                 end
+                 value = value.to_s
+             end
+             return value
+        end
+        
+        # Prepares a value going to be bound to an insert or update statement
+        # This method is also called by map_condition_value
+         def map_save_value(type, value, save_mode)
+             value = map_value(type, value, :save)
+             return @storage.value_for_save(type, value, save_mode)
+         end
 
         # Prepares a value for an sql condition.
-        def prepare_condition_value(type, value)
+        def map_condition_value(type, value)
             return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
-            return prepare_value(type, value)
+            value = map_value(type, value, :condition)
+            return @storage.value_for_condition(type, value)
         end
 
-        def prepare_map_value(type, value)
+        def map_back_value(type, value)
             type = type.respond_to?('basic_type') ? type.basic_type : type
             value = value[0] if value.class == Array
             case type
@@ -368,7 +350,7 @@ module Spider; module Model; module Mappers
                     sub_obj = element.model.new()
                     element_keys.each do |key|
                         val = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
-                        val = prepare_map_value(element.model.elements[key.name].type, val)
+                        val = map_back_value(element.model.elements[key.name].type, val)
                         sub_obj.set_loaded_value(key, val)
                         obj.set_loaded_value(element, sub_obj)
                     end
@@ -441,7 +423,7 @@ module Spider; module Model; module Mappers
                         end
                         sub_obj = element_query_set.find(search_params)[0]
                         element.type.added_elements.each do |added|
-                            sub_obj.set_loaded_value(added, element.mapper.prepare_map_value(added.type, association_row[added.name]))
+                            sub_obj.set_loaded_value(added, element.mapper.map_back_value(added.type, association_row[added.name]))
                         end
                         obj.get(element) << sub_obj
                     end
@@ -475,19 +457,24 @@ module Spider; module Model; module Mappers
             x_table = @schema.junction_table_name(element.name)
             primary_keys = @model.primary_keys
             element_primary_keys = element.model.primary_keys
-            request = "SELECT "+primary_keys.map{ |key| @schema.junction_table_our_field(element.name, key.name) }.join(", ")+", "
-            request += element_primary_keys.map{ |key| @schema.junction_table_their_field(element.name, key.name) }.join(", ")
+            select = {:tables => [x_table]}
+            select[:keys] = primary_keys.map{ |key| @schema.junction_table_our_field(element.name, key.name) }
+            select[:keys] += element_primary_keys.map{ |key| @schema.junction_table_their_field(element.name, key.name) }
             added_elements = element.type.added_elements
             if (added_elements.size > 0)
-                request += ', '
-                request += added_elements.map{ |added| @schema.junction_table_added_field(element.name, added.name) }.join(", ")
+                select[:keys] += added_elements.map{ |added| @schema.junction_table_added_field(element.name, added.name) }
             end
-            condition = " WHERE ("+objects.map{ |obj| 
-                primary_keys.map{ 
-                    |key| @schema.junction_table_our_field(element.name, key.name)+"="+prepare_condition_value( key.type, obj.get(key) ) 
-                }.join(" AND ")  
-            }.join(") OR (")+")"
-            result = @storage.execute(request+" FROM #{x_table} "+condition)
+            condition = {:conj => 'OR', :values => []}
+            objects.each do |obj|
+                sub_cond = {:conj => 'AND', :values => []}
+                primary_keys.each do |key|
+                    sub_cond[:values] << [@schema.junction_table_our_field(element.name, key.name), 
+                        '=', map_condition_value(key.type, obj.get(key))]
+                end
+                condition[:values] << sub_cond
+            end
+            sql, bind_vars = @storage.sql_select(select)
+            result = @storage.execute(sql, *bind_vars)
             associations = {}
             result.each do |row|
                 obj_key = primary_keys.map{ |key| row[@schema.junction_table_our_field(element.name, key.name)] }.join(',')

@@ -177,7 +177,7 @@ module Spider; module Model
         end
         
         
-        def prepare_map_value(type, value)
+        def map_back_value(type, value)
             raise MapperException, "Unimplemented"
         end
         

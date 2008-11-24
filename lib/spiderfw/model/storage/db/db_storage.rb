@@ -71,25 +71,45 @@ module Spider; module Model; module Storage; module Db
             return db_attributes
         end
         
+        ##################################################################
+        #   Preparing values                                             #
+        ##################################################################
+        
+        def value_for_save(type, value, save_mode)
+            return value
+        end
+        
+        def value_for_condition(type, value)
+            return value
+        end
+        
+        def value_to_mapper(type, value)
+            return value
+        end
+        
         def query(query)
             case query[:type]
             when :select
-                execute(sql_select(query), *query[:bind_vars])
+                sql, bind_vars = sql_select(query)
+                execute(sql, *bind_vars)
             when :count
                 query[:keys] = 'COUNT(*) AS N'
-                return execute(sql_select(query), *query[:bind_vars])[0]['N']
+                sql, bind_vars = sql_select(query)
+                return execute(sql, *bind_vars)[0]['N']
             end
         end
         
         def sql_select(query)
+            bind_vars = query[:bind_vars] || []
             sql = "SELECT #{sql_keys(query)} FROM #{sql_tables(query)} "
-            where = sql_where(query)
+            where, vals = sql_condition(query)
+            bind_vars += vals
             sql += "WHERE #{where} " if where && !where.empty?
             order = sql_order(query)
             sql += "ORDER BY #{order} " if order && !order.empty?
             limit = sql_limit(query)
             sql += limit if limit
-            return sql
+            return sql, bind_vars
         end
         
         def sql_keys(query)
@@ -100,18 +120,72 @@ module Spider; module Model; module Storage; module Db
             query[:tables].join(',')
         end
         
-        def sql_where(query)
-            query[:condition]
+        
+        def sql_condition(query)
+            condition = query[:condition]
+            return ['', []] unless (condition && condition[:values])
+            bind_vars = []
+            mapped = condition[:values].map do |v|
+                if (v.is_a? Hash) # subconditions
+                    sql, vals = sql_condition(v)
+                    bind_vars += vals
+                    !sql.empty? ? "(#{sql})" : nil
+                else
+                    bind_vars << v[2]
+                    "#{v[0]} #{v[1]} ?"
+                end
+            end
+            return mapped.select{ |p| p != nil}.join(' '+condition[:conj]+' '), bind_vars
+        end
+        
+        def sql_join(joins)
+            sql = ""
+            joins.each_key do |from_table|
+                joins[from_table].each do |to_table, conditions|
+                    conditions.each do |from_key, to_key|
+                        sql += " AND " unless sql.empty?
+                        sql += "#{from_table}.#{from_key} = #{to_table}.#{to_key}"
+                    end
+                end
+            end
+            return sql
         end
         
         def sql_order(query)
-            query[:order] if query[:order] && query[:order].length > 0
+            return '' unless query[:order]
+            query[:order].map{|o| "#{o[0]} #{o[1]}"}.join(' ,')
         end
         
         def sql_limit(query)
             sql = ""
             sql += "LIMIT #{query[:limit]} " if query[:limit]
             sql += "OFFSET #{query[:offset]} " if query[:offset]
+        end
+        
+        def sql_insert(insert)
+            keys = insert[:values].keys
+            values = insert[:values].values
+            value_placeholders = keys.map{'?'}
+            sql = "INSERT INTO #{insert[:table]} (#{keys.join(',')}) VALUES (#{value_placeholders.join(',')})"
+            return [sql, values]
+        end
+            
+        def sql_update(update)
+            keys = update[:values].keys
+            values = update[:values].values
+            
+            sql = "UPDATE #{update[:table]} SET "
+            sql += keys.map{ |key| "#{key} = ?"}.join(',')
+            where, bind_vars = sql_condition(update)
+            values += bind_vars
+            sql += " WHERE #{where}"
+            return [sql, values]
+        end
+        
+        def sql_delete(delete)
+            where, bind_vars = sql_condition(delete)
+            sql = "DELETE FROM #{delete[:table]} WHERE #{where}"
+            return [sql, bind_vars]
         end
             
             
