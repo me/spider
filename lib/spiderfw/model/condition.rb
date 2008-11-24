@@ -60,6 +60,8 @@ module Spider; module Model
         def <<(condition)
             if (condition.class == self.class)
                 @subconditions << condition
+            elsif (condition.is_a?(Hash))
+                @subconditions << self.class.new(condition)
             elsif (condition.class == String)
                 key, val, comparison = parse_comparison(condition)
                 set(key, val, comparison)

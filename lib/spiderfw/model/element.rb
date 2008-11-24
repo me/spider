@@ -98,6 +98,10 @@ module Spider; module Model
             return nil unless model?
             return model.mapper
         end
+
+        def condition
+            attributes[:condition]
+        end
         
         def queryset
             return nil unless model?

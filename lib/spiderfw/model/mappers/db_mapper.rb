@@ -182,7 +182,7 @@ module Spider; module Model; module Mappers
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
-                if (element.model? && !element.multiple?)
+                if (element.model? && !element.multiple? && schema.has_foreign_fields?(el))
                     element.model.primary_keys.each do |key|
                         field = schema.foreign_key_field(el, key.name)
                         keys << field
@@ -418,22 +418,28 @@ module Spider; module Model; module Mappers
                     objects.each_index do |index|
                         obj = objects[index]
                         condition_row = Condition.new_and
-                        if (!element.multiple?) # 1|n <-> 1
+                        if (!element.multiple? && schema.has_foreign_fields?(element.name)) # 1|n <-> 1
                             element_keys.each do |key|
                                 condition_row[key.name] = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
                             end
                             index_by = element_keys
-                        elsif (element.has_single_reverse?) # 1 <-> n
+                        elsif (element.has_single_reverse?) # 1 <-> n|1
                             sub_request = Request.new
                             @model.primary_keys.each{ |key| sub_request[key.name] = true }
                             sub_query.request[element.attributes[:reverse]] = sub_request
                             @model.primary_keys.each do |key|
                                 condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                             end
-                            @model.primary_keys.each{ |key| index_by << "#{element.attributes[:reverse]}.#{key.name}" }
+                            @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
                         end
                         sub_query.condition << condition_row
                     end
+                end
+                if (element.condition)
+                    new_cond = Condition.new_and
+                    new_cond << element.condition
+                    new_cond << sub_query.condition
+                    sub_query.condition = new_cond
                 end
                 element_queryset = QuerySet.new(element.model)
                 unless (sub_query.condition.empty?)
@@ -467,16 +473,18 @@ module Spider; module Model; module Mappers
                         obj.get(element) << sub_obj
                     end
                 end 
-            elsif (element.multiple? && element.has_single_reverse?) # 1 <-> n"
+            elsif ((element.multiple? || !@schema.has_foreign_fields?(element.name)) && element.has_single_reverse?) # 1 <-> n"
                 # FIXME: should be already indexed!
                 element_query_set.reindex
                 objects.each do |obj|
                     search_params = {}
                     @model.primary_keys.each do |key|
                         field = @schema.field(key.name)
-                        search_params["#{element.attributes[:reverse]}.#{key.name}"] = @raw_data[obj.object_id][field]
+                        search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = @raw_data[obj.object_id][field]
                     end
-                    obj.set_loaded_value(element, element_query_set.find(search_params))
+                    sub_res = element_query_set.find(search_params)
+                    sub_res = sub_res[0] if sub_res && !element.multiple?
+                    obj.set_loaded_value(element, sub_res)
                 end
             else # 1|n <-> 1
                 # FIXME: should be already indexed, but is misssing associated objects

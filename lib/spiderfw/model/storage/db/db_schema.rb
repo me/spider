@@ -34,6 +34,10 @@ module Spider; module Model; module Storage; module Db
             return nil unless @foreign_keys[element_name]
             return @foreign_keys[element_name][key_name][:name]
         end
+
+        def has_foreign_fields?(element_name)
+            return @foreign_keys[element_name] ? true : false
+        end
         
         def column(element_name)
             return @columns[element_name]
