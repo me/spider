@@ -234,6 +234,50 @@ module Spider; module Model; module Storage; module Db
             sql = "DELETE FROM #{delete[:table]} WHERE #{where}"
             return [sql, bind_vars]
         end
+        
+        def sql_create_table(create)
+            name = create[:table]
+            fields = create[:fields]
+            fields.each_key do |field|
+                type = fields[field][:type]
+                attributes = fields[field][:attributes]
+                attributes ||= {}
+                length = attributes[:length]
+                sql_fields += ', ' unless sql_fields.empty?
+                sql_fields += "#{field} #{type}"
+                sql_fields += "(#{length})" if length && length != 0
+            end
+            "CREATE TABLE #{name} (#{sql_fields})"
+        end
+        
+        def sql_alter_table(alter)
+            name = alter[:table]
+            fields = alter[:fields]
+            sqls = []
+            fields.each_key do |field|
+                type = fields[field][:type]
+                attributes = fields[field][:attributes]
+                if (current[field])
+                    if (type != current[field][:type] || attributes[:length] |= current[field][:length])
+                        sql = "ALTER TABLE #{name} ALTER #{field} #{type}"
+                        sql += "(#{attributes[:length]})" if attributes[:length]
+                        sqls << sql
+                    end
+                else
+                    sql = "ALTER TABLE #{name} ADD #{field} #{type}"
+                    sql += "(#{attributes[:length]})" if attributes[:length]
+                    sqls << [sql]
+                end
+            end
+            # if (@config[:drop_fields])
+            #     current.each_key do |field|
+            #         if (!fields[field])
+            #             sql = "ALTER TABLE #{name} DROP #{field}"
+            #             @storage.execute(sql)
+            #         end
+            #     end
+            # end
+        end
             
             
         

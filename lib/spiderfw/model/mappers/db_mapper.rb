@@ -725,16 +725,11 @@ module Spider; module Model; module Mappers
 
         def create_table(name, fields)
             sql_fields = ""
-            fields.each_key do |field|
-                type = fields[field][:type]
-                attributes = fields[field][:attributes]
-                attributes ||= {}
-                length = attributes[:length]
-                sql_fields += ', ' unless sql_fields.empty?
-                sql_fields += "#{field} #{type}"
-                sql_fields += "(#{length})" if length && length != 0
-            end
-            @storage.execute("CREATE TABLE #{name} (#{sql_fields})")
+            sql = @storage.sql_create_table({
+                :table => name,
+                :fields => fields
+            })
+            @storage.execute(sql)
         end
 
         def alter_table(name, fields, force=nil)
@@ -754,29 +749,13 @@ module Spider; module Model; module Mappers
                 end
                 raise SchemaSyncUnsafeConversionException.new(unsafe) unless unsafe.empty?
             end
-            fields.each_key do |field|
-                type = fields[field][:type]
-                attributes = fields[field][:attributes]
-                if (current[field])
-                    if (type != current[field][:type] || attributes[:length] |= current[field][:length])
-                        sql = "ALTER TABLE #{name} ALTER #{field} #{type}"
-                        sql += "(#{attributes[:length]})" if attributes[:length]
-                        @storage.execute(sql)
-                    end
-                else
-                    sql = "ALTER TABLE #{name} ADD #{field} #{type}"
-                    sql += "(#{attributes[:length]})" if attributes[:length]
-                    @storage.execute(sql)
-                end
+            sqls = @storage.sql_alter_table({
+                :table => name,
+                :fields => fields
+            })
+            sqls.each do |sql|
+                @storage.execute(sql)
             end
-            # if (@config[:drop_fields])
-            #     current.each_key do |field|
-            #         if (!fields[field])
-            #             sql = "ALTER TABLE #{name} DROP #{field}"
-            #             @storage.execute(sql)
-            #         end
-            #     end
-            # end
         end
         
         def safe_schema_conversion(old_type, new_type)
