@@ -7,6 +7,8 @@ module Spider; module Model
         include Spider::Logger
         include DataTypes
         
+        class <<self; attr_reader :integrated_models; end
+        
         @@base_types = {
             'text' => {:klass => String},
             'longText' => {:klass => String},
@@ -31,6 +33,10 @@ module Spider; module Model
             # FIXME: might need to clone every element
             subclass.instance_variable_set("@elements", @elements.clone) if @elements
             subclass.instance_variable_set("@elements_order", @elements_order.clone) if @elements_order
+        end
+        
+        def self.app
+            @app ||= self.parent_module
         end
         
         #######################################
@@ -193,8 +199,15 @@ module Spider; module Model
         end
         
         def self.extend_model(model, params={})
+            if (model == superclass) # first undo table per class inheritance
+                @elements = {}
+                @elements_order = []
+            end 
             integrated_name = params[:name] || Spider::Inflector.underscore(model.name).gsub('/', '_')
-            integrated = element(integrated_name, model, :integrated_model => true)
+            @extended_models ||= {}
+            @extended_models[model] = integrated_name
+            integrated_attributes = {:integrated_model => true}
+            integrated = element(integrated_name, model, integrated_attributes)
             model.each_element do |el|
                 attributes = el.attributes.clone
                 attributes[:integrated_from] = integrated
@@ -393,8 +406,9 @@ module Spider; module Model
         
         # Sets a value without calling the associated setter; used by the mapper
         def set_loaded_value(element, value)
-            instance_variable_set("@#{element.name}", value)
-            @loaded_elements[element.name] = true
+            element_name = element.is_a?(Element) ? element.name : element
+            instance_variable_set("@#{element_name}", value)
+            @loaded_elements[element_name] = true
         end
         
         def check(name, val)
@@ -546,6 +560,14 @@ module Spider; module Model
                 query.condition[element.to_sym] = args[0]
                 load(query)
             else
+                if (self.class.integrated_models)
+                    self.class.integrated_models.each do |model, name|
+                        obj = send(name)
+                        if (obj.respond_to?(method))
+                            return obj.send(method, *args)
+                        end
+                    end
+                end
                 raise NoMethodError.new(
                 "undefined method `#{method}' for " +
                 "#{self.class.name}"
@@ -574,14 +596,15 @@ module Spider; module Model
             self.class.each_element do |el|
                 return get(el) if (element_has_value?(el) && el.type == 'text' && !el.primary_key?)
             end
-            return get(el) if element_has_value?(el = self.class.elements_array[0])
+            el = self.class.elements_array[0]
+            return get(el) if element_has_value?(el)
             return ''
         end
         
         def inspect
             self.class.name+': {' +
             self.class.elements_array.select{ |el| element_has_value?(el) && !el.hidden? } \
-                .map{ |el| ":#{el.name} => #{get(el.name).inspect}"}.join(',') + '}'
+                .map{ |el| ":#{el.name} => #{get(el.name).to_s}"}.join(',') + '}'
         end
         
         

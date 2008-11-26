@@ -7,6 +7,7 @@ module Spider
                 @controller_class ||= :MainController
                 class << self
                     attr_reader :path, :pub_path, :test_path, :setup_path
+                    attr_reader :short_prefix
                     
                     def init
                         @pub_path ||= @path+'/public'

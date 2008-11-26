@@ -60,12 +60,6 @@ module Spider; module Model; module Storage; module Db
              end
              return value
          end
-         
-         def query(query)
-             @last_query = query
-             super
-         end
-
 
          def execute(sql, *bind_vars)
              connect unless connected?

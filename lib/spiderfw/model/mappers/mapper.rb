@@ -82,7 +82,7 @@ module Spider; module Model
         ##############################################################        
         
         def load(obj, query)
-            query = prepare_query(query)
+            query = prepare_query(query, obj)
             result = fetch(query)
             if (result && result[0])
                 @raw_data[obj.object_id] ||= {}; @raw_data[obj.object_id].merge!(result[0])
@@ -135,6 +135,7 @@ module Spider; module Model
         def get_external(objects, query)
             # Make "objects" an array if it is not an QuerySet; the methods used are common to the two classes
             objects = [objects] unless objects.kind_of?(Spider::Model::QuerySet)
+            got_external = {}
             get_integrated = {}
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
@@ -146,10 +147,12 @@ module Spider; module Model
                     sub_query = Query.new
                     sub_query.request = ( query.request[element_name].class == Request ) ? query.request[element_name] : nil
                     sub_query.condition = element.attributes[:condition] if element.attributes[:condition]
+                    got_external[element] = true
                     objects = get_external_element(element, sub_query, objects)
                 end
             end
             get_integrated.each do |integrated, request|
+                next if got_external[integrated]
                 sub_query = Query.new(nil, request)
                 objects = get_external_element(integrated, sub_query, objects)
             end
@@ -187,9 +190,9 @@ module Spider; module Model
         #   Strategy                                                 #
         ##############################################################
 
-        def prepare_query(query)
+        def prepare_query(query, obj=nil)
             @model.primary_keys.each do |key|
-                query.request[key] = true
+                query.request[key] = true unless obj && obj.element_loaded?(key)
             end
             query.request.each do |k, v|
                 if (@model.elements[k].integrated?)
@@ -209,7 +212,7 @@ module Spider; module Model
                     condition.delete(k)
                     integrated_from = @model.elements[k].integrated_from
                     integrated_from_element = @model.elements[k].integrated_from_element
-                    condition.set("#{integrated_from}.#{integrated_from_element}", v, c)
+                    condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
                 end 
             end
             condition.subconditions.each do |sub|

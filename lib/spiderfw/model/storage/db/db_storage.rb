@@ -4,8 +4,14 @@ module Spider; module Model; module Storage; module Db
     
     class DbStorage < Spider::Model::Storage::BaseStorage
         @reserved_keywords = ['from', 'order', 'where']
-        def self.reserved_keywords
-            @reserved_keywords
+        @safe_conversions = {
+            'TEXT' => ['LONGTEXT'],
+            'INT' => ['TEXT', 'LONGTEXT', 'REAL'],
+            'REAL' => ['TEXT']
+        }
+
+        class << self
+            attr_reader :reserved_keywords, :safe_conversions
         end
         
         def initialize(url)
@@ -69,7 +75,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns the db type corresponding to an element type
-        def column_type(type)
+        def column_type(type, attributes)
             case type
             when 'text'
                 'TEXT'
@@ -122,6 +128,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def query(query)
+            @last_query = query
             case query[:query_type]
             when :select
                 sql, bind_vars = sql_select(query)
@@ -238,6 +245,7 @@ module Spider; module Model; module Storage; module Db
         def sql_create_table(create)
             name = create[:table]
             fields = create[:fields]
+            sql_fields = ''
             fields.each_key do |field|
                 type = fields[field][:type]
                 attributes = fields[field][:attributes]
@@ -251,24 +259,21 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_alter_table(alter)
-            name = alter[:table]
-            fields = alter[:fields]
+            current = alter[:current]
+            table_name = alter[:table]
+            add_fields = alter[:add_fields]
+            alter_fields = alter[:alter_fields]
             sqls = []
-            fields.each_key do |field|
-                type = fields[field][:type]
-                attributes = fields[field][:attributes]
-                if (current[field])
-                    if (type != current[field][:type] || attributes[:length] |= current[field][:length])
-                        sql = "ALTER TABLE #{name} ALTER #{field} #{type}"
-                        sql += "(#{attributes[:length]})" if attributes[:length]
-                        sqls << sql
-                    end
-                else
-                    sql = "ALTER TABLE #{name} ADD #{field} #{type}"
-                    sql += "(#{attributes[:length]})" if attributes[:length]
-                    sqls << [sql]
-                end
+            
+            add_fields.each do |field|
+                name, type, attributes = field
+                sqls << sql_add_field(table_name, name, type, attributes)
             end
+            alter_fields.each do |field|
+                name, type, attributes = field
+                sqls << sql_alter_field(table_name, name, type, attributes)
+            end
+            return sqls
             # if (@config[:drop_fields])
             #     current.each_key do |field|
             #         if (!fields[field])
@@ -277,6 +282,51 @@ module Spider; module Model; module Storage; module Db
             #         end
             #     end
             # end
+        end
+        
+        def sql_table_field(name, type, attributes)
+            f = "#{name} #{type}"
+            if attributes[:length] && attributes[:length] != 0
+                f += "(#{attributes[:length]})"
+            elsif attributes[:precision]
+                f += "(#{attributes[:precision]}"
+                f += "#{attributes[:scale]}" if attributes[:scale]
+                f += ")"
+            end
+            return f
+        end
+        
+        def sql_add_field(table_name, name, type, attributes)
+            "ALTER TABLE #{table_name} ADD #{sql_table_field(name, type, attributes)}"
+        end
+        
+        def sql_alter_field(table_name, name, type, attributes)
+            "ALTER TABLE #{table_name} ALTER #{sql_table_field(name, type, attributes)}"
+        end
+        
+        def schema_field_equal?(current, field)
+            attributes = field[:attributes]
+           return true if current[:type] == field[:type] && current[:length] == attributes[:length] && current[:precision] == attributes[:precision]
+           return true if (current[:length] == 0 && !field[:length]) || (!current[:length] && field[:length] == 0)
+           return true if (current[:precision] == 0 && !field[:precision]) || (!current[:precision] && field[:precision] == 0)     
+           return false
+        end
+        
+        def safe_schema_conversion?(current, field)
+            attributes = field[:attributes]
+            safe = self.class.safe_conversions
+            if (current[:type] != field[:type])
+                if safe[current[:type]] && safe[current[:type]].include?(field[:type])
+                    return true 
+                else
+                    return false
+                end
+            end
+            return true if ((!current[:length] || current[:length] == 0) \
+                            || (attributes[:length] && current[:length] <= attributes[:length])) && \
+                           ((!current[:precision] || current[:precision] == 0) \
+                           || (attributes[:precision] && current[:precision] <= attributes[:precision]))
+            return false
         end
             
             

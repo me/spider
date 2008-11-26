@@ -6,7 +6,12 @@ module Spider; module Model; module Storage; module Db
     class OCI8 < DbStorage
         
         @reserved_keywords = superclass.reserved_keywords + []
-        class << self; attr_reader :reserved_kewords; end
+        @safe_conversions = {
+            'CHAR' => ['VARCHAR', 'CLOB'],
+            'VARCHAR' => ['CLOB'],
+            'NUMBER' => ['VARCHAR']
+        }
+        class << self; attr_reader :reserved_kewords, :safe_conversions end
         
         def parse_url(url)
             # db:oracle://<username/password>:connect_role@<database>
@@ -32,6 +37,11 @@ module Spider; module Model; module Storage; module Db
             @conn != nil
         end
         
+        def connection
+            connect unless connected?
+            @conn
+        end
+        
         def disconnect
             @conn.logoff()
             @conn = nil
@@ -42,8 +52,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def start_transaction
-            connect unless connected?
-            @conn.autocommit = false
+            connection.autocommit = false
         end
         
         def in_transaction?
@@ -67,14 +76,13 @@ module Spider; module Model; module Storage; module Db
          end
 
          def execute(sql, *bind_vars)
-             connect unless connected?
              if (bind_vars && bind_vars.length > 0)
                  debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
              end
              @last_executed = [sql, bind_vars]
              debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
              result = []
-             @cursor = @conn.exec(sql, *bind_vars)
+             @cursor = connection.exec(sql, *bind_vars)
              return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
              while (h = @cursor.fetch_hash)
                  if block_given?
@@ -92,10 +100,8 @@ module Spider; module Model; module Storage; module Db
          
 
          def prepare(sql)
-             sql = fix_bind_vars(sql)
              debug("oci8 preparing: #{sql}")
-             connect unless connected?
-             return @cursor = @conn.prepare(sql)
+             return @cursor = connection.parse(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
@@ -105,6 +111,10 @@ module Spider; module Model; module Storage; module Db
          def total_rows
              #return @cursor.row_count
              return nil unless @last_executed
+             q = @last_query
+             unless (q[:offset] || q[:limit])
+                 return @last_result ? @last_result.length : nil
+             end
              res = execute("SELECT COUNT(*) AS N FROM (#{@last_executed[0]})", *@last_executed[1])
              return nil unless res && res[0]
              return res[0]['N']
@@ -155,6 +165,10 @@ module Spider; module Model; module Storage; module Db
              }.join(', ')
          end
          
+         def sql_alter_field(table_name, name, type, attributes)
+             "ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"
+         end
+         
          ##############################################################
          #   Methods to get information from the db                   #
          ##############################################################
@@ -165,26 +179,92 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
-             t = OCI8.describe_table(table)
+             t = connection.describe_table(table)
              t.columns.each do |c|
                  columns[c.name] = {
-                     :type => c.data_type,
+                     :type => c.data_type.to_s.upcase,
                      :length => c.data_size,
                      :precision => c.precision,
                      :null => c.nullable?
                  }
+                 columns[c.name].delete(:length) if (columns[c.name][:precision])
              end
              return columns
          end
 
          def table_exists?(table)
              begin
-                 stmt = prepare("select * from #{table}")
-                 stmt.close
+                 connection.describe_table(table)
+                 Spider.logger.debug("TABLE EXISTS #{table}")
                  return true
-             rescue SQLite3::SQLException
+             rescue OCIError
                  return false
              end
+         end
+         
+         # Schema methods
+         
+         def column_type(type, attributes)
+             case type
+             when 'text'
+                 'VARCHAR2'
+             when 'longText'
+                 'CLOB'
+             when 'int'
+                 'NUMBER'
+             when 'real'
+                 'FLOAT'
+             when 'dateTime'
+                 'DATE'
+             when 'binary'
+                 'BLOB'
+             when 'bool'
+                 'NUMBER'
+             end
+         end
+         
+         def column_attributes(type, attributes)
+             db_attributes = {}
+             case type
+             when 'text'
+                 db_attributes[:length] = attributes[:length] || 255
+             when 'longText'
+                 db_attributes[:length] = attributes[:length] if (attributes[:length])
+             when 'bool'
+             when 'int'
+                 db_attributes[:precision] = attributes[:precision] || 38
+             when 'real'
+                 # FIXME
+                 db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
+             when 'binary'
+                 db_attributes[:length] = attributes[:length] if (attributes[:length])
+             when 'bool'
+                 db_attributes[:precision] = 1
+             end
+             return db_attributes
+         end
+         
+         def table_name(name)
+             table_name = name.to_s.gsub('::', '_')
+             while (table_name.length > 30)
+                 parts = table_name.split('_')
+                 max = 0
+                 max_i = nil
+                 parts.each_index do |i|
+                     if (parts[i].length > max)
+                         max = parts[i].length
+                         max_i = i
+                     end
+                 end
+                 parts[max_i] = parts[max_i][0..-2]
+                 table_name = parts.join('_')
+                 table_name.gsub!('_+', '_')
+             end
+             return table_name.upcase
+         end
+         
+         def column_name(name)
+             super.upcase
          end
          
         

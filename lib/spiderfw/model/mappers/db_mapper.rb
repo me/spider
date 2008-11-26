@@ -164,19 +164,29 @@ module Spider; module Model; module Mappers
         def map(request, result, obj)
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
-                next if !element || element.model?
+                next if !element
+                if (element.model? && @schema.has_foreign_fields?(element.name))
+                    sub_obj = element.model.new
+                    element.model.primary_keys.each do |key|
+                        sub_obj.set_loaded_value(key, result[@schema.foreign_key_field(element_name, key.name)])
+                    end
+                    obj.set_loaded_value(element, sub_obj)
+                end
+                next if element.model?
                 result_value = result[@schema.field(element_name)]
                 obj.set_loaded_value(element, map_back_value(element.type, result_value))
             end
             return obj
         end
         
-        def prepare_query(query)
+        def prepare_query(query, obj=nil)
             # FIXME: move to strategy
-            @model.elements.select{ |name, element| !element.model? }.each do |name, element|
+            @model.elements.select{ |name, element| 
+                !element.model? && (!obj || !obj.element_loaded?(element))
+            }.each do |name, element|
                 query.request[element] = true
             end
-            super(query)
+            super(query, obj)
            
             return query
         end
@@ -489,6 +499,9 @@ module Spider; module Model; module Mappers
                         search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = @raw_data[obj.object_id][field]
                     end
                     sub_res = element_query_set.find(search_params)
+                    sub_res.each do |sub_obj|
+                        sub_obj.set_loaded_value(element.attributes[:reverse], obj)
+                    end
                     sub_res = sub_res[0] if sub_res && !element.multiple?
                     obj.set_loaded_value(element, sub_res)
                 end
@@ -622,22 +635,25 @@ module Spider; module Model; module Mappers
         end
 
         def generate_schema(schema)
-            schema.table = @storage.table_name(@model.name.sub('::Models', ''))
+            n = @model.name.sub('::Models', '')
+            n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
+            schema.table = @storage.table_name(n)
             @model.each_element do |element|
                 if (!element.model?)
                     type = element.custom_type? ? element.type.class.maps_to : element.type
                     schema.set_column(element.name,
                         :name => @storage.column_name(element.name),
-                        :type => @storage.column_type(type),
+                        :type => @storage.column_type(type, element.attributes),
                         :attributes => @storage.column_attributes(type, element.attributes)
                     )
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
                     if (!element.multiple?) # 1/n <-> 1
                         element.type.primary_keys.each do |key|
+                            next if key.model?
                             #key_column = element.mapper.schema.column(key.name)
                             schema.set_foreign_key(element.name, key.name, 
                                 :name => @storage.column_name("#{element.name}_#{key.name}"),
-                                :type => @storage.column_type(key.type),
+                                :type => @storage.column_type(key.type, key.attributes),
                                 :attributes => @storage.column_attributes(key.type, key.attributes)
                             )
                         end
@@ -649,21 +665,21 @@ module Spider; module Model; module Mappers
                         @model.primary_keys.each do |key|
                             junction_table[:ours][key.name] = {
                                 :name => @storage.column_name("#{@model.short_name}_#{key.name}"),
-                                :type => @storage.column_type(key.type),
+                                :type => @storage.column_type(key.type, key.attributes),
                                 :attributes => @storage.column_attributes(key.type, key.attributes)
                             }
                         end
                         element.type.primary_keys.each do |key|
                             junction_table[:theirs][key.name] ={
                                 :name => @storage.column_name("#{element.name}_#{key.name}"),
-                                :type => @storage.column_type(key.type),
+                                :type => @storage.column_type(key.type, key.attributes),
                                 :attributes => @storage.column_attributes(key.type, key.attributes)
                             }
                         end
                         element.type.added_elements.each do |added|
                             junction_table[:added][added.name] = {
                                 :name => @storage.column_name(added.name),
-                                :type => @storage.column_type(added.type),
+                                :type => @storage.column_type(added.type, added.attributes),
                                 :attributes => @storage.column_attributes(added.type, added.attributes)
                             }
                         end
@@ -678,7 +694,11 @@ module Spider; module Model; module Mappers
         def generate_junction_table_name(element)
 
             element_prefix = @storage.table_name(element.type.name.sub('::Models', '').gsub('.', '_'))
+            if element.type.app && element.type.app.short_prefix
+                element_prefix.sub!(element.type.app.name, element.type.app.short_prefix) 
+            end
             model_prefix = @storage.table_name(@model.name.sub('::Models', ''))
+            model_prefix.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
             common = -1
             common_prefix = ""
             model_prefix.split(//).each_index do |i|
@@ -707,7 +727,7 @@ module Spider; module Model; module Mappers
             end
             parts = [model_part, element_part].sort
             table_name = common_prefix + parts.join('_x_')
-            return table_name
+            return @storage.table_name(table_name)
         end
         
         private :generate_junction_table_name
@@ -724,7 +744,6 @@ module Spider; module Model; module Mappers
         end
 
         def create_table(name, fields)
-            sql_fields = ""
             sql = @storage.sql_create_table({
                 :table => name,
                 :fields => fields
@@ -734,40 +753,49 @@ module Spider; module Model; module Mappers
 
         def alter_table(name, fields, force=nil)
             current = @storage.describe_table(name)
+            add_fields = []
+            alter_fields = []
             unless (force)
                 unsafe = []
                 fields.each_key do |field|
-                    next unless current[field]
-                    type = fields[field][:type]
-                    attributes = fields[field][:attributes]
-                    attributes ||= {}
-                    if (type != current[field][:type])
-                        unsafe << field unless safe_schema_conversion?(current[field][:type], type)
-                    elsif (attributes[:length] && current[field][:length] && attributes[:length] < current[field][:length])
-                        unsafe << [field, "#{current[field][:type]}(#{current[field][:length]})", "#{type}(#{attributes[:length]})"]
+                    if (!current[field])
+                        add_fields << [field, fields[field][:type], fields[field][:attributes]]
+                    else
+                        type = fields[field][:type]
+                        attributes = fields[field][:attributes]
+                        attributes ||= {}
+                        if (!@storage.schema_field_equal?(current[field], fields[field]))
+                            Spider.logger.debug("DIFFERENT: #{field}")
+                            Spider.logger.debug(current[field])
+                            Spider.logger.debug(fields[field])
+                            unless @storage.safe_schema_conversion?(current[field], fields[field])
+                                unsafe << field 
+                            end
+                            alter_fields <<  [field, fields[field][:type], fields[field][:attributes]]
+                        end
                     end
                 end
-                raise SchemaSyncUnsafeConversionException.new(unsafe) unless unsafe.empty?
+                raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
             end
             sqls = @storage.sql_alter_table({
                 :table => name,
-                :fields => fields
+                :add_fields => add_fields,
+                :alter_fields => alter_fields
             })
             sqls.each do |sql|
                 @storage.execute(sql)
             end
         end
-        
-        def safe_schema_conversion(old_type, new_type)
-            return false
-        end
 
     end
 
-    class SchemaSyncUnsafeConversionException < RuntimeError
+    class SchemaSyncUnsafeConversion < RuntimeError
         attr :fields
         def initialize(fields)
             @fields = fields
+        end
+        def to_s
+            "Unsafe conversion on fields #{fields}"
         end
     end
 
