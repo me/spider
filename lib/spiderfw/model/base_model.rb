@@ -7,7 +7,7 @@ module Spider; module Model
         include Spider::Logger
         include DataTypes
         
-        class <<self; attr_reader :integrated_models; end
+        class <<self; attr_reader :integrated_models, :polymorphic_models; end
         
         @@base_types = {
             'text' => {:klass => String},
@@ -104,7 +104,7 @@ module Spider; module Model
             define_method(name) do
                 element = self.class.elements[name]
                 if (element.integrated?)
-                    return send(element.integrated_from.name).send(element.integrated_from_element)
+                    return get(element.integrated_from.name).send(element.integrated_from_element)
                 end
                 return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
                 if primary_keys_set?
@@ -122,7 +122,7 @@ module Spider; module Model
             define_method("#{name}=") do |val|
                 element = self.class.elements[name]
                 if (element.integrated?)
-                    return element.integrated_from.send("#{element.integrated_from_element}=", val)
+                    return get(element.integrated_from).send("#{element.integrated_from_element}=", val)
                 end
                 if (element.model? && !val.is_a?(BaseModel))
                     val = element.model.new(val)
@@ -202,8 +202,9 @@ module Spider; module Model
             if (model == superclass) # first undo table per class inheritance
                 @elements = {}
                 @elements_order = []
-            end 
+            end
             integrated_name = params[:name] || Spider::Inflector.underscore(model.name).gsub('/', '_')
+            integrated_name = integrated_name.to_sym
             @extended_models ||= {}
             @extended_models[model] = integrated_name
             integrated_attributes = {:integrated_model => true}
@@ -217,6 +218,9 @@ module Spider; module Model
                     attributes.delete(:add_multiple_reverse)
                 end 
                 element(el.name, el.type, attributes)
+            end
+            if (params[:add_polymorphic])
+                model.polymorphic(self, :through => integrated_name)
             end
         end
         
@@ -232,6 +236,13 @@ module Spider; module Model
                 return @proxies[name] ||= proxy.new
             end
             
+        end
+        
+        def self.polymorphic(model, options)
+            through = options[:through] || Spider::Inflector.underscore(self.name).gsub('/', '_')
+            through = through.to_sym
+            @polymorphic_models ||= {}
+            @polymorphic_models[model] = {:through => through}
         end
 
         
@@ -352,6 +363,11 @@ module Spider; module Model
             end
         end
         
+        def self.load(*params)
+            res = find(*params)
+            return res[0]
+        end
+        
         def self.count(condition=nil)
             mapper.count(condition)
         end
@@ -391,7 +407,7 @@ module Spider; module Model
             element = element.name if (element.class == Spider::Model::Element)
             first, rest = element.to_s.split('.', 2)
             if (rest)
-                return nil unless element_has_value?(first)
+                return nil unless element_has_value?(first.to_sym)
                 return send(first).get(rest)
             end
             return send(element)
@@ -426,6 +442,13 @@ module Spider; module Model
                 end
             end
         end
+        
+        def polymorphic_become(model)
+            raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
+            obj = model.new
+            obj.set(self.class.polymorphic_models[model][:through], self)
+            return obj
+        end
             
         
         ##############################################################
@@ -445,7 +468,7 @@ module Spider; module Model
         # it is the only method that relies on the mapper
         def element_has_value?(element)
             element = element.name if (element.class == Element)
-            return get(element) == nil ? false : true unless mapper.mapped?(element)
+            return get(element) == nil ? false : true if (!mapper.mapped?(element) || self.class.elements[element].integrated?)
             return instance_variable_get(:"@#{element}") == nil ? false : true
         end
         
@@ -460,7 +483,12 @@ module Spider; module Model
             primary_keys = self.class.primary_keys
             return false unless primary_keys.length > 0
             primary_keys.each do |el|
-                return false unless self.instance_variable_get(:"@#{el.name}")
+                if (el.integrated?)
+                    return false unless (int_obj = instance_variable_get(:"@#{el.integrated_from.name}"))
+                    return false unless int_obj.instance_variable_get(:"@#{el.integrated_from_element}")
+                else
+                    return false unless self.instance_variable_get(:"@#{el.name}")
+                end
             end
             return true
         end
@@ -499,6 +527,10 @@ module Spider; module Model
             return @mapper ||= self.class.get_mapper(@storage)
         end
         
+        def mapper=(mapper)
+            @mapper = mapper
+        end
+        
         ##############################################################
         #   Saving and loading from storage methods                  #
         ##############################################################
@@ -509,6 +541,18 @@ module Spider; module Model
         
         def save_all
             mapper.save_all(self)
+        end
+        
+        def insert
+            mapper.insert(self)
+        end
+        
+        def update
+            mapper.update(self)
+        end
+        
+        def delete
+            mapper.delete(self)
         end
         
         def load(*params)

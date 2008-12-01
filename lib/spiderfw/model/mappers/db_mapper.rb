@@ -14,7 +14,7 @@ module Spider; module Model; module Mappers
         #   Save (insert and update)                                 #
         ##############################################################
         
-        def save(obj)
+        def before_save(obj)
             @model.elements.select{ |n, el| 
                 mapped?(el) && obj.element_has_value?(el) && el.has_single_reverse? 
             }.each do |name, element|
@@ -25,7 +25,10 @@ module Spider; module Model; module Mappers
                     obj.send(name).send("#{element.attributes[:reverse]}=", obj)
                 end
             end
-            super
+            super(obj)
+        end
+        
+        def after_save(obj)
             @model.elements.select{ |n, el| 
                 mapped?(el) && el.model? && obj.element_has_value?(el) && el.multiple? && !el.has_single_reverse?
             }.each do |name, element|
@@ -46,7 +49,7 @@ module Spider; module Model; module Mappers
         end
         
         # Inserts passed object into the database
-        def insert(obj)
+        def do_insert(obj)
             @storage.start_transaction if @storage.supports_transactions?
             if (obj.class.managed? || !obj.primary_keys_set?)
                 assign_primary_keys(obj)
@@ -61,11 +64,27 @@ module Spider; module Model; module Mappers
             @storage.commit
         end
         
-        def update(obj)
+        def do_update(obj)
             @storage.start_transaction if @storage.supports_transactions?
             sql, values = prepare_update(obj)
             @storage.execute(sql, *values)
             @storage.commit
+        end
+        
+        def do_delete(obj)
+            delete = prepare_delete(obj)
+            condition = Condition.new_and
+            @model.primary_keys.each do |key|
+                condition[key.name] = map_condition_value(key.type, obj.get(key))
+            end
+            delete[:condition], save[:joins] = prepare_condition(condition)
+            delete[:table] = @schema.table
+            sql, values =  @storage.sql_delete(save)
+            @storage.execute(sql, *values)
+        end
+        
+        def sql_execute(sql, *values)
+            @storage.execute(sql, *values)
         end
         
         
@@ -74,7 +93,8 @@ module Spider; module Model; module Mappers
             @model.each_element do |element|
                 if (mapped?(element) && !element.multiple? && obj.element_has_value?(element) && !element.added?)
                     next if (save_mode == :update && element.primary_key?)
-                    next if (element.model? && !schema.has_foreign_fields?(element))
+                    next if (element.model? && !schema.has_foreign_fields?(element.name))
+                    next if (element.integrated?)
                     if (element.model?)
                         element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
@@ -187,7 +207,6 @@ module Spider; module Model; module Mappers
                 query.request[element] = true
             end
             super(query, obj)
-           
             return query
         end
         
@@ -496,7 +515,7 @@ module Spider; module Model; module Mappers
                     search_params = {}
                     @model.primary_keys.each do |key|
                         field = @schema.field(key.name)
-                        search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = @raw_data[obj.object_id][field]
+                        search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key) #@raw_data[obj.object_id][field]
                     end
                     sub_res = element_query_set.find(search_params)
                     sub_res.each do |sub_obj|

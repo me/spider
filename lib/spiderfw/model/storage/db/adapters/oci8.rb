@@ -4,6 +4,30 @@ require 'oci8'
 module Spider; module Model; module Storage; module Db
     
     class OCI8 < DbStorage
+        @semaphore = Mutex.new
+        @connections = {}
+        
+        def self.get_connection(user, pass, dbname, role)
+            @semaphore.synchronize{
+                conn_params = [user, pass, dbname, role]
+                @connections[conn_params] ||= []
+                if (@connections[conn_params].length > 0)
+                     # TODO: mantain a pool instead of a single connection
+                    return @connections[conn_params][0]
+                end
+                conn = ::OCI8.new(*conn_params)
+                # FIXME!!!! It is shared now!
+                conn.autocommit = true
+                @connections[conn_params] << conn
+                return conn
+            }
+            
+            
+        end
+        
+        def self.disconnect(connection)
+        end
+        
         
         @reserved_keywords = superclass.reserved_keywords + []
         @safe_conversions = {
@@ -28,9 +52,8 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
-         def connect()
-            @conn = ::OCI8.new(@user, @pass, @dbname, @role)
-            @conn.autocommit = true
+        def connect()
+            @conn = self.class.get_connection(@user, @pass, @dbname, @role)
         end
         
         def connected?
@@ -43,7 +66,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
-            @conn.logoff()
+            self.class.disconnect(@conn)
             @conn = nil
         end
         
@@ -56,15 +79,17 @@ module Spider; module Model; module Storage; module Db
         end
         
         def in_transaction?
-            return @db.autocommit?
+            return @conn.autocommit?
         end
         
         def commit
             @conn.commit
+            disconnect
         end
         
         def rollback
             @conn.rollback
+            disconnect
         end
         
         def prepare_value(type, value)
@@ -91,6 +116,7 @@ module Spider; module Model; module Storage; module Db
                       result << h
                   end
              end
+             disconnect unless in_transaction?
              unless block_given?
                  result.extend(StorageResult)
                  @last_result = result

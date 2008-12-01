@@ -60,6 +60,13 @@ module Spider; module Model
         #   Save (insert and update)                                 #
         ##############################################################
         
+        def before_save(obj)
+            normalize(obj)
+        end
+        
+        def after_save(obj)
+        end
+        
         def save(obj)
             normalize(obj)
             if (obj.primary_keys_set?)
@@ -69,11 +76,31 @@ module Spider; module Model
             end
         end
         
-        def insert
+        def insert(obj)
+            before_save(obj)
+            do_insert(obj)
+            after_save(obj)
+        end
+        
+        def update(obj)
+            before_save(obj)
+            do_update(obj)
+            after_save(obj)
+        end
+        
+        def delete(obj)
+            do_delete(obj)
+        end
+        
+        def do_delete(obj)
             raise MapperException, "Unimplemented"
         end
         
-        def update
+        def do_insert(obj)
+            raise MapperException, "Unimplemented"
+        end
+        
+        def do_update(obj)
             raise MapperException, "Unimplemented"
         end
         
@@ -172,9 +199,11 @@ module Spider; module Model
             else
                 query.request[element] = true
             end
+            if (!obj.primary_keys_set?)
+                raise MapperException, "Object's primary keys don't have a value. Can't load object."
+            end
             @model.primary_keys.each do |key|
-                val = obj.instance_variable_get("@#{key.name}")
-                raise MapperException, "Object's primary keys don't have a value. Can't load object." unless val
+                val = obj.get(key)
                 query.condition[key.name] = val
             end
             load(obj, query)

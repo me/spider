@@ -23,6 +23,11 @@ module Spider; module Model; module Storage; module Db
             @db.results_as_hash = true
         end
         
+        def db
+            connect unless connected?
+            @db
+        end
+        
         def connected?
             @db != nil
         end
@@ -38,15 +43,21 @@ module Spider; module Model; module Storage; module Db
         end
         
         def start_transaction
-            @db.transaction
+            db.transaction
+        end
+        
+        def in_transaction?
+            @db.transaction_active?
         end
         
         def commit
             @db.commit
+            disconnect
         end
         
         def rollback
             @db.rollback
+            disconnect
         end
         
         def assigned_key(key)
@@ -62,21 +73,20 @@ module Spider; module Model; module Storage; module Db
          end
 
          def execute(sql, *bind_vars)
-             connect unless connected?
              if (bind_vars && bind_vars.length > 0)
-                 debug_vars = bind_vars.map{|var| var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                 debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
              end
              debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
 
-             result = @db.execute(sql, *bind_vars)
-             @last_insert_row_id = @db.last_insert_row_id
+             result = db.execute(sql, *bind_vars)
+             @last_insert_row_id = db.last_insert_row_id
              result.extend(StorageResult)
              @last_result = result
              if block_given?
                  result.each{ |row| yield row }
-                 disconnect
+                 disconnect unless in_transaction?
              else
-                 disconnect
+                 disconnect unless in_transaction?
                  return result
              end
          end
