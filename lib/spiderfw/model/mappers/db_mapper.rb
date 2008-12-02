@@ -343,7 +343,6 @@ module Spider; module Model; module Mappers
                 if (element.model?)
                     if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
-                        element_sql = ""
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
                             field = schema.foreign_key_field(element.name, el_k)
@@ -573,7 +572,7 @@ module Spider; module Model; module Mappers
                     search_params = {}
                     @model.primary_keys.each do |key|
                         field = @schema.field(key.name)
-                        search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key) #@raw_data[obj.object_id][field]
+                        search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key) #@raw_data[obj.object_id][field] # FIXME: right or wrong?
                     end
                     sub_res = element_query_set.find(search_params)
                     if (sub_res)

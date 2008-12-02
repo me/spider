@@ -128,8 +128,8 @@ module Spider; module Model
                     val = element.model.new(val)
                 end
                 old_val = instance_variable_get(ivar)
-                instance_variable_set(ivar, val)
                 check(name, val)
+                instance_variable_set(ivar, val)
                 notify_observers(name, old_val)
                 #extend_element(name)
             end
@@ -183,7 +183,7 @@ module Spider; module Model
                 hash.each do |key, val|
                     element(:id, key.class, :primary_key => true)
                     if (val.class == Hash)
-                        # TODO: allow to pass multiple values as {:element1 => 'el1', :element2 => 'el2'}
+                        # TODO: allow passing of multiple values like {:element1 => 'el1', :element2 => 'el2'}
                     else
                         element(:desc, val.class)
                     end
@@ -386,6 +386,7 @@ module Spider; module Model
             @value_observers = {}
             @all_values_observers = []
             @all_values_observers << Proc.new do |element, old_value|
+                # FIXME: not thread safe...
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
             end
             if (values)
