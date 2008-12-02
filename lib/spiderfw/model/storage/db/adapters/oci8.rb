@@ -173,7 +173,13 @@ module Spider; module Model; module Storage; module Db
          
          def sql_insert(insert)
              @bind_cnt = 0
-             super
+             keys = (insert[:autoincrement] + insert[:values].keys).join(', ')
+             vals = insert[:autoincrement].map{|field| "#{sequence_name(insert[:table], field)}.NEXTVAL"} +
+                    insert[:values].values.map{":#{(@bind_cnt += 1)}"}
+             vals = vals.join(', ')
+             sql = "INSERT INTO #{insert[:table]} (#{keys}) " +
+                   "VALUES (#{vals})"
+             return [sql, insert[:values].values]
          end
          
          def sql_insert_values(insert)
@@ -190,9 +196,31 @@ module Spider; module Model; module Storage; module Db
                  "#{k} = :#{(@bind_cnt += 1)}"
              }.join(', ')
          end
+
+         
+         def create_table(create)
+             super(create)
+             check_sequences(create[:table], create[:fields].select{|f| f[:attributes][:autoincrement]})
+         end
+         
+         def alter_table(alter)
+             super(alter)
+             check_sequences(alter[:table], alter[:all_fields].select{|f| f[:attributes][:autoincrement]})
+         end
          
          def sql_alter_field(table_name, name, type, attributes)
-             "ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"
+             ["ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"]
+         end
+
+         def check_sequences(table, fields)
+             fields.each do |field|
+                 sequence_name = sequence_name(table, field[:name])
+                 check = "select SEQUENCE_NAME from user_sequences where sequence_name = :1"
+                 res = execute(check, sequence_name)
+                 unless res[0]
+                     execute("create sequence #{sequence_name}")
+                 end
+             end
          end
          
          ##############################################################
@@ -250,7 +278,7 @@ module Spider; module Model; module Storage; module Db
          end
          
          def column_attributes(type, attributes)
-             db_attributes = {}
+             db_attributes = super(type, attributes)
              case type
              when 'text'
                  db_attributes[:length] = attributes[:length] || 255
@@ -291,6 +319,10 @@ module Spider; module Model; module Storage; module Db
          
          def column_name(name)
              super.upcase
+         end
+         
+         def sequence_name(table, field)
+             table+'_'+field
          end
          
         

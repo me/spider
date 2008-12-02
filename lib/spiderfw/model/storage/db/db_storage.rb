@@ -108,6 +108,7 @@ module Spider; module Model; module Storage; module Db
             when 'bool'
                 db_attributes[:length] = 1
             end
+            db_attributes[:autoincrement] = attributes[:autoincrement]
             return db_attributes
         end
         
@@ -158,7 +159,15 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_tables(query)
-            query[:tables].join(',')
+            query[:tables].map{ |table|
+                str = table
+                if (query[:joins][table])
+                    query[:joins][table].each_key do |to_table|
+                        str += " "+sql_joins(query[:joins][table][to_table])
+                    end
+                end
+                str
+            }.join(', ')
         end
         
         
@@ -183,17 +192,27 @@ module Spider; module Model; module Storage; module Db
             "#{key} #{comp} ?"
         end
         
-        def sql_join(joins)
-            sql = ""
-            joins.each_key do |from_table|
-                joins[from_table].each do |to_table, conditions|
-                    conditions.each do |from_key, to_key|
-                        sql += " AND " unless sql.empty?
-                        sql += "#{from_table}.#{from_key} = #{to_table}.#{to_key}"
-                    end
-                end
-            end
-            return sql
+        # def sql_join(joins)
+        #     sql = ""
+        #     joins.each_key do |from_table|
+        #         joins[from_table].each do |to_table, conditions|
+        #             conditions.each do |from_key, to_key|
+        #                 sql += " AND " unless sql.empty?
+        #                 sql += "#{from_table}.#{from_key} = #{to_table}.#{to_key}"
+        #             end
+        #         end
+        #     end
+        #     return sql
+        # end
+        
+        def sql_joins(joins)
+            types = {
+                :inner => 'INNER', :outer => 'OUTER', :left_outer => 'LEFT OUTER', :right_outer => 'RIGHT OUTER'
+            }
+            joins.map{ |join|
+                sql_keys = join[:keys].map{ |from_f, to_f| "#{join[:from]}.#{from_f} = #{join[:to]}.#{to_f}"}.join(', ')
+                "#{types[join[:type]]} JOIN #{join[:to]} ON (#{sql_keys})"
+            }.join(" ")
         end
         
         def sql_order(query)
@@ -208,17 +227,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_insert(insert)
-            sql = "INSERT INTO #{insert[:table]} (#{sql_insert_keys(insert)}) VALUES (#{sql_insert_values(insert)})"
+            sql = "INSERT INTO #{insert[:table]} (#{insert[:values].keys.join(', ')}) " +
+                  "VALUES (#{insert[:values].values.map{'?'}.join(', ')})"
             return [sql, insert[:values].values]
         end
         
-        def sql_insert_keys(insert)
-            insert[:values].keys.join(', ')
-        end
-        
-        def sql_insert_values(insert)
-            insert[:values].values.map{'?'}.join(', ')
-        end
             
         def sql_update(update)
             values = update[:values].values
@@ -246,16 +259,15 @@ module Spider; module Model; module Storage; module Db
             name = create[:table]
             fields = create[:fields]
             sql_fields = ''
-            fields.each_key do |field|
-                type = fields[field][:type]
-                attributes = fields[field][:attributes]
+            fields.each do |field|
+                attributes = field[:attributes]
                 attributes ||= {}
                 length = attributes[:length]
                 sql_fields += ', ' unless sql_fields.empty?
-                sql_fields += "#{field} #{type}"
+                sql_fields += "#{field[:name]} #{field[:type]}"
                 sql_fields += "(#{length})" if length && length != 0
             end
-            "CREATE TABLE #{name} (#{sql_fields})"
+            ["CREATE TABLE #{name} (#{sql_fields})"]
         end
         
         def sql_alter_table(alter)
@@ -267,11 +279,11 @@ module Spider; module Model; module Storage; module Db
             
             add_fields.each do |field|
                 name, type, attributes = field
-                sqls << sql_add_field(table_name, name, type, attributes)
+                sqls += sql_add_field(table_name, field[:name], field[:type], field[:attributes])
             end
             alter_fields.each do |field|
                 name, type, attributes = field
-                sqls << sql_alter_field(table_name, name, type, attributes)
+                sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
             return sqls
             # if (@config[:drop_fields])
@@ -282,6 +294,20 @@ module Spider; module Model; module Storage; module Db
             #         end
             #     end
             # end
+        end
+        
+        def create_table(create)
+            sqls = sql_create_table(create)
+            sqls.each do |sql|
+                execute(sql)
+            end
+        end
+        
+        def alter_table(alter)
+            sqls = sql_alter_table(alter)
+            sqls.each do |sql|
+                execute(sql)
+            end
         end
         
         def sql_table_field(name, type, attributes)
@@ -297,11 +323,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_add_field(table_name, name, type, attributes)
-            "ALTER TABLE #{table_name} ADD #{sql_table_field(name, type, attributes)}"
+            ["ALTER TABLE #{table_name} ADD #{sql_table_field(name, type, attributes)}"]
         end
         
         def sql_alter_field(table_name, name, type, attributes)
-            "ALTER TABLE #{table_name} ALTER #{sql_table_field(name, type, attributes)}"
+            ["ALTER TABLE #{table_name} ALTER #{sql_table_field(name, type, attributes)}"]
         end
         
         def schema_field_equal?(current, field)

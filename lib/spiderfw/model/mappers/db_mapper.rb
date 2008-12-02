@@ -39,12 +39,7 @@ module Spider; module Model; module Mappers
         
         def save_all(root)
             @storage.start_transaction if @storage.supports_transactions?
-            uow = UnitOfWork.new
-            uow.add(root)
-            @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) }.each do |name, element|
-                uow.add(root.send(name))
-            end
-            uow.run()
+            super
             @storage.commit
         end
         
@@ -90,8 +85,13 @@ module Spider; module Model; module Mappers
         
         def prepare_save(obj, save_mode)
             values = {}
+            autoincrement = []
             @model.each_element do |element|
-                if (mapped?(element) && !element.multiple? && obj.element_has_value?(element) && !element.added?)
+                next unless mapped?(element)
+                if (save_mode == :insert && element.attributes[:autoincrement])
+                    autoincrement << schema.field(element.name)
+                end
+                if (!element.multiple? && obj.element_has_value?(element) && !element.added?)
                     next if (save_mode == :update && element.primary_key?)
                     next if (element.model? && !schema.has_foreign_fields?(element.name))
                     next if (element.integrated?)
@@ -108,6 +108,7 @@ module Spider; module Model; module Mappers
                 end
             end
             return {
+                :autoincrement => autoincrement,
                 :values => values,
             }
         end
@@ -185,29 +186,45 @@ module Spider; module Model; module Mappers
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
                 next if !element
-                if (element.model? && @schema.has_foreign_fields?(element.name))
+                if (element.model? && schema.has_foreign_fields?(element.name))
                     sub_obj = element.model.new
                     element.model.primary_keys.each do |key|
-                        sub_obj.set_loaded_value(key, result[@schema.foreign_key_field(element_name, key.name)])
+                        sub_obj.set_loaded_value(key, result[schema.foreign_key_field(element_name, key.name)])
                     end
                     obj.set_loaded_value(element, sub_obj)
                 end
                 next if element.model?
-                result_value = result[@schema.field(element_name)]
+                result_value = result[schema.field(element_name)]
                 obj.set_loaded_value(element, map_back_value(element.type, result_value))
+            end
+            if (request.polymorphs)
+                request.polymorphs.each do |model, polym_request|
+                    polym_result = {}
+                    polym_request.keys.each do |element_name|
+                        field = model.mapper.schema.field(element_name)
+                        res_field = "#{model.mapper.schema.table}_#{field}"
+                        polym_result[field] = result[res_field] if result[res_field]
+                    end
+                    if (!polym_result.empty?)
+                        polym_obj = model.new
+                        polym_obj.mapper.map(polym_request, polym_result, polym_obj)
+                        polym_obj.set_loaded_value(model.extended_models[@model], obj)
+                        obj = polym_obj
+                        break
+                    end
+                end                    
             end
             return obj
         end
-        
-        def prepare_query(query, obj=nil)
+
+        def prepare_query_request(request, obj=nil)
             # FIXME: move to strategy
             @model.elements.select{ |name, element| 
                 !element.model? && (!obj || !obj.element_loaded?(element))
             }.each do |name, element|
-                query.request[element] = true
+                request[element] = true
             end
-            super(query, obj)
-            return query
+            super(request, obj)
         end
         
         def prepare_select(query)
@@ -230,9 +247,35 @@ module Spider; module Model; module Mappers
                 end
             end
             condition, joins = prepare_condition(query.condition)
-            joins = prepare_joins(joins)
-            tables = ([@schema.table] + joins.map{ |join| join[0] } + joins.map{ |join| join[1] }).flatten.uniq
+            if (query.polymorphs?)
+                query.request.polymorphs.each do |model, polym_request|
+                    extension_element = model.extended_models[@model]
+                    model.mapper.prepare_query_request(polym_request)
+                    polym_request.reject!{|k, v| 
+                        model.elements[k].integrated? && model.elements[k].integrated_from.name == extension_element
+                    }
+                    polym_select = model.mapper.prepare_select(Query.new(nil, polym_request)) # FIXME!
+                    polym_select[:keys].map!{ |key| "#{key} AS #{key.gsub('.', '_')}"}
+                    keys += polym_select[:keys]
+                    join_fields = {}
+                    @model.primary_keys.each do |key|
+                        from_field = @schema.field(key.name)
+                        to_field = model.mapper.schema.foreign_key_field(extension_element, key.name)
+                        join_fields[from_field] = to_field 
+                    end
+                    # FIXME: move to get_join
+                    joins << {
+                        :type => :left_outer,
+                        :from => @schema.table,
+                        :to => model.mapper.schema.table,
+                        :keys => join_fields
+                    }
+                end
+            end
+            #tables = ([@schema.table] + joins.map{ |join| join[0] } + joins.map{ |join| join[1] }).flatten.uniq
+            tables = [@schema.table]
             order = prepare_order(query)
+            joins = prepare_joins(joins)
             return nil if (keys.empty?)
             return {
                 :query_type => :select,
@@ -250,16 +293,26 @@ module Spider; module Model; module Mappers
         def prepare_joins(joins)
             h = {}
             joins.each do |join|
-                from_table, to_table, on_fields = join
-                if (h[from_table] && h[from_table][to_table])
-                    h[from_table][to_table].merge(on_fields)
-                else
-                    h[from_table] ||= {}
-                    h[from_table][to_table] = on_fields
-                end
+                h[join[:from]] ||= {}
+                h[join[:from]][join[:to]] ||= []
+                h[join[:from]][join[:to]] << join
             end
             return h
         end
+        
+        # def prepare_joins(joins)
+        #     h = {}
+        #     joins.each do |join|
+        #         from_table, to_table, on_fields = join
+        #         if (h[from_table] && h[from_table][to_table])
+        #             h[from_table][to_table].merge(on_fields)
+        #         else
+        #             h[from_table] ||= {}
+        #             h[from_table][to_table] = on_fields
+        #         end
+        #     end
+        #     return h
+        # end
         
         
         def prepare_condition(condition)
@@ -341,7 +394,12 @@ module Spider; module Model; module Mappers
                 element.model.primary_keys.each do |key|
                     keys[@schema.foreign_key_field(element.name, key.name)] = element.mapper.schema.field(key.name)
                 end
-                join = [schema.table, element.mapper.schema.table, keys]
+                join = {
+                    :type => :inner,
+                    :from => schema.table,
+                    :to => element.mapper.schema.table,
+                    :keys => keys
+                }
             end
             return join
         end
@@ -518,11 +576,13 @@ module Spider; module Model; module Mappers
                         search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key) #@raw_data[obj.object_id][field]
                     end
                     sub_res = element_query_set.find(search_params)
-                    sub_res.each do |sub_obj|
-                        sub_obj.set_loaded_value(element.attributes[:reverse], obj)
+                    if (sub_res)
+                        sub_res.each do |sub_obj|
+                            sub_obj.set_loaded_value(element.attributes[:reverse], obj)
+                        end
+                        sub_res = sub_res[0] if !element.multiple?
+                        obj.set_loaded_value(element, sub_res)
                     end
-                    sub_res = sub_res[0] if sub_res && !element.multiple?
-                    obj.set_loaded_value(element, sub_res)
                 end
             else # 1|n <-> 1
                 # FIXME: should be already indexed, but is misssing associated objects
@@ -763,22 +823,33 @@ module Spider; module Model; module Mappers
         end
 
         def create_table(name, fields)
-            sql = @storage.sql_create_table({
+            fields = fields.map{ |name, details| {
+              :name => name,
+              :type => details[:type],
+              :attributes => details[:attributes]  
+            } }
+            @storage.create_table({
                 :table => name,
                 :fields => fields
             })
-            @storage.execute(sql)
         end
 
         def alter_table(name, fields, force=nil)
             current = @storage.describe_table(name)
             add_fields = []
             alter_fields = []
+            all_fields = []
             unless (force)
                 unsafe = []
                 fields.each_key do |field|
+                    field_hash = {
+                        :name => field, 
+                        :type => fields[field][:type], 
+                        :attributes => fields[field][:attributes]
+                    }
+                    all_fields << field_hash
                     if (!current[field])
-                        add_fields << [field, fields[field][:type], fields[field][:attributes]]
+                        add_fields << field_hash
                     else
                         type = fields[field][:type]
                         attributes = fields[field][:attributes]
@@ -790,20 +861,18 @@ module Spider; module Model; module Mappers
                             unless @storage.safe_schema_conversion?(current[field], fields[field])
                                 unsafe << field 
                             end
-                            alter_fields <<  [field, fields[field][:type], fields[field][:attributes]]
+                            alter_fields << field_hash
                         end
                     end
                 end
                 raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
             end
-            sqls = @storage.sql_alter_table({
+            @storage.alter_table({
                 :table => name,
                 :add_fields => add_fields,
-                :alter_fields => alter_fields
+                :alter_fields => alter_fields,
+                :all_fields => all_fields
             })
-            sqls.each do |sql|
-                @storage.execute(sql)
-            end
         end
 
     end

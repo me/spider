@@ -4,7 +4,7 @@ module Spider; module Model
     
     class Condition < ModelHash
         attr_accessor :conjunction
-        attr_reader :subconditions, :comparisons#, :raw
+        attr_reader :subconditions, :comparisons, :polymorphs#, :raw
         
         def get_deep_obj
             c = self.class.new
@@ -36,11 +36,16 @@ module Spider; module Model
             return c
         end
         
-        def initialize(hash=nil)
+        def initialize(hash_or_array=nil)
             @conjunction = :or
             @comparisons = {}
             @subconditions = []
-            super
+            @polymorphs = []
+            if (hash_or_array.is_a?(Array))
+                hash_or_array.each{ |item| self << self.class.new(item) }
+            else
+                super
+            end
             #@raw = {}
         end
         

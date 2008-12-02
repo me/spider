@@ -4,6 +4,7 @@ module Spider; module Model
         include Enumerable
         attr_reader :raw_data
         attr_accessor :query, :model, :owner, :total_rows
+        attr_accessor :fetch_window
 
         def initialize(model, query=nil)
             @query = query || Query.new
@@ -13,6 +14,7 @@ module Spider; module Model
             @owner = nil
             @index_lookup = {}
             @total_rows = nil
+            @fetch_window = nil
         end
         
         def mapper
@@ -180,7 +182,11 @@ module Spider; module Model
                 end
                 h
             end
-        end                    
+        end
+        
+        def method_missing(method, *args)     
+            return @query.send(method, *args)
+        end
                     
         
         # def unit_of_work

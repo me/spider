@@ -4,6 +4,7 @@ module Spider; module Model
     
     class Request < ModelHash
         attr_accessor :total_rows
+        attr_reader :polymorphs
         
         def initialize(val=nil, params={})
             if (val.is_a?(Array))
@@ -13,6 +14,7 @@ module Spider; module Model
                 super(val)
             end
             @total_rows = params[:total_rows]
+            @polymorphs = {}
         end
         
         def request(element)
@@ -27,6 +29,10 @@ module Spider; module Model
         
         def load_all_simple?
             @load_all_simple
+        end
+        
+        def with_polymorphs(type, request)
+            @polymorphs[type] = request
         end
     
     end

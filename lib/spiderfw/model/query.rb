@@ -5,11 +5,12 @@ module Spider; module Model
     
     class Query
         attr_accessor :order, :offset, :limit
-        attr_reader :condition, :request
+        attr_reader :condition, :request, :polymorphs
        
        def initialize(condition = nil, request=nil, &proc)
            @condition = Condition.new(condition)
            @request = Request.new(request)
+           @polymorphs = []
            @order = []
            if (proc)
                defined_methods = define_helper_methods
@@ -55,6 +56,21 @@ module Spider; module Model
                @condition = condition
            end
            return self
+       end
+       
+       def with_polymorph(type, query=nil)
+           query = self.class.new(query) unless query.is_a?(self.class)
+           @polymorphs << type
+           @request.with_polymorphs(type, query.request)
+           return self
+       end
+       
+       ##############################
+       # information methods        #
+       ##############################
+       
+       def polymorphs?
+           @polymorphs.length > 0
        end
        
        private

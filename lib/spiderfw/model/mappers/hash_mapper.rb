@@ -70,7 +70,7 @@ module Spider; module Model; module Mappers
             return query
         end
         
-        def map(request, result, obj)
+        def map(request, result, obj, other={})
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
                 next if element.model?

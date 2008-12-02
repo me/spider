@@ -69,11 +69,32 @@ module Spider; module Model
         
         def save(obj)
             normalize(obj)
-            if (obj.primary_keys_set?)
+            if (@model.extended_models)
+                @model.extended_models.each do |m, el|
+                    obj.get(el).save if obj.element_has_value?(el)
+                end
+                do_insert = false
+                @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
+                    if (!obj.element_has_value?(local_pk))
+                        do_insert = true
+                        break
+                    end
+                end
+            end
+            if (!do_insert && obj.primary_keys_set?)
                 update(obj)
             else
                 insert(obj)
             end
+        end
+        
+        def save_all(root)
+            uow = UnitOfWork.new
+            uow.add(root)
+            @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) }.each do |name, element|
+                uow.add(root.send(name))
+            end
+            uow.run()
         end
         
         def insert(obj)
@@ -153,6 +174,8 @@ module Spider; module Model
             raise MapperException, "Unimplemented"
         end
         
+        
+        # FIXME: cleanup "other", polymorphs should be passed in a better way
         def map(request, result, obj)
             raise MapperException, "Unimplemented"
         end
@@ -160,7 +183,7 @@ module Spider; module Model
         # Load external elements, according to query, 
         # and merge them into an object or a QuerySet
         def get_external(objects, query)
-            # Make "objects" an array if it is not an QuerySet; the methods used are common to the two classes
+            # Make "objects" an array if it is not an QuerySet; we won't use any specific QuerySet methods
             objects = [objects] unless objects.kind_of?(Spider::Model::QuerySet)
             got_external = {}
             get_integrated = {}
@@ -220,18 +243,22 @@ module Spider; module Model
         ##############################################################
 
         def prepare_query(query, obj=nil)
+            prepare_query_request(query.request)
+            prepare_query_condition(query.condition)
+            return query
+        end
+        
+        def prepare_query_request(request, obj=nil)
             @model.primary_keys.each do |key|
-                query.request[key] = true unless obj && obj.element_loaded?(key)
+                request[key] = true unless obj && obj.element_loaded?(key)
             end
-            query.request.each do |k, v|
+            request.each do |k, v|
                 if (@model.elements[k].integrated?)
                     integrated_from = @model.elements[k].integrated_from
                     integrated_from_element = @model.elements[k].integrated_from_element
-                    query.request.request("#{integrated_from.name}.#{integrated_from_element}")
+                    request.request("#{integrated_from.name}.#{integrated_from_element}")
                 end
             end
-            prepare_query_condition(query.condition)
-            return query
         end
         
         # FIXME: better name, move somewhere else

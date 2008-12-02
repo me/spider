@@ -7,7 +7,7 @@ module Spider; module Model
         include Spider::Logger
         include DataTypes
         
-        class <<self; attr_reader :integrated_models, :polymorphic_models; end
+        class <<self; attr_reader :integrated_models, :extended_models, :polymorphic_models; end
         
         @@base_types = {
             'text' => {:klass => String},
@@ -361,6 +361,10 @@ module Spider; module Model
             else
                 mapper.find(Query.new(params[0], params[1]))
             end
+        end
+        
+        def self.all
+            return self.find()
         end
         
         def self.load(*params)
