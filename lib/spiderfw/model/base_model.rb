@@ -138,7 +138,6 @@ module Spider; module Model
                 old_val = instance_variable_get(ivar)
                 check(name, val)
                 instance_variable_set(ivar, val)
-
                 notify_observers(name, old_val)
                 #extend_element(name)
             end
@@ -192,7 +191,7 @@ module Spider; module Model
                 hash.each do |key, val|
                     element(:id, key.class, :primary_key => true)
                     if (val.class == Hash)
-                        # TODO: allow to pass multiple values as {:element1 => 'el1', :element2 => 'el2'}
+                        # TODO: allow passing of multiple values like {:element1 => 'el1', :element2 => 'el2'}
                     else
                         element(:desc, val.class)
                     end
@@ -469,7 +468,7 @@ module Spider; module Model
             if (element.integrated?)
                 get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
             else
-                instance_variable_set("@#{element_name}", value)
+            instance_variable_set("@#{element_name}", value)
             end
             @loaded_elements[element_name] = true
         end
@@ -496,7 +495,7 @@ module Spider; module Model
             obj.set(self.class.polymorphic_models[model][:through], self)
             return obj
         end
-        
+            
         def autoload?
             @_autoload
         end
@@ -739,7 +738,7 @@ module Spider; module Model
             end
             json = ""
             get_json = lambda{
-                return  "{" +
+            return "{" +
                     self.class.elements.select{ |name, el| 
                         !el.attributes[:integrated_model]  && 
                         (element_loaded?(el) || (el.integrated? && element_loaded?(el.integrated_from)))
@@ -751,7 +750,7 @@ module Spider; module Model
             @tmp_json_seen = false
             self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                 (int = get(el)) && int.instance_variable_set("@tmp_json_seen", false)
-            end
+        end
             return json
         end
         
