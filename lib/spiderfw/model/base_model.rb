@@ -107,13 +107,16 @@ module Spider; module Model
                     return get(element.integrated_from.name).send(element.integrated_from_element)
                 end
                 return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
-                if primary_keys_set?
+                if autoload? && primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
                     qs = QuerySet.new(self.class.elements[name].model) # or get the element queryset?
+                    qs.autoload = autoload?
                     instance_variable_set(ivar, qs)
                 elsif (self.class.elements[name].model?)
-                    instance_variable_set(ivar, self.class.elements[name].type.new)
+                    obj = self.class.elements[name].type.new
+                    obj.autoload = autoload?
+                    instance_variable_set(ivar, obj)
                 end
                 return instance_variable_get(ivar)
             end
@@ -122,14 +125,20 @@ module Spider; module Model
             define_method("#{name}=") do |val|
                 element = self.class.elements[name]
                 if (element.integrated?)
-                    return get(element.integrated_from).send("#{element.integrated_from_element}=", val)
+                    integrated_obj = get(element.integrated_from)
+                    integrated_obj.autoload = false
+                    return integrated_obj.send("#{element.integrated_from_element}=", val)
                 end
-                if (element.model? && !val.is_a?(BaseModel))
+                if (element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
                     val = element.model.new(val)
+                    val.autoload = autoload?
+                else
+                    val = prepare_value(element, val)
                 end
                 old_val = instance_variable_get(ivar)
-                instance_variable_set(ivar, val)
                 check(name, val)
+                instance_variable_set(ivar, val)
+
                 notify_observers(name, old_val)
                 #extend_element(name)
             end
@@ -207,7 +216,7 @@ module Spider; module Model
             integrated_name = integrated_name.to_sym
             @extended_models ||= {}
             @extended_models[model] = integrated_name
-            integrated_attributes = {:integrated_model => true}
+            integrated_attributes = {:integrated_model => true, :superclass => true}
             integrated = element(integrated_name, model, integrated_attributes)
             model.each_element do |el|
                 attributes = el.attributes.clone
@@ -382,10 +391,13 @@ module Spider; module Model
         #################################################
 
         def initialize(values=nil)
+            @_autoload = true
+            @_has_values = false
             @loaded_elements = {}
             @value_observers = {}
             @all_values_observers = []
             @all_values_observers << Proc.new do |element, old_value|
+                @_has_values = true
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
             end
             if (values)
@@ -401,6 +413,21 @@ module Spider; module Model
                     set(self.class.primary_keys[0], values)
                 end
             end
+        end
+        
+        def identity_mapper
+            return Spider::Model.identity_mapper if Spider::Model.identity_mapper
+            @identity_mapper ||= IdentityMapper.new
+        end
+        
+        def identity_mapper=(im)
+            @identity_mapper = im
+        end
+        
+        def create_child(element, val=nil)
+            element = element.name if element.is_a?(Element)
+            obj = identity_mapper.get(element.model, val)
+            obj.identity_mapper = self.identity_mapper
         end
         
         #################################################
@@ -424,10 +451,26 @@ module Spider; module Model
             return send("#{element}=", value)
         end
         
+        def prepare_value(element, value)
+            case element.type
+            when 'dateTime'
+                value = DateTime.parse(value) if value.is_a?(String)
+            when 'text'
+            when 'longText'
+                value = value.to_s
+            end
+            value
+        end
+        
         # Sets a value without calling the associated setter; used by the mapper
         def set_loaded_value(element, value)
             element_name = element.is_a?(Element) ? element.name : element
-            instance_variable_set("@#{element_name}", value)
+            element = self.class.elements[element_name]
+            if (element.integrated?)
+                get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
+            else
+                instance_variable_set("@#{element_name}", value)
+            end
             @loaded_elements[element_name] = true
         end
         
@@ -453,7 +496,27 @@ module Spider; module Model
             obj.set(self.class.polymorphic_models[model][:through], self)
             return obj
         end
-            
+        
+        def autoload?
+            @_autoload
+        end
+        
+        def autoload=(bool)
+            return if @_tmp_autoload_walk
+            @_tmp_autoload_walk = true
+            @_autoload = bool
+            self.class.elements_array.select{ |el| el.model? && element_has_value?(el.name)}.each do |el|
+                get(el).autoload = bool
+            end
+            @_tmp_autoload_walk = nil
+        end
+        
+        def no_autoload
+            prev_autoload = autoload?
+            autoload = false
+            yield
+            autoload = prev_autoload
+        end
         
         ##############################################################
         #   Methods for getting information about element values     #
@@ -495,6 +558,10 @@ module Spider; module Model
                 end
             end
             return true
+        end
+        
+        def empty?
+            return @_has_values
         end
 
         
@@ -565,6 +632,11 @@ module Spider; module Model
             else
                 return false unless primary_keys_set?
                 query = Query.new
+                if (params[0].is_a?(Request))
+                    query.request = params.shift
+                elsif (params[0].is_a?(Hash))
+                    query.request = Request.new(params.shift)
+                end
                 elements = params.length > 0 ? params : self.class.elements.keys
                 return true unless elements.select{ |el| !element_loaded?(el) }.length > 0
                 elements.each do |name|
@@ -651,18 +723,46 @@ module Spider; module Model
         
         def inspect
             self.class.name+': {' +
-            self.class.elements_array.select{ |el| element_has_value?(el) && !el.hidden? } \
+            self.class.elements_array.select{ |el| element_loaded?(el) && !el.hidden? } \
                 .map{ |el| ":#{el.name} => #{get(el.name).to_s}"}.join(',') + '}'
         end
         
         
         def to_json
-            return "{" +
-                self.class.elements.select{ |name, el| element_has_value? el }.map{ |name, el| 
-                    "#{name}: "+get(name).to_json
-                }.join(',') +
-                "}"
+            #debugger
+            if (@tmp_json_seen)
+                return self.class.primary_keys.map{ |k| get(k).to_json }
+            end
+            @tmp_json_seen = true
+            self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
+                (int = get(el)) && int.instance_variable_set("@tmp_json_seen", true)
+            end
+            json = ""
+            get_json = lambda{
+                return  "{" +
+                    self.class.elements.select{ |name, el| 
+                        !el.attributes[:integrated_model]  && 
+                        (element_loaded?(el) || (el.integrated? && element_loaded?(el.integrated_from)))
+                     }.map{ |name, el|
+                         "#{name}: #{get(name).to_json}\n"
+                    }.join(',') + "}"
+            }
+            json = get_json.call
+            @tmp_json_seen = false
+            self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
+                (int = get(el)) && int.instance_variable_set("@tmp_json_seen", false)
+            end
+            return json
         end
+        
+        def to_hash()
+            h = {}
+            self.class.elements.select{ |name, el| element_loaded? el }.each do |name, el|
+                h[name.to_s] = get(name)
+            end
+            return h
+        end
+             
         
         
     end

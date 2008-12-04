@@ -3,7 +3,12 @@ require 'spiderfw/model/base_model'
 module Spider; module Model
     
     class Managed < BaseModel
-        element :id, 'int', {:primary_key => true, :read_only => true, :element_position => 0}
+        element :id, 'int', {
+            :primary_key => true, 
+            :autoincrement => true, 
+            :read_only => true, 
+            :element_position => 0
+        }
         
         # def id=(val)
         #     raise ModelException, "You can't assign a value to the 'id' element"

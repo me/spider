@@ -4,8 +4,13 @@ require 'sqlite3'
 module Spider; module Model; module Storage; module Db
     
     class SQLite < DbStorage
-        
         @reserved_keywords = superclass.reserved_keywords + []
+        @capabilities = {
+            :autoincrement => false,
+            :sequences => true,
+            :transactions => true
+        }
+
         class << self; attr_reader :reserved_kewords; end
         
         def parse_url(url)

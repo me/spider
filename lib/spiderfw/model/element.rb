@@ -73,6 +73,10 @@ module Spider; module Model
             @attributes[:extended] ? true : false
         end
         
+        def superclass_element?
+            @attributes[:superclass] ? true : false
+        end
+        
         def method?
             @attributes[:method] ? true : false
         end

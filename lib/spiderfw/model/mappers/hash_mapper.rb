@@ -70,7 +70,8 @@ module Spider; module Model; module Mappers
             return query
         end
         
-        def map(request, result, obj, other={})
+        def map(request, result, obj_or_model)
+            obj = obj_or_model.is_a?(Class) ? obj_or_model.new : obj_or_model
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
                 next if element.model?

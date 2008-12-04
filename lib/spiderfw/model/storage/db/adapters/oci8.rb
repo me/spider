@@ -4,6 +4,12 @@ require 'oci8'
 module Spider; module Model; module Storage; module Db
     
     class OCI8 < DbStorage
+        @capabilities = {
+            :autoincrement => false,
+            :sequences => true,
+            :transactions => true
+        }
+        
         @semaphore = Mutex.new
         @connections = {}
         
@@ -145,6 +151,12 @@ module Spider; module Model; module Storage; module Db
              return nil unless res && res[0]
              return res[0]['N']
          end
+         
+         def sequence_next(table, field)
+             sn = sequence_name(table, field)
+             res = execute("SELECT #{sn}.NEXTVAL AS NEXT FROM DUAL")
+             return res[0]['NEXT'].to_i
+         end
 
          
          ##############################################################
@@ -167,15 +179,39 @@ module Spider; module Model; module Storage; module Db
              super
          end
          
+         def sql_condition(query)
+             where, vals = super
+             if (query[:limit])
+                 if (query[:offset])
+                     limit_cond = "ROWNUM BETWEEN #{query[:offset]} AND #{query[:offset]+query[:limit]}"
+                 else
+                     limit_cond = "ROWNUM < #{query[:limit]}"
+                 end
+                 if (where && !where.empty?)
+                     where = "(#{where}) AND (#{limit_cond})"
+                 else
+                     where = limit_cond
+                 end
+             end
+             return [where, vals]
+         end
+         
+         def sql_limit(query)
+             # already done in sql_condition
+         end
+         
          def sql_condition_value(key, comp, value)
+             if (comp.to_s.downcase == 'ilike')
+                 comp = 'like'
+                 key = "UPPER(#{key})"
+             end
              "#{key} #{comp} :#{(@bind_cnt += 1)}"
          end
          
          def sql_insert(insert)
              @bind_cnt = 0
-             keys = (insert[:autoincrement] + insert[:values].keys).join(', ')
-             vals = insert[:autoincrement].map{|field| "#{sequence_name(insert[:table], field)}.NEXTVAL"} +
-                    insert[:values].values.map{":#{(@bind_cnt += 1)}"}
+             keys = insert[:values].keys.join(', ')
+             vals = insert[:values].values.map{":#{(@bind_cnt += 1)}"}
              vals = vals.join(', ')
              sql = "INSERT INTO #{insert[:table]} (#{keys}) " +
                    "VALUES (#{vals})"
@@ -195,6 +231,11 @@ module Spider; module Model; module Storage; module Db
              update[:values].map{ |k, v| 
                  "#{k} = :#{(@bind_cnt += 1)}"
              }.join(', ')
+         end
+         
+         def sql_delete(del)
+             @bind_cnt = 0
+             super
          end
 
          
@@ -300,8 +341,12 @@ module Spider; module Model; module Storage; module Db
          
          def table_name(name)
              table_name = name.to_s.gsub('::', '_')
-             while (table_name.length > 30)
-                 parts = table_name.split('_')
+             return shorten_identifier(table_name, 30).upcase
+         end
+         
+         def shorten_identifier(name, length)
+             while (name.length > length)
+                 parts = name.split('_')
                  max = 0
                  max_i = nil
                  parts.each_index do |i|
@@ -311,10 +356,10 @@ module Spider; module Model; module Storage; module Db
                      end
                  end
                  parts[max_i] = parts[max_i][0..-2]
-                 table_name = parts.join('_')
-                 table_name.gsub!('_+', '_')
+                 name = parts.join('_')
+                 name.gsub!('_+', '_')
              end
-             return table_name.upcase
+             return name
          end
          
          def column_name(name)
@@ -322,7 +367,7 @@ module Spider; module Model; module Storage; module Db
          end
          
          def sequence_name(table, field)
-             table+'_'+field
+             shorten_identifier(table+'_'+field, 30)
          end
          
         

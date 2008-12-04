@@ -1,15 +1,57 @@
 require 'spiderfw/model/datatypes'
+require 'spiderfw/model/unit_of_work'
+require 'spiderfw/model/identity_mapper'
 
 module Spider 
     
     module Model
         
-        def self.unit_of_work=(uow)
-            @unit_of_work = uow
-        end
         
         def self.unit_of_work
-            @unit_of_work
+            Thread.current[:unit_of_work]
+        end
+        
+        def self.get(model, val)
+            if (!val.is_a?(Hash))
+                if (model.primary_keys.length == 1)
+                    val = {model.primary_keys[0].name => val}
+                else
+                    raise ModelException, "Can't get without primary keys"
+                end
+            end
+            if identity_mapper
+                return identity_mapper.get(model, val)
+            else
+                return model.new(val)
+            end
+        end
+        
+        def self.identity_mapper_put(obj)
+            return nil unless identity_mapper
+            return identity_mapper.put(obj)
+        end
+        
+        def self.identity_mapper
+            Thread.current[:identity_mapper]
+        end
+        
+        def self.identity_mapper=(im)
+            Thread.current[:identity_mapper] = im
+        end
+        
+        def self.with_unit_of_work(&proc)
+            return if unit_of_work
+            UnitOfWork.new(&proc)
+        end
+        
+        def self.with_identity_mapper(&proc)
+            if identity_mapper
+                yield identity_mapper
+            else
+                IdentityMapper.new do |im|
+                    yield im
+                end
+            end
         end
         
         class ModelException < RuntimeError

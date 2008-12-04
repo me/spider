@@ -9,9 +9,14 @@ module Spider; module Model; module Storage; module Db
             'INT' => ['TEXT', 'LONGTEXT', 'REAL'],
             'REAL' => ['TEXT']
         }
+        @capabilities = {
+            :autoincrement => false,
+            :sequences => true,
+            :transactions => true
+        }
 
         class << self
-            attr_reader :reserved_keywords, :safe_conversions
+            attr_reader :reserved_keywords, :safe_conversions, :capabilities
         end
         
         def initialize(url)
@@ -22,6 +27,10 @@ module Spider; module Model; module Storage; module Db
             require 'spiderfw/model/mappers/db_mapper'
             mapper = Spider::Model::Mappers::DbMapper.new(model, self)
             return mapper
+        end
+        
+        def supports?(capability)
+            self.class.capabilities[capability]
         end
         
         def supports_transactions?
@@ -181,6 +190,7 @@ module Spider; module Model; module Storage; module Db
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
                 else
+                    v[2].upcase! if (v[1].to_s.downcase == 'ilike')
                     bind_vars << v[2]
                     sql_condition_value(v[0], v[1], v[2])
                 end
@@ -189,6 +199,10 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_condition_value(key, comp, value)
+            if (comp.to_s.downcase == 'ilike')
+                comp = 'like'
+                key = "UPPER(#{key})"
+            end
             "#{key} #{comp} ?"
         end
         

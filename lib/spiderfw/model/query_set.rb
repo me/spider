@@ -6,7 +6,9 @@ module Spider; module Model
         attr_accessor :query, :model, :owner, :total_rows
         attr_accessor :fetch_window
 
-        def initialize(model, query=nil)
+        def initialize(model, query_or_val=nil)
+            query = query_or_val if (query_or_val.is_a?(Query))
+            data = query_or_val if (query_or_val.is_a?(Enumerable))
             @query = query || Query.new
             @model = model
             @objects = []
@@ -15,11 +17,37 @@ module Spider; module Model
             @index_lookup = {}
             @total_rows = nil
             @fetch_window = nil
+            @autoload = true
+            load_enumerable(data) if data
+            self
         end
         
         def mapper
             @model.mapper
         end
+        
+        def autoload=(bool)
+            @autoload = bool
+            @objects.each{ |obj| obj.autoload = bool }
+        end
+        
+        def autoload?
+            @autoload ? true : false
+        end
+        
+        def no_autoload
+            prev_autoload = autoload?
+            autoload = false
+            yield
+            autoload = prev_autoload
+        end
+            
+        def load_enumerable(enum)
+            enum.each do |val|
+                self << val
+            end
+        end
+                
 
         # Adds an object to the set. Also stores the raw data if it is passed as the second parameter. 
         def <<(obj, raw=nil)
@@ -63,7 +91,7 @@ module Spider; module Model
                 search_key = names.map{ |name| 
                     search_key(obj, name)
                 }.join(',')
-                @index_lookup[index_by][search_key] ||= [] << obj
+                (@index_lookup[index_by][search_key] ||= []) << obj
             end
         end
         
@@ -99,6 +127,7 @@ module Spider; module Model
             result = @index_lookup[index][search_key]
             #result = QuerySet.new(result) if (result)
             @objects = result
+            return QuerySet.new(@model, @query) unless result
             return result
         end
 
@@ -126,6 +155,10 @@ module Spider; module Model
             return "[" +
                 @objects.map{ |obj| obj.to_json }.join(',') +
                 "]"
+        end
+        
+        def to_hash_array
+            return @objects.map{ |obj| obj.to_hash }
         end
         
         def table

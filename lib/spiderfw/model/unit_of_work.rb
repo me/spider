@@ -8,9 +8,9 @@ module Spider; module Model
         def initialize(&proc)
             @objects = {}
             if (proc)
-                Spider::Model.unit_of_work = self
-                yield
-                Spider::Model.unit_of_work = nil
+                Thread.current[:unit_of_work] = self
+                yield self
+                Thread.current[:unit_of_work] = nil
             end
         end
         

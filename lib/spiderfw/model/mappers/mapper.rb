@@ -47,10 +47,10 @@ module Spider; module Model
                 val = obj.get(name)
                 next if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
                 if (val.is_a? Array)
-                    val.each_index { |i| val[i] = @model.new(val[i]) }
-                    obj.set(name, val)
+                    val.each_index { |i| val[i] = Spider::Model.get(element.model, val[i]) unless val[i].is_a?(BaseModel) || val.is_a?(QuerySet) }
+                    obj.set(name, QuerySet.new(element.model, val))
                 else
-                    val = element.model.new(val)
+                    val = Spider::Model.get(element.model, val)
                     obj.set(name, val)
                 end
             end
@@ -68,23 +68,25 @@ module Spider; module Model
         end
         
         def save(obj)
-            normalize(obj)
-            if (@model.extended_models)
-                @model.extended_models.each do |m, el|
-                    obj.get(el).save if obj.element_has_value?(el)
-                end
-                do_insert = false
-                @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
-                    if (!obj.element_has_value?(local_pk))
-                        do_insert = true
-                        break
+            obj.no_autoload do
+                normalize(obj)
+                if (@model.extended_models)
+                    @model.extended_models.each do |m, el|
+                        obj.get(el).save if obj.element_has_value?(el)
+                    end
+                    do_insert = false
+                    @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
+                        if (!obj.element_has_value?(local_pk))
+                            do_insert = true
+                            break
+                        end
                     end
                 end
-            end
-            if (!do_insert && obj.primary_keys_set?)
-                update(obj)
-            else
-                insert(obj)
+                if (!do_insert && obj.primary_keys_set?)
+                    update(obj)
+                else
+                    insert(obj)
+                end
             end
         end
         
@@ -130,13 +132,16 @@ module Spider; module Model
         ##############################################################        
         
         def load(obj, query)
-            query = prepare_query(query, obj)
-            result = fetch(query)
-            if (result && result[0])
-                @raw_data[obj.object_id] ||= {}; @raw_data[obj.object_id].merge!(result[0])
-                map(query.request, result[0], obj)
+            Spider::Model.with_identity_mapper do |im|
+                im.put(obj)
+                query = prepare_query(query, obj)
+                result = fetch(query)
+                if (result && result[0])
+                    @raw_data[obj.object_id] ||= {}; @raw_data[obj.object_id].merge!(result[0])
+                    map(query.request, result[0], obj)
+                end
+                get_external(obj, query)
             end
-            get_external(obj, query)
             return obj
         end
         
@@ -147,20 +152,24 @@ module Spider; module Model
             #     q.parse_xsql(query)
             #     query = q
             # end
-            query = prepare_query(query)
-            query.request.total_rows = true unless query.request.total_rows = false
-            result = fetch(query)
-            set = query_set || QuerySet.new(@model)
-            set.index_by(*@model.primary_keys)
-            set.query = query
-            return set unless result
-            set.total_rows = result.total_rows
-            result.each do |row|
-                obj = set.model.new
-                @raw_data[obj.object_id] = row
-                set << map(query.request, row, obj)
+            set = nil
+            Spider::Model.with_identity_mapper do |im|
+                im.put(query_set)
+                query = prepare_query(query)
+                query.request.total_rows = true unless query.request.total_rows = false
+                result = fetch(query)
+                set = query_set || QuerySet.new(@model)
+                set.index_by(*@model.primary_keys)
+                set.query = query
+                return set unless result
+                set.total_rows = result.total_rows
+                result.each do |row|
+                    obj =  map(query.request, row, set.model)
+                    @raw_data[obj.object_id] = row
+                    set << obj
+                end
+                set = get_external(set, query)
             end
-            set = get_external(set, query)
             return set
         end
         

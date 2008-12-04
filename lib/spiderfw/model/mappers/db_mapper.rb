@@ -67,14 +67,15 @@ module Spider; module Model; module Mappers
         end
         
         def do_delete(obj)
-            delete = prepare_delete(obj)
+            #delete = prepare_delete(obj)
+            del = {}
             condition = Condition.new_and
             @model.primary_keys.each do |key|
                 condition[key.name] = map_condition_value(key.type, obj.get(key))
             end
-            delete[:condition], save[:joins] = prepare_condition(condition)
-            delete[:table] = @schema.table
-            sql, values =  @storage.sql_delete(save)
+            del[:condition], del[:joins] = prepare_condition(condition)
+            del[:table] = @schema.table
+            sql, values =  @storage.sql_delete(del)
             @storage.execute(sql, *values)
         end
         
@@ -85,15 +86,15 @@ module Spider; module Model; module Mappers
         
         def prepare_save(obj, save_mode)
             values = {}
-            autoincrement = []
             @model.each_element do |element|
                 next unless mapped?(element)
-                if (save_mode == :insert && element.attributes[:autoincrement])
-                    autoincrement << schema.field(element.name)
+                if (save_mode == :insert && element.attributes[:autoincrement] && !@storage.supports?(:autoincrement))
+                    obj.set(element.name, @storage.sequence_next(schema.table, schema.field(element.name)))
                 end
                 if (!element.multiple? && obj.element_has_value?(element) && !element.added?)
                     next if (save_mode == :update && element.primary_key?)
                     next if (element.model? && !schema.has_foreign_fields?(element.name))
+                    next if (element.model? && !obj.get(element).primary_keys_set?)
                     next if (element.integrated?)
                     if (element.model?)
                         element_val = obj.get(element.name)
@@ -108,8 +109,7 @@ module Spider; module Model; module Mappers
                 end
             end
             return {
-                :autoincrement => autoincrement,
-                :values => values,
+                :values => values
             }
         end
         
@@ -125,25 +125,28 @@ module Spider; module Model; module Mappers
             @model.primary_keys.each do |key|
                 condition[key.name] = map_condition_value(key.type, obj.get(key))
             end
+            prepare_query_condition(condition)
             save[:condition], save[:joins] = prepare_condition(condition)
             save[:table] = @schema.table
             return @storage.sql_update(save)
         end
          
-         def save_associations(obj, element)
+         def save_associations(obj, element, add=false)
              # FIXME: this is messy
              table = @schema.junction_table_name(element.name)
              local_values = {}
              @model.primary_keys.each { |key| local_values[@schema.junction_table_our_field(element.name, key.name)] = map_condition_value(key.type, obj.get(key)) }
-             delete = {
-                 :table => table,
-                 :condition => {
-                     :conj => 'AND',
-                     :values => local_values.map{ |field, val| [field, '=', val] }
+             unless(add)
+                 delete = {
+                     :table => table,
+                     :condition => {
+                         :conj => 'AND',
+                         :values => local_values.map{ |field, val| [field, '=', val] }
+                     }
                  }
-             }
-             sql, bind_vars = @storage.sql_delete(delete)
-             @storage.execute(sql, *bind_vars)
+                 sql, bind_vars = @storage.sql_delete(delete)
+                 @storage.execute(sql, *bind_vars)
+             end
              #sql += "AND ("+element_values.map{ |field, val| "#{field} <> #{val}"}.join(" OR ")+")"
 #             @storage.execute(sql, local_values.map{ |val| val })
              obj.get(element).each do |sub_obj|
@@ -182,21 +185,34 @@ module Spider; module Model; module Mappers
             return result
         end
         
-        def map(request, result, obj)
+        def map(request, result, obj_or_model)
+            # FIXME: cleanup; get the values in a hash in both cases, then decide
+            if (obj_or_model.is_a?(Class))
+                pks = {}
+                obj_or_model.primary_keys.each do |key|
+                    result_value = result[schema.field(key.name)]
+                    pks[key.name] = map_back_value(key.type, result_value)
+                end
+                obj = Spider::Model.get(obj_or_model, pks)
+            else
+                obj = obj_or_model
+            end     
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
-                next if !element
+                next if !element || element.integrated?
                 if (element.model? && schema.has_foreign_fields?(element.name))
-                    sub_obj = element.model.new
-                    element.model.primary_keys.each do |key|
-                        sub_obj.set_loaded_value(key, result[schema.foreign_key_field(element_name, key.name)])
+                    pks = {}
+                    element.model.primary_keys.each do |key| 
+                        pks[key.name] = result[schema.foreign_key_field(element_name, key.name)]
                     end
+                    sub_obj = Spider::Model.get(element.model, pks)
                     obj.set_loaded_value(element, sub_obj)
                 end
                 next if element.model?
                 result_value = result[schema.field(element_name)]
                 obj.set_loaded_value(element, map_back_value(element.type, result_value))
             end
+            Spider::Model.identity_mapper_put(obj)
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
@@ -363,7 +379,7 @@ module Spider; module Model; module Mappers
                            remaining_condition.set(k, comp, v)
                         end
                     end
-                else
+                elsif(schema.field(element.name))
                     field = schema.qualified_field(element.name)
                     op = comp ? comp : '='
                     cond[:values] << [field, op, map_condition_value(@model.elements[k.to_sym].type, v)]
@@ -479,13 +495,14 @@ module Spider; module Model; module Mappers
             if ( !element.multiple? &&  (query.request.keys - element_keys.map{ |key| key.name }).size == 0 )
                 objects.each do |obj|
                     current_sub = obj.get(element)
-                    sub_obj = current_sub.is_a?(Spider::Model::BaseModel) ? current_sub : element.model.new()
+                    pks = {}
                     element_keys.each do |key|
                         val = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
                         val = map_back_value(element.model.elements[key.name].type, val)
-                        sub_obj.set_loaded_value(key, val)
-                        obj.set_loaded_value(element, sub_obj)
+                        pks[key.name] = val
                     end
+                    sub_obj = current_sub.is_a?(Spider::Model::BaseModel) ? current_sub : Model.get(element.model, pks)
+                    obj.set_loaded_value(element, sub_obj)
                 end
                 result = objects
             else
@@ -576,13 +593,11 @@ module Spider; module Model; module Mappers
                         search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key) #@raw_data[obj.object_id][field]
                     end
                     sub_res = element_query_set.find(search_params)
-                    if (sub_res)
-                        sub_res.each do |sub_obj|
-                            sub_obj.set_loaded_value(element.attributes[:reverse], obj)
-                        end
-                        sub_res = sub_res[0] if !element.multiple?
-                        obj.set_loaded_value(element, sub_res)
+                    sub_res.each do |sub_obj|
+                        sub_obj.set_loaded_value(element.attributes[:reverse], obj)
                     end
+                    sub_res = sub_res[0] if !element.multiple?
+                    obj.set_loaded_value(element, sub_res)
                 end
             else # 1|n <-> 1
                 # FIXME: should be already indexed, but is misssing associated objects
@@ -640,6 +655,7 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def assign_primary_keys(obj)
+            # may be implemented in model
         end
         
         def delayed_primary_keys?
@@ -718,6 +734,7 @@ module Spider; module Model; module Mappers
             n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
             schema.table = @storage.table_name(n)
             @model.each_element do |element|
+                next if element.integrated?
                 if (!element.model?)
                     type = element.custom_type? ? element.type.class.maps_to : element.type
                     schema.set_column(element.name,
@@ -771,42 +788,27 @@ module Spider; module Model; module Mappers
         
         # Helper function that generates a suitable name for a junction table
         def generate_junction_table_name(element)
-
-            element_prefix = @storage.table_name(element.type.name.sub('::Models', '').gsub('.', '_'))
-            if element.type.app && element.type.app.short_prefix
-                element_prefix.sub!(element.type.app.name, element.type.app.short_prefix) 
-            end
-            model_prefix = @storage.table_name(@model.name.sub('::Models', ''))
-            model_prefix.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
-            common = -1
-            common_prefix = ""
-            model_prefix.split(//).each_index do |i|
-                break if model_prefix[i] != element_prefix[i]
-                common += 1;
-            end
-            if (common > -1)
-                common_prefix = model_prefix[0..common]
-                model_prefix = model_prefix[common+1..model_prefix.length-1]
-                element_prefix = element_prefix[common+1..element_prefix.length-1]
-            end
-            model_part = model_prefix+"_"+element.name.to_s
-            element_part = element_prefix
             if (element.attributes[:reverse])
-                reverse = element.attributes[:reverse]
+                reverse_element = element.model.elements[element.attributes[:reverse]]
+            end
+            # this model is the owner
+            if (!reverse_element || element.attributes[:add_reverse] || element.attributes[:add_multiple_reverse] ||
+                element.attributes[:superclass])
+                table = [@model, element]
+            # the other model is the owner
+            elsif(reverse_element.attributes[:add_reverse])
+                table = [element.model, reverse_element]
+            # decide
             else
-                element.type.elements.each do |name, el|
-                    if (el.type == @model && el.attributes[:reverse] == element.name)
-                        reverse = el.name
-                        break
-                    end
-                end
+                table = [[@model, element], [element.model, reverse_element]].sort{ |a, b|
+                    "#{a[0].name}_#{a[1].name}" <=> "#{b[0].name}_#{b[1].name}"
+                }[0]
             end
-            if (reverse)
-                element_part += '_'+reverse.to_s
-            end
-            parts = [model_part, element_part].sort
-            table_name = common_prefix + parts.join('_x_')
-            return @storage.table_name(table_name)
+            mod, el = table
+            n = mod.name.to_s.sub('::Models', '')
+            n.sub!(mod.app.name, mod.app.short_prefix) if mod.app && mod.app.short_prefix
+            n += '_' + el.name.to_s
+            return @storage.table_name(n)
         end
         
         private :generate_junction_table_name
@@ -822,14 +824,14 @@ module Spider; module Model; module Mappers
             end
         end
 
-        def create_table(name, fields)
+        def create_table(table_name, fields)
             fields = fields.map{ |name, details| {
               :name => name,
               :type => details[:type],
               :attributes => details[:attributes]  
             } }
             @storage.create_table({
-                :table => name,
+                :table => table_name,
                 :fields => fields
             })
         end
