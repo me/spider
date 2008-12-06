@@ -185,18 +185,29 @@ module Spider; module Model; module Mappers
             return result
         end
         
-        def map(request, result, obj_or_model)
+        def map(request, result, obj)
+            obj = obj.new if (obj.is_a?(Class))
             # FIXME: cleanup; get the values in a hash in both cases, then decide
-            if (obj_or_model.is_a?(Class))
-                pks = {}
-                obj_or_model.primary_keys.each do |key|
-                    result_value = result[schema.field(key.name)]
-                    pks[key.name] = map_back_value(key.type, result_value)
-                end
-                obj = Spider::Model.get(obj_or_model, pks)
-            else
-                obj = obj_or_model
-            end     
+            # if (obj_or_model.is_a?(Class))
+            #     pks = {}
+            #     keys_missing = false
+            #     obj_or_model.primary_keys.each do |key|
+            #         result_value = result[schema.field(key.name)]
+            #         if (result_value)
+            #             pks[key.name] = map_back_value(key.type, result_value)
+            #         else
+            #             keys_missing = true # gets the primary keys from integrated model
+            #         end
+            #     end
+            #     if (keys_missing)
+            #         obj = obj_or_model.new
+            #     else
+            #         obj = Spider::Model.get(obj_or_model, pks)
+            #     end
+            # else
+            #     obj = obj_or_model
+            #     obj = Spider::Model.put(obj, true)
+            # end     
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
                 next if !element || element.integrated?
@@ -212,7 +223,7 @@ module Spider; module Model; module Mappers
                 result_value = result[schema.field(element_name)]
                 obj.set_loaded_value(element, map_back_value(element.type, result_value))
             end
-            Spider::Model.identity_mapper_put(obj)
+            obj = Spider::Model.put(obj, true) if obj.primary_keys_set?
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
@@ -618,12 +629,25 @@ module Spider; module Model; module Mappers
             x_table = @schema.junction_table_name(element.name)
             primary_keys = @model.primary_keys
             element_primary_keys = element.model.primary_keys
-            select = {:tables => [x_table]}
-            select[:keys] = primary_keys.map{ |key| @schema.junction_table_our_field(element.name, key.name) }
-            select[:keys] += element_primary_keys.map{ |key| @schema.junction_table_their_field(element.name, key.name) }
+            types = {}
+            select = {:tables => [x_table], :types => types}
+            select[:keys] = primary_keys.map{ |key| 
+                field = @schema.junction_table_our_field(element.name, key.name) 
+                types[field] = map_type(key.type)
+                field
+            }
+            select[:keys] += element_primary_keys.map{ |key| 
+                field = @schema.junction_table_their_field(element.name, key.name) 
+                types[field] = map_type(key.type)
+                field
+            }
             added_elements = element.type.added_elements
             if (added_elements.size > 0)
-                select[:keys] += added_elements.map{ |added| @schema.junction_table_added_field(element.name, added.name) }
+                select[:keys] += added_elements.map{ |added| 
+                    field = @schema.junction_table_added_field(element.name, added.name) 
+                    types[field] = map_type(added.type)
+                    field
+                }
             end
             condition = {:conj => 'OR', :values => []}
             objects.each do |obj|
@@ -634,6 +658,7 @@ module Spider; module Model; module Mappers
                 end
                 condition[:values] << sub_cond
             end
+
             sql, bind_vars = @storage.sql_select(select)
             result = @storage.execute(sql, *bind_vars)
             associations = {}
@@ -753,6 +778,10 @@ module Spider; module Model; module Mappers
                             )
                         end
                     elsif (!element.has_single_reverse?)
+                        next if (element.reverse && (
+                            element.model.elements[element.reverse].attributes[:add_reverse] ||
+                            element.model.elements[element.reverse].attributes[:add_multiple_reverse])
+                        )
                         table_name = generate_junction_table_name(element)
                         junction_table = {}
                         junction_table[:name] = table_name

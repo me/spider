@@ -33,6 +33,10 @@ module Spider; module Model
             return true if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
         end
         
+        def original_model
+            @original_model
+        end
+        
         def integrated?
             @attributes[:integrated_from] ? true : false
         end
@@ -55,6 +59,10 @@ module Spider; module Model
         
         def read_only?
             @attributes[:read_only] ? true : false
+        end
+        
+        def reverse
+            @attributes[:reverse]
         end
         
         def has_single_reverse?
@@ -83,6 +91,10 @@ module Spider; module Model
         
         def hidden?
             @attributes[:hidden] ? true : false
+        end
+        
+        def association
+            @attributes[:association]
         end
         
         def label
@@ -126,17 +138,22 @@ module Spider; module Model
         # it (adding other elements)
         def extend_model
             return if @extended_model
-            orig_type = @type
+            @original_model = @type
             class_name = @type.name
             @type = Class.new(BaseModel)
-            @type.extend_model(orig_type)
-            @type.instance_variable_set(:"@name", orig_type.name+'.'+@name.to_s)
+            @type.extend_model(@original_model)
+            if (@attributes[:model_name])
+                new_name = @original_model.parent_module.name.to_s+'::'+@attributes[:model_name].to_s
+            else
+                new_name = @original_model.name+'.'+@name.to_s
+            end
+            @type.instance_variable_set(:"@name", new_name)
             @type.instance_eval do
                 def name
                     @name
                 end
                 
-                @proxied_type = orig_type
+                @proxied_type = @original_model
                 # def storage
                 #     # it has only added elements, they will be merged in by the element owner
                 #     require 'spiderfw/model/storage/null_storage'

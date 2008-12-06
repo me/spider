@@ -26,10 +26,14 @@ module Spider
             end
         end
         
-        def self.identity_mapper_put(obj)
-            return nil unless identity_mapper
-            return identity_mapper.put(obj)
+        def self.put(obj, check=false)
+            if (identity_mapper)
+                return identity_mapper.put(obj, check)
+            else
+                return obj
+            end
         end
+        
         
         def self.identity_mapper
             Thread.current[:identity_mapper]

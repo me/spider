@@ -170,7 +170,7 @@ module Spider; module Model; module Storage; module Db
         def sql_tables(query)
             query[:tables].map{ |table|
                 str = table
-                if (query[:joins][table])
+                if (query[:joins] && query[:joins][table])
                     query[:joins][table].each_key do |to_table|
                         str += " "+sql_joins(query[:joins][table][to_table])
                     end

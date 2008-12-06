@@ -165,6 +165,7 @@ module Spider; module Model; module Storage; module Db
          
          def sql_keys(query)
              query[:keys].map{ |key|
+                 debugger unless query[:types].is_a?(Hash)
                  if (query[:types][key] == 'dateTime')
                      as = key.split('.')[-1]
                      "TO_CHAR(#{key}, 'yyyy-mm-dd hh24:mi') AS #{as}"

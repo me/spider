@@ -133,14 +133,16 @@ module Spider; module Model
         
         def load(obj, query)
             Spider::Model.with_identity_mapper do |im|
-                im.put(obj)
+                im.put(obj) if obj.primary_keys_set?
                 query = prepare_query(query, obj)
                 result = fetch(query)
                 if (result && result[0])
                     @raw_data[obj.object_id] ||= {}; @raw_data[obj.object_id].merge!(result[0])
                     map(query.request, result[0], obj)
                 end
+                delay_put = obj.primary_keys_set? ? false : true
                 get_external(obj, query)
+                im.put(obj, true) if delay_put
             end
             return obj
         end
@@ -168,7 +170,14 @@ module Spider; module Model
                     @raw_data[obj.object_id] = row
                     set << obj
                 end
+                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
                 set = get_external(set, query)
+                if (delay_put)
+                    set.each_index do |i|
+                        set[i].primary_keys_set?
+                        set[i] = im.put(set[i], true)
+                    end
+                end
             end
             return set
         end
@@ -262,6 +271,7 @@ module Spider; module Model
                 request[key] = true unless obj && obj.element_loaded?(key)
             end
             request.each do |k, v|
+                next unless @model.elements[k]
                 if (@model.elements[k].integrated?)
                     integrated_from = @model.elements[k].integrated_from
                     integrated_from_element = @model.elements[k].integrated_from_element
