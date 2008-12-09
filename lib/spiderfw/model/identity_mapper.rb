@@ -37,7 +37,7 @@ module Spider; module Model
                 @objects[obj.class] ||= {}
                 if (check && existent = @objects[obj.class][pks])
                     obj.no_autoload do
-                        obj.class.each_element do |el|
+                        obj.class.elements_array.select{ |el| obj.element_has_value?(el) }.each do |el|
                             existent.set_loaded_value(el, obj.get(el)) 
                         end
                     end

@@ -18,6 +18,7 @@ module Spider; module Model
         end
         
         def request(element)
+            Spider.logger.debug("Requesting #{element}")
             element.to_s.split(',').each do |el|
                 self[el.strip] = true
             end

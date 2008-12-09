@@ -136,8 +136,9 @@ module Spider; module Model
                 im.put(obj) if obj.primary_keys_set?
                 query = prepare_query(query, obj)
                 result = fetch(query)
+                @raw_data[obj.object_id] ||= {}
                 if (result && result[0])
-                    @raw_data[obj.object_id] ||= {}; @raw_data[obj.object_id].merge!(result[0])
+                    @raw_data[obj.object_id].merge!(result[0])
                     map(query.request, result[0], obj)
                 end
                 delay_put = obj.primary_keys_set? ? false : true
@@ -282,6 +283,13 @@ module Spider; module Model
         
         # FIXME: better name, move somewhere else
         def prepare_query_condition(condition)
+            if (@model.attributes[:condition])
+                subcond = Condition.new(@model.attributes[:condition])
+                cond = Condition.new_and
+                cond << condition
+                cond << subcond
+                condition = cond
+            end
             condition.each_with_comparison do |k, v, c|
                 if (@model.elements[k].integrated?)
                     condition.delete(k)

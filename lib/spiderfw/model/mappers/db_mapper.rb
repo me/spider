@@ -161,7 +161,7 @@ module Spider; module Model; module Mappers
                  # sql = "INSERT INTO #{table} (#{local_values.keys.join(',')}, #{element_values.keys.join(',')}) VALUES ("+
                  #         (local_values.values+element_values.values).map{'?'}.join(',') + ")"
                  sql, bind_vars = @storage.sql_insert(insert)
-                 @storage.execute(sql, bind_vars)
+                 @storage.execute(sql, *bind_vars)
                  #end
              end
          end
@@ -216,8 +216,12 @@ module Spider; module Model; module Mappers
                     element.model.primary_keys.each do |key| 
                         pks[key.name] = result[schema.foreign_key_field(element_name, key.name)]
                     end
-                    sub_obj = Spider::Model.get(element.model, pks)
-                    obj.set_loaded_value(element, sub_obj)
+                    begin
+                        sub_obj = Spider::Model.get(element.model, pks)
+                        obj.set_loaded_value(element, sub_obj)
+                    rescue IdentityMapperException
+                        # null keys, nothing to set
+                    end
                 end
                 next if element.model?
                 result_value = result[schema.field(element_name)]
@@ -249,7 +253,7 @@ module Spider; module Model; module Mappers
             @model.elements.select{ |name, element| 
                 !element.model? && (!obj || !obj.element_loaded?(element))
             }.each do |name, element|
-                request[element] = true
+                request[name] = true
             end
             super(request, obj)
         end
@@ -343,6 +347,7 @@ module Spider; module Model; module Mappers
         
         
         def prepare_condition(condition)
+            # FIXME: move to mapper
             condition.each_with_comparison do |k, v, comp|
                 # normalize condition values
                 element = @model.elements[k.to_sym]
@@ -486,7 +491,7 @@ module Spider; module Model; module Mappers
             return nil unless value
             case type
             when 'dateTime'
-                return DateTime.parse(value)
+                return DateTime.parse(value) unless value.is_a?(DateTime)
             end
             return value
         end
@@ -502,7 +507,8 @@ module Spider; module Model; module Mappers
         def get_external_element(element, query, objects)
             element_keys = element.model.primary_keys
             # If the element is not multiple and all requests are primary keys, we already have all we need
-            if ( !element.multiple? &&  (query.request.keys - element_keys.map{ |key| key.name }).size == 0 )
+            if ( !element.multiple? &&  schema.has_foreign_fields?(element.name) &&
+                (query.request.keys - element_keys.map{ |key| key.name }).size == 0 )
                 objects.each do |obj|
                     current_sub = obj.get(element)
                     pks = {}
@@ -540,7 +546,17 @@ module Spider; module Model; module Mappers
                         condition_row = Condition.new_and
                         if (!element.multiple? && schema.has_foreign_fields?(element.name)) # 1|n <-> 1
                             element_keys.each do |key|
-                                condition_row[key.name] = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
+                                if @raw_data[obj.object_id]
+                                    val = @raw_data[obj.object_id][schema.foreign_key_field(element.name, key.name)]
+                                # FIXME!!!
+                                # try to get the value for the superclass, if there were no results for the subclass
+                                elsif obj.class.elements[key.name] && obj.element_has_value?(key)
+                                    val = obj.get(key)
+                                end
+                                if (val)
+                                    val = map_back_value(key.type, val)
+                                    condition_row[key.name] = val
+                                end
                             end
                             index_by = element_keys
                         elsif (element.has_single_reverse?) # 1 <-> n|1
@@ -663,11 +679,19 @@ module Spider; module Model; module Mappers
             result = @storage.execute(sql, *bind_vars)
             associations = {}
             result.each do |row|
-                obj_key = primary_keys.map{ |key| row[@schema.junction_table_our_field(element.name, key.name)] }.join(',')
+                obj_key = primary_keys.map{ |key| 
+                    map_back_value(key.type, row[@schema.junction_table_our_field(element.name, key.name)]) 
+                }.join(',')
                 associations[obj_key] ||= []
                 element_values = {}
-                element_primary_keys.each{ |key| element_values[key.name] = row[@schema.junction_table_their_field(element.name, key.name)] }
-                element.model.added_elements.each{ |added| element_values[added.name] = row[@schema.junction_table_added_field(element.name, added.name)]}
+                element_primary_keys.each do |key| 
+                    element_values[key.name] = map_back_value(key.type, 
+                        row[@schema.junction_table_their_field(element.name, key.name)])
+                end
+                element.model.added_elements.each do |added|
+                    element_values[added.name] = 
+                        map_back_value(added.type, row[@schema.junction_table_added_field(element.name, added.name)])
+                end
                 associations[obj_key] << element_values
             end
             return associations

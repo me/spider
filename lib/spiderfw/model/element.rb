@@ -141,19 +141,27 @@ module Spider; module Model
             @original_model = @type
             class_name = @type.name
             @type = Class.new(BaseModel)
-            @type.extend_model(@original_model)
+            params = {}
+            if (@attributes[:association] == :multiple_choice)
+                params[:hide_elements] = true
+                params[:hide_integrated] = false
+            else
+                params[:hide_integrated] = true
+            end
+            @type.extend_model(@original_model, params)
             if (@attributes[:model_name])
                 new_name = @original_model.parent_module.name.to_s+'::'+@attributes[:model_name].to_s
             else
                 new_name = @original_model.name+'.'+@name.to_s
             end
             @type.instance_variable_set(:"@name", new_name)
+            proxied_type = @original_model
             @type.instance_eval do
                 def name
                     @name
                 end
                 
-                @proxied_type = @original_model
+                @proxied_type = proxied_type
                 # def storage
                 #     # it has only added elements, they will be merged in by the element owner
                 #     require 'spiderfw/model/storage/null_storage'

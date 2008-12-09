@@ -16,7 +16,7 @@ module Spider; module Model
             parts = key.to_s.split('.', 2)
             return super(key.to_sym, val) unless parts[1]
             parts[0] = parts[0].to_sym
-            self[parts[0]] ||= get_deep_obj
+            self[parts[0]] = get_deep_obj unless self[parts[0]].is_a?(self.class)
             self[parts[0]][parts[1]] = val
         end
         

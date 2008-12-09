@@ -151,9 +151,9 @@ module Spider; module Model
             return "#{self.class.name}:\n@model=#{@model}, @query=#{query.inspect}, @objects=#{@objects.inspect}"
         end
         
-        def to_json
+        def to_json(&proc)
             return "[" +
-                @objects.map{ |obj| obj.to_json }.join(',') +
+                @objects.map{ |obj| obj.to_json(&proc) }.join(',') +
                 "]"
         end
         

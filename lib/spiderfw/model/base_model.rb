@@ -7,7 +7,9 @@ module Spider; module Model
         include Spider::Logger
         include DataTypes
         
-        class <<self; attr_reader :integrated_models, :extended_models, :polymorphic_models; end
+        class <<self
+            attr_reader :attributes, :integrated_models, :extended_models, :polymorphic_models 
+        end
         
         @@base_types = {
             'text' => {:klass => String},
@@ -107,6 +109,7 @@ module Spider; module Model
                     return get(element.integrated_from.name).send(element.integrated_from_element)
                 end
                 return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
+                
                 if autoload? && primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                 elsif (self.class.elements[name].attributes[:multiple])
@@ -126,7 +129,7 @@ module Spider; module Model
                 element = self.class.elements[name]
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
-                    integrated_obj.autoload = false
+                    #integrated_obj.autoload = false
                     return integrated_obj.send("#{element.integrated_from_element}=", val)
                 end
                 if (element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
@@ -154,29 +157,24 @@ module Spider; module Model
 
         end
         
-        def self.attributes(element_name, attributes)
+        def self.element_attributes(element_name, attributes)
             elements[element_name].attributes.merge!(attributes)
         end
         
-        def self.has_many(name, type, attributes={}, &proc)
+        def self.many(name, type, attributes={}, &proc)
             attributes[:multiple] = true
-            attributes[:association] ||= :has_many
+            attributes[:association] ||= :many
             element(name, type, attributes, &proc)
         end
-        
-        def self.owns_many(name, type, attributes={}, &proc)
-            attributes[:owner] = true
-            has_many(name, type, attributes, &proc)
-        end
-        
+                
         def self.choice(name, type, attributes={}, &proc)
             attributes[:association] = :choice
             element(name, type, attributes, &proc)
         end
         
-        def self.chooses_many(name, type, attributes={}, &proc)
-            attributes[:association] = :chooses_many
-            has_many(name, type, attributes, &proc)
+        def self.multiple_choice(name, type, attributes={}, &proc)
+            attributes[:association] = :multiple_choice
+            many(name, type, attributes, &proc)
         end
         
         # This should be used only on extended models
@@ -224,11 +222,13 @@ module Spider; module Model
             integrated_name = integrated_name.to_sym
             @extended_models ||= {}
             @extended_models[model] = integrated_name
-            integrated_attributes = {:integrated_model => true, :superclass => true, :hidden => true}
+            integrated_attributes = {:integrated_model => true, :superclass => true}
+            integrated_attributes[:hidden] = true unless (params[:hide_integrated] == false)
             integrated = element(integrated_name, model, integrated_attributes)
             model.each_element do |el|
                 attributes = el.attributes.clone
                 attributes[:integrated_from] = integrated
+                attributes[:hidden] = true if (params[:hide_elements])
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
                     attributes[:reverse] = add_rev
                     attributes.delete(:add_reverse)
@@ -242,8 +242,7 @@ module Spider; module Model
         end
         
         def self.inherit_storage
-            @attributes ||= {}
-            @attributes[:inherit_storage] = true
+            self.attributes[:inherit_storage] = true
             (class << self; self; end).instance_eval do
                 define_method(:storage) do
                     superclass.storage
@@ -252,8 +251,7 @@ module Spider; module Model
         end
         
         def self.condition(condition)
-            @attributes ||= {}
-            @attributes[:condition] = condition
+            self.attributes[:condition] = condition
         end
             
         
@@ -278,6 +276,9 @@ module Spider; module Model
             @polymorphic_models[model] = {:through => through}
         end
 
+        def self.attributes
+            @attributes ||= {}
+        end
         
         #####################################################
         #   Methods returning information about the model   #
@@ -379,7 +380,8 @@ module Spider; module Model
         end
 
         def self.get_mapper(storage)
-            mapper = storage.get_mapper(self)
+            map_class = self.attributes[:inherit_storage] ? superclass : self
+            mapper = storage.get_mapper(map_class)
             if (@mapper_proc)
                 mapper.instance_eval(&@mapper_proc)
             end
@@ -530,7 +532,8 @@ module Spider; module Model
             @_tmp_autoload_walk = true
             @_autoload = bool
             self.class.elements_array.select{ |el| el.model? && element_has_value?(el.name)}.each do |el|
-                get(el).autoload = bool
+                val = get(el)
+                val.autoload = bool if val.respond_to?(:autoload=)
             end
             @_tmp_autoload_walk = nil
         end
@@ -539,7 +542,7 @@ module Spider; module Model
             prev_autoload = autoload?
             self.autoload = false
             yield
-            autoload = prev_autoload
+            self.autoload = prev_autoload
         end
         
         ##############################################################
@@ -663,11 +666,13 @@ module Spider; module Model
                 elsif (params[0].is_a?(Hash))
                     query.request = Request.new(params.shift)
                 end
+                
                 elements = params.length > 0 ? params : self.class.elements.keys
                 return true unless elements.select{ |el| !element_loaded?(el) }.length > 0
                 elements.each do |name|
-                    query.request[name]
+                    query.request[name] = true
                 end
+                query.condition.conjunction = :and
                 self.class.primary_keys.each do |key|
                     query.condition[key.name] = get(key.name)
                 end
@@ -754,22 +759,36 @@ module Spider; module Model
         end
         
         
-        def to_json
-            if (@tmp_json_seen)
-                return self.class.primary_keys.map{ |k| get(k).to_json }.to_json
+        def to_json(&proc)
+            if (@tmp_json_seen && !block_given?)
+                pks = self.class.primary_keys.map{ |k| get(k).to_json }
+                pks = pks[0] if pks.length == 1
+                return pks.to_json
             end
             @tmp_json_seen = true
             self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                 (int = get(el)) && int.instance_variable_set("@tmp_json_seen", true)
             end
+            if (block_given?)
+                select_elements = Proc.new{ true }
+            else
+                select_elements = Proc.new{ |name, el|
+                    !el.hidden? &&
+                    #!el.attributes[:integrated_model]  && 
+                    (element_has_value?(el) || (el.integrated? && element_has_value?(el.integrated_from)))
+                 }
+             end
+                
             json = "{" +
-                    self.class.elements.select{ |name, el|
-                        !el.hidden? &&
-                        !el.attributes[:integrated_model]  && 
-                        (element_has_value?(el) || (el.integrated? && element_has_value?(el.integrated_from)))
-                     }.map{ |name, el|
-                         "#{name}: " + (if block_given? then yield(el) else "#{get(name).to_json}\n" end)
-                    }.join(',') + "}"
+                    self.class.elements.select(&select_elements).map{ |name, el|
+                         if (block_given?)
+                             val = yield(self, el)
+                             val ? "#{name}: #{val}" : nil
+                         else
+                             val = get(name).to_json
+                             "#{name}: #{val}"
+                         end
+                    }.select{ |pair| pair}.join(',') + "}"
             @tmp_json_seen = false
             self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                 (int = get(el)) && int.instance_variable_set("@tmp_json_seen", false)
