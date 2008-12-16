@@ -5,6 +5,7 @@ module Spider; module Model
     class Condition < ModelHash
         attr_accessor :conjunction
         attr_reader :subconditions, :comparisons, :polymorphs#, :raw
+        attr_accessor :conjunct # a hack to keep track of which is the last condition in blocks
         
         def get_deep_obj
             c = self.class.new
@@ -30,23 +31,40 @@ module Spider; module Model
             c << b
         end
         
-        def self.new_and(hash=nil)
-            c = self.new(hash)
+        def self.and(*params, &proc)
+            c = self.new(*params, &proc)
             c.conjunction = :and
             return c
         end
         
-        def initialize(hash_or_array=nil)
-            @conjunction = :or
+        def self.or(*params, &proc)
+            c = self.new(*params, &proc)
+            c.conjunction = :or
+            return c
+        end
+        
+        def initialize(*params, &proc)
+            @conjunction = nil
             @comparisons = {}
             @subconditions = []
             @polymorphs = []
-            if (hash_or_array.is_a?(Array))
-                hash_or_array.each{ |item| self << self.class.new(item) }
-            else
+            if (params.length == 1)
                 super
+            else
+                # FIXME: must have an instantiate method
+                params.each{ |item| self << (item.is_a?(self.class) ? item : self.class.new(item)) } 
             end
-            #@raw = {}
+            parse_block(&proc) if (block_given?)
+        end
+        
+        def parse_block(&proc)
+            context = eval "self", proc.binding
+            res = context.dup.extend(ConditionMixin).instance_eval(&proc)
+            self.replace(res)
+            @conjunction = res.conjunction
+            @comparisons = res.comparisons
+            @subconditions = res.subconditions
+            @polymorphs = res.polymorphs
         end
         
         def each_with_comparison
@@ -87,12 +105,14 @@ module Spider; module Model
                 self[field] = value
                 @comparisons[field.to_sym] = comparison
             end
+            return self
         end
         
         def delete(field)
             super
             @comparisons.delete(field.to_sym)
         end
+        
         
         
         def parse_comparison(comparison)
@@ -124,6 +144,7 @@ module Spider; module Model
         end
         
         def conj(conjunction, other)
+            self.conjunction = conjunction if (!self.conjunction)
             if (self.conjunction == conjunction)
                 c = self
             else
@@ -132,6 +153,7 @@ module Spider; module Model
                 c << self
             end
             c << other
+            other.conjunct = true
             return c
         end
         
@@ -140,16 +162,84 @@ module Spider; module Model
             return conj(:or, other)
         end
         alias :| :or
+        alias :OR :or
         
         def and(other)
             return conj(:and, other)
         end
         alias :& :and
+        alias :AND :and
     
         def empty?
             return super && @subconditions.empty?
         end
+        
+        def ==(other)
+            return false unless other.class == self.class
+            return false unless super
+            return false unless @subconditions == other.subconditions
+        end
+        
+        def uniq!
+            @subconditions.uniq!
+        end
     
+    end
+    
+    module ConditionMixin
+        
+        
+        def method_missing(meth, *arguments)
+            if (meth.to_s =~ /element_(.+)/) # alternative syntax to avoid clashes
+                meth = $1.to_sym
+            end
+            name = @condition_element_name ? "#{@condition_element_name}.#{meth}" : meth.to_s
+            return ConditionElement.new(name, @condition_context)
+        end
+        
+        def AND(&proc)
+            @condition_context = []
+            instance_eval(&proc)
+            c = Condition.and
+            @condition_context.each do |cond|
+                c << cond unless (cond.conjunct)
+            end
+            @condition_context = nil
+            return c
+        end
+        
+        def OR(&proc)
+            @condition_context = []
+            instance_eval(&proc)
+            c = Condition.and
+            @condition_context.each do |cond|
+                c << cond unless (cond.conjunct)
+            end
+            @condition_context = nil
+            return c
+        end
+        
+        class ConditionElement
+            include ConditionMixin
+            
+            def initialize(name, condition_context)
+                @condition_element_name = name
+                @condition_context = condition_context
+            end
+            
+            [:==, :<, :>, :<=, :>=, :like, :ilike].each do |op|
+                define_method(op) do |val|
+                    c = Condition.new.set(@condition_element_name, op, val)
+                    if (@condition_context)
+                        @condition_context << c
+                    end
+                    return c
+                end
+            end
+                    
+        end
+
+        
     end
     
     
