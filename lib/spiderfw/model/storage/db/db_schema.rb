@@ -21,8 +21,17 @@ module Spider; module Model; module Storage; module Db
         alias :set_table :table=
         
         def field(element_name)
-            return nil unless @columns[element_name]
-            return @columns[element_name][:name]
+            if (@columns[element_name])
+                return @columns[element_name][:name]
+            elsif (@foreign_keys[element_name])
+                unless @foreign_keys[element_name].length == 1 # FIXME!!
+                    raise SchemaException, "No single field for element #{element_name}" 
+                end
+                @foreign_keys[element_name].each do |key, val|
+                    return val[:name]
+                end
+            end
+            return nil
         end
 
         
@@ -33,6 +42,14 @@ module Spider; module Model; module Storage; module Db
         def foreign_key_field(element_name, key_name)
             return nil unless @foreign_keys[element_name]
             return @foreign_keys[element_name][key_name][:name]
+        end
+        
+        def qualified_foreign_key_field(element_name, key_name)
+            return @table + '.' + foreign_key_field(element_name, key_name)
+        end
+        
+        def has_fields?(element_name)
+            return (@columns[element_name] || @foreign_keys[element_name]) ? true : false
         end
 
         def has_foreign_fields?(element_name)
@@ -52,27 +69,27 @@ module Spider; module Model; module Storage; module Db
             @foreign_keys[element_name][element_key] = column_description
         end
         
-        def set_junction_table(element_name, description)
-            @junction_tables[element_name] = description
-        end
+        # def set_junction_table(element_name, description)
+        #     @junction_tables[element_name] = description
+        # end
+        # 
+        # def junction_table_name(element_name)
+        #     return @junction_tables[element_name][:name]
+        # end
+        # 
+        # def junction_table_our_field(element_name, key)
+        #     return @junction_tables[element_name][:ours][key][:name]
+        # end
+        # 
+        # def junction_table_their_field(element_name, key)
+        #     return @junction_tables[element_name][:theirs][key][:name]
+        # end
+        # 
+        # def junction_table_added_field(element_name, added_element)
+        #     return @junction_tables[element_name][:added][added_element][:name]
+        # end
         
-        def junction_table_name(element_name)
-            return @junction_tables[element_name][:name]
-        end
-        
-        def junction_table_our_field(element_name, key)
-            return @junction_tables[element_name][:ours][key][:name]
-        end
-        
-        def junction_table_their_field(element_name, key)
-            return @junction_tables[element_name][:theirs][key][:name]
-        end
-        
-        def junction_table_added_field(element_name, added_element)
-            return @junction_tables[element_name][:added][added_element][:name]
-        end
-        
-        def get_all_schemas
+        def get_schemas
             schemas = {}
             schemas[@table] = {}
             @columns.each do |element, column|
@@ -83,16 +100,16 @@ module Spider; module Model; module Storage; module Db
                     schemas[@table][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
                 end
             end
-            @junction_tables.each do |element, junction_table|
-                table_name = junction_table[:name]
-                schemas[table_name] = {}
-                [junction_table[:ours], junction_table[:theirs], junction_table[:added]].each do |fields|
-                    continue unless fields
-                    fields.each do |key, column|
-                        schemas[table_name][column[:name]] = { :type => column[:type], :attributes => column[:attributes] }
-                    end
-                end
-            end
+            # @junction_tables.each do |element, junction_table|
+            #     table_name = junction_table[:name]
+            #     schemas[table_name] = {}
+            #     [junction_table[:ours], junction_table[:theirs], junction_table[:added]].each do |fields|
+            #         continue unless fields
+            #         fields.each do |key, column|
+            #             schemas[table_name][column[:name]] = { :type => column[:type], :attributes => column[:attributes] }
+            #         end
+            #     end
+            # end
             return schemas
         end       
         

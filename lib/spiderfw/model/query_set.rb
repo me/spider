@@ -2,13 +2,18 @@ module Spider; module Model
 
     class QuerySet
         include Enumerable
+        attr_accessor :_parent, :_parent_element
         attr_reader :raw_data
         attr_accessor :query, :model, :owner, :total_rows
-        attr_accessor :fetch_window
+        attr_accessor :loaded, :fetch_window
+        attr_accessor :identity_mapper
 
         def initialize(model, query_or_val=nil)
-            query = query_or_val if (query_or_val.is_a?(Query))
-            data = query_or_val if (query_or_val.is_a?(Enumerable))
+            if (query_or_val.is_a?(Query))
+                 query = query_or_val 
+            else
+                data = query_or_val
+            end
             @query = query || Query.new
             @model = model
             @objects = []
@@ -17,8 +22,12 @@ module Spider; module Model
             @index_lookup = {}
             @total_rows = nil
             @fetch_window = nil
-            @autoload = true
-            load_enumerable(data) if data
+            @autoload = query_or_val.is_a?(Query) ? true : false
+            @identity_mapper = nil
+            @loaded = false
+            @loaded_elements = {}
+            @fixed = {}
+            set_data(data) if data
             self
         end
         
@@ -26,25 +35,43 @@ module Spider; module Model
             @model.mapper
         end
         
-        def autoload=(bool)
+        def fixed(name, value)
+            @fixed[name] = value
+        end
+        
+        def autoload(bool, traverse=true)
             @autoload = bool
-            @objects.each{ |obj| obj.autoload = bool }
+            @objects.each{ |obj| obj.autoload = bool } if traverse
+        end
+        
+        def autoload=(bool)
+            autoload(bool)
         end
         
         def autoload?
             @autoload ? true : false
         end
         
-        def no_autoload
+        def set_parent(obj, element)
+            return if @_parent # FIXME
+            @_parent = obj
+            @_parent_element = element
+        end
+        
+        def no_autoload(traverse=true)
             prev_autoload = autoload?
-            autoload = false
+            self.autoload(false, traverse)
             yield
-            autoload = prev_autoload
+            self.autoload(prev_autoload, traverse)
         end
             
-        def load_enumerable(enum)
-            enum.each do |val|
-                self << val
+        def set_data(data)
+            if (data.is_a?(Enumerable))
+                data.each do |val|
+                    self << val
+                end
+            else
+                self << data
             end
         end
                 
@@ -52,17 +79,33 @@ module Spider; module Model
         # Adds an object to the set. Also stores the raw data if it is passed as the second parameter. 
         def <<(obj, raw=nil)
             return merge(obj) if (obj.class == QuerySet)
+            unless (obj.is_a?(@model))
+                obj = instantiate_object(obj)
+            end
             @objects << obj
+            @loaded_elements.merge!(obj.loaded_elements)
+            obj.set_parent(self, nil)
+            @fixed.each do |key, val|
+                obj.set(key, val)
+            end
             index_object(obj)
             @raw_data[@objects.length-1] = raw if raw
         end
 
         def [](key)
+            load unless @objects[key] || @loaded || !autoload?
             @objects[key]
         end
         
         def []=(key, val)
-            @objects[key] = @model.new(val)
+            load unless @loaded || !autoload?
+            val = instantiate_object(val) unless val.is_a?(@model)
+            @loaded_elements.merge!(val.loaded_elements)
+            val.set_parent(self, nil)
+            @fixed.each do |key, fval|
+                val.set(key, fval)
+            end
+            @objects[key] = val
         end
         
         def length
@@ -74,15 +117,19 @@ module Spider; module Model
             index_name = names.sort.join(',')
             @index_lookup[index_name] = {}
             reindex
+            return self
         end
         
         def reindex
             @index_lookup.each_key do |index|
                 @index_lookup[index] = {}
             end
-            each do |obj|
-                index_object(obj)
+            no_autoload(false) do
+                each do |obj|
+                    index_object(obj)
+                end
             end
+            return self
         end
         
         def index_object(obj)
@@ -106,10 +153,12 @@ module Spider; module Model
                 
 
         def each
+            load unless @loaded || !autoload?
             @objects.each{ |obj| yield obj }
         end
 
         def each_index
+            load unless @loaded || !autoload?
             @objects.each_index{ |index| yield index }
         end
         
@@ -126,17 +175,40 @@ module Spider; module Model
             raise UnimplementedError, "find without an index is not yet implemented" unless @index_lookup[index]
             result = @index_lookup[index][search_key]
             #result = QuerySet.new(result) if (result)
-            @objects = result
-            return QuerySet.new(@model, @query) unless result
-            return result
+            #@objects = result
+            return QuerySet.new(@model, result)
         end
 
         def order_by(*elements)
             @query.order_by *elements
         end
         
+        def set(element, value)
+            element_name = element.is_a?(Element) ? element.name : element
+            fixed(element_name, value)
+#            @query.condition.set(element, '=', value)
+            no_autoload(false) do
+                each do |obj|
+                    obj.set(element_name, value)
+                end
+            end
+        end
+        
         def load
             mapper.find(@query, self)
+            @loaded = true
+        end
+        
+        def save
+            no_autoload(false){ each{ |obj| obj.save } }
+        end
+        
+        def insert
+            no_autoload(false){ each{ |obj| obj.insert } }
+        end
+        
+        def update
+            no_autoload(false){ each{ |obj| obj.update } }
         end
         
 
@@ -145,6 +217,17 @@ module Spider; module Model
 #                next if (unit_of_work && !unit_of_work.save?(obj))
                 obj.save_all(params)
             end
+        end
+        
+        def instantiate_object(val=nil)
+            obj = @model.new(val)
+            obj.identity_mapper = @identity_mapper
+            obj.autoload = autoload?
+            obj.set_parent(self, nil)
+            @fixed.each do |key, fval|
+                obj.set(key, fval)
+            end
+            return obj
         end
         
         def inspect
@@ -217,9 +300,26 @@ module Spider; module Model
             end
         end
         
-        def method_missing(method, *args)     
-            return @query.send(method, *args)
+        def method_missing(method, *args, &proc)     
+            return @query.send(method, *args, &proc)
         end
+        
+        def all_children(path)
+            if (path.length > 0)
+                children = @objects.map{ |obj| obj.all_children(path.clone) }.flatten
+            else
+                return @objects
+            end
+        end
+        
+        def element_loaded(name)
+            @loaded_elements[name] = true
+        end
+        
+        def element_loaded?(name)
+            @loaded_elements[name]
+        end
+            
                     
         
         # def unit_of_work

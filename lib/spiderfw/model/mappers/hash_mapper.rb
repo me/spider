@@ -62,7 +62,7 @@ module Spider; module Model; module Mappers
             return true
         end
         
-        def prepare_query(query)
+        def prepare_query(query, obj=nil)
             query = super
             @model.elements.select{ |name, element| !element.model? }.each do |name, element|
                 query.request[element] = true

@@ -9,12 +9,26 @@ module Spider; module Model; module Storage; module Db
             :sequences => true,
             :transactions => true
         }
+        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num']
+        @safe_conversions = {
+            'CHAR' => ['VARCHAR', 'CLOB'],
+            'VARCHAR' => ['CLOB'],
+            'NUMBER' => ['VARCHAR']
+        }
+        @map_types = {
+            'text' => String,
+            'longText' => String,
+            'int' => Fixnum,
+            'real' => Float,
+            'dateTime' => DateTime
+        }
+        class << self; attr_reader :reserved_kewords, :safe_conversions, :map_types end
         
-        @semaphore = Mutex.new
+        @connection_semaphore = Mutex.new
         @connections = {}
         
         def self.get_connection(user, pass, dbname, role)
-            @semaphore.synchronize{
+            @connection_semaphore.synchronize{
                 conn_params = [user, pass, dbname, role]
                 @connections[conn_params] ||= []
                 if (@connections[conn_params].length > 0)
@@ -35,13 +49,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         
-        @reserved_keywords = superclass.reserved_keywords + []
-        @safe_conversions = {
-            'CHAR' => ['VARCHAR', 'CLOB'],
-            'VARCHAR' => ['CLOB'],
-            'NUMBER' => ['VARCHAR']
-        }
-        class << self; attr_reader :reserved_kewords, :safe_conversions end
+
         
         def parse_url(url)
             # db:oracle://<username/password>:connect_role@<database>
@@ -99,12 +107,13 @@ module Spider; module Model; module Storage; module Db
         end
         
         def prepare_value(type, value)
-             case type
-             when 'binary'
-                 return OCI8::BLOB.new(@conn, value)
-             end
-             return value
-         end
+            return OCI8NilValue.new(type) if (value == nil)
+            case type
+            when 'binary'
+                return OCI8::BLOB.new(@conn, value)
+            end
+            return value
+        end
 
          def execute(sql, *bind_vars)
              if (bind_vars && bind_vars.length > 0)
@@ -112,9 +121,20 @@ module Spider; module Model; module Storage; module Db
              end
              @last_executed = [sql, bind_vars]
              debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
-             result = []
-             @cursor = connection.exec(sql, *bind_vars)
+             @cursor = connection.parse(sql)
              return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
+             bind_vars.each_index do |i|
+                 var = bind_vars[i]
+                 if (var.is_a?(OCI8NilValue))
+                     @cursor.bind_param(i+1, nil, var.type, 0)
+                 else
+                     @cursor.bind_param(i+1, var)
+                 end
+             end
+             res = @cursor.exec
+             return res unless @cursor.type == ::OCI8::STMT_SELECT
+            # @cursor = connection.exec(sql, *bind_vars)
+             result = []
              while (h = @cursor.fetch_hash)
                  if block_given?
                       yield h
@@ -167,7 +187,6 @@ module Spider; module Model; module Storage; module Db
          
          def sql_keys(query)
              query[:keys].map{ |key|
-                 debugger unless query[:types].is_a?(Hash)
                  if (query[:types][key] == 'dateTime')
                      as = key.split('.')[-1]
                      "TO_CHAR(#{key}, 'yyyy-mm-dd hh24:mi') AS #{as}"
@@ -179,24 +198,37 @@ module Spider; module Model; module Storage; module Db
          
          def sql_select(query)
              @bind_cnt = 0
-             super
-         end
-         
-         def sql_condition(query)
-             where, vals = super
+             Spider::Logger.debug("SQL SELECT:")
+             Spider::Logger.debug(query)
+             bind_vars = query[:bind_vars] || []
+             keys = sql_keys(query)
+             query[:order] << [query[:keys][0], 'desc'] if query[:limit] && query[:order].length < 1
+             order = sql_order(query)
+             if (query[:limit])
+                 keys += ", row_number() over (order by #{order}) oci8_row_num"
+             end
+             Spider::Logger.debug("KEYS: #{keys}")
+             tables_sql, tables_values = sql_tables(query)
+             sql = "SELECT #{keys} FROM #{tables_sql} "
+             bind_vars += tables_values
+             where, vals = sql_condition(query)
+             bind_vars += vals
+             sql += "WHERE #{where} " if where && !where.empty?
+             order = sql_order(query)
              if (query[:limit])
                  if (query[:offset])
-                     limit_cond = "ROWNUM BETWEEN #{query[:offset]} AND #{query[:offset]+query[:limit]}"
+                     limit = "oci8_row_num between :#{@bind_cnt+=1} and :#{@bind_cnt+=1}"
+                     bind_vars << query[:offset]
+                     bind_vars << query[:limit]
                  else
-                     limit_cond = "ROWNUM < #{query[:limit]}"
+                     limit = "oci8_row_num < :#{@bind_cnt+=1}"
+                     bind_vars << query[:limit]
                  end
-                 if (where && !where.empty?)
-                     where = "(#{where}) AND (#{limit_cond})"
-                 else
-                     where = limit_cond
-                 end
+                 sql = "SELECT * FROM (#{sql}) WHERE #{limit} order by #{order}"
+             else
+                 sql += "ORDER BY #{order} " if order && !order.empty?
              end
-             return [where, vals]
+             return sql, bind_vars
          end
          
          def sql_limit(query)
@@ -279,13 +311,15 @@ module Spider; module Model; module Storage; module Db
              columns = {}
              t = connection.describe_table(table)
              t.columns.each do |c|
-                 columns[c.name] = {
+                 col = {
                      :type => c.data_type.to_s.upcase,
                      :length => c.data_size,
                      :precision => c.precision,
+                     :scale => c.scale,
                      :null => c.nullable?
                  }
-                 columns[c.name].delete(:length) if (columns[c.name][:precision])
+                 col.delete(:length) if (col[:precision])
+                 columns[c.name] = col
              end
              return columns
          end
@@ -328,9 +362,9 @@ module Spider; module Model; module Storage; module Db
                  db_attributes[:length] = attributes[:length] || 255
              when 'longText'
                  db_attributes[:length] = attributes[:length] if (attributes[:length])
-             when 'bool'
              when 'int'
                  db_attributes[:precision] = attributes[:precision] || 38
+                 db_attributes[:length] = nil
              when 'real'
                  # FIXME
                  db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
@@ -338,6 +372,7 @@ module Spider; module Model; module Storage; module Db
                  db_attributes[:length] = attributes[:length] if (attributes[:length])
              when 'bool'
                  db_attributes[:precision] = 1
+                 db_attributes[:length] = nil
              end
              return db_attributes
          end
@@ -373,6 +408,19 @@ module Spider; module Model; module Storage; module Db
              shorten_identifier(table+'_'+field, 30)
          end
          
+        
+    end
+    
+    class OCI8NilValue
+        attr_accessor :type
+        
+        def initialize(type)
+            @type = (mapped = OCI8.map_types[type]) ? mapped : type
+        end
+        
+        def to_s
+            'NULL'
+        end
         
     end
     

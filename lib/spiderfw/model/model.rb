@@ -61,6 +61,24 @@ module Spider
         class ModelException < RuntimeError
         end
         
+        class FormatError < ::FormatError
+            attr_reader :element
+            
+            def initialize(element, message)
+                element = element.name if element.is_a?(Element)
+                @element = element.to_s
+                @message = message
+                super(message)
+            end
+            
+
+            
+            # def to_s
+            #     message
+            # end
+            
+        end
+        
     end
     
     Model.autoload(:BaseModel, 'spiderfw/model/base_model')

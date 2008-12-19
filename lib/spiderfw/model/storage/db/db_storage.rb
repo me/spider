@@ -126,14 +126,18 @@ module Spider; module Model; module Storage; module Db
         ##################################################################
         
         def value_for_save(type, value, save_mode)
-            return value
+            return prepare_value(type, value)
         end
         
         def value_for_condition(type, value)
-            return value
+            return prepare_value(type, value)
         end
         
         def value_to_mapper(type, value)
+            return prepare_value(type, value)
+        end
+        
+        def prepare_value(type, value)
             return value
         end
         
@@ -152,7 +156,9 @@ module Spider; module Model; module Storage; module Db
         
         def sql_select(query)
             bind_vars = query[:bind_vars] || []
-            sql = "SELECT #{sql_keys(query)} FROM #{sql_tables(query)} "
+            tables_sql, tables_values = sql_tables(query)
+            sql = "SELECT #{sql_keys(query)} FROM #{tables_sql} "
+            bind_vars += tables_values
             where, vals = sql_condition(query)
             bind_vars += vals
             sql += "WHERE #{where} " if where && !where.empty?
@@ -168,15 +174,20 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_tables(query)
-            query[:tables].map{ |table|
+            values = []
+            sql = query[:tables].map{ |table|
                 str = table
                 if (query[:joins] && query[:joins][table])
+                    
                     query[:joins][table].each_key do |to_table|
-                        str += " "+sql_joins(query[:joins][table][to_table])
+                        join, join_values = sql_joins(query[:joins][table][to_table])
+                        str += " "+join
+                        values += join_values
                     end
                 end
                 str
             }.join(', ')
+            return [sql, values]
         end
         
         
@@ -223,15 +234,22 @@ module Spider; module Model; module Storage; module Db
             types = {
                 :inner => 'INNER', :outer => 'OUTER', :left_outer => 'LEFT OUTER', :right_outer => 'RIGHT OUTER'
             }
-            joins.map{ |join|
-                sql_keys = join[:keys].map{ |from_f, to_f| "#{join[:from]}.#{from_f} = #{join[:to]}.#{to_f}"}.join(', ')
-                "#{types[join[:type]]} JOIN #{join[:to]} ON (#{sql_keys})"
+            values = []
+            sql = joins.map{ |join|
+                sql_on = join[:keys].map{ |from_f, to_f| "#{join[:from]}.#{from_f} = #{join[:to]}.#{to_f}"}.join(' AND ')
+                if (join[:condition])
+                    condition_sql, condition_values = sql_condition({:condition => join[:condition]})
+                    sql_on += " and #{condition_sql}"
+                    values += condition_values
+                end
+                "#{types[join[:type]]} JOIN #{join[:to]} ON (#{sql_on})"
             }.join(" ")
+            return [sql, values]
         end
         
         def sql_order(query)
             return '' unless query[:order]
-            query[:order].map{|o| "#{o[0]} #{o[1]}"}.join(' ,')
+            return query[:order].map{|o| "#{o[0]} #{o[1]}"}.join(' ,')
         end
         
         def sql_limit(query)
@@ -278,8 +296,7 @@ module Spider; module Model; module Storage; module Db
                 attributes ||= {}
                 length = attributes[:length]
                 sql_fields += ', ' unless sql_fields.empty?
-                sql_fields += "#{field[:name]} #{field[:type]}"
-                sql_fields += "(#{length})" if length && length != 0
+                sql_fields += sql_table_field(field[:name], field[:type], field[:attributes])
             end
             ["CREATE TABLE #{name} (#{sql_fields})"]
         end

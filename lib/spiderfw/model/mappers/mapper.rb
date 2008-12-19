@@ -1,6 +1,7 @@
 module Spider; module Model
     
     class Mapper
+        attr_accessor :storage
         
         def initialize(model, storage)
             @model = model
@@ -56,6 +57,14 @@ module Spider; module Model
             end
         end
         
+        #############################################################
+        #   Info                                                    #
+        #############################################################
+        
+        def have_references?(element)
+            raise MapperException, "Unimplemented"
+        end
+        
         ##############################################################
         #   Save (insert and update)                                 #
         ##############################################################
@@ -67,7 +76,7 @@ module Spider; module Model
         def after_save(obj)
         end
         
-        def save(obj)
+        def save(obj, request=nil)
             obj.no_autoload do
                 normalize(obj)
                 if (@model.extended_models)
@@ -87,6 +96,34 @@ module Spider; module Model
                 else
                     insert(obj)
                 end
+                save_associations(obj)
+            end
+        end
+        
+        def save_associations(obj)
+            @model.elements_array.select{ |el| mapped?(el) && !el.integrated? &&
+                    !have_references?(el) && obj.element_has_value?(el) }.each do |el|
+                save_element_associations(obj, el)
+            end
+        end
+        
+        def save_element_associations(obj, element)
+            if (element.attributes[:junction])
+                element.mapper.delete({element.attributes[:reverse] => obj})
+                obj.get(element).insert
+            else
+                associated = obj.get(element)
+                if (element.multiple? && element.owned?)
+                    condition = Condition.and
+                    associated.each do |child|
+                        condition_row = Condition.or
+                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
+                        condition << condition_row
+                    end
+                    element.mapper.delete(condition)
+                end
+                associated.set(element.reverse, obj)
+                associated.save
             end
         end
         
@@ -111,8 +148,16 @@ module Spider; module Model
             after_save(obj)
         end
         
-        def delete(obj)
-            do_delete(obj)
+        def delete(obj_or_condition)
+            if (obj_or_condition.is_a?(BaseModel))
+                condition = Condition.and
+                @model.primary_keys.each do |key|
+                    condition[key.name] = map_condition_value(key.type, obj.get(key))
+                end
+            else
+                condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)
+            end
+            do_delete(condition)
         end
         
         def do_delete(obj)
@@ -131,52 +176,58 @@ module Spider; module Model
         #   Load (and find)                                          #
         ##############################################################        
         
-        def load(obj, query)
-            Spider::Model.with_identity_mapper do |im|
-                im.put(obj) if obj.primary_keys_set?
-                query = prepare_query(query, obj)
-                result = fetch(query)
-                @raw_data[obj.object_id] ||= {}
-                if (result && result[0])
-                    @raw_data[obj.object_id].merge!(result[0])
-                    map(query.request, result[0], obj)
+        def load_element(objects, element)
+            load(objects, Query.new(nil, [element.name]))
+        end
+        
+        def load(objects, query)
+            objects = queryset_siblings(objects) unless objects.is_a?(QuerySet)
+            request = query.request
+            condition = Condition.or
+            objects.each do |obj|
+                condition_row = Condition.and
+                @model.primary_keys.each do |key|
+                    val = obj.get(key)
+                    condition_row[key.name] = val
                 end
-                delay_put = obj.primary_keys_set? ? false : true
-                get_external(obj, query)
-                im.put(obj, true) if delay_put
+                condition << condition_row
             end
-            return obj
+            return find(Query.new(condition, request), objects)
         end
         
         
         def find(query, query_set=nil)
-            # if (query.class == String)
-            #     q = Query.new
-            #     q.parse_xsql(query)
-            #     query = q
-            # end
             set = nil
             Spider::Model.with_identity_mapper do |im|
                 im.put(query_set)
-                query = prepare_query(query)
+                query = prepare_query(query, query_set)
                 query.request.total_rows = true unless query.request.total_rows = false
                 result = fetch(query)
                 set = query_set || QuerySet.new(@model)
                 set.index_by(*@model.primary_keys)
                 set.query = query
-                return set unless result
+                return set if !result || result.empty?
                 set.total_rows = result.total_rows
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
+                    search = {}
+                    @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
+                    obj_res = set.find(search)
+                    if (obj_res && obj_res[0])
+                        obj_res[0].merge!(obj)
+                    else
+                        set << obj
+                    end
                     @raw_data[obj.object_id] = row
-                    set << obj
                 end
                 delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
                 set = get_external(set, query)
                 if (delay_put)
-                    set.each_index do |i|
-                        set[i].primary_keys_set?
-                        set[i] = im.put(set[i], true)
+                    set.no_autoload(false) do
+                        set.each_index do |i|
+                            set[i].primary_keys_set?
+                            set[i] = im.put(set[i], true)
+                        end
                     end
                 end
             end
@@ -202,13 +253,15 @@ module Spider; module Model
         # Load external elements, according to query, 
         # and merge them into an object or a QuerySet
         def get_external(objects, query)
-            # Make "objects" an array if it is not an QuerySet; we won't use any specific QuerySet methods
-            objects = [objects] unless objects.kind_of?(Spider::Model::QuerySet)
+            objects = queryset_siblings(objects) unless objects.is_a?(QuerySet)
+            return objects if objects.length < 1
             got_external = {}
             get_integrated = {}
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
                 next unless element && mapped?(element)
+                next if objects.element_loaded?(element_name)
+                next unless element.reverse # FIXME
                 if element.integrated?
                    get_integrated[element.integrated_from] ||= Request.new
                    get_integrated[element.integrated_from][element.integrated_from_element] = query.request[element_name]
@@ -222,35 +275,57 @@ module Spider; module Model
             end
             get_integrated.each do |integrated, request|
                 next if got_external[integrated]
+                next if objects.element_loaded?(integrated.name)
                 sub_query = Query.new(nil, request)
                 objects = get_external_element(integrated, sub_query, objects)
             end
-                
             return objects
         end
         
-        
-        def load_element(obj, element)
-            query = Query.new
-            query.condition.conjunction = :and
-            if (element.model?)
-                query.request[element] = Request.new
-                element.model.elements.each do |name, el|
-                    query.request[element.name][name] = true unless (el.model?)
+        def get_external_element(element, query, objects)
+            Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
+            if (have_references?(element))
+                return load_element(objects, element)
+            end
+            sub_request = Request.new
+            @model.primary_keys.each{ |key| sub_request[key.name] = true }
+            condition = Condition.or
+            index_by = []
+            @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
+            
+            objects.each do |obj|
+                condition_row = Condition.and
+                @model.primary_keys.each do |key|
+                    condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                 end
-            else
-                query.request[element] = true
+                condition << condition_row
             end
-            if (!obj.primary_keys_set?)
-                raise MapperException, "Object's primary keys don't have a value. Can't load object."
+            unless condition.empty?                
+                if (element.condition)
+                    condition = Condition.and(condition, element.condition)
+                end
+                result = QuerySet.new(element.model).index_by(*index_by)
+                result = result.mapper.find(Query.new(condition, sub_request), result)
+                result.loaded = true
+                return associate_external(element, objects, result)
             end
-            @model.primary_keys.each do |key|
-                val = obj.get(key)
-                query.condition[key.name] = val
-            end
-            load(obj, query)
+            return nil
         end
         
+        def queryset_siblings(obj)
+            return QuerySet.new(@model, obj) unless obj._parent
+            path = []
+            while (obj._parent)
+                path.unshift(obj._parent_element) if (obj._parent_element) # otherwise it's a query set
+                obj = obj._parent
+            end
+            Spider::Logger.debug("Siblings for path: #{path.join(', ')}")
+            res = path.empty? ? obj : obj.all_children(path)
+            res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
+            return res
+        end
+        
+
         
         def map_back_value(type, value)
             raise MapperException, "Unimplemented"
@@ -262,7 +337,7 @@ module Spider; module Model
         ##############################################################
 
         def prepare_query(query, obj=nil)
-            prepare_query_request(query.request)
+            prepare_query_request(query.request, obj)
             prepare_query_condition(query.condition)
             return query
         end
@@ -271,11 +346,24 @@ module Spider; module Model
             @model.primary_keys.each do |key|
                 request[key] = true unless obj && obj.element_loaded?(key)
             end
+            lazy_groups = []
             request.each do |k, v|
-                next unless @model.elements[k]
-                if (@model.elements[k].integrated?)
-                    integrated_from = @model.elements[k].integrated_from
-                    integrated_from_element = @model.elements[k].integrated_from_element
+                next unless element = @model.elements[k]
+                grps = element.lazy_groups
+                lazy_groups += grps if grps
+            end
+            lazy_groups.uniq!
+            @model.elements.each do |name, element|
+                next if (obj && obj.element_loaded?(element))
+                if (element.lazy_groups && (lazy_groups - element.lazy_groups).length < lazy_groups.length)
+                    request.request(name)
+                end
+            end
+            request.each do |k, v|
+                next unless element = @model.elements[k]
+                if (element.integrated?)
+                    integrated_from = element.integrated_from
+                    integrated_from_element = element.integrated_from_element
                     request.request("#{integrated_from.name}.#{integrated_from_element}")
                 end
             end
@@ -285,7 +373,7 @@ module Spider; module Model
         def prepare_query_condition(condition)
             if (@model.attributes[:condition])
                 subcond = Condition.new(@model.attributes[:condition])
-                cond = Condition.new_and
+                cond = Condition.and
                 cond << condition
                 cond << subcond
                 condition = cond

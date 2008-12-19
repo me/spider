@@ -28,19 +28,17 @@ module Spider; module Model
         def put(obj, check=false)
             return nil unless obj
             if (obj.is_a?(QuerySet))
-                obj.each_index{ |i| obj[i] = put(obj[i], check) }
+                obj.no_autoload(false) do
+                    obj.each_index{ |i| obj[i] = put(obj[i], check) }
+                end
                 return obj
             else
                 raise IdentityMapperException, "Can't get without all primary keys" unless obj.primary_keys_set?
                 pks = {}
                 obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
                 @objects[obj.class] ||= {}
-                if (check && existent = @objects[obj.class][pks])
-                    obj.no_autoload do
-                        obj.class.elements_array.select{ |el| obj.element_has_value?(el) }.each do |el|
-                            existent.set_loaded_value(el, obj.get(el)) 
-                        end
-                    end
+                if (check && (existent = @objects[obj.class][pks]) && existent.object_id != obj.object_id)
+                    existent.merge!(obj)
                     return existent
                 else
                     return @objects[obj.class][pks] = obj

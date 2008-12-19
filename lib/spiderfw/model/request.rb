@@ -18,7 +18,6 @@ module Spider; module Model
         end
         
         def request(element)
-            Spider.logger.debug("Requesting #{element}")
             element.to_s.split(',').each do |el|
                 self[el.strip] = true
             end
@@ -34,6 +33,10 @@ module Spider; module Model
         
         def with_polymorphs(type, request)
             @polymorphs[type] = request
+        end
+        
+        def polymorphs?
+            @polymorphs.empty? ? false : true
         end
     
     end

@@ -7,8 +7,11 @@ module Spider; module Model
         include Spider::Logger
         include DataTypes
         
+        attr_accessor :_parent, :_parent_element
+        attr_reader :loaded_elements
+        
         class <<self
-            attr_reader :attributes, :integrated_models, :extended_models, :polymorphic_models 
+            attr_reader :attributes, :elements_order, :integrated_models, :extended_models, :polymorphic_models
         end
         
         @@base_types = {
@@ -33,12 +36,19 @@ module Spider; module Model
         # Copies this class' elements to the subclass.
         def self.inherited(subclass)
             # FIXME: might need to clone every element
+            @subclasses ||= []
+            @subclasses << subclass
             subclass.instance_variable_set("@elements", @elements.clone) if @elements
             subclass.instance_variable_set("@elements_order", @elements_order.clone) if @elements_order
         end
         
         def self.app
-            @app ||= self.parent_module
+            return @app if @app
+            app = self
+            while (!app.include?(Spider::App))
+                app = app.parent_module
+            end
+            @app = app
         end
         
         #######################################
@@ -61,9 +71,9 @@ module Spider; module Model
             elsif (type.class == Hash)
                 type = create_inline_model(type)
                 attributes[:inline] = true
-            elsif (type.class == String && !@@base_types[type])
-                require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
-                type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
+            # elsif (type.class == String && !@@base_types[type])
+            #     require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
+            #     type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
             end
             if (attributes[:add_reverse])
                 unless (type.elements[attributes[:add_reverse]])
@@ -86,7 +96,42 @@ module Spider; module Model
                     attributes[:integrated_from_element] = name
                 end
             end
+
+            if (attributes[:multiple] && (!attributes[:reverse] || \
+                # FIXME! the first check is needed when the referenced class has not been parsed yet 
+                # but now it assumes that the reverse is not multiple if it is not defined
+                (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?)))
+                orig_type = type
+                if (attributes[:through])
+                    type = attributes[:through]
+                else
+                    attributes[:anonymous_model] = true
+                    attributes[:owned] = true unless attributes[:owned] != nil
+                    attributes[:junction] = true
+                    type = self.const_set(Spider::Inflector.camelize(name), Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
+                    self_name = self.short_name.downcase.to_sym
+                    attributes[:reverse] = self_name
+                    type.element(self_name, self, :primary_key => true, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
+                    # FIXME! fix in case of clashes with existent elements
+                    other_name = (orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).downcase.to_sym
+                    other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
+                    type.element(other_name, orig_type, :primary_key => true)
+                    type.integrate(other_name, :hidden => true) # FIXME: in some cases we want the integrated elements
+                    if (proc)                                   #        to be hidden, but the integrated el instead
+                        type.class_eval(&proc)
+                    end
+                end
+            end
+            if (attributes[:lazy] == nil)
+                if (@@base_types[type] || !attributes[:multiple])
+                    attributes[:lazy] = :default
+                else
+                    attributes[:lazy] = true
+                end
+            end
+            
             @elements[name] = Element.new(name, type, attributes)
+            
             if (attributes[:element_position])
                 @elements_order.insert(attributes[:element_position], name)
             else
@@ -110,16 +155,11 @@ module Spider; module Model
                 end
                 return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
                 
+                Spider.logger.debug("Element not loaded #{name} (i'm #{self.object_id})")
                 if autoload? && primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
-                elsif (self.class.elements[name].attributes[:multiple])
-                    qs = QuerySet.new(self.class.elements[name].model) # or get the element queryset?
-                    qs.autoload = autoload?
-                    instance_variable_set(ivar, qs)
-                elsif (self.class.elements[name].model?)
-                    obj = self.class.elements[name].type.new
-                    obj.autoload = autoload?
-                    instance_variable_set(ivar, obj)
+                elsif (element.model?)
+                    val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 return instance_variable_get(ivar)
             end
@@ -134,27 +174,50 @@ module Spider; module Model
                 end
                 if (element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
                     val = element.model.new(val)
-                    val.autoload = autoload?
-                else
-                    val = prepare_value(element, val)
+                end
+                val = prepare_child(element.name, val)
+                if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
+                    val.set_parent(self, name)
                 end
                 old_val = instance_variable_get(ivar)
                 check(name, val)
                 instance_variable_set(ivar, val)
+                @modified_elements[name] = true unless element.primary_key?
                 notify_observers(name, old_val)
                 #extend_element(name)
             end
             
-            if (proc)
-                raise ModelException, "Element extension is implemented only for n <-> n elements" unless (@elements[name].multiple? && !@elements[name].has_single_reverse?)
-                @elements[name].extend_model
-                @elements[name].attributes[:extended] = true
-                @elements[name].attributes[:queryset_model] = self
-                @elements[name].model.class_eval(&proc)
+            if (attributes[:integrate])
+                integrate(name, attributes[:integrate])
             end
-            
+            if (@subclasses)
+                @subclasses.each do |sub|
+                    sub.elements[name] = @elements[name].clone
+                    sub.elements_order << name
+                end
+            end
             return @elements[name]
 
+        end
+        
+        def self.integrate(element_name, params={})
+            params ||= {}
+            elements[element_name].attributes[:integrated_model] = true
+            model = elements[element_name].model
+            params[:except] ||= []
+            model.each_element do |el|
+                next if params[:except].include?(el.name)
+                attributes = el.attributes.clone.merge({
+                    :integrated_from => elements[element_name],
+                    :hidden => params[:hidden]
+                })
+                if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
+                    attributes[:reverse] = add_rev
+                    attributes.delete(:add_reverse)
+                    attributes.delete(:add_multiple_reverse)
+                end
+                element(el.name, el.type, attributes)
+            end
         end
         
         def self.element_attributes(element_name, attributes)
@@ -175,14 +238,6 @@ module Spider; module Model
         def self.multiple_choice(name, type, attributes={}, &proc)
             attributes[:association] = :multiple_choice
             many(name, type, attributes, &proc)
-        end
-        
-        # This should be used only on extended models
-        def self.add_element(name, type, attributes={})
-             el = element(name, type, attributes)
-             el.attributes[:added] = true
-             @elements[name] = el
-             (@added_elements ||= []) << el
         end
         
         
@@ -218,24 +273,18 @@ module Spider; module Model
                 @elements = {}
                 @elements_order = []
             end
-            integrated_name = params[:name] || Spider::Inflector.underscore(model.name).gsub('/', '_')
+            integrated_name = params[:name]
+            if (!integrated_name)
+                integrated_name = (self.parent_module == model.parent_module) ? model.short_name : model.name
+                integrated_name = Spider::Inflector.underscore(integrated_name).gsub('/', '_')
+            end
             integrated_name = integrated_name.to_sym
             @extended_models ||= {}
             @extended_models[model] = integrated_name
-            integrated_attributes = {:integrated_model => true, :superclass => true}
-            integrated_attributes[:hidden] = true unless (params[:hide_integrated] == false)
-            integrated = element(integrated_name, model, integrated_attributes)
-            model.each_element do |el|
-                attributes = el.attributes.clone
-                attributes[:integrated_from] = integrated
-                attributes[:hidden] = true if (params[:hide_elements])
-                if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
-                    attributes[:reverse] = add_rev
-                    attributes.delete(:add_reverse)
-                    attributes.delete(:add_multiple_reverse)
-                end 
-                element(el.name, el.type, attributes)
-            end
+            attributes = {}
+            attributes[:hidden] = true unless (params[:hide_integrated] == false)
+            integrated = element(integrated_name, model, attributes)
+            integrate(integrated_name)
             if (params[:add_polymorphic])
                 model.polymorphic(self, :through => integrated_name)
             end
@@ -285,7 +334,7 @@ module Spider; module Model
         #####################################################
         
         def self.short_name
-            return self.name.match(/([^:]+)$/)
+            return self.name.match(/([^:]+)$/)[1]
         end
         
         def self.managed?
@@ -331,11 +380,6 @@ module Spider; module Model
         
         def self.primary_keys
             elements.values.select{|el| el.attributes[:primary_key]}
-        end
-        
-        # Returns elements added by extending an element inside another model
-        def self.added_elements
-            return @added_elements || []
         end
         
         ##############################################################
@@ -392,14 +436,15 @@ module Spider; module Model
         # Accepts a Query, or a Condition and a Request (optional)
         def self.find(*params)
             if (params[0] && params[0].is_a?(Query))
-                mapper.find(params[0])
+                query = params[0]
             else
-                mapper.find(Query.new(params[0], params[1]))
+                query = Query.new(params[0], params[1])
             end
+            return QuerySet.new(self, query)
         end
         
         def self.all
-            return self.find()
+            return self.find
         end
         
         def self.load(*params)
@@ -420,6 +465,7 @@ module Spider; module Model
             @_autoload = true
             @_has_values = false
             @loaded_elements = {}
+            @modified_elements = {}
             @value_observers = {}
             @all_values_observers = []
             @all_values_observers << Proc.new do |element, old_value|
@@ -435,8 +481,9 @@ module Spider; module Model
                     values.each_val do |name, val|
                         set(name, val) if self.class.has_element?(name)
                     end
-                elsif (self.class.primary_keys.length == 1) # Single key, single value
-                    set(self.class.primary_keys[0], values)
+                 # Single unset key, single value
+                elsif ((empty_keys = self.class.primary_keys.select{ |key| !element_has_value?(key) }).length == 1)
+                    set(empty_keys[0], values)
                 end
             end
         end
@@ -450,11 +497,45 @@ module Spider; module Model
             @identity_mapper = im
         end
         
-        def create_child(element, val=nil)
-            element = element.name if element.is_a?(Element)
-            obj = identity_mapper.get(element.model, val)
-            obj.identity_mapper = self.identity_mapper
+        def instantiate_element(name)
+            element = self.class.elements[name]
+            if (element.attributes[:multiple])
+                val = QuerySet.new(element.model) # or get the element queryset?
+            elsif (element.model?)
+                val = element.type.new
+            end            
+            return prepare_child(name, val)
         end
+        
+        def prepare_child(name, obj)
+            return obj if obj.nil?
+            element = self.class.elements[name]
+            if (element.model?)
+                obj.autoload = autoload?
+                obj.identity_mapper = self.identity_mapper
+                obj.set_parent(self, name)
+                if (element.has_single_reverse?)
+                    obj.set(element.attributes[:reverse], self)
+                end
+            else
+                obj = prepare_value(element, obj)
+            end
+            return obj
+        end
+        
+        def all_children(path)
+            Spider::Logger.debug("PATH: #{path}")
+            return [] unless val = get(path.shift)
+            return val if path.length < 1
+            return val.all_children(path)
+        end
+        
+        def set_parent(obj, element)
+            return if @_parent
+            @_parent = obj
+            @_parent_element = element
+        end
+        
         
         #################################################
         #   Get and set                                 #
@@ -495,9 +576,14 @@ module Spider; module Model
             if (element.integrated?)
                 get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
             else
-            instance_variable_set("@#{element_name}", value)
+                prepare_child(element.name, value) if element.model?
+                instance_variable_set("@#{element_name}", value)
             end
             @loaded_elements[element_name] = true
+            @modified_elements[element_name] = false
+            if (@_parent && @_parent.is_a?(QuerySet))
+                @_parent.element_loaded(element_name)
+            end
         end
         
         def check(name, val)
@@ -511,7 +597,7 @@ module Spider; module Model
                     when Proc
                         Proc.call(msg)
                     end
-                    raise FormatError, msg unless test
+                    raise FormatError.new(name, msg) unless test
                 end
             end
         end
@@ -562,14 +648,50 @@ module Spider; module Model
         # FIXME: should probably try to get away without this method
         # it is the only method that relies on the mapper
         def element_has_value?(element)
-            element = element.name if (element.class == Element)
-            return get(element) == nil ? false : true if (!mapper.mapped?(element) || self.class.elements[element].integrated?)
-            return instance_variable_get(:"@#{element}") == nil ? false : true
+            element_name = (element.is_a?(Element)) ? element.name : element
+            element = self.class.elements[element_name]
+            if (element.integrated?)
+                return false unless obj = instance_variable_get(:"@#{element.integrated_from.name}")
+                return obj.element_has_value?(element.integrated_from_element)
+            end
+            if (!mapper.mapped?(element))
+                return send("#{element_name}?") if (respond_to?("#{element_name}?"))
+                return get(element) == nil ? false : true if (!mapper.mapped?(element))
+            end
+            return instance_variable_get(:"@#{element_name}") == nil ? false : true
         end
         
         def element_loaded?(element)
             element = element.name if (element.class == Element)
             return @loaded_elements[element]
+        end
+        
+        def element_modified?(element)
+            element = element.is_a?(Element) ? element : self.class.elements[element]
+            if element_has_value?(element) && (val = get(element)).respond_to?(:modified?)
+                return val.modified?
+            end
+            return @modified_elements[element.name]
+        end
+        
+        def modified?
+            return true unless @modified_elements.reject{ |key, val| !val }.empty?
+            self.class.elements_array.select{ |el| 
+                !el.model? && !@@base_types[el.type] && element_has_value?(el) 
+            }.each do |el|
+                return true if get(el).modified?
+            end
+            return false
+        end
+        
+        def set_modified(request)
+            request.each do |key, val| # FIXME: go deep
+                @modified_elements[key] = true
+            end
+        end
+        
+        def reset_modified_elements
+            @modified_elements = {}
         end
         
         # Returns true if all primary keys have a value; false if some primary key
@@ -591,6 +713,14 @@ module Spider; module Model
         
         def empty?
             return @_has_values
+        end
+        
+        def merge!(obj)
+            obj.class.elements_array.select{ |el| obj.element_has_value?(el) && !el.integrated?}.each do |el|
+                set_loaded_value(el, obj.get(el))
+            end
+            @loaded_elements.merge!(obj.loaded_elements)
+                
         end
 
         
@@ -637,6 +767,7 @@ module Spider; module Model
         
         def save
             mapper.save(self)
+            reset_modified_elements
         end
         
         def save_all
@@ -645,10 +776,12 @@ module Spider; module Model
         
         def insert
             mapper.insert(self)
+            reset_modified_elements
         end
         
         def update
             mapper.update(self)
+            reset_modified_elements
         end
         
         def delete

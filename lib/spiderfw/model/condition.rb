@@ -229,6 +229,11 @@ module Spider; module Model
             
             [:==, :<, :>, :<=, :>=, :like, :ilike].each do |op|
                 define_method(op) do |val|
+                    replace = {
+                        :== => '='
+                    }
+                    op = replaced if replaced = replace[op]
+                    op = op.to_s
                     c = Condition.new.set(@condition_element_name, op, val)
                     if (@condition_context)
                         @condition_context << c
