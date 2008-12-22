@@ -134,7 +134,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_to_mapper(type, value)
-            return prepare_value(type, value)
+            return value
         end
         
         def prepare_value(type, value)
@@ -201,8 +201,14 @@ module Spider; module Model; module Storage; module Db
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
                 else
+                    v[1] = 'between' if (v[2].is_a?(Range))
                     v[2].upcase! if (v[1].to_s.downcase == 'ilike')
-                    bind_vars << v[2]
+                    if (v[1].to_s.downcase == 'between')
+                        bind_vars << v[2].first
+                        bind_vars << v[2].last
+                    else
+                        bind_vars << v[2]
+                    end
                     sql_condition_value(v[0], v[1], v[2])
                 end
             end
@@ -214,7 +220,9 @@ module Spider; module Model; module Storage; module Db
                 comp = 'like'
                 key = "UPPER(#{key})"
             end
-            "#{key} #{comp} ?"
+            sql = "#{key} #{comp} ?"
+            sql += " AND ?" if (comp.to_s.downcase == 'between')
+            return sql
         end
         
         # def sql_join(joins)

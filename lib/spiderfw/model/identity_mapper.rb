@@ -11,16 +11,20 @@ module Spider; module Model
             end
         end
         
-        def get(model, keys)
-
+        def get(model, values)
             @objects[model] ||= {}
+            pks = {}
             model.primary_keys.each do |k| 
-                raise IdentityMapperException, "Can't get without all primary keys" unless keys[k.name]
+                # dereference integrated primary keys
+                pks[k.name] = (k.integrated? && values[k.integrated_from.name]) ? 
+                    values[k.integrated_from.name].get(k.integrated_from_element) :
+                    values[k.name]
+                raise IdentityMapperException, "Can't get without all primary keys" unless pks[k.name]
             end
-            pks = keys.reject{|k,v| !model.elements[k].primary_key?}
-            obj = (@objects[model][pks] ||= model.new(keys))
-            keys.reject{|k,v| model.elements[k].primary_key? }.each do
-                obj.set(k, v)
+            obj = (@objects[model][pks] ||= model.new(pks))
+            pks.each{ |k, v| obj.element_loaded(k) }
+            values.reject{|k,v| model.elements[k].primary_key? }.each do |k, v|
+                obj.set_loaded_value(k, v)
             end
             return obj
         end

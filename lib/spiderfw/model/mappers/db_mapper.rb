@@ -132,6 +132,23 @@ module Spider; module Model; module Mappers
             save[:table] = @schema.table
             return @storage.sql_update(save)
         end
+        
+        def bulk_update(values, condition)
+            db_values = {}
+            values.each do |key, val|
+                element = @model.elements[key]
+                next if !mapped?(element) || element.integrated?
+                next if element.model?
+                store_key = schema.field(element.name)
+                next unless store_key
+                db_values[store_key] = map_save_value(element.type, val, :update)
+            end
+            save = {:values => db_values}
+            save[:condition], save[:joins] = prepare_condition(condition)
+            return @storage.execute(@storage.sql_update(save))
+        end
+                
+        end
          
         
         ##############################################################
@@ -145,8 +162,8 @@ module Spider; module Model; module Mappers
         end
         
         def fetch(query)
-            Spider.logger.debug("Fetching model #{@model} query:")
-            Spider.logger.debug(query)
+#            Spider.logger.debug("Fetching model #{@model} query:")
+#            Spider.logger.debug(query)
             storage_query = prepare_select(query)
             if (storage_query)
                 result = @storage.query(storage_query)
@@ -156,27 +173,32 @@ module Spider; module Model; module Mappers
         end
         
         def map(request, result, obj)
-            obj = obj.new if (obj.is_a?(Class))
+            model = obj.is_a?(Class) ? obj : obj.class
+            data = {}
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
+                result_value = nil
                 next if !element || element.integrated?
                 if (element.model? && schema.has_foreign_fields?(element.name))
                     pks = {}
+                    keys_set = true
                     element.model.primary_keys.each do |key| 
-                        pks[key.name] = result[schema.foreign_key_field(element_name, key.name)]
+                        key_val = result[schema.foreign_key_field(element_name, key.name)]
+                        keys_set = false unless key_val
+                        pks[key.name] = key_val
                     end
-                    begin
-                        sub_obj = Spider::Model.get(element.model, pks)
-                        obj.set_loaded_value(element, sub_obj)
-                    rescue IdentityMapperException
+#                    begin
+                    data[element_name] = Spider::Model.get(element.model, pks) if keys_set
+#                    rescue IdentityMapperException
                         # null keys, nothing to set
-                    end
+#                    end
+                elsif !element.model?
+                    data[element_name] = map_back_value(element.type, result[schema.field(element_name)])
                 end
-                next if element.model?
-                result_value = result[schema.field(element_name)]
-                obj.set_loaded_value(element, map_back_value(element.type, result_value))
             end
-            obj = Spider::Model.put(obj, true) if obj.primary_keys_set?
+            # Spider::Logger.debug("GETting #{model}")
+            # Spider::Logger.debug(data)
+            obj = Spider::Model.get(model, data)
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
@@ -218,6 +240,8 @@ module Spider; module Model; module Mappers
                     query.order << [key.name, 'asc']
                 end
             end
+            order, order_joins = prepare_order(query)
+            joins += order_joins if order_joins
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
@@ -269,7 +293,7 @@ module Spider; module Model; module Mappers
                 end
             end
             tables = [@schema.table]
-            order = prepare_order(query)
+            
             joins = prepare_joins(joins)
             return nil if (keys.empty?)
             return {
@@ -419,12 +443,23 @@ module Spider; module Model; module Mappers
         end
         
         def prepare_order(query)
-            o = []
-            query.order.each do |order_el|
-                dir = order[1] ? order[1] : ''
-                o << [order[0], dir]
+            joins = []
+            fields = []
+            query.order.each do |order|
+                element_name, direction = order
+                parts = element_name.to_s.split('.')
+                current_model = @model
+                parts.each do |part|
+                    el = current_model.elements[part.to_sym]
+                    if (el.model? && current_model.mapper.can_join?(el))
+                        joins << get_join(el.name)
+                        current_model = el.model
+                    elsif (field = current_model.mapper.schema.qualified_field(el.name))
+                        fields << [field, direction]
+                    end
+                end
             end
-            return o
+            return [fields, joins]
         end
         
         def map_type(type)
@@ -455,6 +490,9 @@ module Spider; module Model; module Mappers
 
         # Prepares a value for an sql condition.
         def map_condition_value(type, value)
+            if value.is_a?(Range)
+                return Range.new(map_condition_value(type, value.first), map_condition_value(type, value.last))
+            end
             return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
             value = map_value(type, value, :condition)
             return @storage.value_for_condition(type, value)
@@ -463,6 +501,7 @@ module Spider; module Model; module Mappers
         def map_back_value(type, value)
             type = type.respond_to?('basic_type') ? type.basic_type : type
             value = value[0] if value.class == Array
+            value = storage.value_to_mapper(type, value)
             case type
             when 'int'
                 return value.to_i
@@ -474,7 +513,7 @@ module Spider; module Model; module Mappers
             return nil unless value
             case type
             when 'dateTime'
-                return DateTime.parse(value) unless value.is_a?(DateTime)
+                return DateTime.parse(value) unless value.is_a?(Date)
             end
             return value
         end

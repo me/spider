@@ -6,6 +6,10 @@ module Spider; module Model
     class Query
         attr_accessor :order, :offset, :limit
         attr_reader :condition, :request, :polymorphs
+        
+        def self.where(*params)
+            return self.class.new.condition.where(*params)
+        end
        
        def initialize(condition = nil, request=nil, &proc)
            @condition = condition.is_a?(Condition) ? condition : Condition.new(condition)
@@ -35,7 +39,7 @@ module Spider; module Model
        
        def order_by(*labels)
            labels.each do |l|
-               parts = l.split(' ')
+               parts = l.to_s.split(' ')
                @order << [parts[0], parts[1]]
            end
        end

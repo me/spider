@@ -12,6 +12,13 @@ module Spider; module Model
         end
         
         def []=(key, val)
+            if (val.is_a?(BaseModel))
+                n = self.class.new
+                val.each_val do |el, v|
+                    n[el] = v
+                end
+                val = n
+            end
             key = key.name if key.class == Element
             parts = key.to_s.split('.', 2)
             return super(key.to_sym, val) unless parts[1]

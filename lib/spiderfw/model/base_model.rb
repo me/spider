@@ -153,7 +153,12 @@ module Spider; module Model
                 if (element.integrated?)
                     return get(element.integrated_from.name).send(element.integrated_from_element)
                 end
-                return instance_variable_get(ivar) if element_has_value?(name) || element_loaded?(name)
+                if element_has_value?(name) || element_loaded?(name)
+                    val = instance_variable_get(ivar) 
+                    val.set_parent(self, name) if val && element.model?
+                    return val
+                end
+                    
                 
                 Spider.logger.debug("Element not loaded #{name} (i'm #{self.object_id})")
                 if autoload? && primary_keys_set?
@@ -161,7 +166,9 @@ module Spider; module Model
                 elsif (element.model?)
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
-                return instance_variable_get(ivar)
+                val = instance_variable_get(ivar)
+                val.set_parent(self, name) if element.model? && val
+                return val
             end
 
             #instance_variable_setter
@@ -176,9 +183,6 @@ module Spider; module Model
                     val = element.model.new(val)
                 end
                 val = prepare_child(element.name, val)
-                if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
-                    val.set_parent(self, name)
-                end
                 old_val = instance_variable_get(ivar)
                 check(name, val)
                 instance_variable_set(ivar, val)
@@ -305,7 +309,6 @@ module Spider; module Model
             
         
         def self.group(name, &proc)
-            require 'spiderfw/model/proxy_model'
             proxy = Class.new(ProxyModel).proxy(name.to_s+'_', self)
             proxy.instance_eval(&proc)
             proxy.each_element do |el|
@@ -513,7 +516,6 @@ module Spider; module Model
             if (element.model?)
                 obj.autoload = autoload?
                 obj.identity_mapper = self.identity_mapper
-                obj.set_parent(self, name)
                 if (element.has_single_reverse?)
                     obj.set(element.attributes[:reverse], self)
                 end
@@ -524,14 +526,15 @@ module Spider; module Model
         end
         
         def all_children(path)
-            Spider::Logger.debug("PATH: #{path}")
-            return [] unless val = get(path.shift)
-            return val if path.length < 1
-            return val.all_children(path)
+            no_autoload do
+                return [] unless val = get(path.shift)
+                return val if path.length < 1
+                return val.all_children(path)
+            end
         end
         
+        
         def set_parent(obj, element)
-            return if @_parent
             @_parent = obj
             @_parent_element = element
         end
@@ -556,6 +559,10 @@ module Spider; module Model
             first, rest = element.to_s.split('.', 2)
             return send(first).set(rest) if (rest)
             return send("#{element}=", value)
+        end
+        
+        def set_hash(hash)
+            hash.each { |key, val| set(key, val) }
         end
         
         def prepare_value(element, value)
@@ -661,6 +668,11 @@ module Spider; module Model
             return instance_variable_get(:"@#{element_name}") == nil ? false : true
         end
         
+        def element_loaded(element)
+            element = element.name if (element.class == Element)
+            @loaded_elements[element] = true
+        end
+        
         def element_loaded?(element)
             element = element.name if (element.class == Element)
             return @loaded_elements[element]
@@ -668,10 +680,12 @@ module Spider; module Model
         
         def element_modified?(element)
             element = element.is_a?(Element) ? element : self.class.elements[element]
+            set_mod = @modified_elements[element.name]
+            return set_mod if set_mod
             if element_has_value?(element) && (val = get(element)).respond_to?(:modified?)
                 return val.modified?
             end
-            return @modified_elements[element.name]
+            return false
         end
         
         def modified?
@@ -717,10 +731,31 @@ module Spider; module Model
         
         def merge!(obj)
             obj.class.elements_array.select{ |el| obj.element_has_value?(el) && !el.integrated?}.each do |el|
-                set_loaded_value(el, obj.get(el))
+                val = obj.get(el)
+                set_loaded_value(el, val)
             end
             @loaded_elements.merge!(obj.loaded_elements)
                 
+        end
+        
+        def keys_to_condition
+            c = Condition.and
+            self.class.primary_keys.each do |key|
+                val = get(key)
+                if (key.model?)
+                    c[key.name] = val.keys_to_condition
+                else
+                    c[key.name] = val
+                end
+            end
+            return c
+        end
+        
+        def in_storage? # FIXME! this must be more generic
+            self.class.primary_keys.each do |key|
+                return false unless element_has_value?(key)
+            end
+            return true
         end
 
         

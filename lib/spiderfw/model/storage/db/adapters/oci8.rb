@@ -114,6 +114,15 @@ module Spider; module Model; module Storage; module Db
             end
             return value
         end
+        
+        def value_to_mapper(type, value)
+            case type
+            when 'dateTime'
+                return value ? value.to_date : nil
+            else
+                return value
+            end
+        end
 
          def execute(sql, *bind_vars)
              if (bind_vars && bind_vars.length > 0)
@@ -185,29 +194,39 @@ module Spider; module Model; module Storage; module Db
          #   SQL methods                                              #
          ##############################################################
          
-         def sql_keys(query)
-             query[:keys].map{ |key|
-                 if (query[:types][key] == 'dateTime')
-                     as = key.split('.')[-1]
-                     "TO_CHAR(#{key}, 'yyyy-mm-dd hh24:mi') AS #{as}"
-                 else
-                     key
-                 end
-             }.join(', ')
-         end
+         # def sql_keys(query)
+         #     query[:keys].map{ |key|
+         #         if (query[:types][key] == 'dateTime')
+         #             as = key.split('.')[-1]
+         #             "TO_CHAR(#{key}, 'yyyy-mm-dd hh24:mi') AS #{as}"
+         #         else
+         #             key
+         #         end
+         #     }.join(', ')
+         # end
          
          def sql_select(query)
              @bind_cnt = 0
-             Spider::Logger.debug("SQL SELECT:")
-             Spider::Logger.debug(query)
+             # Spider::Logger.debug("SQL SELECT:")
+             # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
+             if query[:limit] # Oracle is so braindead
+                 query[:order] << [query[:keys][0], 'desc'] if query[:order].length < 1
+                 query[:order].each do |o|
+                     field, direction = o
+                     i = query[:keys].index(field)
+                     unless i
+                         query[:keys].push(field)
+                         i = query[:keys].length < 1
+                     end
+                     query[:keys][query[:keys].index(field)] += " AS #{field.sub('.', '_')}"
+                 end
+             end
              keys = sql_keys(query)
-             query[:order] << [query[:keys][0], 'desc'] if query[:limit] && query[:order].length < 1
              order = sql_order(query)
              if (query[:limit])
                  keys += ", row_number() over (order by #{order}) oci8_row_num"
              end
-             Spider::Logger.debug("KEYS: #{keys}")
              tables_sql, tables_values = sql_tables(query)
              sql = "SELECT #{keys} FROM #{tables_sql} "
              bind_vars += tables_values
@@ -224,7 +243,7 @@ module Spider; module Model; module Storage; module Db
                      limit = "oci8_row_num < :#{@bind_cnt+=1}"
                      bind_vars << query[:limit]
                  end
-                 sql = "SELECT * FROM (#{sql}) WHERE #{limit} order by #{order}"
+                 sql = "SELECT * FROM (#{sql}) WHERE #{limit} order by #{order.gsub('.', '_')}"
              else
                  sql += "ORDER BY #{order} " if order && !order.empty?
              end
@@ -240,7 +259,9 @@ module Spider; module Model; module Storage; module Db
                  comp = 'like'
                  key = "UPPER(#{key})"
              end
-             "#{key} #{comp} :#{(@bind_cnt += 1)}"
+             sql = "#{key} #{comp} :#{(@bind_cnt += 1)}"
+             sql += " AND :#{(@bind_cnt += 1)}" if comp.to_s.downcase == 'between'
+             return sql
          end
          
          def sql_insert(insert)

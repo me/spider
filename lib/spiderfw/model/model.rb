@@ -1,6 +1,17 @@
 require 'spiderfw/model/datatypes'
 require 'spiderfw/model/unit_of_work'
 require 'spiderfw/model/identity_mapper'
+require 'spiderfw/model/base_model'
+require 'spiderfw/model/mixins/mixins'
+require 'spiderfw/model/extended_models/managed'
+require 'spiderfw/model/inline_model'
+require 'spiderfw/model/storage'
+require 'spiderfw/model/request'
+require 'spiderfw/model/condition'
+require 'spiderfw/model/query'
+require 'spiderfw/model/query_set'
+require 'spiderfw/model/unit_of_work'
+require 'spiderfw/model/proxy_model'
 
 module Spider 
     
@@ -81,15 +92,5 @@ module Spider
         
     end
     
-    Model.autoload(:BaseModel, 'spiderfw/model/base_model')
-    Model.autoload(:Mixins, 'spiderfw/model/mixins/mixins')
-    Model.autoload(:Managed, 'spiderfw/model/extended_models/managed')
-    Model.autoload(:InlineModel, 'spiderfw/model/inline_model')    
-    Model.autoload(:Storage, 'spiderfw/model/storage')
-    Model.autoload(:Request, 'spiderfw/model/request')
-    Model.autoload(:Condition, 'spiderfw/model/condition')
-    Model.autoload(:Query, 'spiderfw/model/query')
-    Model.autoload(:QuerySet, 'spiderfw/model/query_set')
-    Model.autoload(:UnitOfWork, 'spiderfw/model/unit_of_work')
 
 end

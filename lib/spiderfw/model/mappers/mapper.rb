@@ -20,7 +20,9 @@ module Spider; module Model
         
         def mapped?(element)
             element = element.name if (element.is_a? Element)
-            return false if @no_map_elements[element]
+            element = @model.elements[element]
+            return false if (element.attributes[:unmapped])
+            return false if @no_map_elements[element.name]
             return true
         end
         
@@ -148,6 +150,9 @@ module Spider; module Model
             after_save(obj)
         end
         
+        def bulk_update(values, conditon)
+        end
+        
         def delete(obj_or_condition)
             if (obj_or_condition.is_a?(BaseModel))
                 condition = Condition.and
@@ -185,12 +190,7 @@ module Spider; module Model
             request = query.request
             condition = Condition.or
             objects.each do |obj|
-                condition_row = Condition.and
-                @model.primary_keys.each do |key|
-                    val = obj.get(key)
-                    condition_row[key.name] = val
-                end
-                condition << condition_row
+                condition << obj.keys_to_condition
             end
             return find(Query.new(condition, request), objects)
         end
@@ -210,26 +210,28 @@ module Spider; module Model
                 set.total_rows = result.total_rows
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
-                    search = {}
+                    search = {} 
                     @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
-                    obj_res = set.find(search)
+                    obj_res = set.find(search)  # FIXME: find a better way
                     if (obj_res && obj_res[0])
                         obj_res[0].merge!(obj)
+                        obj.loaded_elements.each{ |name, bool| set.element_loaded(name)}
                     else
                         set << obj
                     end
                     @raw_data[obj.object_id] = row
                 end
-                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
+#                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
+
                 set = get_external(set, query)
-                if (delay_put)
-                    set.no_autoload(false) do
-                        set.each_index do |i|
-                            set[i].primary_keys_set?
-                            set[i] = im.put(set[i], true)
-                        end
-                    end
-                end
+                # if (delay_put)
+                #     set.no_autoload(false) do
+                #         set.each_index do |i|
+                #             set[i].primary_keys_set?
+                #             set[i] = im.put(set[i], true)
+                #         end
+                #     end
+                # end
             end
             return set
         end
@@ -314,14 +316,18 @@ module Spider; module Model
         
         def queryset_siblings(obj)
             return QuerySet.new(@model, obj) unless obj._parent
+            Spider::Logger.debug("Siblings for #{obj.object_id} (#{obj.class}):")
             path = []
-            while (obj._parent)
+            seen = {obj => true}
+            while (obj._parent && !seen[obj._parent])
                 path.unshift(obj._parent_element) if (obj._parent_element) # otherwise it's a query set
                 obj = obj._parent
+                seen[obj] = true
             end
-            Spider::Logger.debug("Siblings for path: #{path.join(', ')}")
             res = path.empty? ? obj : obj.all_children(path)
             res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
+            
+            Spider::Logger.debug(res.map{|obj| obj.object_id.to_s}.join(', '))
             return res
         end
         
@@ -344,7 +350,7 @@ module Spider; module Model
         
         def prepare_query_request(request, obj=nil)
             @model.primary_keys.each do |key|
-                request[key] = true unless obj && obj.element_loaded?(key)
+                request[key] = true
             end
             lazy_groups = []
             request.each do |k, v|
@@ -354,7 +360,7 @@ module Spider; module Model
             end
             lazy_groups.uniq!
             @model.elements.each do |name, element|
-                next if (obj && obj.element_loaded?(element))
+                next if (obj && obj.element_loaded?(name))
                 if (element.lazy_groups && (lazy_groups - element.lazy_groups).length < lazy_groups.length)
                     request.request(name)
                 end

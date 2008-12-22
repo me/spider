@@ -3,7 +3,7 @@ module Spider; module Model
     class QuerySet
         include Enumerable
         attr_accessor :_parent, :_parent_element
-        attr_reader :raw_data
+        attr_reader :raw_data, :loaded_elements
         attr_accessor :query, :model, :owner, :total_rows
         attr_accessor :loaded, :fetch_window
         attr_accessor :identity_mapper
@@ -53,11 +53,10 @@ module Spider; module Model
         end
         
         def set_parent(obj, element)
-            return if @_parent # FIXME
             @_parent = obj
             @_parent_element = element
         end
-        
+                
         def no_autoload(traverse=true)
             prev_autoload = autoload?
             self.autoload(false, traverse)
@@ -84,7 +83,6 @@ module Spider; module Model
             end
             @objects << obj
             @loaded_elements.merge!(obj.loaded_elements)
-            obj.set_parent(self, nil)
             @fixed.each do |key, val|
                 obj.set(key, val)
             end
@@ -94,16 +92,17 @@ module Spider; module Model
 
         def [](key)
             load unless @objects[key] || @loaded || !autoload?
-            @objects[key]
+            val = @objects[key]
+            val.set_parent(self, nil) if val
+            return val
         end
         
         def []=(key, val)
             load unless @loaded || !autoload?
             val = instantiate_object(val) unless val.is_a?(@model)
             @loaded_elements.merge!(val.loaded_elements)
-            val.set_parent(self, nil)
-            @fixed.each do |key, fval|
-                val.set(key, fval)
+            @fixed.each do |fkey, fval|
+                val.set(fkey, fval)
             end
             @objects[key] = val
         end
@@ -154,7 +153,10 @@ module Spider; module Model
 
         def each
             load unless @loaded || !autoload?
-            @objects.each{ |obj| yield obj }
+            @objects.each do |obj| 
+                obj.set_parent(self, nil)
+                yield obj
+            end
         end
 
         def each_index
@@ -223,7 +225,6 @@ module Spider; module Model
             obj = @model.new(val)
             obj.identity_mapper = @identity_mapper
             obj.autoload = autoload?
-            obj.set_parent(self, nil)
             @fixed.each do |key, fval|
                 obj.set(key, fval)
             end
@@ -312,12 +313,14 @@ module Spider; module Model
             end
         end
         
-        def element_loaded(name)
-            @loaded_elements[name] = true
+        def element_loaded(element)
+            element = element.name if (element.class == Element)
+            @loaded_elements[element] = true
         end
         
-        def element_loaded?(name)
-            @loaded_elements[name]
+        def element_loaded?(element)
+            element = element.name if (element.class == Element)
+            @loaded_elements[element]
         end
             
                     
