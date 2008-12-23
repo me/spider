@@ -76,6 +76,10 @@ module Spider; module Model; module Storage; module Db
             return name.to_s.gsub(':', '_')
         end
         
+        def sequence_name(name)
+            return name.to_s.gsub(':', '_')
+        end
+        
         # Fixes a string to be used as a column name
         def column_name(name)
             name = name.to_s
@@ -392,6 +396,24 @@ module Spider; module Model; module Storage; module Db
                            ((!current[:precision] || current[:precision] == 0) \
                            || (attributes[:precision] && current[:precision] <= attributes[:precision]))
             return false
+        end
+        
+        def shorten_identifier(name, length)
+            while (name.length > length)
+                parts = name.split('_')
+                max = 0
+                max_i = nil
+                parts.each_index do |i|
+                    if (parts[i].length > max)
+                        max = parts[i].length
+                        max_i = i
+                    end
+                end
+                parts[max_i] = parts[max_i][0..-2]
+                name = parts.join('_')
+                name.gsub!('_+', '_')
+            end
+            return name
         end
             
             

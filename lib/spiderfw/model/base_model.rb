@@ -390,11 +390,13 @@ module Spider; module Model
         ##############################################################
         
         def self.with_mapper(*params, &proc)
-            @mapper_proc = proc
+            @mapper_procs ||= []
+            @mapper_procs << proc
         end
         
         def self.with_mapper_for(*params, &proc)
-            @mapper_proc = proc
+            @mapper_procs ||= []
+            @mapper_procs << proc
         end
         
         def self.use_storage(name)
@@ -429,8 +431,8 @@ module Spider; module Model
         def self.get_mapper(storage)
             map_class = self.attributes[:inherit_storage] ? superclass : self
             mapper = storage.get_mapper(map_class)
-            if (@mapper_proc)
-                mapper.instance_eval(&@mapper_proc)
+            if (@mapper_procs)
+                @mapper.procs.each{ |proc| mapper.instance_eval(&proc) }
             end
             return mapper
         end

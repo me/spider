@@ -9,6 +9,7 @@ module Spider; module Model; module Storage; module Db
             @columns = {}
             @foreign_keys = {}
             @junction_tables = {}
+            @sequences = []
         end
         
         def table

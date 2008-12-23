@@ -308,14 +308,23 @@ module Spider; module Model; module Storage; module Db
          def sql_alter_field(table_name, name, type, attributes)
              ["ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"]
          end
+         
+         def sequence_exists?(sequence_name)
+             check = "select SEQUENCE_NAME from user_sequences where sequence_name = :1"
+             res = execute(check, sequence_name)
+             return res[0] ? true : false
+         end
+         
+         def create_sequence(sequence_name)
+             execute("create sequence #{sequence_name}")
+         end
+             
 
          def check_sequences(table, fields)
              fields.each do |field|
                  sequence_name = sequence_name(table, field[:name])
-                 check = "select SEQUENCE_NAME from user_sequences where sequence_name = :1"
-                 res = execute(check, sequence_name)
-                 unless res[0]
-                     execute("create sequence #{sequence_name}")
+                 if (!sequence_exists?(sequence_name))
+                     create_sequence(sequence_name)
                  end
              end
          end
@@ -401,24 +410,6 @@ module Spider; module Model; module Storage; module Db
          def table_name(name)
              table_name = name.to_s.gsub('::', '_')
              return shorten_identifier(table_name, 30).upcase
-         end
-         
-         def shorten_identifier(name, length)
-             while (name.length > length)
-                 parts = name.split('_')
-                 max = 0
-                 max_i = nil
-                 parts.each_index do |i|
-                     if (parts[i].length > max)
-                         max = parts[i].length
-                         max_i = i
-                     end
-                 end
-                 parts[max_i] = parts[max_i][0..-2]
-                 name = parts.join('_')
-                 name.gsub!('_+', '_')
-             end
-             return name
          end
          
          def column_name(name)

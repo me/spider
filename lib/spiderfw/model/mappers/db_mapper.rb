@@ -663,6 +663,9 @@ module Spider; module Model; module Mappers
                     create_table(table_name, table_schema)
                 end
             end
+            schema.sequences.each do |name|
+                create_sequence(name) unless sequence_exists?(name)
+            end
         end
 
         def create_table(table_name, fields)
