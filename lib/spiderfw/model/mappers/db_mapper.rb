@@ -147,8 +147,6 @@ module Spider; module Model; module Mappers
             save[:condition], save[:joins] = prepare_condition(condition)
             return @storage.execute(@storage.sql_update(save))
         end
-                
-        end
          
         
         ##############################################################
