@@ -3,13 +3,14 @@ require 'spiderfw/model/storage/schema'
 module Spider; module Model; module Storage; module Db
     
     class DbSchema < Spider::Model::Storage::Schema
+        attr_reader :sequences
         
         def initialize()
             super
             @columns = {}
             @foreign_keys = {}
             @junction_tables = {}
-            @sequences = []
+            @sequences = {}
         end
         
         def table
@@ -68,6 +69,14 @@ module Spider; module Model; module Storage; module Db
         def set_foreign_key(element_name, element_key, column_description)
             @foreign_keys[element_name] ||= {}
             @foreign_keys[element_name][element_key] = column_description
+        end
+        
+        def set_sequence(name, db_name)
+            @sequences[name] = db_name
+        end
+        
+        def sequence(name)
+            @sequences[name]
         end
         
         # def set_junction_table(element_name, description)

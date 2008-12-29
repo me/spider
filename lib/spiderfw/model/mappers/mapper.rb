@@ -2,6 +2,7 @@ module Spider; module Model
     
     class Mapper
         attr_accessor :storage
+        attr_reader :type
         
         def initialize(model, storage)
             @model = model
@@ -9,6 +10,7 @@ module Spider; module Model
             @raw_data = {}
             @options = {}
             @no_map_elements = {}
+            @sequences = []
         end
         
         
@@ -19,6 +21,7 @@ module Spider; module Model
         end
         
         def mapped?(element)
+            Spider::Logger.debug("Element #{element}, model #{@model}")
             element = element.name if (element.is_a? Element)
             element = @model.elements[element]
             return false if (element.attributes[:unmapped])
@@ -76,6 +79,7 @@ module Spider; module Model
         end
         
         def after_save(obj)
+            obj.reset_modified_elements
         end
         
         def save(obj, request=nil)
@@ -174,6 +178,14 @@ module Spider; module Model
         end
         
         def do_update(obj)
+            raise MapperException, "Unimplemented"
+        end
+        
+        def lock(obj=nil, mode=:exclusive)
+            raise MapperException, "Unimplemented"
+        end
+        
+        def sequence_next(name)
             raise MapperException, "Unimplemented"
         end
         
@@ -354,7 +366,10 @@ module Spider; module Model
             end
             lazy_groups = []
             request.each do |k, v|
-                next unless element = @model.elements[k]
+                unless element = @model.elements[k]
+                    request.delete(k)
+                    next
+                end
                 grps = element.lazy_groups
                 lazy_groups += grps if grps
             end

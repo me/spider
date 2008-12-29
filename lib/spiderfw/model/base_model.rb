@@ -11,7 +11,7 @@ module Spider; module Model
         attr_reader :loaded_elements
         
         class <<self
-            attr_reader :attributes, :elements_order, :integrated_models, :extended_models, :polymorphic_models
+            attr_reader :attributes, :elements_order, :integrated_models, :extended_models, :polymorphic_models, :sequences
         end
         
         @@base_types = {
@@ -75,17 +75,6 @@ module Spider; module Model
             #     require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
             #     type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
             end
-            if (attributes[:add_reverse])
-                unless (type.elements[attributes[:add_reverse]])
-                    attributes[:reverse] = attributes[:add_reverse]
-                    type.element(attributes[:add_reverse], self, :reverse => name)
-                end
-            elsif (attributes[:add_multiple_reverse])
-                unless (type.elements[attributes[:add_reverse]])
-                    attributes[:reverse] = attributes[:add_multiple_reverse]
-                    type.element(attributes[:add_multiple_reverse], self, :reverse => name, :multiple => true)
-                end
-            end
             if (attributes[:integrated_from])
                 if (attributes[:integrated_from].class == String)
                     parts = attributes[:integrated_from].split('.')
@@ -120,6 +109,17 @@ module Spider; module Model
                     if (proc)                                   #        to be hidden, but the integrated el instead
                         type.class_eval(&proc)
                     end
+                end
+            end
+            if (attributes[:add_reverse])
+                unless (type.elements[attributes[:add_reverse]])
+                    attributes[:reverse] = attributes[:add_reverse]
+                    type.element(attributes[:add_reverse], self, :reverse => name)
+                end
+            elsif (attributes[:add_multiple_reverse])
+                unless (type.elements[attributes[:add_reverse]])
+                    attributes[:reverse] = attributes[:add_multiple_reverse]
+                    type.element(attributes[:add_multiple_reverse], self, :reverse => name, :multiple => true)
                 end
             end
             if (attributes[:lazy] == nil)
@@ -332,6 +332,15 @@ module Spider; module Model
             @attributes ||= {}
         end
         
+        def self.sequence(name)
+            @sequences ||= []
+            @sequences << name
+        end
+        
+        def self.sequences
+            @sequences ||= []
+        end
+        
         #####################################################
         #   Methods returning information about the model   #
         #####################################################
@@ -432,7 +441,7 @@ module Spider; module Model
             map_class = self.attributes[:inherit_storage] ? superclass : self
             mapper = storage.get_mapper(map_class)
             if (@mapper_procs)
-                @mapper.procs.each{ |proc| mapper.instance_eval(&proc) }
+                @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
             end
             return mapper
         end
@@ -691,6 +700,8 @@ module Spider; module Model
         end
         
         def modified?
+            Spider::Logger.debug("MODIFIED:")
+            Spider::Logger.debug(@modified_elements.reject{ |key, val| !val })
             return true unless @modified_elements.reject{ |key, val| !val }.empty?
             self.class.elements_array.select{ |el| 
                 !el.model? && !@@base_types[el.type] && element_has_value?(el) 
@@ -791,7 +802,8 @@ module Spider; module Model
         
         def mapper
             @storage ||= self.class.storage
-            return @mapper ||= self.class.get_mapper(@storage)
+            @mapper ||= self.class.get_mapper(@storage)
+            return @mapper
         end
         
         def mapper=(mapper)
@@ -915,7 +927,7 @@ module Spider; module Model
         
         def to_s
             self.class.each_element do |el|
-                return get(el) if (element_has_value?(el) && el.type == 'text' && !el.primary_key?)
+                return get(el) if (el.type == 'text' && !el.primary_key?)
             end
             el = self.class.elements_array[0]
             return get(el) if element_has_value?(el)

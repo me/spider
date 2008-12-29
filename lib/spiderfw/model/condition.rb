@@ -43,8 +43,14 @@ module Spider; module Model
             return c
         end
         
+        def self.no_conjunction(*params, &proc)
+            c = self.new(*params, &proc)
+            c.conjunction = nil
+            return c
+        end
+        
         def initialize(*params, &proc)
-            @conjunction = nil
+            @conjunction = :or
             @comparisons = {}
             @subconditions = []
             @polymorphs = []
@@ -234,7 +240,7 @@ module Spider; module Model
                     }
                     op = replaced if replaced = replace[op]
                     op = op.to_s
-                    c = Condition.new.set(@condition_element_name, op, val)
+                    c = Condition.no_conjunction.set(@condition_element_name, op, val)
                     if (@condition_context)
                         @condition_context << c
                     end

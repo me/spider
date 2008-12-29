@@ -211,7 +211,7 @@ module Spider; module Model; module Storage; module Db
                         bind_vars << v[2].first
                         bind_vars << v[2].last
                     else
-                        bind_vars << v[2]
+                        bind_vars << v[2] unless v[2].nil?
                     end
                     sql_condition_value(v[0], v[1], v[2])
                 end
@@ -224,8 +224,13 @@ module Spider; module Model; module Storage; module Db
                 comp = 'like'
                 key = "UPPER(#{key})"
             end
-            sql = "#{key} #{comp} ?"
-            sql += " AND ?" if (comp.to_s.downcase == 'between')
+            if (value.nil?)
+                comp = comp == '=' ? "IS" : "IS NOT"
+                sql = "#{key} #{comp} NULL"
+            else
+                sql = "#{key} #{comp} ?"
+                sql += " AND ?" if (comp.to_s.downcase == 'between')
+            end
             return sql
         end
         

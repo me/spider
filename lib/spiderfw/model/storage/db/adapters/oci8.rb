@@ -115,6 +115,11 @@ module Spider; module Model; module Storage; module Db
             return value
         end
         
+        def value_for_condition(type, value)
+            return value if value.nil?
+            super
+        end
+        
         def value_to_mapper(type, value)
             case type
             when 'dateTime'
@@ -152,6 +157,8 @@ module Spider; module Model; module Storage; module Db
                   end
              end
              disconnect unless in_transaction?
+              Spider::Logger.debug("RESULT:")
+              Spider::Logger.debug(result)
              unless block_given?
                  result.extend(StorageResult)
                  @last_result = result
@@ -183,9 +190,8 @@ module Spider; module Model; module Storage; module Db
              return res[0]['N']
          end
          
-         def sequence_next(table, field)
-             sn = sequence_name(table, field)
-             res = execute("SELECT #{sn}.NEXTVAL AS NEXT FROM DUAL")
+         def sequence_next(sequence_name)
+             res = execute("SELECT #{sequence_name}.NEXTVAL AS NEXT FROM DUAL")
              return res[0]['NEXT'].to_i
          end
 
@@ -219,7 +225,7 @@ module Spider; module Model; module Storage; module Db
                          query[:keys].push(field)
                          i = query[:keys].length < 1
                      end
-                     query[:keys][query[:keys].index(field)] += " AS #{field.sub('.', '_')}"
+                     query[:keys] << "#{field} AS #{field.sub('.', '_')}"
                  end
              end
              keys = sql_keys(query)
@@ -259,8 +265,13 @@ module Spider; module Model; module Storage; module Db
                  comp = 'like'
                  key = "UPPER(#{key})"
              end
-             sql = "#{key} #{comp} :#{(@bind_cnt += 1)}"
-             sql += " AND :#{(@bind_cnt += 1)}" if comp.to_s.downcase == 'between'
+             if (value.nil?)
+                 comp = comp == '=' ? "IS" : "IS NOT"
+                 sql = "#{key} #{comp} NULL"
+             else
+                 sql = "#{key} #{comp} :#{(@bind_cnt += 1)}"
+                 sql += " AND :#{(@bind_cnt += 1)}" if comp.to_s.downcase == 'between'
+             end
              return sql
          end
          
@@ -293,17 +304,6 @@ module Spider; module Model; module Storage; module Db
              @bind_cnt = 0
              super
          end
-
-         
-         def create_table(create)
-             super(create)
-             check_sequences(create[:table], create[:fields].select{|f| f[:attributes][:autoincrement]})
-         end
-         
-         def alter_table(alter)
-             super(alter)
-             check_sequences(alter[:table], alter[:all_fields].select{|f| f[:attributes][:autoincrement]})
-         end
          
          def sql_alter_field(table_name, name, type, attributes)
              ["ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"]
@@ -317,16 +317,6 @@ module Spider; module Model; module Storage; module Db
          
          def create_sequence(sequence_name)
              execute("create sequence #{sequence_name}")
-         end
-             
-
-         def check_sequences(table, fields)
-             fields.each do |field|
-                 sequence_name = sequence_name(table, field[:name])
-                 if (!sequence_exists?(sequence_name))
-                     create_sequence(sequence_name)
-                 end
-             end
          end
          
          ##############################################################
@@ -416,8 +406,8 @@ module Spider; module Model; module Storage; module Db
              super.upcase
          end
          
-         def sequence_name(table, field)
-             shorten_identifier(table+'_'+field, 30)
+         def sequence_name(name)
+             shorten_identifier(name, 30).upcase
          end
          
         

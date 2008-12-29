@@ -8,6 +8,7 @@ module Spider; module Model; module Mappers
 
         def initialize(model, storage)
             super
+            @type = :db
         end
         
         def have_references?(element)
@@ -31,11 +32,7 @@ module Spider; module Model; module Mappers
                 # end
             end
             super(obj)
-        end
-        
-        def after_save(obj)
-        end
-            
+        end            
         
         def save_all(root)
             @storage.start_transaction if @storage.supports_transactions?
@@ -89,7 +86,7 @@ module Spider; module Model; module Mappers
                 next if !mapped?(element) || element.integrated?
                 next if save_mode == :update && !obj.element_modified?(element)
                 if (save_mode == :insert && element.attributes[:autoincrement] && !@storage.supports?(:autoincrement))
-                    obj.set(element.name, @storage.sequence_next(schema.table, schema.field(element.name)))
+                    obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
                 end
                 if (!element.multiple?)
                     next if (save_mode == :update && element.primary_key?)
@@ -147,7 +144,14 @@ module Spider; module Model; module Mappers
             save[:condition], save[:joins] = prepare_condition(condition)
             return @storage.execute(@storage.sql_update(save))
         end
-         
+        
+        def lock(obj=nil, mode=:exclusive)
+            return storage.lock(@schema.table) unless obj
+        end 
+        
+        def sequence_next(name)
+            return storage.sequence_next(schema.sequence(name))
+        end
         
         ##############################################################
         #   Loading methods                                          #
@@ -170,7 +174,20 @@ module Spider; module Model; module Mappers
             return result
         end
         
+        def find_by_sql(sql, *bind_vars)
+            result = storage.execute(sql, *bind_vars)
+            set = QuerySet.new(@model)
+            result.each do |row|
+                set << map(nil, row, @model)
+            end
+            return set
+        end
+        
         def map(request, result, obj)
+            if (!request)
+                request = Request.new
+                @model.elements_array.each{ |el| request.request(el.name) }
+            end
             model = obj.is_a?(Class) ? obj : obj.class
             data = {}
             request.keys.each do |element_name|
@@ -625,6 +642,10 @@ module Spider; module Model; module Mappers
             schema.table = @storage.table_name(n)
             @model.each_element do |element|
                 next if element.integrated?
+                next unless mapped?(element)
+                if (element.attributes[:autoincrement] && !@storage.supports?(:autoincrement))
+                    schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
+                end
                 if (!element.model?)
                     type = element.custom_type? ? element.type.class.maps_to : element.type
                     schema.set_column(element.name,
@@ -637,14 +658,21 @@ module Spider; module Model; module Mappers
                         element.type.primary_keys.each do |key|
                             next if key.model?
                             #key_column = element.mapper.schema.column(key.name)
+                            key_attributes = {
+                                :length => key.attributes[:length],
+                                :precision => key.attributes[:precision]
+                            }
                             schema.set_foreign_key(element.name, key.name, 
                                 :name => @storage.column_name("#{element.name}_#{key.name}"),
                                 :type => @storage.column_type(key.type, key.attributes),
-                                :attributes => @storage.column_attributes(key.type, key.attributes)
+                                :attributes => @storage.column_attributes(key.type, key_attributes)
                             )
                         end
                     end
                 end
+            end
+            @model.sequences.each do |name|
+                schema.set_sequence(name, @storage.sequence_name("#{schema.table}_#{name}"))
             end
             return schema
         end
@@ -661,8 +689,8 @@ module Spider; module Model; module Mappers
                     create_table(table_name, table_schema)
                 end
             end
-            schema.sequences.each do |name|
-                create_sequence(name) unless sequence_exists?(name)
+            schema.sequences.each do |name, db_name|
+                storage.create_sequence(db_name) unless storage.sequence_exists?(db_name)
             end
         end
 
