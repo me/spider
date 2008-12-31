@@ -14,7 +14,8 @@ module Spider
                 'Connection' => 'close'
             }
             @previous_stdout = $stdout
-            $stdout = response.body
+            Thread.current[:stdout] = response.body
+            $stdout = ThreadOut
             super
         end
         
