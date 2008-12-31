@@ -6,7 +6,13 @@ module Spider; module Model
         attr_reader :raw_data, :loaded_elements
         attr_accessor :query, :model, :owner, :total_rows
         attr_accessor :loaded, :fetch_window
-        attr_accessor :identity_mapper
+        attr_accessor :append_element
+        
+        def self.static(model, query_or_val=nil)
+            qs = self.new(model, query_or_val)
+            qs.autoload = false
+            return qs
+        end
 
         def initialize(model, query_or_val=nil)
             if (query_or_val.is_a?(Query))
@@ -27,6 +33,7 @@ module Spider; module Model
             @loaded = false
             @loaded_elements = {}
             @fixed = {}
+            @append_element = nil
             set_data(data) if data
             self
         end
@@ -73,7 +80,6 @@ module Spider; module Model
                 self << data
             end
         end
-                
 
         # Adds an object to the set. Also stores the raw data if it is passed as the second parameter. 
         def <<(obj, raw=nil)
@@ -90,6 +96,8 @@ module Spider; module Model
             @raw_data[@objects.length-1] = raw if raw
         end
 
+            
+
         def [](key)
             load unless @objects[key] || @loaded || !autoload?
             val = @objects[key]
@@ -105,6 +113,18 @@ module Spider; module Model
                 val.set(fkey, fval)
             end
             @objects[key] = val
+        end
+        
+        def delete_at(index)
+            @objects.delete_at(index)
+        end
+        
+        def +(other)
+            qs = self.clone
+            other.each do |obj|
+                qs << obj
+            end
+            return qs
         end
         
         def length
@@ -222,6 +242,11 @@ module Spider; module Model
         end
         
         def instantiate_object(val=nil)
+            if (@append_element)
+                val = @model.elements[@append_element].type.new(val) unless (val.is_a?(BaseModel))
+                val = {@append_element => val}
+            end
+                
             obj = @model.new(val)
             obj.identity_mapper = @identity_mapper
             obj.autoload = autoload?
@@ -235,14 +260,20 @@ module Spider; module Model
             return "#{self.class.name}:\n@model=#{@model}, @query=#{query.inspect}, @objects=#{@objects.inspect}"
         end
         
-        def to_json(&proc)
+        def to_json(state=nil, &proc)
+            load unless @loaded || !autoload?
             return "[" +
-                @objects.map{ |obj| obj.to_json(&proc) }.join(',') +
+                self.map{ |obj| obj.to_json(&proc) }.join(',') +
                 "]"
         end
         
+        def cut(*params)
+            load unless @loaded || !autoload?
+            return self.map{ |obj| obj.cut(*params) }
+        end
+        
         def to_hash_array
-            return @objects.map{ |obj| obj.to_hash }
+            return self.map{ |obj| obj.to_hash }
         end
         
         def table
@@ -321,6 +352,15 @@ module Spider; module Model
         def element_loaded?(element)
             element = element.name if (element.class == Element)
             @loaded_elements[element]
+        end
+        
+        def identity_mapper
+            return Spider::Model.identity_mapper if Spider::Model.identity_mapper
+            @identity_mapper ||= IdentityMapper.new
+        end
+        
+        def identity_mapper=(im)
+            @identity_mapper = im
         end
             
                     

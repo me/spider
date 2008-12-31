@@ -18,7 +18,11 @@ module Spider; module Model
         
         def model
             return nil unless model?
-            return type
+            return association_type || type
+        end
+        
+        def association_type
+            @attributes[:association_type]
         end
         
         def multiple?
@@ -30,6 +34,7 @@ module Spider; module Model
         end
         
         def model?
+            return true if association_type
             return true if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
         end
         

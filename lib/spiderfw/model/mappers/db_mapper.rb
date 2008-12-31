@@ -21,16 +21,6 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def before_save(obj)
-            @model.elements.select{ |n, el| 
-                mapped?(el) && obj.element_has_value?(el) && el.has_single_reverse? 
-            }.each do |name, element|
-                # FIXME: what is this?!?
-                # if (element.multiple?)
-                #     obj.send(name).each { |o| o.send("#{element.attributes[:reverse]}=", obj) }
-                # else
-                #     obj.send(name).send("#{element.attributes[:reverse]}=", obj)
-                # end
-            end
             super(obj)
         end            
         
@@ -91,10 +81,9 @@ module Spider; module Model; module Mappers
                 if (!element.multiple?)
                     next if (save_mode == :update && element.primary_key?)
                     next if (element.model? && !schema.has_foreign_fields?(element.name))
-                    next if (element.model? && !obj.get(element).primary_keys_set?)
+                    next if (element.model? && (!(element_val = obj.get(element)) || !obj.get(element).primary_keys_set?))
                     next if (element.integrated?)
                     if (element.model?)
-                        element_val = obj.get(element.name)
                         element.model.primary_keys.each do |key|
                             store_key = schema.foreign_key_field(element.name, key.name)
                             values[store_key] = map_save_value(key.type, element_val.get(key.name), save_mode)
@@ -200,10 +189,10 @@ module Spider; module Model; module Mappers
                     element.model.primary_keys.each do |key| 
                         key_val = result[schema.foreign_key_field(element_name, key.name)]
                         keys_set = false unless key_val
-                        pks[key.name] = key_val
+                        pks[key.name] = map_back_value(key.type, key_val)
                     end
 #                    begin
-                    data[element_name] = Spider::Model.get(element.model, pks) if keys_set
+                    data[element_name] = keys_set ? Spider::Model.get(element.model, pks) : nil
 #                    rescue IdentityMapperException
                         # null keys, nothing to set
 #                    end
@@ -211,9 +200,8 @@ module Spider; module Model; module Mappers
                     data[element_name] = map_back_value(element.type, result[schema.field(element_name)])
                 end
             end
-            # Spider::Logger.debug("GETting #{model}")
-            # Spider::Logger.debug(data)
             obj = Spider::Model.get(model, data)
+            data.keys.each{ |el| obj.element_loaded(el) }
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
@@ -239,8 +227,10 @@ module Spider; module Model; module Mappers
         end
         
         def can_join?(element)
+            Spider::Logger.debug("Can join? #{element}")
             return false if element.multiple?
             return false if element.storage != @storage
+            Spider::Logger.debug("TRUE")
             return true
         end
         
@@ -410,8 +400,11 @@ module Spider; module Model; module Mappers
         
         def get_join(element)
             return unless element.model?
+            Spider::Logger.debug("Getting join for model #{@model} to element #{element}")
+            Spider::Logger.debug(@model.primary_keys.map{|k| k.name})
             element_table = element.mapper.schema.table
             if (schema.has_foreign_fields?(element.name))
+                Spider::Logger.debug("JOIN A")
                 keys = {}
                 element.model.primary_keys.each do |key|
                     keys[schema.foreign_key_field(element.name, key.name)] = element.mapper.schema.field(key.name)
@@ -429,14 +422,17 @@ module Spider; module Model; module Mappers
                     :condition => condition
                 }
             elsif (element.has_single_reverse? && element.mapper.schema.has_foreign_fields?(element.reverse)) # n/1 <-> n
+                Spider::Logger.debug("JOIN B")
                 keys = {}
                 @model.primary_keys.each do |key|
                     our_field = nil
+                    Spider::Logger.debug("OUR FIELD")
                     if (key.integrated?)
                         our_field = schema.foreign_key_field(key.integrated_from.name, key.integrated_from_element)
                     else
                         our_field = schema.field(key.name)
                     end
+                    Spider::Logger.debug("THEIR FIELD")
                     keys[our_field] = element.mapper.schema.foreign_key_field(element.reverse, key.name)
                 end
                 if (element.condition)
@@ -466,8 +462,13 @@ module Spider; module Model; module Mappers
                 current_model = @model
                 parts.each do |part|
                     el = current_model.elements[part.to_sym]
+                    if (el.integrated?)
+                        joins << get_join(el.integrated_from)
+                        current_model = el.integrated_from.type
+                        el = current_model.elements[el.integrated_from_element]
+                    end
                     if (el.model? && current_model.mapper.can_join?(el))
-                        joins << get_join(el.name)
+                        joins << get_join(el)
                         current_model = el.model
                     elsif (field = current_model.mapper.schema.qualified_field(el.name))
                         fields << [field, direction]
@@ -624,6 +625,7 @@ module Spider; module Model; module Mappers
         end
         
         def get_schema()
+            return @model.superclass.mapper.get_schema() if (@model.attributes[:inherit_storage])
             schema =  Spider::Model::Storage::Db::DbSchema.new()
             if (@schema_define_proc)
                 schema.instance_eval(&@schema_define_proc)
@@ -679,8 +681,13 @@ module Spider; module Model; module Mappers
 
         def sync_schema(force=false)
             schema_description = schema.get_schemas
+            sequences = schema.sequences.values
             @model.elements_array.select{ |el| el.attributes[:anonymous_model] }.each do |el|
                 schema_description.merge!(el.model.mapper.schema.get_schemas)
+                sequences += el.model.mapper.schema.sequences.values
+                # Spider::Logger.debug("MERGING SEQUENCES:")
+                # Spider::Logger.debug(el.model.mapper.schema.sequences)
+                # sequences.merge!(el.model.mapper.schema.sequences)
             end
             schema_description.each do |table_name, table_schema|
                 if @storage.table_exists?(table_name)
@@ -689,7 +696,7 @@ module Spider; module Model; module Mappers
                     create_table(table_name, table_schema)
                 end
             end
-            schema.sequences.each do |name, db_name|
+            sequences.compact.each do |db_name|
                 storage.create_sequence(db_name) unless storage.sequence_exists?(db_name)
             end
         end

@@ -38,7 +38,8 @@ module Spider; module Model; module Storage; module Db
 
         
         def qualified_field(element_name)
-            return @table + '.' + field(element_name)
+            raise SchemaException, "No DB field defined for element #{element_name}" unless f = field(element_name)
+            return @table + '.' + f
         end
 
         def foreign_key_field(element_name, key_name)

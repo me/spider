@@ -124,6 +124,8 @@ module Spider; module Model; module Storage; module Db
             case type
             when 'dateTime'
                 return value ? value.to_date : nil
+            when 'longText'
+                return value ? value.read : ''
             else
                 return value
             end
@@ -157,8 +159,6 @@ module Spider; module Model; module Storage; module Db
                   end
              end
              disconnect unless in_transaction?
-              Spider::Logger.debug("RESULT:")
-              Spider::Logger.debug(result)
              unless block_given?
                  result.extend(StorageResult)
                  @last_result = result

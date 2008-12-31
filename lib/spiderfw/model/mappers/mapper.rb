@@ -21,7 +21,6 @@ module Spider; module Model
         end
         
         def mapped?(element)
-            Spider::Logger.debug("Element #{element}, model #{@model}")
             element = element.name if (element.is_a? Element)
             element = @model.elements[element]
             return false if (element.attributes[:unmapped])
@@ -116,7 +115,14 @@ module Spider; module Model
         def save_element_associations(obj, element)
             if (element.attributes[:junction])
                 element.mapper.delete({element.attributes[:reverse] => obj})
-                obj.get(element).insert
+                val = obj.get(element)
+                if (val.is_a?(QuerySet) && val.model == element.type) # construct the junction
+                    qs = QuerySet.static(element.model, val.map{ |el_obj|
+                        {element.attributes[:reverse] => obj, element.attributes[:junction_their_element] => el_obj}
+                    })
+                    val = qs
+                end
+                val.insert
             else
                 associated = obj.get(element)
                 if (element.multiple? && element.owned?)
@@ -159,10 +165,13 @@ module Spider; module Model
         
         def delete(obj_or_condition)
             if (obj_or_condition.is_a?(BaseModel))
+                obj = obj_or_condition
                 condition = Condition.and
                 @model.primary_keys.each do |key|
                     condition[key.name] = map_condition_value(key.type, obj.get(key))
                 end
+                Spider::Logger.debug("Condition:")
+                Spider::Logger.debug(condition)
             else
                 condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)
             end
@@ -212,6 +221,9 @@ module Spider; module Model
             set = nil
             Spider::Model.with_identity_mapper do |im|
                 im.put(query_set)
+                if (@model.attributes[:condition])
+                    query.condition = Condition.and(query.condition, @model.attributes[:condition])
+                end
                 query = prepare_query(query, query_set)
                 query.request.total_rows = true unless query.request.total_rows = false
                 result = fetch(query)
@@ -286,12 +298,15 @@ module Spider; module Model
                     got_external[element] = true
                     objects = get_external_element(element, sub_query, objects)
                 end
+                # no furter attempts to try; set as loaded
+                objects.element_loaded(element_name)
             end
             get_integrated.each do |integrated, request|
                 next if got_external[integrated]
                 next if objects.element_loaded?(integrated.name)
                 sub_query = Query.new(nil, request)
                 objects = get_external_element(integrated, sub_query, objects)
+                objects.element_loaded(integrated)
             end
             return objects
         end
@@ -328,7 +343,6 @@ module Spider; module Model
         
         def queryset_siblings(obj)
             return QuerySet.new(@model, obj) unless obj._parent
-            Spider::Logger.debug("Siblings for #{obj.object_id} (#{obj.class}):")
             path = []
             seen = {obj => true}
             while (obj._parent && !seen[obj._parent])
@@ -338,8 +352,6 @@ module Spider; module Model
             end
             res = path.empty? ? obj : obj.all_children(path)
             res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
-            
-            Spider::Logger.debug(res.map{|obj| obj.object_id.to_s}.join(', '))
             return res
         end
         
@@ -392,18 +404,12 @@ module Spider; module Model
         
         # FIXME: better name, move somewhere else
         def prepare_query_condition(condition)
-            if (@model.attributes[:condition])
-                subcond = Condition.new(@model.attributes[:condition])
-                cond = Condition.and
-                cond << condition
-                cond << subcond
-                condition = cond
-            end
             condition.each_with_comparison do |k, v, c|
-                if (@model.elements[k].integrated?)
+                raise MapperException, "Condition for nonexistent element #{k}" unless element = @model.elements[k]
+                if (element.integrated?)
                     condition.delete(k)
-                    integrated_from = @model.elements[k].integrated_from
-                    integrated_from_element = @model.elements[k].integrated_from_element
+                    integrated_from = element.integrated_from
+                    integrated_from_element = element.integrated_from_element
                     condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
                 end 
             end
