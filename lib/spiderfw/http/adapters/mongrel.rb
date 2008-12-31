@@ -80,7 +80,11 @@ module Spider; module HTTP
             controller_request = Spider::Request.new
             controller_request.env = normalize_request(request.params.clone)
             controller_request.protocol = :http
-            controller_request.parse_query(request.params['QUERY_STRING'])
+            if (request.params['REQUEST_METHOD'] == 'POST')
+                controller_request.parse_query(request.body.read)
+            else
+                controller_request.parse_query(request.params['QUERY_STRING'])
+            end
 
             controller_response = Spider::Response.new
             controller_response.body = MongrelIO.new(response, controller_response)
