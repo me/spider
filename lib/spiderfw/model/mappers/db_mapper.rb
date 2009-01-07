@@ -371,6 +371,7 @@ module Spider; module Model; module Mappers
                         cond[:values] << element_cond
                     else
                         if (element.storage == @storage)
+                            element.mapper.prepare_query_condition(v)
                             element_condition, element_joins = element.mapper.prepare_condition(v)
                             joins += element_joins
                             joins << get_join(element)

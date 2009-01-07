@@ -244,7 +244,7 @@ module Spider; module Model; module Storage; module Db
                  if (query[:offset])
                      limit = "oci8_row_num between :#{@bind_cnt+=1} and :#{@bind_cnt+=1}"
                      bind_vars << query[:offset]
-                     bind_vars << query[:limit]
+                     bind_vars << query[:offset] + query[:limit]
                  else
                      limit = "oci8_row_num < :#{@bind_cnt+=1}"
                      bind_vars << query[:limit]

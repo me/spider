@@ -228,6 +228,7 @@ module Spider; module Model
                 query.request.total_rows = true unless query.request.total_rows = false
                 result = fetch(query)
                 set = query_set || QuerySet.new(@model)
+                set.loaded = true
                 set.index_by(*@model.primary_keys)
                 set.query = query
                 return set if !result || result.empty?
