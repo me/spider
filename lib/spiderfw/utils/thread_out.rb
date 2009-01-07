@@ -16,6 +16,8 @@ module ThreadOut
     end
   end
   
+  def self.<<(stuff)
+      self.write(stuff)
+  end
+  
 end
-
-$stdout = ThreadOut

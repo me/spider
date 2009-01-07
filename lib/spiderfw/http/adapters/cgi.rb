@@ -68,7 +68,7 @@ end
 controller_request.protocol = :http
 path = controller_request.env['REQUEST_PATH']+''
 controller_response = Spider::Response.new
-controller_response.body = CGIIO.new($stdout, controller_response)
+controller_response.body = CGIIO.new(STDOUT, controller_response)
 begin
     controller = ::Spider::HTTPController.new(controller_request, controller_response)
     #controller.before(path)
