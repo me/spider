@@ -106,7 +106,7 @@ module Spider; module Model
                     attributes[:reverse] = self_name
                     assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
                     # FIXME! fix in case of clashes with existent elements
-                    other_name = (orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).downcase.to_sym
+                    other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).downcase.to_sym
                     other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
                     attributes[:junction_their_element] = other_name
                     assoc_type.element(other_name, orig_type)
@@ -190,7 +190,7 @@ module Spider; module Model
                     #integrated_obj.autoload = false
                     return integrated_obj.send("#{element.integrated_from_element}=", val)
                 end
-                if (element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
+                if (val && element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
                     val = element.model.new(val)
                 end
                 val = prepare_child(element.name, val)
@@ -652,13 +652,14 @@ module Spider; module Model
 
         
         def check(name, val)
-            self.class.elements[name].type.check(val) if (self.class.elements[name].type.respond_to?(:check))
-            if (checks = self.class.elements[name].attributes[:check])
-                checks = {(_("%s is not in the correct format") % val) => checks} unless checks.is_a?(Hash)
+            element = self.class.elements[name]
+            element.type.check(val) if (element.type.respond_to?(:check))
+            if (checks = element.attributes[:check])
+                checks = {(_("%s is not in the correct format") % element.label) => checks} unless checks.is_a?(Hash)
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
-                        msg =~ check
+                        val == nil ? true : msg =~ check
                     when Proc
                         Proc.call(msg)
                     end

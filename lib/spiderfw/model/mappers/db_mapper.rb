@@ -525,7 +525,7 @@ module Spider; module Model; module Mappers
             when 'real'
                 return value.to_f
             when 'bool'
-                return value ? true : false
+                return value == 1 ? true : false
             end
             return nil unless value
             case type

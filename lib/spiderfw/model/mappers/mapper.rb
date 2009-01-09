@@ -175,6 +175,7 @@ module Spider; module Model
             else
                 condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)
             end
+            prepare_query_condition(condition)
             do_delete(condition)
         end
         
