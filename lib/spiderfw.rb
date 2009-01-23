@@ -43,9 +43,9 @@ module Spider
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
             GetText.locale = config.get('locale')
 
-            if (Spider.config['debugger.start'])
-
-            end
+            # if (Spider.config['debugger.start'])
+            #     Debugger.start
+            # end
             init_apps
             @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
@@ -71,6 +71,7 @@ module Spider
             @paths[:layouts] = root+'/layouts'
             @paths[:var] = root+'/var'
             @paths[:certs] = @paths[:config]+'/certs'
+            @paths[:tmp] = root+'/tmp'
         end
         
         def paths

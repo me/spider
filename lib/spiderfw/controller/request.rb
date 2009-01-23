@@ -1,8 +1,23 @@
 module Spider
     
     class Request
-        attr_accessor :params, :env, :protocol, :format, :extension
+        attr_accessor :params, :cookies, :env, :protocol, :format, :extension, :session, :user_id
         @@multipart_regexp = /\Amultipart\/form-data.*boundary=\"?([^\";,]+)/n.freeze
+        
+        
+        def initialize(protocol, env, body)
+            Spider::Logger.debug("REQUEST:")
+            Spider::Logger.debug(env)
+#            Spider::Logger.debug(b)
+            @env = env
+            if (env['REQUEST_METHOD'] == 'POST')
+                @params = parse_query(body.read)
+            else
+                @params = parse_query(env['QUERY_STRING'])
+            end
+            @cookies = parse_query(env['HTTP_COOKIE'], ';')
+        end
+        
         
         # ==== Parameters
         # qs<String>:: The query string.
@@ -17,7 +32,7 @@ module Spider
         #--
         # from Merb
         def parse_query(qs, d = '&;')
-          @params = (qs||'').split(/[#{d}] */n).inject({}) { |h,p| 
+          return (qs||'').split(/[#{d}] */n).inject({}) { |h,p| 
             key, value = unescape(p).split('=',2)
             normalize_params(h, key, value)
           }

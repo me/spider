@@ -19,6 +19,7 @@ class CGIIO < Spider::ControllerIO
     
     def send_headers
         Spider::Logger.debug("sending headers")
+        @controller_response.prepare_headers
         @headers_sent = true
         @out << "Status: #{@controller_response.status}\n"
         @controller_response.headers.each do |key, val|
@@ -30,7 +31,7 @@ class CGIIO < Spider::ControllerIO
     
 end
 
-def prepare_params
+def prepare_env
     return {
         'SERVER_NAME' => ENV['SERVER_NAME'],
         'PATH_INFO' => ENV['PATH_INFO'],
@@ -38,6 +39,7 @@ def prepare_params
         'HTTP_USER_AGENT' => ENV['HTTP_USER_AGENT'],
         'SCRIPT_NAME' => ENV['SCRIPT_NAME'],
         'SERVER_PROTOCOL' => ENV['SERVER_PROTOCOL'],
+        'HTTP_COOKIE' => ENV['HTTP_COOKIE'],
         'HTTP_HOST' => ENV['HTTP_HOST'],
         'HTTP_ACCEPT_LANGUAGE' => ENV['HTTP_ACCEPT_LANGUAGE'],
         'SERVER_SOFTWARE' => ENV['SERVER_SOFTWARE'],
@@ -56,17 +58,10 @@ def prepare_params
 end
 
 Spider::Logger.debug('-----------')
-controller_request = Spider::Request.new
-controller_request.env = prepare_params
-if (controller_request.env['REQUEST_METHOD'] == 'POST')
-    body = $stdin.read(controller_request.env['CONTENT_LENGTH'].to_i)
-    Spider::Logger.debug("CGI POST BODY: #{body}")
-    controller_request.parse_query(body)
-else
-    controller_request.parse_query(controller_request.env['QUERY_STRING'])
-end
-controller_request.protocol = :http
-path = controller_request.env['REQUEST_PATH']+''
+env = prepare_env
+body = $stdin.read(env['CONTENT_LENGTH'].to_i)
+controller_request = Spider::Request.new(:http, env, body)
+path = env['REQUEST_PATH']+''
 controller_response = Spider::Response.new
 controller_response.body = CGIIO.new(STDOUT, controller_response)
 begin

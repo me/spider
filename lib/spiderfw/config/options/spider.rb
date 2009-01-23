@@ -39,4 +39,10 @@ module Spider
     
     config_option 'locale', _("The locale to use")
     
+    # Session
+    
+    config_option 'session.store', _("Where to store the session"), :default => 'memory', :choices => ['memory', 'file', 'memcached']
+    
+    config_option 'session.file.path', _("The folder where to store file sessions"), :default => lambda{ return Spider.paths[:var]+'/sessions' }
+    
 end

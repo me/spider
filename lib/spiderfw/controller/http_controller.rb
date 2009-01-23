@@ -1,5 +1,7 @@
 require 'spiderfw/controller/spider_controller'
 require 'spiderfw/controller/formats/html'
+require 'spiderfw/controller/session/memory_session'
+require 'spiderfw/controller/session/file_session'
 
 module Spider
     
@@ -16,6 +18,9 @@ module Spider
             @previous_stdout = $stdout
             Thread.current[:stdout] = response.body
             $stdout = ThreadOut
+            request.user_id = request.cookies['user_id']
+            request.session = Session.get(request.cookies['sid'])
+            response.cookies['sid'] = request.session.sid
             super
         end
         
@@ -37,6 +42,7 @@ module Spider
             else
                 super
             end
+            request.session.persist
         end
         
         

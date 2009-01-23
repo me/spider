@@ -40,10 +40,15 @@ module Spider; module HTTP
         end
         
         def send_headers
+            @controller_response.prepare_headers
             @response.status = @controller_response.status
             @response.send_status(nil)
             @controller_response.headers.each do |key, val|
-                @response.header[key] = val
+                if (val.is_a?(Array))
+                    val.each{ |v| @response.header[key] = v }
+                else
+                    @response.header[key] = val
+                end
             end
             @response.send_header
         end
@@ -77,14 +82,8 @@ module Spider; module HTTP
         def process(request, response)
             @server.request_received
             path = request.params['REQUEST_PATH']
-            controller_request = Spider::Request.new
-            controller_request.env = normalize_request(request.params.clone)
-            controller_request.protocol = :http
-            if (request.params['REQUEST_METHOD'] == 'POST')
-                controller_request.parse_query(request.body.read)
-            else
-                controller_request.parse_query(request.params['QUERY_STRING'])
-            end
+            env = normalize_request(request.params.clone)
+            controller_request = Spider::Request.new(:http, env, request.body)
 
             controller_response = Spider::Response.new
             controller_response.body = MongrelIO.new(response, controller_response)
@@ -122,7 +121,7 @@ module Spider; module HTTP
             
             ENV['SPIDER_PATH'] = $SPIDER_PATH
             ['SERVER_NAME', 'PATH_INFO', 'HTTP_ACCEPT_ENCODING', 'HTTP_USER_AGENT', 'SCRIPT_NAME',
-             'SERVER_PROTOCOL', 'HTTP_HOST', 'HTTP_ACCEPT_LANGUAGE', 'SERVER_SOFTWARE', 'REQUEST_PATH',
+             'SERVER_PROTOCOL', 'HTTP_COOKIE', 'HTTP_HOST', 'HTTP_ACCEPT_LANGUAGE', 'SERVER_SOFTWARE', 'REQUEST_PATH',
              'HTTP_VERSION', 'REQUEST_URI', 'SERVER_PORT', 'GATEWAY_INTERFACE', 'HTTP_ACCEPT', 'HTTP_CONNECTION',
              'REQUEST_METHOD', 'QUERY_STRING', 'CONTENT_TYPE', 'CONTENT_LENGTH'].each do |key|
                 ENV[key] = request.params[key]

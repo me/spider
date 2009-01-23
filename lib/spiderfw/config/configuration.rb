@@ -34,11 +34,15 @@ module Spider
             action.call(val) if (action)
         end
         
+        def sub_conf(name)
+            @values[name] ||= Configuration.new(@prefix+".#{name}")
+        end
+        
         def set(key, val)
             first, rest = key.split('.', 2)
             if rest
                 begin
-                    ( @values[first] ||= Configuration.new(@prefix+".#{first}") ).configure(rest, val)
+                    sub_conf(first).configure(rest, val)
                 rescue ConfigurationException # raise only top level exception
                     raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key
                 end
@@ -55,9 +59,11 @@ module Spider
         
         
         def [](key)
+            Spider::Logger.debug("Getting CONF #{key}")
             val = @values[key]
             if (!val && @options[key] && @options[key][:params][:default])
                 default = @options[key][:params][:default]
+                Spider::Logger.debug("DEFAULT: #{default}")
                 val = (default.class == Proc) ? default.call() : default
             end
             return val
@@ -95,10 +101,11 @@ module Spider
 
         
         def get(key)
+#            debugger
             key = key.to_s
             first, rest = key.split('.', 2)
             if rest
-                return nil unless @values[first]
+                v = sub_conf(first)
                 @values[first].config(rest)
             else
                 self[key]
@@ -114,7 +121,7 @@ module Spider
         def create_prefix(name)
             first, rest = name.split('.', 2)
             @options[first] ||= {}
-            v = (@values[first] ||= Configuration.new(@prefix+".#{first}"))
+            v = sub_conf(first)
             v.create_prefix(rest) if rest
         end
         

@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
   s.add_dependency("gettext", ["> 1.80.0"])
   s.add_dependency("hpricot", ["> 0.6"])
   s.add_dependency("json", ["> 1.1"])
+  s.add_dependency("uuid", ["> 2.0"])
   s.add_development_dependency("rake", ["> 0.7.3"])
   s.add_development_dependency("ruby-debug", ["> 0.9.3"])
   s.requirements << "Optional dependencies: openssl, sqlite3, webrick, mongrel, ruby-oci8"

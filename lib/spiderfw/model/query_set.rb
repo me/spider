@@ -128,6 +128,11 @@ module Spider; module Model
         end
         
         def length
+            load unless @loaded || !autoload?
+            @objects.length
+        end
+        
+        def current_length
             @objects.length
         end
         
@@ -362,6 +367,16 @@ module Spider; module Model
         def identity_mapper=(im)
             @identity_mapper = im
         end
+        
+        #####################
+        # Condition methods #
+        #####################
+        
+        def where(*params, &proc)
+            @query.where(*params, &proc)
+            return self
+        end
+            
             
                     
         
