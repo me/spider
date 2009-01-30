@@ -282,7 +282,7 @@ module Spider; module Model
         end
         
         def table
-            return print "Empty\n" if length < 1
+            return print("Empty\n") if length < 1
             columns = ENV['COLUMNS'].to_i || 80
             a = to_flat_array
             m_sizes = Hash.new(0) # one separator column
