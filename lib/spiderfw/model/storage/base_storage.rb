@@ -27,6 +27,55 @@ module Spider; module Model; module Storage
             return true
         end
         
+        # Utility methods
+        
+        def sequence_file_path(name)
+            path = 'var/sequences/'+name
+            return path
+        end
+        
+        def sequence_exists?(name)
+            File.exist?(sequence_file_path(name))
+        end
+        
+        def create_sequence(name, start=1, increment=1)
+            sequence_next(name, start, increment)
+        end
+            
+        
+        def update_sequence(name, val)
+            # not an alias because the set value behaviour of next_sequence isn't expected in subclasses
+            sequence_next(name, val)
+        end
+        
+        # Increments a named sequence and returns the new value
+        def sequence_next(name, newval=nil, increment=1)
+            path = sequence_file_path(name)
+            FileUtils.mkpath(File.dirname(path))
+            if newval
+                seq = newval
+            else
+                seq = 0
+                File.open(path, 'a+') do |f|
+                    f.rewind
+                    f.flock File::LOCK_EX
+                    seq, increment_str = f.gets.split('|')
+                    seq = seq.to_i
+                    increment = increment_str.to_i if increment_str
+                    f.close
+                end
+                seq += increment
+            end
+            File.open(path, 'w+') do |f|
+                f.print(seq)
+                f.print("|#{increment}") if (increment != 1)
+                f.flock File::LOCK_UN
+                f.close
+            end
+            return seq
+        end
+            
+        
     end
     
     ###############################

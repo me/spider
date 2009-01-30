@@ -15,29 +15,6 @@ module Spider; module Model
             end
         end
         
-        # Utility method
-        
-        # Increments a named sequence and returns the new value
-        def next_sequence(name)
-            dir = @model.name.sub('::Models', '').gsub('::', '/')
-            FileUtils.mkpath('var/sequences/'+dir)
-            path = 'var/sequences/'+dir+'/'+name
-            seq = 0
-            File.open(path, 'a+') do |f|
-                f.rewind
-                f.flock File::LOCK_EX
-                seq = f.gets.to_i
-                f.close
-            end
-            seq += 1
-            File.open(path, 'w+') do |f|
-                f.print(seq)
-                f.flock File::LOCK_UN
-                f.close
-            end
-            return seq
-        end
-        
         module StorageResult
             attr_accessor :total_rows
             
