@@ -11,6 +11,8 @@ module Spider; module Model
                     storage = Db::SQLite.new(url)
                 when 'oci8'
                     storage = Db::OCI8.new(url)
+                when 'mysql'
+                    storage = Db::Mysql.new(url)
                 end
             end
         end
