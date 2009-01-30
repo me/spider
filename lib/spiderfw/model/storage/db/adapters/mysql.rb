@@ -120,10 +120,14 @@ module Spider; module Model; module Storage; module Db
              debug("mysql executing:\n#{sql}\n[#{debug_vars}]")
              @stmt = connection.prepare(sql)
              res = @stmt.execute(*bind_vars)
-             have_result = (res.is_a? ::Mysql::Result)
+             have_result = (@stmt.field_count == 0 ? false : true)
              if (have_result)
+                 result_meta = @stmt.result_metadata
+                 fields = result_meta.fetch_fields
                  result = []
-                 while (h = res.fetch_hash)
+                 while (a = res.fetch)
+                     h = {}
+                     fields.each_index{ |i| h[fields[i].name] = a[i]}
                      if block_given?
                          yield h
                      else
