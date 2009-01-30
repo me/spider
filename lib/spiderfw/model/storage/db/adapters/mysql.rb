@@ -72,6 +72,11 @@ module Spider; module Model; module Storage; module Db
             return conn
         end
         
+        def disconnect
+            conn.autocommit(true)
+            super
+        end
+        
         def parse_url(url)
             # db:mysql://<username:password>@<host>:<port>/<database>
             if (url =~ /.+:\/\/(?:(.+):(.+)@)?(.+)?\/(.+)/)

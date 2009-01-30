@@ -39,7 +39,7 @@ module Spider; module Model; module Mappers
             sql, values = prepare_insert(obj)
             if (sql)
                 @storage.execute(sql, *values)
-                @storage.commit
+                @storage.commit if @storage.in_transaction?
             end
         end
         
@@ -48,7 +48,7 @@ module Spider; module Model; module Mappers
             sql, values = prepare_update(obj)
             if (sql)
                 @storage.execute(sql, *values)
-                @storage.commit
+                @storage.commit if @storage.in_transaction?
             end
         end
         
@@ -636,7 +636,7 @@ module Spider; module Model; module Mappers
             schema ||= Spider::Model::Storage::Db::DbSchema.new
             n = @model.name.sub('::Models', '')
             n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
-            schema.table = @storage.table_name(n)
+            schema.table ||= @storage.table_name(n)
             primary_key_columns = []
             integrated_pks = []
             @model.each_element do |element|

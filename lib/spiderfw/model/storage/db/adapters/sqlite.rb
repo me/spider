@@ -34,7 +34,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def in_transaction?
-            @conn.transaction_active?
+            @conn && @conn.transaction_active?
         end
         
         def commit

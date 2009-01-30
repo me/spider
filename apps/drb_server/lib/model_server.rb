@@ -19,12 +19,15 @@ module SpiderApps; module DrbServer
         
         def start
             DRb.start_service @uri, self
+            trap('TERM') { DRb.stop_service }
+            trap('INT') { DRb.stop_service }
             Spider::Logger.debug("Model server listening on #{DRb.uri}")
             DRb.thread.join
         end
         
-        def get(model)
-            return model.new
+        def get(model_name, *args)
+            model = const_get_full(model_name)
+            return model.new(*args)
         end
         
     end
