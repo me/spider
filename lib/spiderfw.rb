@@ -7,6 +7,8 @@ ENV['GETTEXT_PATH'] ||= ''
 ENV['GETTEXT_PATH'] += $SPIDER_PATH+'/data/locale,'+$SPIDER_RUN_PATH+'/data/locale'
 #$:.push($SPIDER_LIB+'/spiderfw')
 $:.push(Dir.pwd)
+
+$:.push($SPIDER_PATH)
 #p $:
 
 require 'rubygems'
@@ -98,11 +100,13 @@ module Spider
             Logger.debug("Loading apps:")
             Logger.debug(@apps_to_load)
             @apps_to_load.uniq.each do |app|
-                unless File.exist?($SPIDER_RUN_PATH+'/apps/'+app) && File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
+                if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app) && File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb'))
+                    require($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
+                elsif (File.exist?($SPIDER_PATH+'/apps/'+app) && File.exist?($SPIDER_PATH+'/apps/'+app+'/_init.rb'))
+                    require($SPIDER_PATH+'/apps/'+app+'/_init.rb')                    
+                else
                     Logger.error("App #{app} not found")
-                    next
                 end
-                require($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
             end
         end
         
