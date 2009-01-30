@@ -39,11 +39,6 @@ module Spider; module Model; module Mappers
             sql, values = prepare_insert(obj)
             if (sql)
                 @storage.execute(sql, *values)
-                if (delayed_primary_keys?)
-                    @model.primary_keys.each do |key|
-                        obj.set_loaded_value(key, @storage.assigned_key(key))
-                    end
-                end
                 @storage.commit
             end
         end
@@ -75,7 +70,7 @@ module Spider; module Model; module Mappers
             @model.each_element do |element|
                 next if !mapped?(element) || element.integrated?
                 next if save_mode == :update && !obj.element_modified?(element)
-                if (save_mode == :insert && element.attributes[:autoincrement] && !@storage.supports?(:autoincrement))
+                if (save_mode == :insert && !schema.attributes(element.name)[:autoincrement])
                     obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
                 end
                 if (!element.multiple?)
@@ -564,11 +559,7 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def assign_primary_keys(obj)
-            # may be implemented in model
-        end
-        
-        def delayed_primary_keys?
-            false
+            # may be implemented in model through the 'with_mapper' method
         end
 
         
@@ -625,13 +616,14 @@ module Spider; module Model; module Mappers
             return @schema
         end
         
-        def get_schema()
+        def get_schema
             return @model.superclass.mapper.get_schema() if (@model.attributes[:inherit_storage])
-            schema =  Spider::Model::Storage::Db::DbSchema.new()
             if (@schema_define_proc)
+                schema =  Spider::Model::Storage::Db::DbSchema.new
                 schema.instance_eval(&@schema_define_proc)
+                schema = generate_schema(schema)
             else
-                generate_schema(schema)
+                schema = generate_schema
             end
             if (@schema_proc)
                 schema.instance_eval(&@schema_proc)
@@ -639,45 +631,95 @@ module Spider; module Model; module Mappers
             return schema
         end
 
-        def generate_schema(schema)
+        def generate_schema(schema=nil)
+            had_schema = schema ? true : false
+            schema ||= Spider::Model::Storage::Db::DbSchema.new
             n = @model.name.sub('::Models', '')
             n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
             schema.table = @storage.table_name(n)
+            primary_key_columns = []
+            integrated_pks = []
+            @model.each_element do |element|
+                if element.integrated?
+                    integrated_pks << [element.integrated_from.name, element.integrated_from_element] if (element.primary_key?)
+                end
+            end
             @model.each_element do |element|
                 next if element.integrated?
                 next unless mapped?(element)
-                if (element.attributes[:autoincrement] && !@storage.supports?(:autoincrement))
-                    schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
-                end
+                next if had_schema && !schema.columns[element.name] && !schema.foreign_keys[element.name]
                 if (!element.model?)
                     type = element.custom_type? ? element.type.class.maps_to : element.type
+                    current_column = schema.columns[element.name] || {}
+                    db_attributes = current_column[:attributes]
+                    if (!db_attributes)
+                        db_attributes = @storage.column_attributes(type, element.attributes)
+                        db_attributes.merge(element.attributes[:db]) if (element.attributes[:db]) 
+                        if (element.attributes[:autoincrement] && !db_attributes[:autoincrement])
+                            schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
+                        end
+                    end
+                    column_name = current_column[:name] || @storage.column_name(element.name)
+                    column_type = current_column[:type] || @storage.column_type(type, element.attributes)
                     schema.set_column(element.name,
-                        :name => @storage.column_name(element.name),
-                        :type => @storage.column_type(type, element.attributes),
-                        :attributes => @storage.column_attributes(type, element.attributes)
+                        :name => column_name,
+                        :type => column_type,
+                        :attributes => db_attributes
                     )
+                    primary_key_columns << column_name if element.primary_key?
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
                     if (!element.multiple?) # 1/n <-> 1
+                        current_schema = schema.foreign_keys[element.name] || {}
                         element.type.primary_keys.each do |key|
-                            next if key.model?
+                            if key.model? # fixme: only works with single primary key model (after the first)
+                                curr_key = key
+                                curr_key = curr_key.model.primary_keys[0] while curr_key.model? && curr_key.model.primary_keys.length == 1
+                                next if curr_key.model
+                                key_type = curr_key.type
+                                key_attributes = curr_key.attributes
+                            else
+                                key_type = key.type
+                                key_attributes = key.attributes
+                            end
                             #key_column = element.mapper.schema.column(key.name)
+                            
                             key_attributes = {
-                                :length => key.attributes[:length],
-                                :precision => key.attributes[:precision]
+                                :length => key_attributes[:length],
+                                :precision => key_attributes[:precision]
                             }
+                            current = current_schema[key.name] || {}
+                            column_name = current[:name] || @storage.column_name("#{element.name}_#{key.name}")
+                            column_type = current[:type] || @storage.column_type(key_type, key_attributes)
+                            column_attributes = current[:attributes] || @storage.column_attributes(key_type, key_attributes)
                             schema.set_foreign_key(element.name, key.name, 
-                                :name => @storage.column_name("#{element.name}_#{key.name}"),
-                                :type => @storage.column_type(key.type, key.attributes),
-                                :attributes => @storage.column_attributes(key.type, key_attributes)
+                                :name => column_name,
+                                :type => column_type,
+                                :attributes => column_attributes
                             )
+                            if (element.primary_key? || integrated_pks.include?([element.name, key.name]))
+                                primary_key_columns << column_name
+                            end
                         end
                     end
                 end
             end
+            schema.set_primary_key(primary_key_columns) if primary_key_columns.length > 0
             @model.sequences.each do |name|
                 schema.set_sequence(name, @storage.sequence_name("#{schema.table}_#{name}"))
             end
             return schema
+        end
+        
+        def collect_real_keys(element, path=[])
+            real_keys = []
+            element.type.primary_keys.each do |key|
+                if (key.model?)
+                    real_keys += schema_collect_real_keys(key, path<<element.name)
+                else
+                    real_keys << [key, path<<element.name]
+                end
+            end
+            return real_keys
         end
 
         def sync_schema(force=false)
@@ -691,10 +733,11 @@ module Spider; module Model; module Mappers
                 # sequences.merge!(el.model.mapper.schema.sequences)
             end
             schema_description.each do |table_name, table_schema|
+                table_attributes = {:primary_key => table_schema[:attributes][:primary_key]}
                 if @storage.table_exists?(table_name)
-                    alter_table(table_name, table_schema, force)
+                    alter_table(table_name, table_schema[:columns], table_attributes, force)
                 else
-                    create_table(table_name, table_schema)
+                    create_table(table_name, table_schema[:columns], table_attributes)
                 end
             end
             sequences.compact.each do |db_name|
@@ -702,7 +745,7 @@ module Spider; module Model; module Mappers
             end
         end
 
-        def create_table(table_name, fields)
+        def create_table(table_name, fields, attributes)
             fields = fields.map{ |name, details| {
               :name => name,
               :type => details[:type],
@@ -710,12 +753,14 @@ module Spider; module Model; module Mappers
             } }
             @storage.create_table({
                 :table => table_name,
-                :fields => fields
+                :fields => fields,
+                :attributes => attributes,
             })
         end
 
-        def alter_table(name, fields, force=nil)
+        def alter_table(name, fields, attributes, force=nil)
             current = @storage.describe_table(name)
+            current_fields = current[:columns]
             add_fields = []
             alter_fields = []
             all_fields = []
@@ -728,17 +773,17 @@ module Spider; module Model; module Mappers
                         :attributes => fields[field][:attributes]
                     }
                     all_fields << field_hash
-                    if (!current[field])
+                    if (!current_fields[field])
                         add_fields << field_hash
                     else
                         type = fields[field][:type]
                         attributes = fields[field][:attributes]
                         attributes ||= {}
-                        if (!@storage.schema_field_equal?(current[field], fields[field]))
+                        if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
                             Spider.logger.debug("DIFFERENT: #{field}")
-                            Spider.logger.debug(current[field])
+                            Spider.logger.debug(current_fields[field])
                             Spider.logger.debug(fields[field])
-                            unless @storage.safe_schema_conversion?(current[field], fields[field])
+                            unless @storage.safe_schema_conversion?(current_fields[field], fields[field])
                                 unsafe << field 
                             end
                             alter_fields << field_hash
@@ -747,11 +792,16 @@ module Spider; module Model; module Mappers
                 end
                 raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
             end
+            alter_attributes = {}
+            if (current[:primary_key] != attributes[:primary_key])
+                alter_attributes[:primary_key] = attributes[:primary_key]
+            end
             @storage.alter_table({
                 :table => name,
                 :add_fields => add_fields,
                 :alter_fields => alter_fields,
-                :all_fields => all_fields
+                :all_fields => all_fields,
+                :attributes => alter_attributes
             })
         end
 
@@ -763,7 +813,7 @@ module Spider; module Model; module Mappers
             @fields = fields
         end
         def to_s
-            "Unsafe conversion on fields #{fields}"
+            "Unsafe conversion on fields #{fields.join(', ')}"
         end
     end
 
