@@ -25,10 +25,14 @@ module Spider; module Model; module Storage; module Db
         class << self; attr_reader :reserved_kewords, :safe_conversions, :map_types end
         
         def self.new_connection(user, pass, dbname, role)
-            conn = ::OCI8.new(*conn_params)
-            # FIXME!!!! It is shared now!
+            conn = ::OCI8.new(user, pass, dbname, role)
             conn.autocommit = true
             return conn
+        end
+        
+        def disconnect
+            conn.autocommit = true
+            super
         end
         
         def parse_url(url)
@@ -53,7 +57,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def in_transaction?
-            return @conn.autocommit?
+            return @conn && @conn.autocommit?
         end
         
         def commit
