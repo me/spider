@@ -13,6 +13,12 @@ module Spider; module Model; module Storage; module Db
 
         class << self; attr_reader :reserved_kewords; end
         
+        def self.new_connection(file)
+            db = SQLite3::Database.new(file)
+            db.results_as_hash = true
+            return db
+        end
+        
         def parse_url(url)
             if (url =~ /(.+?):\/\/(.+)/)
                 @file = $2
@@ -20,48 +26,24 @@ module Spider; module Model; module Storage; module Db
             else
                 raise ArgumentError, "SQLite url '#{url}' is invalid"
             end
-        end
-        
-         def connect()
-            debug("sqlite opening file #{@file}")
-            @db = SQLite3::Database.new(@file)
-            @db.results_as_hash = true
-        end
-        
-        def db
-            connect unless connected?
-            @db
-        end
-        
-        def connected?
-            @db != nil
-        end
-        
-        def disconnect
-            debug("sqlite closing file #{@file}")
-            @db.close
-            @db = nil
-        end
-        
-        def supports_transactions?
-            true
+            @connection_params = [@file]
         end
         
         def start_transaction
-            db.transaction
+            connection.transaction
         end
         
         def in_transaction?
-            @db.transaction_active?
+            @conn.transaction_active?
         end
         
         def commit
-            @db.commit
+            @conn.commit
             disconnect
         end
         
         def rollback
-            @db.rollback
+            @conn.rollback
             disconnect
         end
         
@@ -83,8 +65,8 @@ module Spider; module Model; module Storage; module Db
              end
              debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
 
-             result = db.execute(sql, *bind_vars)
-             @last_insert_row_id = db.last_insert_row_id
+             result = connection.execute(sql, *bind_vars)
+             @last_insert_row_id = connection.last_insert_row_id
              result.extend(StorageResult)
              @last_result = result
              if block_given?
@@ -100,7 +82,7 @@ module Spider; module Model; module Storage; module Db
          def prepare(sql)
              debug("sqlite preparing: #{sql}")
              connect unless connected?
-             return @db.prepare(sql)
+             return @conn.prepare(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
@@ -139,7 +121,7 @@ module Spider; module Model; module Storage; module Db
                  end
              end
              stmt.close
-             return columns
+             return {:columns => columns}
          end
 
          def table_exists?(table)

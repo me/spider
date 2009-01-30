@@ -24,35 +24,15 @@ module Spider; module Model; module Storage; module Db
         }
         class << self; attr_reader :reserved_kewords, :safe_conversions, :map_types end
         
-        @connection_semaphore = Mutex.new
-        @connections = {}
-        
-        def self.get_connection(user, pass, dbname, role)
-            @connection_semaphore.synchronize{
-                conn_params = [user, pass, dbname, role]
-                @connections[conn_params] ||= []
-                if (@connections[conn_params].length > 0)
-                     # TODO: mantain a pool instead of a single connection
-                    return @connections[conn_params][0]
-                end
-                conn = ::OCI8.new(*conn_params)
-                # FIXME!!!! It is shared now!
-                conn.autocommit = true
-                @connections[conn_params] << conn
-                return conn
-            }
-            
-            
+        def self.new_connection(user, pass, dbname, role)
+            conn = ::OCI8.new(*conn_params)
+            # FIXME!!!! It is shared now!
+            conn.autocommit = true
+            return conn
         end
-        
-        def self.disconnect(connection)
-        end
-        
-        
-
         
         def parse_url(url)
-            # db:oracle://<username/password>:connect_role@<database>
+            # db:oracle://<username:password>:connect_role@<database>
             # where database is
             # the net8 connect string or
             # for Oracle client 10g or later, //hostname_or_ip:port_no/oracle_sid
@@ -64,30 +44,10 @@ module Spider; module Model; module Storage; module Db
             else
                 raise ArgumentError, "OCI8 url '#{url}' is invalid"
             end
+            @connection_params = [@user, @pass, @dbname, @role]
         end
         
-        def connect()
-            @conn = self.class.get_connection(@user, @pass, @dbname, @role)
-        end
-        
-        def connected?
-            @conn != nil
-        end
-        
-        def connection
-            connect unless connected?
-            @conn
-        end
-        
-        def disconnect
-            self.class.disconnect(@conn)
-            @conn = nil
-        end
-        
-        def supports_transactions?
-            return true
-        end
-        
+
         def start_transaction
             connection.autocommit = false
         end
@@ -148,21 +108,27 @@ module Spider; module Model; module Storage; module Db
                  end
              end
              res = @cursor.exec
-             return res unless @cursor.type == ::OCI8::STMT_SELECT
-            # @cursor = connection.exec(sql, *bind_vars)
-             result = []
-             while (h = @cursor.fetch_hash)
-                 if block_given?
-                      yield h
-                  else
-                      result << h
-                  end
+             have_result = (@cursor.type == ::OCI8::STMT_SELECT)
+             # @cursor = connection.exec(sql, *bind_vars)
+             if (have_result)
+                 result = []
+                 while (h = @cursor.fetch_hash)
+                     if block_given?
+                          yield h
+                      else
+                          result << h
+                      end
+                 end
              end
              disconnect unless in_transaction?
-             unless block_given?
-                 result.extend(StorageResult)
-                 @last_result = result
-                 return result
+             if (have_result)
+                 unless block_given?
+                     result.extend(StorageResult)
+                     @last_result = result
+                     return result
+                 end
+             else
+                 return res
              end
          end
          
@@ -177,7 +143,6 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             #return @cursor.row_count
              return nil unless @last_executed
              q = @last_query.clone
              unless (q[:offset] || q[:limit])
@@ -315,8 +280,13 @@ module Spider; module Model; module Storage; module Db
              return res[0] ? true : false
          end
          
-         def create_sequence(sequence_name)
-             execute("create sequence #{sequence_name}")
+         def create_sequence(sequence_name, start=1, increment=1)
+             execute("create sequence #{sequence_name} start with #{start} increment by #{increment}")
+         end
+         
+         def update_sequence(name, val)
+             execute("drop sequence #{name}")
+             create_sequence(name, val)
          end
          
          ##############################################################
@@ -329,24 +299,28 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
-             t = connection.describe_table(table)
-             t.columns.each do |c|
-                 col = {
-                     :type => c.data_type.to_s.upcase,
-                     :length => c.data_size,
-                     :precision => c.precision,
-                     :scale => c.scale,
-                     :null => c.nullable?
-                 }
-                 col.delete(:length) if (col[:precision])
-                 columns[c.name] = col
+             connection do |conn|
+                 t = conn.describe_table(table)
+                 t.columns.each do |c|
+                     col = {
+                         :type => c.data_type.to_s.upcase,
+                         :length => c.data_size,
+                         :precision => c.precision,
+                         :scale => c.scale,
+                         :null => c.nullable?
+                     }
+                     col.delete(:length) if (col[:precision])
+                     columns[c.name] = col
+                 end
              end
-             return columns
+             return {:columns => columns}
          end
 
          def table_exists?(table)
              begin
-                 connection.describe_table(table)
+                 connection do |c|
+                     c.describe_table(table)
+                 end
                  Spider.logger.debug("TABLE EXISTS #{table}")
                  return true
              rescue OCIError
@@ -380,16 +354,12 @@ module Spider; module Model; module Storage; module Db
              case type
              when 'text'
                  db_attributes[:length] = attributes[:length] || 255
-             when 'longText'
-                 db_attributes[:length] = attributes[:length] if (attributes[:length])
              when 'int'
                  db_attributes[:precision] = attributes[:precision] || 38
                  db_attributes[:length] = nil
              when 'real'
                  # FIXME
                  db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
-             when 'binary'
-                 db_attributes[:length] = attributes[:length] if (attributes[:length])
              when 'bool'
                  db_attributes[:precision] = 1
                  db_attributes[:length] = nil

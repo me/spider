@@ -3,7 +3,7 @@ require 'spiderfw/model/storage/schema'
 module Spider; module Model; module Storage; module Db
     
     class DbSchema < Spider::Model::Storage::Schema
-        attr_reader :sequences
+        attr_reader :sequences, :columns, :foreign_keys, :primary_key, :partial
         
         def initialize()
             super
@@ -11,6 +11,7 @@ module Spider; module Model; module Storage; module Db
             @foreign_keys = {}
             @junction_tables = {}
             @sequences = {}
+            @partial = false
         end
         
         def table
@@ -34,6 +35,11 @@ module Spider; module Model; module Storage; module Db
                 end
             end
             return nil
+        end
+        
+        def attributes(element_name)
+            return nil if (!@columns[element_name])
+            return @columns[element_name][:attributes]
         end
 
         
@@ -102,15 +108,16 @@ module Spider; module Model; module Storage; module Db
         
         def get_schemas
             schemas = {}
-            schemas[@table] = {}
+            schemas[@table] = {:columns => {}, :attributes => {}}
             @columns.each do |element, column|
-                schemas[@table][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
+                schemas[@table][:columns][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
             end
             @foreign_keys.each_key do |element|
                 @foreign_keys[element].each do |key, column|
-                    schemas[@table][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
+                    schemas[@table][:columns][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
                 end
             end
+            schemas[@table][:attributes][:primary_key] = @primary_key
             # @junction_tables.each do |element, junction_table|
             #     table_name = junction_table[:name]
             #     schemas[table_name] = {}
@@ -122,7 +129,11 @@ module Spider; module Model; module Storage; module Db
             #     end
             # end
             return schemas
-        end       
+        end
+        
+        def set_primary_key(columns)
+            @primary_key = columns
+        end
         
     end
     

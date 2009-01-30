@@ -1,9 +1,11 @@
 require 'spiderfw/model/storage/base_storage'
+require 'spiderfw/model/mappers/db_mapper'
 
 module Spider; module Model; module Storage; module Db
     
     class DbStorage < Spider::Model::Storage::BaseStorage
         @reserved_keywords = ['from', 'order', 'where']
+        @type_synonyms = {}
         @safe_conversions = {
             'TEXT' => ['LONGTEXT'],
             'INT' => ['TEXT', 'LONGTEXT', 'REAL'],
@@ -16,16 +18,61 @@ module Spider; module Model; module Storage; module Db
         }
 
         class << self
-            attr_reader :reserved_keywords, :safe_conversions, :capabilities
+            attr_reader :reserved_keywords, :type_synonyms, :safe_conversions, :capabilities
+            
+            def get_connection(*args)
+                @connection_semaphore ||= Mutex.new
+                @connections ||= {}
+                @connection_semaphore.synchronize{
+                    @connections[args] ||= []
+                    if (@connections[args].length > 0)
+                         # TODO: mantain a pool instead of a single connection
+                        return @connections[args].pop
+                    end
+                    conn = new_connection(*args)
+                    @connections[args] << conn
+                    return conn
+                }
+            end
+            
+            def release_connection(conn, conn_params)
+                @connections[conn_params] << conn
+            end
+            
         end
         
         def initialize(url)
             super
         end
         
+        def connect()
+            @conn = self.class.get_connection(*@connection_params)
+        end
+        
+        def connected?
+            @conn != nil
+        end
+        
+        def connection
+            is_connected = connected?
+            connect unless is_connected
+            if block_given?
+                yield @conn
+                disconnect unless is_connected
+            end
+            return @conn
+        end
+        
+        def disconnect
+            self.class.release_connection(@conn, @connection_params)
+            @conn = nil
+        end
+        
         def get_mapper(model)
-            require 'spiderfw/model/mappers/db_mapper'
             mapper = Spider::Model::Mappers::DbMapper.new(model, self)
+            if (self.class.const_defined?(:MapperExtension))
+                mapper.extend(self.class.const_get(:MapperExtension))
+            end
             return mapper
         end
         
@@ -34,7 +81,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def supports_transactions?
-            return false
+            return self.class.capabilities[:transactions]
         end
         
         def start_transaction
@@ -121,7 +168,7 @@ module Spider; module Model; module Storage; module Db
             when 'bool'
                 db_attributes[:length] = 1
             end
-            db_attributes[:autoincrement] = attributes[:autoincrement]
+            db_attributes[:autoincrement] = attributes[:autoincrement] if supports?(:autoincrement)
             return db_attributes
         end
         
@@ -159,6 +206,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_select(query)
+            @last_query_type = :select
             bind_vars = query[:bind_vars] || []
             tables_sql, tables_values = sql_tables(query)
             sql = "SELECT #{sql_keys(query)} FROM #{tables_sql} "
@@ -276,6 +324,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_insert(insert)
+            @last_query_type = :insert
             sql = "INSERT INTO #{insert[:table]} (#{insert[:values].keys.join(', ')}) " +
                   "VALUES (#{insert[:values].values.map{'?'}.join(', ')})"
             return [sql, insert[:values].values]
@@ -283,6 +332,7 @@ module Spider; module Model; module Storage; module Db
         
             
         def sql_update(update)
+            @last_query_type = :update
             values = update[:values].values
             sql = "UPDATE #{update[:table]} SET "
             sql += sql_update_values(update)
@@ -299,6 +349,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_delete(delete)
+            @last_query_type = :delete
             where, bind_vars = sql_condition(delete)
             sql = "DELETE FROM #{delete[:table]} WHERE #{where}"
             return [sql, bind_vars]
@@ -313,7 +364,11 @@ module Spider; module Model; module Storage; module Db
                 attributes ||= {}
                 length = attributes[:length]
                 sql_fields += ', ' unless sql_fields.empty?
-                sql_fields += sql_table_field(field[:name], field[:type], field[:attributes])
+                sql_fields += sql_table_field(field[:name], field[:type], attributes)
+            end
+            if (create[:attributes][:primary_key])
+                primary_key_fields = create[:attributes][:primary_key].join(', ')
+                sql_fields += ", PRIMARY KEY (#{primary_key_fields})"
             end
             ["CREATE TABLE #{name} (#{sql_fields})"]
         end
@@ -323,6 +378,7 @@ module Spider; module Model; module Storage; module Db
             table_name = alter[:table]
             add_fields = alter[:add_fields]
             alter_fields = alter[:alter_fields]
+            alter_attributes = alter[:attributes]
             sqls = []
             
             add_fields.each do |field|
@@ -332,6 +388,10 @@ module Spider; module Model; module Storage; module Db
             alter_fields.each do |field|
                 name, type, attributes = field
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
+            end
+            if (alter_attributes[:primary_key])
+                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current[:attributes][:primary_key])
+                sqls << "ALTER TABLE #{table_name} ADD PRIMARY KEY "+alter_attributes[:primary_key].join(', ')
             end
             return sqls
             # if (@config[:drop_fields])
@@ -380,11 +440,15 @@ module Spider; module Model; module Storage; module Db
         
         def schema_field_equal?(current, field)
             attributes = field[:attributes]
-           return true if current[:type] == field[:type] && current[:length] == attributes[:length] && current[:precision] == attributes[:precision]
-           return true if (current[:length] == 0 && !field[:length]) || (!current[:length] && field[:length] == 0)
-           return true if (current[:precision] == 0 && !field[:precision]) || (!current[:precision] && field[:precision] == 0)     
-           return false
+            return false unless current[:type] == field[:type] || (self.class.type_synonyms[current[:type]] && self.class.type_synonyms[current[:type]].include?(field[:type]))
+            try_method = :"schema_field_#{field[:type].downcase}_equal?"
+            return send(try_method, current, field) if (respond_to?(try_method))
+            current[:length] ||= 0; attributes[:length] ||= 0; current[:precision] ||= 0; attributes[:precision] ||= 0
+            return false unless current[:length] == attributes[:length]
+            return false unless current[:precision] == attributes[:precision]
+            return true
         end
+
         
         def safe_schema_conversion?(current, field)
             attributes = field[:attributes]
