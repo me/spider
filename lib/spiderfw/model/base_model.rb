@@ -197,7 +197,15 @@ module Spider; module Model
                     return integrated_obj.send("#{element.integrated_from_element}=", val)
                 end
                 if (val && element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
-                    val = element.model.new(val)
+                    if (element.multiple? && val.is_a?(Enumerable))
+                        qs = QuerySet.new(element.model)
+                        val.each do |row|
+                            row = element.model.new(row) unless row.is_a?(BaseModel)
+                            qs << row
+                        end
+                    else
+                        val = element.model.new(val)
+                    end
                 end
                 val = prepare_child(element.name, val)
                 old_val = instance_variable_get(ivar)
