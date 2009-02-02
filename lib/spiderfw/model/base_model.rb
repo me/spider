@@ -1049,13 +1049,19 @@ module Spider; module Model
             return json
         end
         
-        def cut(*params)
+        def cut(*params, &proc)
             h = {}
             if (params[0].is_a?(String))
                 return sprintf(params[0], *params[1..-1].map{ |el| get(el) })
             elsif (params[0].is_a?(Fixnum))
                 p = params.shift
-                return self.to_s if (p < 1)
+                if (p < 1)
+                    if (block_given?)
+                        return proc.call(self)
+                    else
+                        return self.to_s
+                    end
+                end
                 lev = p
                 where = {}
                 self.class.elements_array.each { |el| where[el.name] = lev-1}
@@ -1075,7 +1081,7 @@ module Spider; module Model
                         el = self.class.elements[name]
                         raise ModelException, "Element #{name} does not exist" unless el
                         val = get(el)
-                        val = val.cut(where[name]) if el.model? && val
+                        val = val.cut(where[name], &proc) if el.model? && val
                     end
                     h[name] = val
                 end
