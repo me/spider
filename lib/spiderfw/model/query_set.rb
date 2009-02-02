@@ -271,6 +271,7 @@ module Spider; module Model
                 self.map{ |obj| obj.to_json(&proc) }.join(',') +
                 "]"
         end
+
         
         def cut(*params)
             load unless @loaded || !autoload?
@@ -368,12 +369,22 @@ module Spider; module Model
             @identity_mapper = im
         end
         
-        #####################
-        # Condition methods #
-        #####################
+        ########################################
+        # Condition, request and query methods #
+        ########################################
         
         def where(*params, &proc)
             @query.where(*params, &proc)
+            return self
+        end
+        
+        def limit(n)
+            @query.limit = n
+            return self
+        end
+        
+        def offset(n)
+            @query.offset = n
             return self
         end
             
