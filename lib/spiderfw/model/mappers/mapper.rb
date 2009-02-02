@@ -179,6 +179,10 @@ module Spider; module Model
             do_delete(condition)
         end
         
+        def delete_all!
+            raise MapperException, "Unimplemented"
+        end
+        
         def do_delete(obj)
             raise MapperException, "Unimplemented"
         end
