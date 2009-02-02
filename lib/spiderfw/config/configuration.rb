@@ -59,11 +59,9 @@ module Spider
         
         
         def [](key)
-            Spider::Logger.debug("Getting CONF #{key}")
             val = @values[key]
             if (!val && @options[key] && @options[key][:params][:default])
                 default = @options[key][:params][:default]
-                Spider::Logger.debug("DEFAULT: #{default}")
                 val = (default.class == Proc) ? default.call() : default
             end
             return val
