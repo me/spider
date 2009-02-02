@@ -8,7 +8,7 @@ module Spider; module Model
         include DataTypes
         
         attr_accessor :_parent, :_parent_element
-        attr_reader :loaded_elements
+        attr_reader :model, :loaded_elements
         
         class <<self
             attr_reader :attributes, :elements_order, :integrated_models, :extended_models, :polymorphic_models, :sequences
@@ -100,20 +100,26 @@ module Spider; module Model
                     attributes[:owned] = true unless attributes[:owned] != nil
                     attributes[:junction] = true
                     attributes[:junction_id] ||= :id
-                    assoc_type = self.const_set(Spider::Inflector.camelize(name), Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
-                    assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
-                    self_name = self.short_name.downcase.to_sym
-                    attributes[:reverse] = self_name
-                    assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
-                    # FIXME! fix in case of clashes with existent elements
-                    other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).downcase.to_sym
-                    other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
-                    attributes[:junction_their_element] = other_name
-                    assoc_type.element(other_name, orig_type)
-                    assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
-                    if (proc)                                   #        to be hidden, but the integrated el instead
-                        attributes[:keep_junction] = true
-                        assoc_type.class_eval(&proc)
+                    first_model = self.first_definer(name)
+                    assoc_type_name = Spider::Inflector.camelize(name)
+                    if (first_model.const_defined?(assoc_type_name))
+                        assoc_type = first_model.const_get(assoc_type_name)
+                    else
+                        assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
+                        assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
+                        self_name = self.short_name.downcase.to_sym
+                        attributes[:reverse] = self_name
+                        assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
+                        # FIXME! fix in case of clashes with existent elements
+                        other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).downcase.to_sym
+                        other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
+                        attributes[:junction_their_element] = other_name
+                        assoc_type.element(other_name, orig_type)
+                        assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
+                        if (proc)                                   #        to be hidden, but the integrated el instead
+                            attributes[:keep_junction] = true
+                            assoc_type.class_eval(&proc)
+                        end
                     end
                     attributes[:association_type] = assoc_type
                 end
@@ -219,6 +225,8 @@ module Spider; module Model
             params ||= {}
             elements[element_name].attributes[:integrated_model] = true
             model = elements[element_name].model
+            self.attributes[:integrated_models] ||= {}
+            self.attributes[:integrated_models][model] = element_name
             params[:except] ||= []
             model.each_element do |el|
                 next if params[:except].include?(el.name)
@@ -408,6 +416,18 @@ module Spider; module Model
             elements.values.select{|el| el.attributes[:primary_key]}
         end
         
+        def self.first_definer(element_name)
+            if (self.superclass.elements && self.superclass.elements[element_name])
+                return self.superclass.first_definer(element_name)
+            end
+            if (self.attributes[:integrated_models])
+                self.attributes[:integrated_models].keys.each do |mod|
+                    return mod.first_definer(element_name) if (mod.elements[element_name])
+                end
+            end
+            return self
+        end
+        
         ##############################################################
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
@@ -496,6 +516,7 @@ module Spider; module Model
             @modified_elements = {}
             @value_observers = {}
             @all_values_observers = []
+            @model = self.class
             @all_values_observers << Proc.new do |element, old_value|
                 @_has_values = true
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
@@ -938,8 +959,8 @@ module Spider; module Model
                 query.condition[element.to_sym] = args[0]
                 load(query)
             else
-                if (self.class.integrated_models)
-                    self.class.integrated_models.each do |model, name|
+                if (self.class.attributes[:integrated_models])
+                    self.class.attributes[:integrated_models].each do |model, name|
                         obj = send(name)
                         if (obj.respond_to?(method))
                             return obj.send(method, *args)
@@ -1069,6 +1090,7 @@ module Spider; module Model
             end
             return h
         end
+        
              
         
         
