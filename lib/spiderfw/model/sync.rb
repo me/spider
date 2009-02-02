@@ -6,18 +6,43 @@ module Spider; module Model
         include TSort
         
         def initialize
-            @models = {}
+            @model_tasks = {}
+            @processed_deps = {}
             @processed = {}
         end
         
-        def dump(model, remote)
+        def add(model)
             collect_dependencies(model)
-            tasks = tsort
-            
         end
         
+        def each
+            tasks = tsort
+            pp tasks
+            tasks.each do |task|
+                yield task.model
+            end
+        end
+        
+        # def dump(model, model_server)
+        #     collect_dependencies(model)
+        #     tasks = tsort
+        # end
+        # 
+        # def fetch!(model, model_server)
+        #     model.mapper.delete_all!
+        #     collect_dependencies(model)
+        #     tasks = tsort
+        #     tasks.each do |task|
+        #         res = model_server.all(model.name)
+        #         res.each do |obj|
+        #             debugger
+        #             model.mapper.insert(obj)
+        #         end
+        #     end
+        # end
+        
         def tsort_each_node(&block)
-            @models.each_value(&block)
+            @model_tasks.each_value(&block)
         end
         
         def tsort_each_child(node, &block)
@@ -25,14 +50,14 @@ module Spider; module Model
         end
         
         def collect_dependencies(model)
-            @processed[model] = true
-            @models[model] ||= SyncTask.new(model)
+            @processed_deps[model] = true
+            @model_tasks[model] ||= SyncTask.new(model)
             model.elements_array.select{ |el| el.model? && model.mapper.have_references?(el) }.each do |el|
-                @models[el.model] ||= SyncTask.new(el.model)
-                @models[model] << @models[el.model]
+                @model_tasks[el.model] ||= SyncTask.new(el.model)
+                @model_tasks[model] << @model_tasks[el.model]
             end
             model.elements_array.select{ |el| el.model? }.each do |el|
-                collect_dependencies(el.model) unless @processed[el.model]
+                collect_dependencies(el.model) unless @processed_deps[el.model]
             end
         end
         
