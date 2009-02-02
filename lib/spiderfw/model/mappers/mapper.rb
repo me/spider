@@ -179,6 +179,10 @@ module Spider; module Model
             do_delete(condition)
         end
         
+        def delete_all!
+            raise MapperException, "Unimplemented"
+        end
+        
         def do_delete(obj)
             raise MapperException, "Unimplemented"
         end
@@ -232,7 +236,14 @@ module Spider; module Model
                 set.loaded = true
                 set.index_by(*@model.primary_keys)
                 set.query = query
-                return set if !result || result.empty?
+                if !result || result.empty?
+                    set.each do |obj|
+                        query.request.keys.each do |element_name|
+                            obj.set_loaded_value(element_name, nil)
+                        end
+                    end
+                    return set
+                end
                 set.total_rows = result.total_rows
                 result.each do |row|
                     obj =  map(query.request, row, set.model)

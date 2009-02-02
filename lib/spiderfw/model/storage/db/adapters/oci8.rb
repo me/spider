@@ -31,7 +31,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
-            conn.autocommit = true
+            @conn.autocommit = true if @conn
             super
         end
         
@@ -156,7 +156,7 @@ module Spider; module Model; module Storage; module Db
              sql, vars = sql_select(q)
              res = execute("SELECT COUNT(*) AS N FROM (#{sql})", *vars)
              return nil unless res && res[0]
-             return res[0]['N']
+             return res[0]['N'].to_i
          end
          
          def sequence_next(sequence_name)

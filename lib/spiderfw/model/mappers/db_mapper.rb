@@ -33,7 +33,7 @@ module Spider; module Model; module Mappers
         # Inserts passed object into the database
         def do_insert(obj)
             @storage.start_transaction if @storage.supports_transactions?
-            if (obj.class.managed? || !obj.primary_keys_set?)
+            if (obj.model.managed? || !obj.primary_keys_set?)
                 assign_primary_keys(obj)
             end
             sql, values = prepare_insert(obj)
@@ -44,11 +44,11 @@ module Spider; module Model; module Mappers
         end
         
         def do_update(obj)
-            @storage.start_transaction if @storage.supports_transactions?
+            storage.start_transaction if storage.supports_transactions?
             sql, values = prepare_update(obj)
             if (sql)
-                @storage.execute(sql, *values)
-                @storage.commit if @storage.in_transaction?
+                storage.execute(sql, *values)
+                storage.commit if storage.in_transaction?
             end
         end
         
@@ -56,13 +56,17 @@ module Spider; module Model; module Mappers
             #delete = prepare_delete(obj)
             del = {}
             del[:condition], del[:joins] = prepare_condition(condition)
-            del[:table] = @schema.table
-            sql, values =  @storage.sql_delete(del)
-            @storage.execute(sql, *values)
+            del[:table] = schema.table
+            sql, values =  storage.sql_delete(del)
+            storage.execute(sql, *values)
+        end
+        
+        def delete_all!
+            storage.execute("DELETE FROM #{schema.table}")
         end
         
         def sql_execute(sql, *values)
-            @storage.execute(sql, *values)
+            storage.execute(sql, *values)
         end
         
         def prepare_save(obj, save_mode, request=nil)
@@ -70,7 +74,7 @@ module Spider; module Model; module Mappers
             @model.each_element do |element|
                 next if !mapped?(element) || element.integrated?
                 next if save_mode == :update && !obj.element_modified?(element)
-                if (save_mode == :insert && !schema.attributes(element.name)[:autoincrement])
+                if (save_mode == :insert && element.attributes[:autoincrement] && !schema.attributes(element.name)[:autoincrement])
                     obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
                 end
                 if (!element.multiple?)
@@ -172,7 +176,7 @@ module Spider; module Model; module Mappers
                 request = Request.new
                 @model.elements_array.each{ |el| request.request(el.name) }
             end
-            model = obj.is_a?(Class) ? obj : obj.class
+            model = obj.is_a?(Class) ? obj : obj.model
             data = {}
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
