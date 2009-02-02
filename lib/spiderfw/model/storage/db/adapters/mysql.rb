@@ -20,7 +20,7 @@ module Spider; module Model; module Storage; module Db
         }
         @field_types = {
             0 => 'DECIMAL',
-            1 => 'CHAR',
+            1 => 'TINYINT',
             2 => 'SHORT',
             3 => 'INT',
             4 => 'FLOAT',
@@ -73,7 +73,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
-            conn.autocommit(true)
+            @conn.autocommit(true) if @conn
             super
         end
         
@@ -245,6 +245,10 @@ module Spider; module Model; module Storage; module Db
          
          # Schema methods
          
+         def table_name(name)
+             super.downcase
+         end
+         
          def column_type(type, attributes)
              case type
              when 'text'
@@ -260,7 +264,7 @@ module Spider; module Model; module Storage; module Db
              when 'binary'
                  'BLOB'
              when 'bool'
-                 'BIT'
+                 'TINYINT'
              end
          end
          
