@@ -30,6 +30,11 @@ module SpiderApps; module DrbServer
             return model.new(*args)
         end
         
+        def method_missing(method, *args)
+            model = const_get_full(args.shift)
+            return model.send(method, *args)
+        end
+        
     end
     
     
