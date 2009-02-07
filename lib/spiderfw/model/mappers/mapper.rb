@@ -3,6 +3,7 @@ module Spider; module Model
     class Mapper
         attr_accessor :storage
         attr_reader :type
+
         
         def initialize(model, storage)
             @model = model
@@ -73,11 +74,14 @@ module Spider; module Model
         #   Save (insert and update)                                 #
         ##############################################################
         
-        def before_save(obj)
+        def before_save(obj, mode)
             normalize(obj)
+            @model.elements_array.each do |el|
+                raise MapperException, "Element #{el.name} is required" if (el.required? && !obj.element_has_value?(el))
+            end
         end
         
-        def after_save(obj)
+        def after_save(obj, mode)
             obj.reset_modified_elements
         end
         
@@ -149,15 +153,15 @@ module Spider; module Model
         end
         
         def insert(obj)
-            before_save(obj)
+            before_save(obj, :insert)
             do_insert(obj)
-            after_save(obj)
+            after_save(obj, :insert)
         end
         
         def update(obj)
-            before_save(obj)
+            before_save(obj, :update)
             do_update(obj)
-            after_save(obj)
+            after_save(obj, :update)
         end
         
         def bulk_update(values, conditon)
