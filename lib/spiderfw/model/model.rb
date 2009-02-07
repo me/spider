@@ -1,21 +1,34 @@
 require 'spiderfw/model/datatypes'
 require 'spiderfw/model/unit_of_work'
 require 'spiderfw/model/identity_mapper'
-require 'spiderfw/model/base_model'
-require 'spiderfw/model/mixins/mixins'
-require 'spiderfw/model/extended_models/managed'
-require 'spiderfw/model/inline_model'
-require 'spiderfw/model/storage'
-require 'spiderfw/model/request'
-require 'spiderfw/model/condition'
-require 'spiderfw/model/query'
-require 'spiderfw/model/query_set'
-require 'spiderfw/model/unit_of_work'
-require 'spiderfw/model/proxy_model'
 
 module Spider 
     
     module Model
+        
+        @base_types = [
+            String, Spider::DataTypes::Text, Fixnum, DateTime, Spider::DataTypes::Bool
+        ]
+        class <<self; attr_reader :base_types; end
+        
+        def self.base_type(klass)
+            k = klass
+            while (k && !base_types.include?(k))
+                k = simplify_type(k)
+            end
+            return k
+        end
+        
+        def self.simplify_type(klass)
+            map_types = {
+                
+            }
+            return klass if base_types.include?(klass)
+            return t if t = map_types[klass]
+            return klass.maps_to if (klass.subclass_of?(Spider::DataType) && klass.maps_to)
+            return klass.superclass if klass.superclass
+            return nil
+        end
         
         
         def self.unit_of_work
@@ -94,3 +107,15 @@ module Spider
     
 
 end
+
+require 'spiderfw/model/base_model'
+require 'spiderfw/model/mixins/mixins'
+require 'spiderfw/model/extended_models/managed'
+require 'spiderfw/model/inline_model'
+require 'spiderfw/model/storage'
+require 'spiderfw/model/request'
+require 'spiderfw/model/condition'
+require 'spiderfw/model/query'
+require 'spiderfw/model/query_set'
+require 'spiderfw/model/unit_of_work'
+require 'spiderfw/model/proxy_model'

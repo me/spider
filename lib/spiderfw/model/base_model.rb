@@ -14,23 +14,6 @@ module Spider; module Model
             attr_reader :attributes, :elements_order, :integrated_models, :extended_models, :polymorphic_models, :sequences
         end
         
-        @@base_types = {
-            'text' => {:klass => String},
-            'longText' => {:klass => String},
-            'int' => {:klass => Fixnum},
-            'real' => {:klass => Float},
-            'dateTime' => {:klass => Time},
-            'binary' => {:klass => String},
-            'bool' => {:klass => FalseClass}
-        }
-        
-        @@map_types = {
-            String => 'text',
-            Text => 'longText',
-            Fixnum => 'int',
-            DateTime => 'dateTime',
-            Bool => 'bool'
-        }
         
         
         # Copies this class' elements to the subclass.
@@ -60,21 +43,23 @@ module Spider; module Model
         def self.element(name, type, attributes={}, &proc)
             @elements ||= {}
             @elements_order ||= []
-            default_attributes = case type
-            when 'text'
-                {:length => 255}
+            if type.class == Class
+                default_attributes = case type.name
+                when 'String'
+                    {:length => 255}
+                else
+                    {}
+                end
             else
-                {}
+                default_attributes = {}
             end
             attributes = default_attributes.merge(attributes)
-            if (type.class == Class && @@map_types[type]) 
-                type = @@map_types[type]
-            elsif (type.class == Hash)
+            # if (type.class == Class && Model.base_type(type)) 
+            #                 type = Model.base_type(type)
+            #             els
+            if (type.class == Hash)
                 type = create_inline_model(name, type)
                 attributes[:inline] = true
-            # elsif (type.class == String && !@@base_types[type])
-            #     require($SPIDER_PATH+'/lib/model/types/'+type+'.rb')
-            #     type = Spider::Model::Types.const_get(Spider::Model::Types.classes[type]).new
             end
             if (attributes[:integrated_from])
                 if (attributes[:integrated_from].class == String)
@@ -139,7 +124,7 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (@@base_types[type] || !attributes[:multiple])
+                if (!type.is_a?(BaseModel) || !attributes[:multiple])
                     attributes[:lazy] = :default
                 else
                     attributes[:lazy] = true
@@ -645,12 +630,19 @@ module Spider; module Model
         
         def prepare_value(element, value)
             element = self.class.elements[element] unless element.is_a?(Element)
-            case element.type
-            when 'dateTime'
-                value = DateTime.parse(value) if value.is_a?(String)
-            when 'text'
-            when 'longText'
-                value = value.to_s
+            if (element.type.subclass_of?(Spider::DataType))
+                value = element.type.new(value) unless value.is_a?(element.type)
+                element.type.take_attributes.each do |a|
+                    value.attributes[a] = element.attributes[a]
+                end
+            else
+                case element.type
+                when DateTime
+                    value = DateTime.parse(value) if value.is_a?(String)
+                when String
+                when Text
+                    value = value.to_s
+                end
             end
             value
         end
@@ -790,7 +782,7 @@ module Spider; module Model
             Spider::Logger.debug(@modified_elements.reject{ |key, val| !val })
             return true unless @modified_elements.reject{ |key, val| !val }.empty?
             self.class.elements_array.select{ |el| 
-                !el.model? && !@@base_types[el.type] && element_has_value?(el) 
+                !el.model? && element_has_value?(el) && el.type.is_a?(Spider::DataType)
             }.each do |el|
                 return true if get(el).modified?
             end
@@ -1013,7 +1005,7 @@ module Spider; module Model
         
         def to_s
             self.class.each_element do |el|
-                return get(el) if (el.type == 'text' && !el.primary_key?)
+                return get(el) if (el.type == String && !el.primary_key?)
             end
             el = self.class.elements_array[0]
             return get(el) if element_has_value?(el)

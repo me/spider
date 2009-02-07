@@ -15,14 +15,11 @@ module Spider; module Model; module Storage; module Db
             'VARCHAR' => ['CLOB'],
             'NUMBER' => ['VARCHAR']
         }
-        @map_types = {
-            'text' => String,
-            'longText' => String,
-            'int' => Fixnum,
-            'real' => Float,
-            'dateTime' => DateTime
-        }
-        class << self; attr_reader :reserved_kewords, :safe_conversions, :map_types end
+        class << self; attr_reader :reserved_kewords, :safe_conversions end
+        
+        def self.base_types
+            super << Spider::DataTypes::Binary
+        end
         
         def self.new_connection(user, pass, dbname, role)
             conn = ::OCI8.new(user, pass, dbname, role)
@@ -72,8 +69,8 @@ module Spider; module Model; module Storage; module Db
         
         def prepare_value(type, value)
             return OCI8NilValue.new(type) if (value == nil)
-            case type
-            when 'binary'
+            case type.name
+            when 'Spider::DataTypes::Binary'
                 return OCI8::BLOB.new(@conn, value)
             end
             return value
@@ -85,10 +82,10 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_to_mapper(type, value)
-            case type
-            when 'dateTime'
+            case type.name
+            when 'DateTime'
                 return value ? value.to_date : nil
-            when 'longText'
+            when 'Text'
                 return value ? value.read : ''
             else
                 return value
@@ -335,36 +332,36 @@ module Spider; module Model; module Storage; module Db
          # Schema methods
          
          def column_type(type, attributes)
-             case type
-             when 'text'
+             case type.name
+             when 'String'
                  'VARCHAR2'
-             when 'longText'
+             when 'Spider::DataTypes::Text'
                  'CLOB'
-             when 'int'
+             when 'Fixnum'
                  'NUMBER'
-             when 'real'
+             when 'Float'
                  'FLOAT'
-             when 'dateTime'
+             when 'DateTime'
                  'DATE'
-             when 'binary'
+             when 'Spider::DataTypes::Binary'
                  'BLOB'
-             when 'bool'
+             when 'Spider::DataTypes::Bool'
                  'NUMBER'
              end
          end
          
          def column_attributes(type, attributes)
              db_attributes = super(type, attributes)
-             case type
-             when 'text'
+             case type.name
+             when 'String'
                  db_attributes[:length] = attributes[:length] || 255
-             when 'int'
+             when 'Fixnum'
                  db_attributes[:precision] = attributes[:precision] || 38
                  db_attributes[:length] = nil
-             when 'real'
+             when 'Float'
                  # FIXME
                  db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
-             when 'bool'
+             when 'Spider::DataTypes::Bool'
                  db_attributes[:precision] = 1
                  db_attributes[:length] = nil
              end
@@ -391,7 +388,7 @@ module Spider; module Model; module Storage; module Db
         attr_accessor :type
         
         def initialize(type)
-            @type = (mapped = OCI8.map_types[type]) ? mapped : type
+            @type = type
         end
         
         def to_s

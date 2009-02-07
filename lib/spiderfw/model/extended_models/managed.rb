@@ -3,7 +3,7 @@ require 'spiderfw/model/base_model'
 module Spider; module Model
     
     class Managed < BaseModel
-        element :id, 'int', {
+        element :id, Fixnum, {
             :primary_key => true, 
             :autoincrement => true, 
             :read_only => true, 

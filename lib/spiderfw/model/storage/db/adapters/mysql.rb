@@ -4,6 +4,11 @@ require 'mysql'
 module Spider; module Model; module Storage; module Db
     
     class Mysql < DbStorage
+        
+        def self.base_types
+            super << Spider::DataTypes::Binary
+        end
+        
         @capabilities = {
             :autoincrement => true,
             :sequences => false,
@@ -170,6 +175,26 @@ module Spider; module Model; module Storage; module Db
              return @total_rows
          end
          
+         def prepare_value(type, value)
+             return value unless value
+             case type.name
+             when 'DateTime'
+                 return value.to_s
+             when 'Fixnum'
+                 return value.to_i
+             end
+             return value
+         end
+         
+         def value_to_mapper(type, value)
+             return value unless value
+             case type.name
+             when 'DateTime'
+                 return DateTime.parse("#{value.year}-#{value.month}-#{value.day}T#{value.hour}:#{value.minute}:#{value.second}")
+             end
+             return value
+         end
+         
          ##############################################################
          #   SQL methods                                              #
          ##############################################################         
@@ -250,30 +275,30 @@ module Spider; module Model; module Storage; module Db
          end
          
          def column_type(type, attributes)
-             case type
-             when 'text'
+             case type.name
+             when 'String'
                  'VARCHAR'
-             when 'longText'
+             when 'Spider::DataTypes::Text'
                  'TEXT'
-             when 'int'
+             when 'Fixnum'
                  'INT'
-             when 'real'
+             when 'Float'
                  'FLOAT'
-             when 'dateTime'
+             when 'DateTime'
                  'DATETIME'
-             when 'binary'
+             when 'Spider::DataTypes::Binary'
                  'BLOB'
-             when 'bool'
+             when 'Spider::DataTypes::Bool'
                  'TINYINT'
              end
          end
          
          def column_attributes(type, attributes)
              db_attributes = super(type, attributes)
-             case type
-             when 'text'
+             case type.name
+             when 'String'
                  db_attributes[:length] = attributes[:length] || 255
-             when 'int'
+             when 'Fixnum'
                  db_attributes[:length] = 11
              end
              return db_attributes

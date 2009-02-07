@@ -3,7 +3,7 @@ require 'spiderfw/model/mappers/db_mapper'
 
 module Spider; module Model; module Storage; module Db
     
-    class DbStorage < Spider::Model::Storage::BaseStorage
+    class DbStorage < Storage::BaseStorage
         @reserved_keywords = ['from', 'order', 'where']
         @type_synonyms = {}
         @safe_conversions = {
@@ -19,6 +19,7 @@ module Spider; module Model; module Storage; module Db
 
         class << self
             attr_reader :reserved_keywords, :type_synonyms, :safe_conversions, :capabilities
+
             
             def get_connection(*args)
                 @connection_semaphore ||= Mutex.new
@@ -136,20 +137,20 @@ module Spider; module Model; module Storage; module Db
         
         # Returns the db type corresponding to an element type
         def column_type(type, attributes)
-            case type
-            when 'text'
+            case type.name
+            when 'String'
                 'TEXT'
-            when 'longText'
+            when 'Text'
                 'LONGTEXT'
-            when 'int'
+            when 'Fixnum'
                 'INT'
-            when 'real'
+            when 'Float'
                 'REAL'
-            when 'dateTime'
+            when 'DateTime'
                 'DATE'
-            when 'binary'
+            when 'Spider::DataTypes::Binary'
                 'BLOB'
-            when 'bool'
+            when 'Spider::DataTypes::Bool'
                 'INT'
             end
         end
@@ -157,15 +158,15 @@ module Spider; module Model; module Storage; module Db
         # Returns the attributes corresponding to element type and attributes
         def column_attributes(type, attributes)
             db_attributes = {}
-            case type
-            when 'text', 'longText'
+            case type.name
+            when 'String', 'Spider::DataTypes::Text'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
-            when 'real'
+            when 'Float'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
                 db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
-            when 'binary'
+            when 'Spider::DataTypes::Binary'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
-            when 'bool'
+            when 'Spider::DataTypes::Bool'
                 db_attributes[:length] = 1
             end
             db_attributes[:autoincrement] = attributes[:autoincrement] if supports?(:autoincrement)

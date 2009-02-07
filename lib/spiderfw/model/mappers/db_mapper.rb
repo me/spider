@@ -479,18 +479,22 @@ module Spider; module Model; module Mappers
         end
         
         def map_type(type)
-            if (type.is_a? Spider::DataTypes::DataType)
-                return type.maps_to
+            st = type
+            while (st && !storage.class.base_types.include?(st))
+                st = Model.simplify_type(st)
             end
-            return type
+            raise MapperException, "No defined mapping for type #{type}" unless st
+            return st
         end
         
         def map_value(type, value, mode=nil)
-             if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
+             if (type.subclass_of?(Spider::DataType))
+                 value = value.map(self.type)
+             elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
                  value = type.primary_keys.map{ |key| value.send(key.name) }
              else
-                 case type
-                 when 'bool'
+                 case type.name
+                 when 'Spider::DataTypes::Bool'
                      value = value ? 1 : 0
                  end
              end
@@ -518,17 +522,17 @@ module Spider; module Model; module Mappers
             type = type.respond_to?('basic_type') ? type.basic_type : type
             value = value[0] if value.class == Array
             value = storage.value_to_mapper(type, value)
-            case type
-            when 'int'
+            case type.name
+            when 'Fixnum'
                 return value.to_i
-            when 'real'
+            when 'Float'
                 return value.to_f
-            when 'bool'
+            when 'Spider::DataTypes::Bool'
                 return value == 1 ? true : false
             end
             return nil unless value
-            case type
-            when 'dateTime'
+            case type.name
+            when 'DateTime'
                 return DateTime.parse(value) unless value.is_a?(Date)
             end
             return value

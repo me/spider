@@ -13,6 +13,10 @@ module Spider; module Model; module Storage; module Db
 
         class << self; attr_reader :reserved_kewords; end
         
+        def self.base_types
+            super << Spider::DataTypes::Binary
+        end
+        
         def self.new_connection(file)
             db = SQLite3::Database.new(file)
             db.results_as_hash = true
@@ -52,8 +56,8 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_for_save(type, value, save_mode)
-             case type
-             when 'binary'
+             case type.name
+             when 'Spider::DataTypes::Binary'
                  return SQLite3::Blob.new(value)
              end
              return value

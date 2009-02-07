@@ -4,6 +4,10 @@ module Spider; module Model; module Storage
         include Spider::Logger
         attr_reader :url
         
+        def self.base_types
+            Model.base_types
+        end
+        
         def initialize(url)
             @url = url
             parse_url(url)
