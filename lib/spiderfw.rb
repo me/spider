@@ -78,7 +78,9 @@ module Spider
         end
         
         def load_apps(*l)
-            l.each { |app| @apps_to_load << app }
+            l.each do |app|
+                @apps_to_load << app 
+            end
         end
         
         def load_all_apps
@@ -93,18 +95,47 @@ module Spider
             end
         end
         
+        # FIXME: cleanup
         def init_apps
             Logger.debug("Loading apps:")
             Logger.debug(@apps_to_load)
+            found = false
             @apps_to_load.uniq.each do |app|
-                if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app) && File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb'))
-                    require($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
-                elsif (File.exist?($SPIDER_PATH+'/apps/'+app) && File.exist?($SPIDER_PATH+'/apps/'+app+'/_init.rb'))
-                    require($SPIDER_PATH+'/apps/'+app+'/_init.rb')                    
-                else
+                if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app))
+                    if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb'))
+                        require($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
+                        found = true
+                    else
+                        found = init_apps_in_folder($SPIDER_RUN_PATH+'/apps/'+app)
+                    end
+                elsif (File.exist?($SPIDER_PATH+'/apps/'+app))
+                    if (File.exist?($SPIDER_PATH+'/apps/'+app+'/_init.rb'))
+                        require($SPIDER_PATH+'/apps/'+app+'/_init.rb')                    
+                        found = true
+                    else
+                        found = init_apps_in_folder($SPIDER_PATH+'/apps/'+app)
+                    end
+                end
+                if (!found)
                     Logger.error("App #{app} not found")
                 end
             end
+        end
+        
+        def init_apps_in_folder(path)
+            path += '/' unless path[-1].chr == '/'
+            found = false
+            Dir.new(path).each do |f|
+                next if f[0].chr == '.'
+                if (File.exist?(path+f+'/_init.rb'))
+                    require(path+f+'/_init.rb')
+                    found = true
+                else
+                    f = init_apps_in_folder(path+f)
+                    found ||= f
+                end
+            end
+            return found
         end
         
         def add_app(mod)
