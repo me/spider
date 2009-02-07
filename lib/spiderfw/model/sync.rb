@@ -50,6 +50,7 @@ module Spider; module Model
         end
         
         def collect_dependencies(model)
+            return collect_dependencies(model.superclass) if model.attributes[:inherit_storage]
             @processed_deps[model] = true
             @model_tasks[model] ||= SyncTask.new(model)
             model.elements_array.select{ |el| el.model? && model.mapper.have_references?(el) }.each do |el|
