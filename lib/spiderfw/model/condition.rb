@@ -238,7 +238,9 @@ module Spider; module Model
                     replace = {
                         :== => '='
                     }
-                    op = replaced if replaced = replace[op]
+                    if (replace[op])
+                        op = replace[op]
+                    end
                     op = op.to_s
                     c = Condition.no_conjunction.set(@condition_element_name, op, val)
                     if (@condition_context)
