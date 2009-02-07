@@ -40,6 +40,7 @@ module Spider; module Model
             @subclasses << subclass
             subclass.instance_variable_set("@elements", @elements.clone) if @elements
             subclass.instance_variable_set("@elements_order", @elements_order.clone) if @elements_order
+            subclass.instance_variable_set("@mapper_procs", @mapper_procs.clone) if @mapper_procs
         end
         
         def self.app
@@ -154,9 +155,11 @@ module Spider; module Model
             end
             
             # class element getter
-            (class << self; self; end).instance_eval do
-                define_method("#{name}") do
-                    @elements[name]
+            unless respond_to?(name)
+                (class << self; self; end).instance_eval do
+                    define_method("#{name}") do
+                        @elements[name]
+                    end
                 end
             end
             
@@ -176,7 +179,7 @@ module Spider; module Model
                     return val
                 end
 
-                Spider.logger.debug("Element not loaded #{name} (i'm #{self.class} #{self.object_id})")
+#                Spider.logger.debug("Element not loaded #{name} (i'm #{self.class} #{self.object_id})")
                 if autoload? && primary_keys_set?
                     mapper.load_element(self, self.class.elements[name])
                     val = instance_variable_get(ivar)
@@ -198,11 +201,12 @@ module Spider; module Model
                 end
                 if (val && element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
                     if (element.multiple? && val.is_a?(Enumerable))
-                        qs = QuerySet.new(element.model)
+                        qs = QuerySet.new(element.type)
                         val.each do |row|
                             row = element.model.new(row) unless row.is_a?(BaseModel)
                             qs << row
                         end
+                        val = qs
                     else
                         val = element.model.new(val)
                     end
@@ -688,7 +692,7 @@ module Spider; module Model
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
-                        val == nil ? true : msg =~ check
+                        val == nil ? true : check.match(val)
                     when Proc
                         Proc.call(msg)
                     end
@@ -701,6 +705,14 @@ module Spider; module Model
             raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
             obj = model.new
             obj.set(self.class.polymorphic_models[model][:through], self)
+            return obj
+        end
+        
+        def subclass(model)
+            obj = model.new
+            elements_array.each do |el|
+                obj.set(el, self.get(el)) if element_has_value?(el)
+            end
             return obj
         end
             
@@ -1010,7 +1022,7 @@ module Spider; module Model
         
         def inspect
             self.class.name+': {' +
-            self.class.elements_array.select{ |el| element_loaded?(el) && !el.hidden? } \
+            self.class.elements_array.select{ |el| (element_loaded?(el) || element_has_value?(el)) && !el.hidden? } \
                 .map{ |el| ":#{el.name} => #{get(el.name).to_s}"}.join(',') + '}'
         end
         
