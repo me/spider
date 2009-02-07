@@ -166,16 +166,6 @@ module Spider; module Model; module Storage; module Db
          #   SQL methods                                              #
          ##############################################################
          
-         # def sql_keys(query)
-         #     query[:keys].map{ |key|
-         #         if (query[:types][key] == 'dateTime')
-         #             as = key.split('.')[-1]
-         #             "TO_CHAR(#{key}, 'yyyy-mm-dd hh24:mi') AS #{as}"
-         #         else
-         #             key
-         #         end
-         #     }.join(', ')
-         # end
          
          def sql_select(query)
              @bind_cnt = 0
@@ -183,14 +173,15 @@ module Spider; module Model; module Storage; module Db
              # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
              if query[:limit] # Oracle is so braindead
+                 # add first field to order if none is found; order is needed for limit
                  query[:order] << [query[:keys][0], 'desc'] if query[:order].length < 1
                  query[:order].each do |o|
                      field, direction = o
-                     i = query[:keys].index(field)
-                     unless i
-                         query[:keys].push(field)
-                         i = query[:keys].length < 1
-                     end
+                     # i = query[:keys].index(field)
+                     #   unless i
+                     #       query[:keys].push(field)
+                     #       i = query[:keys].length < 1
+                     #   end
                      query[:keys] << "#{field} AS #{field.sub('.', '_')}"
                  end
              end
