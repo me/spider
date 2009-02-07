@@ -4,6 +4,9 @@ module Spider
         
         def self.included(mod)
             mod.module_eval do
+                
+                include Spider::DataTypes
+                
                 @controller_class ||= :MainController
                 class << self
                     attr_reader :path, :pub_path, :test_path, :setup_path
@@ -21,7 +24,20 @@ module Spider
                     end
                     
                     def models
-                        self.constants.map{ |m| const_get(m) }.select{ |m| m.subclass_of? Spider::Model::BaseModel }
+                        mods = []
+                        self.constants.each { |c| mods += get_models(const_get(c)) }
+                        return mods
+                    end
+                    
+                    def get_models(m)
+                        models = []
+                        if m.subclass_of? Spider::Model::BaseModel
+                             models << m
+                             m.constants.each do |c|
+                                 models += get_models(m.const_get(c))
+                             end
+                         end
+                         return models
                     end
                     
                     def controllers
