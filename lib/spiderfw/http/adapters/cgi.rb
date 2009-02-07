@@ -58,6 +58,7 @@ def prepare_env
 end
 
 Spider::Logger.debug('-----------')
+
 env = prepare_env
 body = $stdin.read(env['CONTENT_LENGTH'].to_i)
 controller_request = Spider::Request.new(:http, env, body)

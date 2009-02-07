@@ -11,7 +11,8 @@ module Spider
 #            Spider::Logger.debug(b)
             @env = env
             if (env['REQUEST_METHOD'] == 'POST')
-                @params = parse_query(body.read)
+                body_str = body.is_a?(IO) ? body.read : body
+                @params = parse_query(body)
             else
                 @params = parse_query(env['QUERY_STRING'])
             end
