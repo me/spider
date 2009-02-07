@@ -11,6 +11,7 @@ $:.push(Dir.pwd)
 $:.push($SPIDER_PATH)
 #p $:
 
+
 require 'rubygems'
 require 'find'
 require 'spiderfw/autoload'
@@ -22,10 +23,7 @@ module Spider
     
     class << self
         # Everything here must be thread safe!!!
-        attr_reader :logger, :controller, :apps, :server, :configuration
-        alias :config :configuration
-        alias :conf :configuration
-        
+        attr_reader :logger, :controller, :apps, :server
         
         def init(force=false)
             return if @init_done && !force
@@ -37,7 +35,6 @@ module Spider
             @logger.open(STDERR, :DEBUG)
 #            @controller = Controller
             @server = {}
-            @configuration = Configuration.new
             @paths[:spider] = $SPIDER_PATH
             setup_paths(@root)
             load_configuration($SPIDER_PATH+'/config')

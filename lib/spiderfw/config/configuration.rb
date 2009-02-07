@@ -51,11 +51,26 @@ module Spider
                     @values[key] ||= Configuration.new(@prefix+".#{key}")
                     val.each { |k, v| self[key][k.to_s] = v }
                 else
+                    val = convert_val(@options[key][:params][:type], val) if (@options[key][:params][:type])
                     self[key] = val
                 end
             end
         end
         alias :configure :set
+        
+        def convert_val(type, val)
+            case type.name
+            when 'String'
+                val = val.to_s
+            when 'Symbol'
+                val = val.to_sym
+            when 'Fixnum'
+                val = val.to_i
+            when 'Float'
+                val = val.to_f
+            end
+            return val
+        end
         
         
         def [](key)
@@ -157,7 +172,6 @@ module Spider
         
     end
     
-    
     class ConfigurationException < Exception
         attr_reader :type
         
@@ -166,8 +180,18 @@ module Spider
             super
         end
         
+    end    
     
-        
+    # Spider
+    @configuration = Configuration.new
+    class <<self
+        attr_reader :configuration
+        alias :config :configuration
+        alias :conf :configuration
     end
+    def self.config_option(*params)
+        @configuration.config_option(*params)
+    end
+    
     
 end

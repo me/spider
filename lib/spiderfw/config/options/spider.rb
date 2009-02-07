@@ -1,9 +1,8 @@
 module Spider
-    include Configurable
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
         :action => Proc.new do |option|
-            config_include_set(option)
+            Spider.configuration.include_set(option)
             case option
             when 'devel' || 'test'
                 require 'ruby-debug'

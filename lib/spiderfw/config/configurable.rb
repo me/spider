@@ -13,6 +13,7 @@ module Spider
                     @configuration = @configuration[prefix]
                 end
                 
+                 # FIXME: doesn't use the prefix?
                  def self.config_option(name, description, params={})
                      Spider.configuration.config_option(name, description, params)
                  end
