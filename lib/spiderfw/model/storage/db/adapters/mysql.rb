@@ -146,7 +146,7 @@ module Spider; module Model; module Storage; module Db
                  end
                  if (@last_query_type == :select)
                      rows_res = connection.query("select FOUND_ROWS()")
-                     @total_rows = rows_res.fetch_row[0]
+                     @total_rows = rows_res.fetch_row[0].to_i
                  end
              end
              @last_insert_id = connection.insert_id
