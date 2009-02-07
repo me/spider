@@ -20,8 +20,8 @@ module Spider; module Model; module Mappers
         #   Save (insert and update)                                 #
         ##############################################################
         
-        def before_save(obj)
-            super(obj)
+        def before_save(obj, mode)
+            super
         end            
         
         def save_all(root)
@@ -71,25 +71,35 @@ module Spider; module Model; module Mappers
         
         def prepare_save(obj, save_mode, request=nil)
             values = {}
-            @model.each_element do |element|
-                next if !mapped?(element) || element.integrated?
-                next if save_mode == :update && !obj.element_modified?(element)
-                if (save_mode == :insert && element.attributes[:autoincrement] && !schema.attributes(element.name)[:autoincrement])
-                    obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
-                end
-                if (!element.multiple?)
-                    next if (save_mode == :update && element.primary_key?)
-                    next if (element.model? && !schema.has_foreign_fields?(element.name))
-                    next if (element.model? && (!(element_val = obj.get(element)) || !obj.get(element).primary_keys_set?))
-                    next if (element.integrated?)
-                    if (element.model?)
-                        element.model.primary_keys.each do |key|
-                            store_key = schema.foreign_key_field(element.name, key.name)
-                            values[store_key] = map_save_value(key.type, element_val.get(key.name), save_mode)
+            obj.no_autoload do
+                @model.each_element do |element|
+                    next if !mapped?(element) || element.integrated?
+                    next if save_mode == :update && !obj.element_modified?(element)
+                    if (save_mode == :insert && element.attributes[:autoincrement] && !schema.attributes(element.name)[:autoincrement])
+                        obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
+                    end
+                    if (!element.multiple?)
+                        next if (save_mode == :update && element.primary_key?)
+                        next if (element.model? && !schema.has_foreign_fields?(element.name))
+                        next if (element.model? && (!(element_val = obj.get(element)) || !obj.get(element).primary_keys_set?))
+                        next if (element.integrated?)
+                        if (element.model?)
+                            element.model.primary_keys.each do |key|
+                                # FIXME! only works with one primary key
+                                if (key.model?)
+                                    key_type = key.model.primary_keys[0].type
+                                    key_value = element_val.get(key.name).get(key.model.primary_keys[0])
+                                else
+                                    key_type = key.model? ? key.model.primary_keys[0].type : key.type 
+                                    key_value = element_val.get(key.name)
+                                end
+                                store_key = schema.foreign_key_field(element.name, key.name)
+                                values[store_key] = map_save_value(key_type, key_value, save_mode)
+                            end
+                        else
+                            store_key = schema.field(element.name)
+                            values[store_key] = map_save_value(element.type, obj.send(element.name), save_mode)
                         end
-                    else
-                        store_key = schema.field(element.name)
-                        values[store_key] = map_save_value(element.type, obj.send(element.name), save_mode)
                     end
                 end
             end
