@@ -31,15 +31,15 @@ module Spider
             full_path = get_location(path)
             return false unless File.exist?(full_path+'/check')
             lock_file = File.new(full_path)
-            lock_file.lock(File::LOCK_SH)
-            File.new(full_path).lock(File::LOCK_SH)
+            lock_file.flock(File::LOCK_SH)
+            File.new(full_path).flock(File::LOCK_SH)
             # TODO: maybe insert here an (optional) tamper check 
             # that looks if the cache mtime is later then the saved time
             Marshal.load(IO.read(full_path+'/check')).each do |check, time|
                 debug("Template file #{check} changed, refreshing cache")
                 return false if File.mtime(check) > time
             end
-            lock_file.lock(File::LOCK_UN)
+            lock_file.flock(File::LOCK_UN)
             return true
         end
         
@@ -58,18 +58,18 @@ module Spider
             debug("Using cached #{template_path}")
             full_path = get_location(template_path)
             lock_file = File.new(full_path)
-            lock_file.lock(File::LOCK_SH)
+            lock_file.flock(File::LOCK_SH)
             init_code = IO.read(full_path+'/init.rb')
             run_code = IO.read(full_path+'/run.rb')
-            lock_file.lock(File::LOCK_UN)
+            lock_file.flock(File::LOCK_UN)
             return Spider::TemplateBlocks::CompiledBlock.new(init_code, run_code)
         end
         
         def write_cache(template_path, compiled_block, template_obj)
             full_path = get_location(template_path)
-            lock_file = File.new(full_path)
-            lock_file.lock(File::LOCK_EX)
             FileUtils.mkpath(full_path)
+            lock_file = File.new(full_path)
+            lock_file.flock(File::LOCK_EX)
             File.open(full_path+'/init.rb', 'w') do |file|
                 file.puts(compiled_block.init_code)
             end
@@ -82,7 +82,7 @@ module Spider
             File.open(full_path+'/check', 'w') do |file|
                 file.puts(Marshal.dump(modified))
             end
-            lock_file.lock(File::LOCK_UN)
+            lock_file.flock(File::LOCK_UN)
         end
         
         
