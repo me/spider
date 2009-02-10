@@ -2,6 +2,8 @@ require 'uuid'
 
 module Spider
     
+
+    
     class Session
         attr_reader :sid
         
@@ -15,7 +17,24 @@ module Spider
             else
                 klass = MemorySession
             end
+            klass.setup
             return klass.new(sid)
+        end
+        
+        def self.setup
+            return if @setup
+            @setup = true
+        end
+        
+        def self.check_purge
+            if (!@last_purge || (Time.now - @last_purge) > Spider.conf.get('session.purge_check'))
+                purge(Spider.conf.get('session.life'))
+                @last_purge = Time.now
+            end
+        end
+        
+        def self.purge
+            raise RuntimeError, "Unimplemented"
         end
         
         def initialize(sid=nil)
@@ -40,6 +59,10 @@ module Spider
         
         def []=(key, val)
             @data[key] = val
+        end
+        
+        def delete(key)
+            @data.delete(key)
         end
         
         def persist

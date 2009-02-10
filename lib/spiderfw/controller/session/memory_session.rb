@@ -12,19 +12,32 @@ module Spider
                     @mutex ||= Mutex.new
                     @sessions ||= Hash.new
                 end
+                super
             end
         
             def []=(sid, data)
-                setup
                 @mutex.synchronize {
-                    @sessions[sid] = data
+                    @sessions[sid] = {
+                        :data => data,
+                        :mtime => Time.now
+                    }
                 }
             end
         
             def [](sid)
-                setup
+                check_purge
                 @mutex.synchronize{
                     @sessions[sid]
+                }
+            end
+            
+            def purge(life)
+                @mutex.synchronize{
+                    @sessions.each do |sid, session|
+                        if (session[:mtime] + life < Time.now)
+                            @sessions.delete(sid)
+                        end
+                    end
                 }
             end
             
@@ -32,11 +45,14 @@ module Spider
         
         
         def persist
+            Spider::Logger.debug("Persisting session #{@sid}")
             self.class[@sid] = @data
         end
         
         def restore
-            @data = self.class[@sid]
+            sess = self.class[@sid] || {}
+            @data = sess[:data]
+            @mtime = sess[:mtime]
         end
         
         

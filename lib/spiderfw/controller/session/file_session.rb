@@ -3,6 +3,8 @@ require 'fileutils'
 
 module Spider
     
+
+    
     class FileSession < Session
         
         class << self
@@ -19,16 +21,18 @@ module Spider
             end
         
             def [](sid)
+                check_purge
                 dir = Spider.conf.get('session.file.path')
                 path = "#{dir}/#{sid}"
                 if (File.exist?(path))
                     f = File.new(path, 'r')
                     f.flock(File::LOCK_SH)
                     data = Marshal.restore(f.read)
+                    mtime = f.mtime
                     f.flock(File::LOCK_UN)
                     f.close
                 end
-                return data
+                return {:data => data, :mtime => mtime}
             end
             
         end
