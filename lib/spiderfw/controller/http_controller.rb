@@ -12,7 +12,7 @@ module Spider
             @response = response
             @response.status = 200
             @response.headers = {
-                'Content-Type' => 'text/plain',
+                
                 'Connection' => 'close'
             }
             @previous_stdout = $stdout
@@ -21,10 +21,11 @@ module Spider
             request.user_id = request.cookies['user_id']
             request.session = Session.get(request.cookies['sid'])
             response.cookies['sid'] = request.session.sid
+            response.cookies['sid'].path = '/'
             super
         end
         
-        def execute(action='', *arguments)
+        def before(action='', *arguments)
             @extensions = {
                 'js' => {:format => :js, :content_type => 'application/javascript'},
                 'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
@@ -38,13 +39,27 @@ module Spider
                     (content_type = ext[:content_type]) && @response.headers['Content-Type'] = content_type
                     (mixin = ext[:mixin]) && extend(mixin)
                 end
+                @http_action_no_extension
                 super($1, *arguments)
             else
                 super
             end
-            request.session.persist
         end
         
+        def execute(action='', *arguments)
+            if (@http_action_no_extension)
+                super(@http_action_no_extension, *arguments)
+            else
+                super
+            end
+        end
+
+        def after(action='', *arguments)
+            debug("HTTP_CONTROLLER AFTER")
+            request.session.persist
+            super
+        end
+
         
         def dispatched_object(route)
             super
