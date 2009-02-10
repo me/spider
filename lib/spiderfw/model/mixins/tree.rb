@@ -101,7 +101,7 @@ module Spider; module Model
 
                with_mapper do
 
-                   def after_save(obj)
+                   def after_save(obj, mode)
                        super
                        @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
                            left_el = el.attributes[:tree_left]
@@ -110,7 +110,7 @@ module Spider; module Model
                                left = sequence_next(el.name)
                                obj.set(left_el, left)
                            end
-                           parent = obj_get(el.attributes[:reverse])
+                           parent = obj.get(el.attributes[:reverse])
                            rebuild_from = parent ? parent : obj
                            tree_rebuild(el, rebuild_from, left)
                        end
