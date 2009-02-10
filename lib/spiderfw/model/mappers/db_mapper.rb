@@ -669,16 +669,20 @@ module Spider; module Model; module Mappers
                 if (!element.model?)
                     type = element.custom_type? ? element.type.class.maps_to : element.type
                     current_column = schema.columns[element.name] || {}
+                    storage_type = type
+                    while (!@storage.class.base_types.include?(storage_type))
+                        storage_type = Model.simplify_type(storage_type)
+                    end
                     db_attributes = current_column[:attributes]
                     if (!db_attributes)
-                        db_attributes = @storage.column_attributes(type, element.attributes)
+                        db_attributes = @storage.column_attributes(storage_type, element.attributes)
                         db_attributes.merge(element.attributes[:db]) if (element.attributes[:db]) 
                         if (element.attributes[:autoincrement] && !db_attributes[:autoincrement])
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
                         end
                     end
                     column_name = current_column[:name] || @storage.column_name(element.name)
-                    column_type = current_column[:type] || @storage.column_type(type, element.attributes)
+                    column_type = current_column[:type] || @storage.column_type(storage_type, element.attributes)
                     schema.set_column(element.name,
                         :name => column_name,
                         :type => column_type,
