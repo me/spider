@@ -492,6 +492,12 @@ module Spider; module Model
             return self.find
         end
         
+        def self.where(&proc)
+            qs = QuerySet.new(self)
+            qs.where(&proc)
+            return qs
+        end
+        
         def self.load(*params)
             res = find(*params)
             return res[0]
@@ -546,7 +552,11 @@ module Spider; module Model
         def instantiate_element(name)
             element = self.class.elements[name]
             if (element.model?)
-                val = element.type.new
+                if (element.multiple?)
+                    val = QuerySet.new(element.model)
+                else
+                    val = element.type.new
+                end
                 val.autoload = autoload?
             end       
             return prepare_child(name, val)
