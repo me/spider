@@ -51,6 +51,7 @@ module Spider; module HTTP
                 end
             end
             @response.send_header
+            Spider::Logger.debug("---SENT HEADERS----")
         end
         
         
@@ -90,13 +91,15 @@ module Spider; module HTTP
 
             begin
                 controller = ::Spider::HTTPController.new(controller_request, controller_response)
-                #controller.before(path)
+                controller.before(path)
                 controller.execute(path)
-                #controller.after(path)                
+                Spider::Logger.debug("Response: #{controller.response}")
+                controller.after(path)                
             rescue => exc
                 Spider.logger.error(exc)
-                controller.ensure()
+                controller.ensure() if controller
             ensure
+                Spider::Logger.debug("---- Closing Mongrel Response ----- ")
                 response.finished
                 
             end
