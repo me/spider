@@ -3,6 +3,8 @@ module Spider
     # The includer of this module has to define a method dispatched_object, which must
     # return a child object given the class, the next action, and the route parameters
     module Dispatcher
+        attr_reader :dispatched_action
+        attr_accessor :dispatch_previous
         
         def self.included(klass)
            klass.extend(ClassMethods)
@@ -34,14 +36,19 @@ module Spider
             obj, route = @dispatch_next[action]
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
-            return obj.send(method, route.action, *(new_arguments))
+            return [obj, route.action, new_arguments]
+#            return obj.send(method, route.action, *(new_arguments))
+        end
+        
+        def do_dispatch(method, action='', *arguments)
+            obj, route_action, new_arguments = dispatch(method, action, *arguments)
+            return nil unless obj
+            return obj.send(method, route_action, *(new_arguments))
         end
 
         
         def can_dispatch?(method, action)
-            Spider.logger.debug("Can dispatch? #{method}, #{action}")
             d_next = dispatch_next(action)
-            Spider.logger.debug(d_next)
             return false unless d_next && d_next[0].respond_to?(method)
             return true
         end
@@ -50,6 +57,7 @@ module Spider
             next_route = get_route(path)
             return false unless next_route
             obj = dispatched_object(next_route)
+            obj.dispatch_previous = self
             return [obj, next_route]
         end
         
@@ -59,14 +67,12 @@ module Spider
         end
         
         def get_route(path)
-            Spider.logger.debug("Routing '#{path}'")
             r = routes + self.class.routes 
             r.each do |route|
                 try, dest, options = route
                 action = nil
                 case try
                 when String
-                    Spider.logger.debug("TRY: #{try}")
                     test_path = path
                     if (options[:ignore_case])
                         test_path = path.downcase

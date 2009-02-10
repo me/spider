@@ -6,6 +6,8 @@ require 'spiderfw/templates/visual'
 require 'spiderfw/controller/controller_exceptions'
 require 'spiderfw/widget/widget'
 
+require 'spiderfw/controller/helpers/http'
+
 module Spider
     
     class Controller
@@ -54,42 +56,78 @@ module Spider
         end
         
         def execute(action='', *arguments)
+            return if @done
             debug("Controller #{self} executing #{action} with arguments")
             debug(arguments)
             @call_path = action
-            before(action, *arguments)
-            begin
-                action = self.class.default_action if (action == '')
-                method = action
-                additional_arguments = []
-                if (action =~ /^([^:]+)(:.+)$/)
-                    method = $1
-                elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
-                    method = $1
-                    additional_arguments = [$2]
-                end
-                if (self.class.method_defined?(method.to_sym))
-                    layout = self.class.get_layout(method) # FIXME! move to visual somehow
-                    if (layout) 
-                        debug("Execute got layout:")
-                        debug(layout)
-                        layout = layout.render_and_yield(self, method.to_sym, arguments)
-                    else 
-                        send(method, *(arguments+additional_arguments))
+            # before(action, *arguments)
+            # do_dispatch(:before, action, *arguments)
+            catch(:done) do
+                begin
+                    action = self.class.default_action if (action == '')
+                    method = action
+                    additional_arguments = []
+                    if (action =~ /^([^:]+)(:.+)$/)
+                        method = $1
+                    elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
+                        method = $1
+                        additional_arguments = [$2]
                     end
-                elsif (can_dispatch?(:execute, action))
-                    run_chain(:execute, action, *arguments)
-                    dispatch(:execute, action)
-                    debug("Dispatched by #{self} ")
-                    debug("Response is now:")
-                    debug(@response)
-                    after(action, *arguments)
-                else
-                    raise NotFoundException.new(action)
+                    layout = self.class.get_layout(method) # FIXME! move to visual somehow
+                    if (self.class.method_defined?(method.to_sym))
+                   
+                        if (layout) 
+                            layout = layout.render_and_yield(self, method.to_sym, arguments)
+                        else
+                            send(method, *(arguments+additional_arguments))
+                        end
+                    elsif (can_dispatch?(:execute, action))
+                        #run_chain(:execute, action, *arguments)
+                        if (layout)
+                            obj, route_method, new_arguments = dispatch(:execute, action)
+                            new_arguments.unshift(route_method)
+                            layout = layout.render_and_yield(obj, :execute, new_arguments)
+                        else
+                            do_dispatch(:execute, action)
+                        end
+                        after(action, *arguments)
+                    else
+                        raise NotFoundException.new(action)
+                    end
+                rescue => exc
+                    try_rescue(exc)
                 end
-            rescue => exc
-                try_rescue(exc)
             end
+        end
+        
+        def before(action='', *arguments)
+            catch(:done) do
+                debug("IN BEFORE; I AM #{self}")
+                # begin
+                #     run_chain(:before)
+                #     #return dispatch(:before, action, *arguments)
+                # rescue => exc
+                #     try_rescue(exc)
+                # end
+                do_dispatch(:before, action, *arguments)
+            end
+        end
+                
+
+        
+        def after(action='', *arguments)
+            do_dispatch(:after, action, *arguments)
+            # begin
+            #     run_chain(:after)
+            #     #dispatch(:after, action, params)
+            # rescue => exc
+            #     try_rescue(exc)
+            # end
+        end
+        
+        def done
+            @done = true
+            throw :done
         end
 
         
@@ -101,25 +139,7 @@ module Spider
             klass.new(@request, @response, @scene)
         end
         
-        def before(action='', *arguments)
-            begin
-                run_chain(:before)
-                #return dispatch(:before, action, *arguments)
-            rescue => exc
-                try_rescue(exc)
-            end
-        end
-                
 
-        
-        def after(action='', *params)
-            begin
-                run_chain(:after)
-                #dispatch(:after, action, params)
-            rescue => exc
-                try_rescue(exc)
-            end
-        end
 
         
         def try_rescue(exc)
@@ -133,7 +153,7 @@ module Spider
             action = @call_path
             return false unless can_dispatch?(:execute, action)
             debug("CAN DISPATCH #{action}")
-            dispatch(:execute, action)
+            do_dispatch(:execute, action)
             return true
         end
 
