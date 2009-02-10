@@ -21,7 +21,7 @@ module Spider; module TemplateBlocks
             c += "print '#{start}'\n"
             blocks = parse_content(@el)
             c, init = compile_content(c, init)
-            c += "print '#{escape_text(@el.etag.inspect)}'\n"
+            c += "print '#{escape_text(@el.etag.inspect)}'\n" if @el.etag
             return CompiledBlock.new(init, c)
         end
         

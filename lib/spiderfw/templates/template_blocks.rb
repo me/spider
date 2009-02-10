@@ -7,6 +7,8 @@ module Spider
                 block = :Text
             elsif (el.attributes['sp:each'])
                 block = :Each
+            elsif (el.attributes['sp:if'])
+                block = :If
             elsif (el.name == 'sp:render')
                 block = :Render
             elsif (el.name == 'sp:yield')
@@ -53,6 +55,11 @@ module Spider
                 blocks = parse_content(@el)
                 blocks.each do |block|
                     compiled = block.compile
+                    if (compiled.run_code =~ /nil/)
+                        Spider::Logger.debug("NIL BLOCK")
+                        Spider::Logger.debug(block)
+                        Spider::Logger.debug(compiled.run_code)
+                    end
                     c += compiled.run_code if (compiled.run_code)
                     init += compiled.init_code if (compiled.init_code)
                 end
@@ -70,7 +77,7 @@ module Spider
             
             
             def inspect
-                ""
+                @el
             end
             
             def var_to_scene(var)
@@ -102,6 +109,7 @@ end
 require 'spiderfw/templates/blocks/html'
 require 'spiderfw/templates/blocks/text'
 require 'spiderfw/templates/blocks/each'
+require 'spiderfw/templates/blocks/if'
 require 'spiderfw/templates/blocks/render'
 require 'spiderfw/templates/blocks/yield'
 require 'spiderfw/templates/blocks/widget'

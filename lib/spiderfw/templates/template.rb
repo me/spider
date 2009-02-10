@@ -29,7 +29,7 @@ module Spider
             end
 
             def load(path, scene={})
-                return nil unless File.exist?(path)
+                raise RuntimeError, "Template #{path} does not exist" unless File.exist?(path)
                 template = self.new(scene)
                 template.load(path)
                 return template
