@@ -77,7 +77,11 @@ module Spider; module Model
         def before_save(obj, mode)
             normalize(obj)
             @model.elements_array.each do |el|
-                raise MapperException, "Element #{el.name} is required" if (el.required? && !obj.element_has_value?(el))
+                raise MapperException, "Element #{el.name} is required" if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
+                if (el.unique?)
+                    existent = @model.find(el.name => obj.get(el))
+                    raise MapperException, "Element #{el.name} is not unique" if existent.length > 0
+                end
             end
         end
         

@@ -33,6 +33,10 @@ module Spider; module Model
             @attributes[:required] ? true : false
         end
         
+        def unique?
+            @attributes[:unique] ? true : false
+        end
+        
         def model?
             return true if association_type
             return true if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
