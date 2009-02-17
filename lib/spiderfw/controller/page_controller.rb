@@ -21,9 +21,8 @@ module Spider
         end
         
         def init_template(path)
-            template = load_template(path)
+            template = super
             template.widgets = @widgets
-            template.init(@request, @scene)
             return template
         end
         
