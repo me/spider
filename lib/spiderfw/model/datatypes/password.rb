@@ -14,6 +14,7 @@ module Spider; module DataTypes
         take_attributes :hash, :salt
         
         def map(mapper_type)
+            @val ||= ''
             salt = attributes[:salt] || Spider.conf.get('password.salt')
             salt ||= ''
             hash_type = attributes[:hash] || Spider.conf.get('password.hash')
