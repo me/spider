@@ -21,6 +21,7 @@ class ModelCommand < CmdParse::Command
                 end
             end
             models.each do |m|
+                Spider::Logger.debug("SYNCING #{m}")
                 m.mapper.sync_schema if m.mapper.respond_to?(:sync_schema)
             end
         end
