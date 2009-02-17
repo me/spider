@@ -98,21 +98,26 @@ module Spider; module Model
 
             
 
-        def [](key)
-            load unless @objects[key] || @loaded || !autoload?
-            val = @objects[key]
+        def [](index)
+            load unless @objects[index] || @loaded || !autoload?
+            val = @objects[index]
             val.set_parent(self, nil) if val
             return val
         end
         
-        def []=(key, val)
+        def []=(index, val)
             load unless @loaded || !autoload?
             val = instantiate_object(val) unless val.is_a?(@model)
             @loaded_elements.merge!(val.loaded_elements)
             @fixed.each do |fkey, fval|
                 val.set(fkey, fval)
             end
-            @objects[key] = val
+            @objects[index] = val
+        end
+        
+        def last
+            load unless @loaded || !autoload?
+            @objects.last
         end
         
         def delete_at(index)
