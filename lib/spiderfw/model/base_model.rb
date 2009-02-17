@@ -815,8 +815,6 @@ module Spider; module Model
         end
         
         def modified?
-            Spider::Logger.debug("MODIFIED:")
-            Spider::Logger.debug(@modified_elements.reject{ |key, val| !val })
             return true unless @modified_elements.reject{ |key, val| !val }.empty?
             self.class.elements_array.select{ |el| 
                 !el.model? && element_has_value?(el) && el.type.is_a?(Spider::DataType)
