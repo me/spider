@@ -57,7 +57,8 @@ module Spider
         
         
         
-        def initialize(scene={})
+        def initialize(path, scene=nil)
+            @path = path
             @scene = scene
             @widgets = {}
         end
@@ -68,18 +69,22 @@ module Spider
         end
         
         
-        def load(path)
+        def load(path=nil)
             debug("TEMPLATE LOADING #{path}")
-            @path = path
-            cache_path = path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
+            @path = path if path
+            cache_path = @path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
             @compiled = self.class.cache.fetch(cache_path, self) do
-                doc = open(path){ |f| Hpricot.XML(f) }
+                doc = open(@path){ |f| Hpricot.XML(f) }
                 root_block = TemplateBlocks.parse_element(doc.root, self.class.allowed_blocks)
                 root_block.compile
             end
             @cache_path = self.class.cache.get_location(cache_path)
             # Spider.logger.debug("COMPILED:")
             # Spider.logger.debug(@compiled)
+        end
+        
+        def loaded?
+            @compiled ? true : false
         end
         
         def add_widget(id, widget, request=nil, scene=nil, params=nil, content=nil)
@@ -91,6 +96,7 @@ module Spider
         end
         
         def init(request, scene)
+            load unless loaded?
             debug("Template init")
             instance_eval(@compiled.init_code, @cache_path+'/init.rb')
         end
@@ -100,8 +106,9 @@ module Spider
         end
         
         def render(scene=nil)
+            load unless loaded?
             scene ||= (@scene || Scene.new)
-            debug("Template rendering with scene:")
+            debug("Template #{@path} rendering with scene:")
             debug(scene)            
             scene = Scene.new(scene) if scene.class == Hash
             scene.instance_eval(@compiled.run_code, @cache_path+'/run.rb')

@@ -1,11 +1,15 @@
 module Spider
     
     class AppController < Controller
+        include Visual
+        
+        no_layout 'serve_resource'
         
         def initialize(request, response, scene=nil)
             route 'pub/', :serve_resource
             super
         end
+        
         
         def serve_resource(path)
             full_path = self.class.app.pub_path+'/'+path

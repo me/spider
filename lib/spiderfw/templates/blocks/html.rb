@@ -17,6 +17,7 @@ module Spider; module TemplateBlocks
                 end
                 start += '"'
             end
+            start += " /" unless @el.etag
             start += ">"
             c += "print '#{start}'\n"
             blocks = parse_content(@el)

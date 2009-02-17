@@ -5,14 +5,16 @@ module Spider
         def self.parse_element(el, allowed_blocks=nil)
             if (el.class == ::Hpricot::Text)
                 block = :Text
+            elsif (el.attributes['sp:if'])
+                block = :If    
             elsif (el.attributes['sp:each'])
                 block = :Each
-            elsif (el.attributes['sp:if'])
-                block = :If
             elsif (el.name == 'sp:render')
                 block = :Render
             elsif (el.name == 'sp:yield')
                 block = :Yield
+            elsif (el.name == 'sp:pass')
+                block = :Pass
             elsif (Spider::Template.registered?(el.name))
                 klass = Spider::Template.get_registered_class(el.name)
                 if (klass.subclass_of?(::Spider::Widget))
@@ -75,6 +77,20 @@ module Spider
                 return res
             end
             
+            def vars_to_scene(str)
+                res = ""
+                scanner = ::StringScanner.new(str)
+                pos = 0
+                while scanner.scan_until(/@(\w[\w\d_]+)/)
+                    text = scanner.pre_match[pos..-1]
+                    pos = scanner.pos
+                    res += text
+                    res += "scene[:#{scanner.matched[1..-1]}]"
+                end
+                res += scanner.rest
+                return res
+            end
+            
             
             def inspect
                 @el
@@ -112,4 +128,5 @@ require 'spiderfw/templates/blocks/each'
 require 'spiderfw/templates/blocks/if'
 require 'spiderfw/templates/blocks/render'
 require 'spiderfw/templates/blocks/yield'
+require 'spiderfw/templates/blocks/pass'
 require 'spiderfw/templates/blocks/widget'

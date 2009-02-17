@@ -22,6 +22,8 @@ module Spider; module TemplateBlocks
             content.run_code.each_line do |line|
                 c += '  '+line
             end
+            c += '   print "\n"'
+            c += "\n"
             c += "end\n"
             init += content.init_code
             return CompiledBlock.new(init, c)

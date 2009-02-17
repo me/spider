@@ -6,18 +6,10 @@ module Spider; module TemplateBlocks
         
         def compile
             init = ""
-            cond = @el.attributes['sp:if']
+            cond = vars_to_scene(@el.attributes['sp:if'])
             scanner = ::StringScanner.new(cond)
             pos = 0
-            c = "if ("
-            while scanner.scan_until(/@(\w[\w\d_]+)/)
-                text = scanner.pre_match[pos..-1]
-                pos = scanner.pos
-                c += text
-                c += "scene[:#{scanner.matched[1..-1]}]"
-            end
-            c+= scanner.rest
-            c+= ")\n"
+            c = "if (#{cond})\n"
                 
             @el.remove_attribute('sp:if')
             content = Spider::TemplateBlocks.parse_element(@el).compile

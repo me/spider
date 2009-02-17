@@ -11,7 +11,9 @@ module Spider; module Helpers
             debug "REDIRECTING TO #{url}"
             @response.status = 301
             @response.headers["Location"] = url
-            throw :done
+            @response.headers.delete("Content-Type")
+            @response.headers.delete("Set-Cookie")
+            done
         end
         
         def before(action='', *arguments)
@@ -27,7 +29,11 @@ module Spider; module Helpers
                     if (dispatched_action =~ /\/([^\/]+)$/)
                         dispatched_action = $1
                     end
-                    redirect(dispatched_action+'/')
+                    dest = dispatched_action+'/'
+                    if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
+                        dest += '?'+@request.env['QUERY_STRING']
+                    end
+                    redirect(dest)
                 end
             end
             super

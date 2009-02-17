@@ -43,6 +43,10 @@ module Spider
         def do_dispatch(method, action='', *arguments)
             obj, route_action, new_arguments = dispatch(method, action, *arguments)
             return nil unless obj
+            meth_action = route_action.length > 0 ? route_action : obj.class.default_action
+            meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
+            try_meth = "#{method}_#{meth_action.downcase}"
+            return obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
             return obj.send(method, route_action, *(new_arguments))
         end
 
@@ -57,7 +61,7 @@ module Spider
             next_route = get_route(path)
             return false unless next_route
             obj = dispatched_object(next_route)
-            obj.dispatch_previous = self
+            obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=)
             return [obj, next_route]
         end
         
@@ -79,8 +83,7 @@ module Spider
                         try.downcase!
                     end
                     if (test_path[0..(try.length-1)] == try)
-                        action = test_path[(try.length)..(test_path.length-1)]
-                        params = []
+                        action = path[(try.length)..-1]
                     end
                 when Regexp
                     action_index = options[:action_match]
@@ -92,6 +95,7 @@ module Spider
                 end
                 if (action)
                     if (dest.class == Symbol) # route to self
+                        params = [action]
                         action = dest.to_s
                         dest = self
                     end

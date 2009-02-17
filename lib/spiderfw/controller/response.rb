@@ -28,6 +28,7 @@ module Spider
             Spider::Logger.debug("HEADERS:")
             Spider::Logger.debug(@headers)
         end
+
         
     end
     

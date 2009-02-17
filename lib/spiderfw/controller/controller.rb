@@ -7,12 +7,12 @@ require 'spiderfw/controller/controller_exceptions'
 require 'spiderfw/widget/widget'
 
 require 'spiderfw/controller/helpers/http'
+require 'spiderfw/controller/helpers/static_content'
 
 module Spider
     
     class Controller
         include Dispatcher
-        include Visual
         include Logger
         
         class << self
@@ -31,7 +31,21 @@ module Spider
             
             def layout_path
                 return self.app.path+'/layouts'
-            end            
+            end
+            
+            def check_action(action, check)
+                checks = check.is_a?(Array) ? check : [check]
+                action = action.to_s
+                action = default_action if action == ''
+                action = action[0..-1] if action[-1].chr == '/'
+                checks.each do |check|
+                    Spider::Logger.debug("CHECKING '#{action}', '#{check}'")
+                    return true if check.is_a?(String) && action == check || (action[-1].chr == '/' && action[0..-2] == check)
+                    return true if check.is_a?(Regexp) && action =~ check
+                    Spider::Logger.debug("FALSE")
+                end
+                return false
+            end      
             
         end
         
@@ -55,6 +69,7 @@ module Spider
             self.class.to_s
         end
         
+        
         def execute(action='', *arguments)
             return if @done
             debug("Controller #{self} executing #{action} with arguments")
@@ -73,24 +88,14 @@ module Spider
                         method = $1
                         additional_arguments = [$2]
                     end
-                    layout = self.class.get_layout(method) # FIXME! move to visual somehow
                     if (self.class.method_defined?(method.to_sym))
-                   
-                        if (layout) 
-                            layout = layout.render_and_yield(self, method.to_sym, arguments)
-                        else
-                            send(method, *(arguments+additional_arguments))
-                        end
+                        debug("SENDING #{method} WITH ARGS:")
+                        debug(arguments+additional_arguments)
+                        send(method, *(arguments+additional_arguments))
                     elsif (can_dispatch?(:execute, action))
                         #run_chain(:execute, action, *arguments)
-                        if (layout)
-                            obj, route_method, new_arguments = dispatch(:execute, action)
-                            new_arguments.unshift(route_method)
-                            layout = layout.render_and_yield(obj, :execute, new_arguments)
-                        else
-                            do_dispatch(:execute, action)
-                        end
-                        after(action, *arguments)
+                        do_dispatch(:execute, action)
+#                        after(action, *arguments)
                     else
                         raise NotFoundException.new(action)
                     end
@@ -126,8 +131,13 @@ module Spider
         end
         
         def done
-            @done = true
+            self.done = true
             throw :done
+        end
+        
+        def done=(val)
+            @done = val
+            @dispatch_previous.done = val if @dispatch_previous
         end
 
         

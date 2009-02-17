@@ -2,12 +2,14 @@ require 'spiderfw/controller/app_controller'
 
 module Spider
 
-    class PageController < AppController
+    class PageController < Controller
+        include Visual
 
         def initialize(request, response, scene=nil)
             super
             @widgets = {}
         end
+        
         
         def get_route(path)
             if (path =~ /^[^:]+:([^:\/]+)[:\/]?(.*)$/) # route to widgets

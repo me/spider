@@ -2,20 +2,14 @@ module Spider
     
     class Layout < Template
         allow_blocks :HTML, :Text, :Render, :Yield
+        attr_accessor :template
         
-        def render_and_yield(controller, action, arguments)
-            Spider::Logger.debug("RENDER AND YIELD:")
-            Spider::Logger.debug(controller)
-            Spider::Logger.debug(action)
-            Spider::Logger.debug(arguments)
-            @scene[:yield_to] = {
-                :controller => controller,
-                :action => action,
-                :arguments => arguments
-            }
-            render(@scene)
+        def render(scene=nil)
+            scene ||= (@scene || Scene.new)
+            tmpl = @template.is_a?(Template) ? @template : Template.new(@template)
+            scene[:yield_to_template] = tmpl
+            super
         end
-        
         
     end
     
