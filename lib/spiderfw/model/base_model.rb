@@ -23,7 +23,8 @@ module Spider; module Model
             @subclasses << subclass
             subclass.instance_variable_set("@elements", @elements.clone) if @elements
             subclass.instance_variable_set("@elements_order", @elements_order.clone) if @elements_order
-            subclass.instance_variable_set("@mapper_procs", @mapper_procs.clone) if @mapper_procs
+            subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
+            subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
         end
         
         def self.app
@@ -115,12 +116,12 @@ module Spider; module Model
             if (attributes[:add_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_reverse]
-                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name)
+                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name, :added_reverse => true)
                 end
             elsif (attributes[:add_multiple_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_multiple_reverse]
-                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true)
+                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true, :added_reverse => true)
                 end
             end
             if (attributes[:lazy] == nil)
@@ -186,7 +187,7 @@ module Spider; module Model
                 end
                 if (val && element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
                     if (element.multiple? && val.is_a?(Enumerable))
-                        qs = QuerySet.new(element.type)
+                        qs = instantiate_element(name)
                         val.each do |row|
                             row = element.model.new(row) unless row.is_a?(BaseModel)
                             qs << row
@@ -237,7 +238,7 @@ module Spider; module Model
                     attributes.delete(:add_reverse)
                     attributes.delete(:add_multiple_reverse)
                 end
-                attributes.delete(:primary_key) if (params[:no_pks])
+                attributes.delete(:primary_key) unless (params[:keep_pks])
                 element(el.name, el.type, attributes)
             end
         end
@@ -307,7 +308,7 @@ module Spider; module Model
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
             process_models = [self] + (@subclasses || [])
             integrated = element(integrated_name, model, attributes)
-            integrate(integrated_name)
+            integrate(integrated_name, :keep_pks => true)
             if (params[:add_polymorphic])
                 model.polymorphic(self, :through => integrated_name)
             end
@@ -429,9 +430,19 @@ module Spider; module Model
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
         
+        def self.mapper_include(mod)
+            @mapper_modules ||= []
+            @mapper_modules << mod
+        end
+        
         def self.with_mapper(*params, &proc)
             @mapper_procs ||= []
             @mapper_procs << proc
+        end
+        
+        def self.with_mapper_subclasses(*params, &proc)
+            @mapper_procs_subclass ||= []
+            @mapper_procs_subclass << proc
         end
         
         def self.with_mapper_for(*params, &proc)
@@ -471,8 +482,14 @@ module Spider; module Model
         def self.get_mapper(storage)
 #            map_class = self.attributes[:inherit_storage] ? superclass : self
             mapper = storage.get_mapper(self)
+            if (@mapper_modules)
+                @mapper_modules.each{ |mod| mapper.extend(mod) }
+            end
             if (@mapper_procs)
                 @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
+            end
+            if (@mapper_procs_subclass)
+                @mapper_procs_subclass.each{ |proc| mapper.instance_eval(&proc) }
             end
             return mapper
         end
@@ -581,9 +598,11 @@ module Spider; module Model
                 end
                 obj.identity_mapper = self.identity_mapper
                 # FIXME: cleanup the single reverse thing, doesn't have much sense now with junctions
-                if (element.has_single_reverse? && (!element.attributes[:junction] || element.attributes[:keep_junction]))
-                    obj.set(element.attributes[:reverse], self)
-                end
+                # if (element.has_single_reverse? && (!element.attributes[:junction] || element.attributes[:keep_junction]))
+                #                     obj.no_autoload do
+                #                         obj.set(element.attributes[:reverse], self) unless obj.get(element.attributes[:reverse]) == self
+                #                     end
+                #                 end
                 if (element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
                 end
@@ -749,6 +768,14 @@ module Spider; module Model
         ##############################################################
         #   Methods for getting information about element values     #
         ##############################################################
+        
+        def ==(other)
+            return false unless other
+            self.class.primary_keys.each do |k|
+                return false unless get(k) == other.get(k)
+            end
+            return true
+        end
 
         def each_val
             self.class.elements.select{ |name, el| element_has_value?(name) }.each do |name, el|
@@ -1098,7 +1125,7 @@ module Spider; module Model
             Spider::Model.with_identity_mapper do |im|
                 where.keys.each do |name|
                     if (where[name].is_a?(Proc))
-                        val = where[name].call(self)
+                        val = where[name].call(self, name)
                     else
                         el = self.class.elements[name]
                         raise ModelException, "Element #{name} does not exist" unless el
