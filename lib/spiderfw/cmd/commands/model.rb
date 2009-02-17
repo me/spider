@@ -16,7 +16,7 @@ class ModelCommand < CmdParse::Command
                 mod = const_get_full(model)
                 if (mod.is_a?(Module) && mod.include?(Spider::App))
                     mod.models.each { |m| models << m }
-                elsif (mod.is_a?(Spider::Model::BaseModel))
+                elsif (mod.subclass_of?(Spider::Model::BaseModel))
                     models << mod
                 end
             end
