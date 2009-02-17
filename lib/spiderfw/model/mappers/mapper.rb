@@ -78,9 +78,11 @@ module Spider; module Model
             normalize(obj)
             @model.elements_array.each do |el|
                 raise MapperException, "Element #{el.name} is required" if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
-                if (el.unique?)
+                if (el.unique? && obj.element_modified?(el))
                     existent = @model.find(el.name => obj.get(el))
-                    raise MapperException, "Element #{el.name} is not unique" if existent.length > 0
+                    if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
+                        raise MapperException, "Element #{el.name} is not unique"
+                    end
                 end
             end
         end
@@ -90,6 +92,8 @@ module Spider; module Model
         end
         
         def save(obj, request=nil)
+            # Load local primary keys if they exist
+            @model.elements_array.select{ |el| el.attributes[:local_pk]}.each{ |local_pk| obj.get(local_pk) }
             obj.no_autoload do
                 normalize(obj)
                 if (@model.extended_models)
@@ -112,6 +116,7 @@ module Spider; module Model
                 save_associations(obj)
             end
         end
+
         
         def save_associations(obj)
             @model.elements_array.select{ |el| mapped?(el) && !el.integrated? &&
@@ -129,6 +134,10 @@ module Spider; module Model
                         {element.attributes[:reverse] => obj, element.attributes[:junction_their_element] => el_obj}
                     })
                     val = qs
+                elsif (val.is_a?(QuerySet))
+                    val.each do |row|
+                        row.set(element.attributes[:reverse], obj)
+                    end
                 end
                 val.insert
             else

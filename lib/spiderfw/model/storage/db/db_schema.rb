@@ -3,7 +3,7 @@ require 'spiderfw/model/storage/schema'
 module Spider; module Model; module Storage; module Db
     
     class DbSchema < Spider::Model::Storage::Schema
-        attr_reader :sequences, :columns, :foreign_keys, :primary_key, :partial
+        attr_reader :sequences, :columns, :foreign_keys, :primary_key, :partial, :pass
         
         def initialize()
             super
@@ -12,6 +12,7 @@ module Spider; module Model; module Storage; module Db
             @junction_tables = {}
             @sequences = {}
             @partial = false
+            @pass = {}
         end
         
         def table
@@ -70,6 +71,7 @@ module Spider; module Model; module Storage; module Db
         end 
         
         def set_column(element_name, column_description)
+            column_description[:attributes] ||= {}
             @columns[element_name] = column_description
         end
         
@@ -80,6 +82,10 @@ module Spider; module Model; module Storage; module Db
         
         def set_sequence(name, db_name)
             @sequences[name] = db_name
+        end
+        
+        def set_nil(name)
+            @pass[name] = true
         end
         
         def sequence(name)

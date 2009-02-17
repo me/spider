@@ -493,7 +493,8 @@ module Spider; module Model; module Mappers
             while (st && !storage.class.base_types.include?(st))
                 st = Model.simplify_type(st)
             end
-            raise MapperException, "No defined mapping for type #{type}" unless st
+            return type unless st
+#            raise MapperException, "No defined mapping for type #{type}" unless st
             return st
         end
         
@@ -665,7 +666,8 @@ module Spider; module Model; module Mappers
             @model.each_element do |element|
                 next if element.integrated?
                 next unless mapped?(element)
-                next if had_schema && !schema.columns[element.name] && !schema.foreign_keys[element.name]
+                next if had_schema && schema.pass[element.name]
+                next if element.attributes[:added_reverse] && element.has_single_reverse?
                 if (!element.model?)
                     type = element.custom_type? ? element.type.class.maps_to : element.type
                     current_column = schema.columns[element.name] || {}
@@ -747,6 +749,7 @@ module Spider; module Model; module Mappers
         def sync_schema(force=false)
             schema_description = schema.get_schemas
             sequences = schema.sequences.values
+
             @model.elements_array.select{ |el| el.attributes[:anonymous_model] }.each do |el|
                 schema_description.merge!(el.model.mapper.schema.get_schemas)
                 sequences += el.model.mapper.schema.sequences.values
