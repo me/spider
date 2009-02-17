@@ -30,6 +30,7 @@ module Spider
             @paths = {}
             @apps_to_load = []
             @apps ||= {}
+            @app_paths = []
             @root = Dir.pwd
             @logger = Spider::Logger
             @logger.open(STDERR, :DEBUG)
@@ -37,9 +38,12 @@ module Spider
             @server = {}
             @paths[:spider] = $SPIDER_PATH
             setup_paths(@root)
+            load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
+            find_apps
+            load_apps_options
             load_configuration($SPIDER_PATH+'/config')
             load_configuration(@root+'/config')
-            load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
+            
             GetText.locale = config.get('locale')
 
             # if (Spider.config['debugger.start'])
@@ -95,25 +99,38 @@ module Spider
             end
         end
         
-        # FIXME: cleanup
         def init_apps
+            @app_paths.each do |path|
+                require path+'/_init.rb'
+            end
+        end
+        
+        def load_apps_options
+            @app_paths.each do |path|
+                options_path = path+'/config/options.rb'
+                require options_path if (File.exist?(options_path))
+            end
+        end
+        
+        # FIXME: cleanup
+        def find_apps
             Logger.debug("Loading apps:")
             Logger.debug(@apps_to_load)
             found = false
             @apps_to_load.uniq.each do |app|
                 if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app))
                     if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb'))
-                        require($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb')
+                        @app_paths << $SPIDER_RUN_PATH+'/apps/'+app
                         found = true
                     else
-                        found = init_apps_in_folder($SPIDER_RUN_PATH+'/apps/'+app)
+                        found = find_apps_in_folder($SPIDER_RUN_PATH+'/apps/'+app)
                     end
                 elsif (File.exist?($SPIDER_PATH+'/apps/'+app))
                     if (File.exist?($SPIDER_PATH+'/apps/'+app+'/_init.rb'))
-                        require($SPIDER_PATH+'/apps/'+app+'/_init.rb')                    
+                        @app_paths << $SPIDER_PATH+'/apps/'+app+
                         found = true
                     else
-                        found = init_apps_in_folder($SPIDER_PATH+'/apps/'+app)
+                        found = find_apps_in_folder($SPIDER_PATH+'/apps/'+app)
                     end
                 end
                 if (!found)
@@ -122,16 +139,16 @@ module Spider
             end
         end
         
-        def init_apps_in_folder(path)
+        def find_apps_in_folder(path)
             path += '/' unless path[-1].chr == '/'
             found = false
             Dir.new(path).each do |f|
                 next if f[0].chr == '.'
                 if (File.exist?(path+f+'/_init.rb'))
-                    require(path+f+'/_init.rb')
+                    @app_paths << path+f
                     found = true
                 else
-                    f = init_apps_in_folder(path+f)
+                    f = find_apps_in_folder(path+f)
                     found ||= f
                 end
             end
