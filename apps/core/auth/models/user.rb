@@ -7,7 +7,7 @@ module Spider; module Auth
         element :uid, String, :primary_key => true
         many :groups, Spider::Auth::Group, :add_multiple_reverse => :users
         
-        with_mapper do
+        with_mapper_subclasses do
             def assign_primary_keys(obj)
                 obj.set(:uid, UUID.new.generate)
             end

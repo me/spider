@@ -2,6 +2,7 @@ module Spider; module Auth
     
     class LoginController < Spider::Controller
         include Spider::Helpers::HTTP
+        include Spider::Visual
         
         def before(action='')
             super

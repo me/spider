@@ -11,7 +11,7 @@ module Spider; module Auth
         element :label, String, :required => true, :check => /[\w\d_]+/, :unique => true
         element :name, String
         
-        with_mapper do
+        with_mapper_subclasses do
             def assign_primary_keys(obj)
                 obj.set(:gid, UUID.new.generate)
             end

@@ -10,25 +10,27 @@ module Spider; module Auth
             model.element(:modification_user, Spider::Auth::User)
             model.element(:creation_date, DateTime)
             model.element(:modification_date, DateTime)
-            model.with_mapper do
-                
-                def insert(obj)
-                    obj.creation_user = Spider::Auth.current_user
-                    obj.modification_user = Spider::Auth.current_user
-                    obj.creation_date = DateTime.now
-                    obj.modification_date = DateTime.now
-                    super(obj)
-                end
-                
-                def update(obj)
-                    obj.modification_user = Spider::Auth.current_user
-                    obj.modification_date = DateTime.now
-                    super(obj)
-                end
-                
-            end
+            model.mapper_include MapperMethods
             
                 
+        end
+        
+        module MapperMethods
+            def insert(obj)
+                obj.creation_user = Spider::Auth.current_user
+                obj.modification_user = Spider::Auth.current_user
+                obj.creation_date = DateTime.now
+                obj.modification_date = DateTime.now
+                super(obj)
+            end
+            
+            def update(obj)
+                if (@model.elements_array.select{ |el| obj.element_modified?(el) }.length > 0)
+                    obj.modification_user = Spider::Auth.current_user
+                    obj.modification_date = DateTime.now
+                end
+                super(obj)
+            end
         end
         
         module ClassMethods
