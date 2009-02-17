@@ -20,7 +20,13 @@ module Spider
                     
                     def controller_class
                         #controllers = self.const_get(:Controllers)
-                        const_defined?(@controller_class) ? const_get(@controller_class) : Spider::Controller
+                        controller = const_defined?(@controller_class) ? const_get(@controller_class) : Spider::Controller
+                        # default_helpers = [:StaticContent]
+                        #                         default_helpers.each do |helper|
+                        #                             h = Spider::Helpers.const_get(helper)
+                        #                             controller.class_eval{ include(h) } unless (controller.include?(h))
+                        #                         end
+                        return controller
                     end
                     
                     def models
@@ -34,7 +40,9 @@ module Spider
                         if m.subclass_of? Spider::Model::BaseModel
                              models << m
                              m.constants.each do |c|
-                                 models += get_models(m.const_get(c))
+                                 sub_mod = m.const_get(c)
+                                 next if !sub_mod.is_a?(Spider::Model::BaseModel) || sub_mod.app != self
+                                 models += get_models(sub_mod)
                              end
                          end
                          return models
