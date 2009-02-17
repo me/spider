@@ -40,6 +40,7 @@ module Spider; module HTTP
         end
         
         def send_headers
+            Spider::Logger.debug("---SENDING HEADERS----")
             @controller_response.prepare_headers
             @response.status = @controller_response.status
             @response.send_status(nil)
@@ -51,7 +52,7 @@ module Spider; module HTTP
                 end
             end
             @response.send_header
-            Spider::Logger.debug("---SENT HEADERS----")
+            
         end
         
         
@@ -93,8 +94,10 @@ module Spider; module HTTP
                 controller = ::Spider::HTTPController.new(controller_request, controller_response)
                 controller.before(path)
                 controller.execute(path)
-                Spider::Logger.debug("Response: #{controller.response}")
-                controller.after(path)                
+                Spider::Logger.debug("Response:")
+                Spider::Logger.debug(controller.response)
+                controller.after(path)
+                controller_response.body.send_headers unless response.header_sent           
             rescue => exc
                 Spider.logger.error(exc)
                 controller.ensure() if controller
