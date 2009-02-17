@@ -40,6 +40,7 @@ module Spider; module Model
         def model?
             return true if association_type
             return true if type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
+            return false
         end
         
         def original_model
