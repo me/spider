@@ -182,6 +182,10 @@ module Spider; module Model
                 element = self.class.elements[name]
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
+                    unless integrated_obj
+                        integrated_obj = instantiate_element(element.integrated_from.name)
+                        set(element.integrated_from, integrated_obj)
+                    end
                     #integrated_obj.autoload = false
                     return integrated_obj.send("#{element.integrated_from_element}=", val)
                 end

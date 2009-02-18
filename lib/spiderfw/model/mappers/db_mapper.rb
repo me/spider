@@ -499,7 +499,7 @@ module Spider; module Model; module Mappers
         end
         
         def map_value(type, value, mode=nil)
-             if (type.subclass_of?(Spider::DataType))
+             if (type.subclass_of?(Spider::DataType) && value)
                  value = value.map(self.type)
              elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
                  value = type.primary_keys.map{ |key| value.send(key.name) }
