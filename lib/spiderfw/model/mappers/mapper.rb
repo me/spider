@@ -256,7 +256,7 @@ module Spider; module Model
                 if !result || result.empty?
                     set.each do |obj|
                         query.request.keys.each do |element_name|
-                            obj.set_loaded_value(element_name, nil)
+                            obj.set_loaded_value(element_name, nil) unless @model.elements[element_name].integrated?
                         end
                     end
                     return set
