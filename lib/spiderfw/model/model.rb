@@ -19,6 +19,16 @@ module Spider
             return k
         end
         
+        def self.ruby_type(klass)
+            map_types = {
+                Spider::DataTypes::Text => String,
+                Spider::DataTypes::Bool => FalseClass,
+                Spider::DataTypes::Binary => String
+            }
+            return map_types[klass] if map_types[klass]
+            return klass
+        end
+        
         def self.simplify_type(klass)
             map_types = {
                 

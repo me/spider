@@ -68,7 +68,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def prepare_value(type, value)
-            return OCI8NilValue.new(type) if (value == nil)
+            return OCI8NilValue.new(Spider::Model.ruby_type(type)) if (value == nil)
             case type.name
             when 'Spider::DataTypes::Binary'
                 return OCI8::BLOB.new(@conn, value)
