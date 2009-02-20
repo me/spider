@@ -95,7 +95,10 @@ module Spider
                 end
                 if (action)
                     if (dest.class == Symbol) # route to self
-                        params = [action]
+                        new_params = []
+                        new_params << action if action && !action.empty?
+                        new_params += (params || [])
+                        params = new_params
                         action = dest.to_s
                         dest = self
                     end
