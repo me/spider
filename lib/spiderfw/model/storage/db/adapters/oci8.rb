@@ -22,9 +22,9 @@ module Spider; module Model; module Storage; module Db
         end
         
         def self.new_connection(user, pass, dbname, role)
-            conn = ::OCI8.new(user, pass, dbname, role)
-            conn.autocommit = true
-            return conn
+            @conn ||= ::OCI8.new(user, pass, dbname, role)
+            @conn.autocommit = true
+            return @conn
         end
         
         def disconnect
