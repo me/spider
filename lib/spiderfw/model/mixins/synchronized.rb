@@ -18,7 +18,7 @@ module Spider; module Model
 
                 with_mapper do
                     
-                    def before_save(obj)
+                    def before_save(obj, mode)
                         return super unless @model.synchronizing
                         obj = get_synchronized(obj)
                         super(obj)
