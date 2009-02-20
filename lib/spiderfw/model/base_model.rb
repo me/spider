@@ -669,11 +669,11 @@ module Spider; module Model
                     value.attributes[a] = element.attributes[a]
                 end
             else
-                case element.type
-                when DateTime
+                case element.type.name
+                when 'DateTime'
                     value = DateTime.parse(value) if value.is_a?(String)
-                when String
-                when Text
+                when 'String'
+                when 'Spider::DataTypes::Text'
                     value = value.to_s
                 end
             end
