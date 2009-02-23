@@ -275,7 +275,7 @@ module Spider; module Model
                     # FIXME: this is not good, find a better way
                     if (!mapped[obj])
                         query.request.keys.each do |element_name|
-                            obj.set_loaded_value(element_name, nil) unless @model.elements[element_name].integrated?
+                            obj.set_loaded_value(element_name, nil) unless obj.element_loaded?(element_name) || @model.elements[element_name].integrated?
                         end
                     end
                 end
