@@ -253,27 +253,31 @@ module Spider; module Model
                 set.loaded = true
                 set.index_by(*@model.primary_keys)
                 set.query = query
-                if !result || result.empty?
-                    set.each do |obj|
+                mapped = {}
+                if (result)
+                    set.total_rows = result.total_rows
+                    result.each do |row|
+                        obj =  map(query.request, row, set.model)
+                        mapped[obj] = true
+                        search = {} 
+                        @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
+                        obj_res = set.find(search)  # FIXME: find a better way
+                        if (obj_res && obj_res[0])
+                            obj_res[0].merge!(obj)
+                            obj.loaded_elements.each{ |name, bool| set.element_loaded(name)}
+                        else
+                            set << obj
+                        end
+                        @raw_data[obj.object_id] = row
+                    end
+                end
+                set.each do |obj|
+                    # FIXME: this is not good, find a better way
+                    if (!mapped[obj])
                         query.request.keys.each do |element_name|
                             obj.set_loaded_value(element_name, nil) unless @model.elements[element_name].integrated?
                         end
                     end
-                    return set
-                end
-                set.total_rows = result.total_rows
-                result.each do |row|
-                    obj =  map(query.request, row, set.model)
-                    search = {} 
-                    @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
-                    obj_res = set.find(search)  # FIXME: find a better way
-                    if (obj_res && obj_res[0])
-                        obj_res[0].merge!(obj)
-                        obj.loaded_elements.each{ |name, bool| set.element_loaded(name)}
-                    else
-                        set << obj
-                    end
-                    @raw_data[obj.object_id] = row
                 end
 #                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
 
