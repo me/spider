@@ -35,6 +35,11 @@ module Spider; module Auth
             end
         end
         
+        def logout
+            @request.session['uid'] = nil
+            Spider::Auth.current_user = nil
+        end
+        
     end
     
     
