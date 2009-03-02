@@ -159,7 +159,7 @@ module Spider; module Model
         def save_all(root)
             uow = UnitOfWork.new
             uow.add(root)
-            @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) }.each do |name, element|
+            @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) && root.get(el).modified? }.each do |name, element|
                 uow.add(root.send(name))
             end
             uow.run()
