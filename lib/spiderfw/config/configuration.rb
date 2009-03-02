@@ -11,8 +11,14 @@ module Spider
             prefix = prefix[1..prefix.length-1] if (prefix[0..0] == '.')
             @prefix = prefix
             @options = @@options
-            # TODO: add exception if prefix not defined (i.e. if o[part] does not exist)
-            @options = prefix.split('.').inject(@options){ |o, part| o[part] } if prefix != ''
+            if prefix != ''
+                cur = ''
+                @options = prefix.split('.').inject(@options) do |o, part|
+                    cur += '.' unless cur.empty?; cur += part
+                    raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % cur unless o[part]
+                    o[part]
+                end
+            end
             @sets = {}
             @current_set = 'default'
             @sets['default'] = self
@@ -75,6 +81,7 @@ module Spider
         
         def [](key)
             val = @values[key]
+            
             if (!val && @options[key] && @options[key][:params][:default])
                 default = @options[key][:params][:default]
                 val = (default.class == Proc) ? default.call() : default
