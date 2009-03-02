@@ -16,6 +16,7 @@ module Spider; module CommandLine
             @cmd.options = CmdParse::OptionParserWrapper.new do |opt|
                 opt.separator _("Global options:")
                 opt.on("--verbose", _("Be verbose when outputting info"), "-v" ) {|t| $verbose = true }
+                opt.on("--chdir", _("Cd to a directory before running"), "-c"){ |c| Dir.chdir(c) }
             end
 
             @cmd.add_command(CmdParse::HelpCommand.new, true)
