@@ -3,8 +3,6 @@ require 'fileutils'
 
 module Spider
     
-
-    
     class FileSession < Session
         
         class << self
@@ -34,6 +32,15 @@ module Spider
                 end
                 return {:data => data, :mtime => mtime}
             end
+            
+            def purge(life)
+                dir = Spider.conf.get('session.file.path')
+                Find.find(dir) do |path|
+                    next unless File.file?(path)
+                    File.unlink(path) if (File.mtime + life < Time.now)
+                end
+            end
+                
             
         end
         
