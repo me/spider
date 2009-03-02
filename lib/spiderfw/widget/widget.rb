@@ -58,7 +58,7 @@ module Spider
         end
                 
         def try_rescue(exc)
-            if (exc.is_a?(NotFoundException))
+            if (exc.is_a?(NotFound))
                 error("Widget path not found: #{exc.path}")
             else
                 raise exc

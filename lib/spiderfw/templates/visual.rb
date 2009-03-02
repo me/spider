@@ -12,7 +12,6 @@ module Spider
         end
         
         def before(action, *params)
-            debug("IN VISUAL BEFORE")
             @layout ||= self.class.get_layout(action)
             @layout ||= @dispatcher_layout
             super
@@ -52,8 +51,6 @@ module Spider
         
         def dispatched_object(route)
             obj = super
-            debug("#{self} created dispatched object #{obj}")
-            debug("My layout is #{@layout}, #{@dispatcher_layout}")
             set_layout = @layout || @dispatcher_layout
             obj.dispatcher_layout = self.class.init_layout(set_layout) if set_layout
             return obj
@@ -88,8 +85,6 @@ module Spider
                     end
                 end
                 action = (action && !action.empty?) ? action.to_sym : self.default_action
-                Spider::Logger.debug("Looking for layout for action #{action}")
-                Spider::Logger.debug(@layouts)
                 layouts.each do |try|
                     name, params = try
                     if (params[:for])

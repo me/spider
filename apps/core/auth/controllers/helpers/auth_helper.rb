@@ -7,7 +7,6 @@ module Spider; module Auth
         end
         
         def before(action='', *arguments)
-            debug("REQUIRE_USER BEFORE")
             self.class.auth_require_users.each do |params|
                 
                 if (@request.session['uid'])
@@ -15,12 +14,10 @@ module Spider; module Auth
                 end
                 good = false
                 unl = params[:unless]
-                debug("ACTION IS: #{action}")
                 if (unl)
                     unl = [unl] unless unl.is_a?(Array)
                     unl.each do |p|
                         if ((p.is_a?(Regexp) && action =~ p) || action == p)
-                            debug("GOOD BECAUSE #{p}")
                             good = true
                         end
                     end
@@ -39,7 +36,6 @@ module Spider; module Auth
                 if (!good)
                     user = Spider::Auth.current_user
                     if (user)
-                        debug("GOOD BECAUSE USER #{user}")
                         good = true
                         if (params[:groups])
                             good = false
@@ -48,7 +44,6 @@ module Spider; module Auth
                             end
                         end
                     end
-                    debug("UNAUTHORIZED!") unless good
                     raise Unauthorized unless good
                 end
             end
