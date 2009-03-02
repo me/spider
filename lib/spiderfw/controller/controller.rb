@@ -4,6 +4,7 @@ require 'spiderfw/controller/response'
 require 'spiderfw/controller/scene'
 require 'spiderfw/templates/visual'
 require 'spiderfw/controller/controller_exceptions'
+require 'spiderfw/controller/first_responder'
 require 'spiderfw/widget/widget'
 
 require 'spiderfw/controller/helpers/http'
@@ -14,6 +15,7 @@ module Spider
     class Controller
         include Dispatcher
         include Logger
+        include Helpers
         
         class << self
 
@@ -39,10 +41,8 @@ module Spider
                 action = default_action if action == ''
                 action = action[0..-1] if action[-1].chr == '/'
                 checks.each do |check|
-                    Spider::Logger.debug("CHECKING '#{action}', '#{check}'")
                     return true if check.is_a?(String) && action == check || (action[-1].chr == '/' && action[0..-2] == check)
                     return true if check.is_a?(Regexp) && action =~ check
-                    Spider::Logger.debug("FALSE")
                 end
                 return false
             end      
@@ -56,6 +56,7 @@ module Spider
             @request = request
             @response = response
             @scene = scene || Scene.new
+            @dispatch_path = ''
             init
             #@parent = parent
         end
@@ -67,6 +68,10 @@ module Spider
         
         def inspect
             self.class.to_s
+        end
+        
+        def dispatch_prefix
+            @request.action[0..@request.action.index(@action)-1].gsub(/\/+$/, '')
         end
         
         
@@ -97,9 +102,10 @@ module Spider
                         do_dispatch(:execute, action)
 #                        after(action, *arguments)
                     else
-                        raise NotFoundException.new(action)
+                        raise NotFound.new(action)
                     end
                 rescue => exc
+                    debug("CONTROLLER TRY_RESCUE #{exc}")
                     try_rescue(exc)
                 end
             end
@@ -107,21 +113,31 @@ module Spider
         
         def before(action='', *arguments)
             catch(:done) do
-                debug("IN BEFORE; I AM #{self}")
-                # begin
-                #     run_chain(:before)
-                #     #return dispatch(:before, action, *arguments)
-                # rescue => exc
-                #     try_rescue(exc)
-                # end
-                do_dispatch(:before, action, *arguments)
+                begin
+                    debug("IN BEFORE; I AM #{self}")
+                    # begin
+                    #     run_chain(:before)
+                    #     #return dispatch(:before, action, *arguments)
+                    # rescue => exc
+                    #     try_rescue(exc)
+                    # end
+                    do_dispatch(:before, action, *arguments)
+                rescue => exc
+                    try_rescue(exc)
+                end
             end
         end
                 
 
         
         def after(action='', *arguments)
-            do_dispatch(:after, action, *arguments)
+            catch(:done) do
+                begin
+                    do_dispatch(:after, action, *arguments)
+                rescue => exc
+                    try_rescue(exc)
+                end
+            end
             # begin
             #     run_chain(:after)
             #     #dispatch(:after, action, params)
@@ -146,7 +162,9 @@ module Spider
         def dispatched_object(route)
             klass = route.dest
             return klass if klass.class != Class
-            klass.new(@request, @response, @scene)
+            obj = klass.new(@request, @response, @scene)
+#            obj.dispatch_path = @dispatch_path + route.path
+            return obj
         end
         
 

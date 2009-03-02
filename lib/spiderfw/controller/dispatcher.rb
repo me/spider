@@ -5,6 +5,7 @@ module Spider
     module Dispatcher
         attr_reader :dispatched_action
         attr_accessor :dispatch_previous
+        attr_accessor :action
         
         def self.included(klass)
            klass.extend(ClassMethods)
@@ -36,6 +37,7 @@ module Spider
             obj, route = @dispatch_next[action]
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
+            obj.action = route.action
             return [obj, route.action, new_arguments]
 #            return obj.send(method, route.action, *(new_arguments))
         end

@@ -1,15 +1,10 @@
 module Spider; module Helpers
     
     module HTTP
-        MULTIPLE_CHOICHES = 300
-        MOVED_PERMANENTLY = 301
-        FOUND = 302
-        SEE_OTHER = 303
-        TEMPORARY_REDIRECT = 307
         
-        def redirect(url, code=MOVED_PERMANENTLY)
+        def redirect(url, code=Spider::HTTP::MOVED_PERMANENTLY)
             debug "REDIRECTING TO #{url}"
-            @response.status = 301
+            @response.status = code
             @response.headers["Location"] = url
             @response.headers.delete("Content-Type")
             @response.headers.delete("Set-Cookie")
@@ -37,6 +32,28 @@ module Spider; module Helpers
                 end
             end
             super
+        end
+        
+        def try_rescue(exc)
+            if (exc.is_a?(HTTPStatus))
+                @response.status = exc.code
+                done
+                #raise
+            else
+                super
+            end
+        end
+        
+        class HTTPStatus < RuntimeError
+            attr_reader :code
+            
+            def initialize(code)
+                @code = code
+            end
+            
+            def status_message
+                Spider::HTTP.status_messages[@code]
+            end
         end
         
     end

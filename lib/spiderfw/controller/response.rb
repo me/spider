@@ -3,11 +3,16 @@ require 'spiderfw/controller/cookies'
 module Spider
     
     class Response
-        attr_accessor :status, :headers, :body, :cookies
+        attr_reader :status
+        attr_accessor :headers, :server_output, :cookies
         
-        def initialize
+        def initialize()
             @headers = {}
             @cookies = Cookies.new
+        end
+        
+        def body=(io)
+            @server_output.set_body_io(io)
         end
         
         def register(key, val)
@@ -27,6 +32,15 @@ module Spider
             end
             Spider::Logger.debug("HEADERS:")
             Spider::Logger.debug(@headers)
+        end
+        
+        def status=(code)
+            @status = code
+            # if (Spider::HTTP.status_messages[code])
+            #     @status = code.to_s+' '+Spider::HTTP.status_messages[code]
+            # else
+            #     @status = code
+            # end
         end
 
         

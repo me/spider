@@ -1,6 +1,16 @@
+require 'spiderfw/controller/http_controller'
+
 module Spider; module HTTP
     
     class Server
+        
+        @supports = {
+            :chunked_request => false
+        }
+
+        def self.supports?(capability)
+            @supports[capability]
+        end
 
         
         def options(opts={})

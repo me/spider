@@ -12,7 +12,7 @@ module Spider; module Helpers
         def serve_static(path)
             full_path = self.class.app.pub_path+'/'+path
             debug("Serving resource: #{full_path}")
-            raise Spider::Controller::NotFoundException.new(path) unless File.exist?(full_path)
+            raise Spider::Controller::NotFound.new(path) unless File.exist?(full_path)
             f = File.open(full_path, 'r')
             while (block = f.read(1024)) do
                 print block

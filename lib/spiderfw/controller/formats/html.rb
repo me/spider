@@ -11,7 +11,7 @@ module Spider
         #    
         #     begin
         #         run_chain(:before)
-        #     # rescue NotFoundException
+        #     # rescue NotFound
         #     #     render('errors/404')
         #     rescue => exc
         #         top

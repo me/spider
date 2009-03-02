@@ -1,9 +1,12 @@
 require 'mongrel'
-require 'spiderfw/controller/http_controller'
 
 module Spider; module HTTP
     
     class Mongrel < Server
+        
+        @supports = {
+            :chunked_request => false
+        }
         
         def start_server(opts={})
             opts = options(opts)
@@ -85,24 +88,31 @@ module Spider; module HTTP
             @server.request_received
             path = request.params['REQUEST_PATH']
             env = normalize_request(request.params.clone)
-            controller_request = Spider::Request.new(:http, env, request.body)
+            controller_request = Spider::Request.new(env)
+            controller_request.server = Mongrel
+            controller_request.body = request.body
+            controller_request.action = path
 
             controller_response = Spider::Response.new
-            controller_response.body = MongrelIO.new(response, controller_response)
+            controller_response.server_output = MongrelIO.new(response, controller_response)
 
             begin
                 controller = ::Spider::HTTPController.new(controller_request, controller_response)
+                controller.extend(Spider::FirstResponder)
+                Spider::Logger.debug("CONTROLLER: #{controller}")
                 controller.before(path)
                 controller.execute(path)
                 Spider::Logger.debug("Response:")
                 Spider::Logger.debug(controller.response)
                 controller.after(path)
-                controller_response.body.send_headers unless response.header_sent           
+                Spider::Logger.debug("Controller #{controller} DONE")
             rescue => exc
+                Spider.logger.error("EXCEPTION")
                 Spider.logger.error(exc)
                 controller.ensure() if controller
             ensure
-                Spider::Logger.debug("---- Closing Mongrel Response ----- ")
+                controller_response.server_output.send_headers unless response.header_sent
+                Spider::Logger.debug("---- Closing Mongrel Response ---- ")
                 response.finished
                 
             end

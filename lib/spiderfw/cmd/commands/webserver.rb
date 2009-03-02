@@ -9,7 +9,7 @@ class WebServerCommand < CmdParse::Command
 #        @description = _("")
         
         @port = 8080
-        @server_name = 'mongrel'
+        @server_name = Spider.conf.get('http.server')
         
         servers = {
             'webrick' => :WEBrick,
