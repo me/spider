@@ -127,7 +127,7 @@ module Spider
                     end
                 elsif (File.exist?($SPIDER_PATH+'/apps/'+app))
                     if (File.exist?($SPIDER_PATH+'/apps/'+app+'/_init.rb'))
-                        @app_paths << $SPIDER_PATH+'/apps/'+app+
+                        @app_paths << $SPIDER_PATH+'/apps/'+app
                         found = true
                     else
                         found = find_apps_in_folder($SPIDER_PATH+'/apps/'+app)
