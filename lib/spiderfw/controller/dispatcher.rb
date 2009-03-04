@@ -46,9 +46,11 @@ module Spider
             obj, route_action, new_arguments = dispatch(method, action, *arguments)
             return nil unless obj
             meth_action = route_action.length > 0 ? route_action : obj.class.default_action
-            meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
-            try_meth = "#{method}_#{meth_action.downcase}"
-            return obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
+            unless meth_action.empty?
+                meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
+                try_meth = "#{method}_#{meth_action.downcase}"
+                return obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
+            end
             return obj.send(method, route_action, *(new_arguments))
         end
 
@@ -73,11 +75,13 @@ module Spider
         end
         
         def get_route(path)
-            r = routes + self.class.routes 
+            r = routes + self.class.routes
             r.each do |route|
                 try, dest, options = route
                 action = nil
                 case try
+                when true
+                    action = path
                 when String
                     test_path = path
                     if (options[:ignore_case])
@@ -93,6 +97,16 @@ module Spider
                     if (match)
                         action = action_index ? match[action_index] : match.post_match
                         params = match[1..(match.length-1)]
+                    end
+                when Proc
+                    res = try.call(path, self)
+                    if (res)
+                        if (res.is_a?(Array))
+                            action = res[0]
+                            params = res[1]
+                        else
+                            action = res
+                        end
                     end
                 end
                 if (action)

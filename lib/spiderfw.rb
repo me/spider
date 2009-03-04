@@ -39,17 +39,7 @@ module Spider
             @paths[:spider] = $SPIDER_PATH
             setup_paths(@root)
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
-            find_apps
-            load_apps_options
-            load_configuration($SPIDER_PATH+'/config')
-            load_configuration(@root+'/config')
             
-            GetText.locale = config.get('locale')
-
-            # if (Spider.config['debugger.start'])
-            #     Debugger.start
-            # end
-            init_apps
             @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
             # if (File.exist?(routes_file))
@@ -57,7 +47,7 @@ module Spider
             # end
             # else
             #     @apps.each do |name, app|
-            #         @controller.route('/'+app.name.gsub('::', '/'), app.controller_class, :ignore_case => true)
+            #         @controller.route('/'+app.name.gsub('::', '/'), app.controller, :ignore_case => true)
             #     end
             # end
         end
@@ -85,6 +75,15 @@ module Spider
             l.each do |app|
                 @apps_to_load << app 
             end
+            find_apps
+            require (@paths[:config]+'/options') if File.exist?(@paths[:config]+'/options.rb')
+            load_apps_options
+            load_configuration($SPIDER_PATH+'/config')
+            load_configuration(@root+'/config')
+            
+            GetText.locale = config.get('locale')
+
+            init_apps
         end
         
         def load_all_apps
@@ -180,6 +179,21 @@ module Spider
                     end
                 end
                 #load(package_path+'/config/'+f)
+            end
+        end
+        
+        def controller
+            require 'spiderfw/controller/spider_controller'
+            SpiderController
+        end
+        
+        def route_apps(*apps)
+            @route_apps = apps.empty? ? true : apps
+            if (@route_apps)
+                apps_to_route = @route_apps == true ? self.apps.values : @route_apps.map{ |name| self.apps[name] }
+            end
+            if (apps_to_route)
+                apps_to_route.each{ |app| self.controller.route_app(app) }
             end
         end
         

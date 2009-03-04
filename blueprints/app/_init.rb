@@ -4,7 +4,7 @@ require 'apps/<%= app_path %>/controllers/<%= app_name %>.rb'<% tab = (modules.l
 <%=tab%>    @description = ""
 <%=tab%>    @version = 0.1
 <%=tab%>    @path = File.dirname(__FILE__)
-<%=tab%>    @controller_class = :<%= module_name %>Controller
+<%=tab%>    @controller = :<%= module_name %>Controller
 <%=tab%>    include Spider::App
 <%=tab%>end
 <%= "\n"+modules[0..-2].inject(""){ |s, mod| s+= "; " if (s.length > 0); s+="end" if (modules.length > 1)} %>

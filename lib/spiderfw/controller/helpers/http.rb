@@ -12,24 +12,13 @@ module Spider; module Helpers
         end
         
         def before(action='', *arguments)
-            if (action == '')
-                check_controller = @dispatch_previous
-                dispatched_action = check_controller.dispatched_action
-                while (!dispatched_action || dispatched_action.empty?)
-                    check_controller = check_controller.dispatch_previous
-                    dispatched_action = check_controller.dispatched_action
+            # Redirect to url + slash if controller is called without action
+            if (action == '' && @request.env['PATH_INFO'][-1].chr != '/')
+                dest = @request.env['PATH_INFO']+'/'
+                if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
+                    dest += '?'+@request.env['QUERY_STRING']
                 end
-                dispatched_action ||= ''
-                if (dispatched_action == '' || dispatched_action[-1].chr != '/')
-                    if (dispatched_action =~ /\/([^\/]+)$/)
-                        dispatched_action = $1
-                    end
-                    dest = dispatched_action+'/'
-                    if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
-                        dest += '?'+@request.env['QUERY_STRING']
-                    end
-                    redirect(dest)
-                end
+                redirect(dest)
             end
             super
         end

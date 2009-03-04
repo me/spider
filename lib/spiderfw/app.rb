@@ -7,7 +7,7 @@ module Spider
                 
                 include Spider::DataTypes
                 
-                @controller_class ||= :MainController
+                @controller ||= :MainController
                 class << self
                     attr_reader :path, :pub_path, :test_path, :setup_path
                     attr_reader :short_prefix
@@ -18,9 +18,9 @@ module Spider
                         @setup_path ||= @path+'/setup'
                     end
                     
-                    def controller_class
+                    def controller
                         #controllers = self.const_get(:Controllers)
-                        controller = const_defined?(@controller_class) ? const_get(@controller_class) : Spider::Controller
+                        controller = const_defined?(@controller) ? const_get(@controller) : Spider::Controller
                         # default_helpers = [:StaticContent]
                         #                         default_helpers.each do |helper|
                         #                             h = Spider::Helpers.const_get(helper)
@@ -68,7 +68,7 @@ module Spider
             # if (File.exist?(routes_file))
             #     load(routes_file)
             # else
-            #     mod.controller_class.route('/', mod.name+'::MainController')
+            #     mod.controller.route('/', mod.name+'::MainController')
             # end
             Spider::add_app(mod)
         end

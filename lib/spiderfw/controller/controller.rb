@@ -71,6 +71,7 @@ module Spider
         end
         
         def dispatch_prefix
+            return '' if @request.action.empty?
             @request.action[0..@request.action.index(@action)-1].gsub(/\/+$/, '')
         end
         
@@ -84,8 +85,7 @@ module Spider
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
                 begin
-                    action = self.class.default_action if (action == '')
-                    method = action
+                    method = action.empty? ? self.class.default_action : action
                     additional_arguments = []
                     if (action =~ /^([^:]+)(:.+)$/)
                         method = $1
@@ -93,14 +93,12 @@ module Spider
                         method = $1
                         additional_arguments = [$2]
                     end
-                    if (self.class.method_defined?(method.to_sym))
-                        debug("SENDING #{method} WITH ARGS:")
-                        debug(arguments+additional_arguments)
-                        send(method, *(arguments+additional_arguments))
-                    elsif (can_dispatch?(:execute, action))
+                    if (can_dispatch?(:execute, action))
                         #run_chain(:execute, action, *arguments)
                         do_dispatch(:execute, action)
 #                        after(action, *arguments)
+                    elsif (self.class.method_defined?(method.to_sym))
+                        send(method, *(arguments+additional_arguments))
                     else
                         raise NotFound.new(action)
                     end

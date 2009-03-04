@@ -51,8 +51,10 @@ module Spider
         
         def dispatched_object(route)
             obj = super
-            set_layout = @layout || @dispatcher_layout
-            obj.dispatcher_layout = self.class.init_layout(set_layout) if set_layout
+            if (obj.is_a?(Visual))
+                set_layout = @layout || @dispatcher_layout
+                obj.dispatcher_layout = self.class.init_layout(set_layout) if set_layout
+            end
             return obj
         end
         
