@@ -125,7 +125,8 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (!type.is_a?(BaseModel) || !attributes[:multiple])
+                if (!type.subclass_of?(BaseModel)) # || !attributes[:multiple])
+                    # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = :default
                 else
                     attributes[:lazy] = true
@@ -187,7 +188,9 @@ module Spider; module Model
                         set(element.integrated_from, integrated_obj)
                     end
                     #integrated_obj.autoload = false
-                    return integrated_obj.send("#{element.integrated_from_element}=", val)
+                    res = integrated_obj.send("#{element.integrated_from_element}=", val)
+                    @modified_elements[name] = true unless element.primary_key?
+                    return res
                 end
                 if (val && element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
                     if (element.multiple? && val.is_a?(Enumerable))
@@ -204,8 +207,8 @@ module Spider; module Model
                 val = prepare_child(element.name, val)
                 old_val = instance_variable_get(ivar)
                 check(name, val)
-                instance_variable_set(ivar, val)
                 @modified_elements[name] = true unless element.primary_key?
+                instance_variable_set(ivar, val)
                 notify_observers(name, old_val)
                 #extend_element(name)
             end
@@ -504,7 +507,9 @@ module Spider; module Model
             if (params[0] && params[0].is_a?(Query))
                 query = params[0]
             else
-                query = Query.new(params[0], params[1])
+                condition = Condition.and(params[0])
+                request = Request.new(params[1])
+                query = Query.new(condition, request)
             end
             return QuerySet.new(self, query)
         end
@@ -648,6 +653,14 @@ module Spider; module Model
                 return send(first).get(rest)
             end
             return send(element)
+        end
+        
+        def get_no_load(element)
+            res = nil
+            no_autoload do
+                res = get(element)
+            end
+            return res
         end
 
         def set(element, value)
@@ -812,9 +825,18 @@ module Spider; module Model
             element = element.is_a?(Element) ? element : self.class.elements[element]
             set_mod = @modified_elements[element.name]
             return set_mod if set_mod
+            if (element.integrated?)
+                return element_modified?(element) unless integrated = get_no_load(element.integrated_from)
+                return integrated.element_modified?(element.integrated_from_element)
+            end
             if element_has_value?(element) && (val = get(element)).respond_to?(:modified?)
                 return val.modified?
             end
+            return false
+        end
+        
+        def elements_modified?(*elements)
+            elements.each{ |el| return true if element_modified?(el) }
             return false
         end
         

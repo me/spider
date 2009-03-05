@@ -47,17 +47,19 @@ module Spider; module Model
         end
         
         def normalize(obj)
-            @model.elements.select{ |n, el| 
-                    mapped?(el) &&  el.model? && obj.element_has_value?(el) 
-            }.each do |name, element|
-                val = obj.get(name)
-                next if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
-                if (val.is_a? Array)
-                    val.each_index { |i| val[i] = Spider::Model.get(element.model, val[i]) unless val[i].is_a?(BaseModel) || val.is_a?(QuerySet) }
-                    obj.set(name, QuerySet.new(element.model, val))
-                else
-                    val = Spider::Model.get(element.model, val)
-                    obj.set(name, val)
+            obj.no_autoload do
+                @model.elements.select{ |n, el| 
+                        mapped?(el) &&  el.model? && obj.element_has_value?(el) 
+                }.each do |name, element|
+                    val = obj.get(name)
+                    next if (val.is_a?(BaseModel) || val.is_a?(QuerySet))
+                    if (val.is_a? Array)
+                        val.each_index { |i| val[i] = Spider::Model.get(element.model, val[i]) unless val[i].is_a?(BaseModel) || val.is_a?(QuerySet) }
+                        obj.set(name, QuerySet.new(element.model, val))
+                    else
+                        val = Spider::Model.get(element.model, val)
+                        obj.set(name, val)
+                    end
                 end
             end
         end
@@ -78,7 +80,7 @@ module Spider; module Model
             normalize(obj)
             @model.elements_array.each do |el|
                 raise MapperException, "Element #{el.name} is required" if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
-                if (el.unique? && obj.element_modified?(el))
+                if (el.unique? && !el.integrated? && obj.element_modified?(el))
                     existent = @model.find(el.name => obj.get(el))
                     if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
                         raise MapperException, "Element #{el.name} is not unique"
@@ -94,27 +96,30 @@ module Spider; module Model
         def save(obj, request=nil)
             # Load local primary keys if they exist
             @model.elements_array.select{ |el| el.attributes[:local_pk]}.each{ |local_pk| obj.get(local_pk) }
-            obj.no_autoload do
-                normalize(obj)
-                if (@model.extended_models)
-                    @model.extended_models.each do |m, el|
-                        obj.get(el).save if obj.element_has_value?(el)
-                    end
-                    do_insert = false
-                    @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
-                        if (!obj.element_has_value?(local_pk))
-                            do_insert = true
-                            break
-                        end
+            if (@model.extended_models)
+                is_insert = false
+                @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
+                    if (!obj.element_has_value?(local_pk))
+                        is_insert = true
+                        break
                     end
                 end
-                if (!do_insert && obj.primary_keys_set?)
-                    update(obj)
-                else
-                    insert(obj)
-                end
-                save_associations(obj)
             end
+            save_mode = (!is_insert && obj.primary_keys_set?) ? :update : :insert
+            normalize(obj)
+            before_save(obj, save_mode)
+            if (@model.extended_models)
+                @model.extended_models.each do |m, el|
+                    obj.get(el).save if obj.element_modified?(el)
+                end
+            end
+            if (save_mode == :update)
+                do_update(obj)
+            else
+                do_insert(obj)
+            end
+            save_associations(obj)
+            after_save(obj, save_mode)
         end
 
         
@@ -264,6 +269,7 @@ module Spider; module Model
                 set.total_rows = result.total_rows
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
+                    next unless obj
                     search = {} 
                     @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
                     obj_res = set.find(search)  # FIXME: find a better way

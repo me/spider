@@ -209,7 +209,14 @@ module Spider; module Model; module Mappers
                     data[element_name] = map_back_value(element.type, result[schema.field(element_name)])
                 end
             end
-            obj = Spider::Model.get(model, data)
+            begin
+                obj = Spider::Model.get(model, data)
+            rescue IdentityMapperException => exc
+                # This should not happen
+                Spider::Logger.warn("Row in DB without primary keys, won't be mapped:")
+                Spider::Logger.warn(data)
+                return nil
+            end
             data.keys.each{ |el| obj.element_loaded(el) }
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
