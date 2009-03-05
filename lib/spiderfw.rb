@@ -32,12 +32,14 @@ module Spider
             @apps ||= {}
             @app_paths = []
             @root = Dir.pwd
+            setup_paths(@root)
             @logger = Spider::Logger
             @logger.open(STDERR, :DEBUG)
+            @logger.open(@paths[:log]+'/error.log', :ERROR)
 #            @controller = Controller
             @server = {}
             @paths[:spider] = $SPIDER_PATH
-            setup_paths(@root)
+            
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
             
             @init_done=true
@@ -65,6 +67,7 @@ module Spider
             @paths[:var] = root+'/var'
             @paths[:certs] = @paths[:config]+'/certs'
             @paths[:tmp] = root+'/tmp'
+            @paths[:log] = @paths[:var]+'/log'
         end
         
         def paths
