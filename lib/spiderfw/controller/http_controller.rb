@@ -24,10 +24,9 @@ module Spider
         
         def before(action='', *arguments)
             if (@request.env['HTTP_TRANSFER_ENCODING'] == 'Chunked' && !@request.server.supports?(:chunked_request))
-                raise HTTPStatus.new(Spider::HTTP::NOT_IMPLEMENTED)
+                raise HTTPStatus.NOT_IMPLEMENTED
             end
             @request.cookies = Spider::HTTP.parse_query(@request.env['HTTP_COOKIE'], ';')
-            @request.user_id = @request.cookies['user_id']
             @request.session = Session.get(@request.cookies['sid'])
             @response.cookies['sid'] = @request.session.sid
             @response.cookies['sid'].path = '/'
@@ -42,47 +41,14 @@ module Spider
                 #'json' => {:format => :json, :content_type => 'text/x-json'}
                 'json' => {:format => :json, :content_type => 'text/plain'}
             }
-            if (action =~ /(.+)\.(\w+)$/)
-                @request.extension = $2
-                if (ext = @extensions[$2])
-                    @request.format = ext[:format]
-                    (content_type = ext[:content_type]) && @response.headers['Content-Type'] = content_type
-                    (mixin = ext[:mixin]) && extend(mixin)
-                end
-                @http_action_no_extension
-                super($1, *arguments)
-            else
-                super
-            end
+
+            super
         end
         
-        def execute(action='', *arguments)
-            if (@http_action_no_extension)
-                super(@http_action_no_extension, *arguments)
-            else
-                super
-            end
-        end
-
         def after(action='', *arguments)
-            debug("HTTP_CONTROLLER AFTER")
             @request.session.persist if @request.session
             super
         end
-
-        
-        def dispatched_object(route)
-            super
-            
-        end
-        
-        # def before(action, *params)
-        #     begin
-        #         super
-        #     rescue NotFound
-        #         @response.status = 404
-        #     end
-        # end
         
         def ensure(action='', *arguments)
             dispatch(:ensure, action, *arguments)
@@ -96,7 +62,7 @@ module Spider
         end
         
         def try_rescue(exc)
-            if (exc.is_a?(NotFound))
+            if (exc.is_a?(Spider::Controller::NotFound))
                 @response.status = Spider::HTTP::NOT_FOUND
                 error("Not found: #{exc.path}")
             elsif (exc.is_a?(BadRequest))
@@ -106,6 +72,7 @@ module Spider
                 @response.status = Spider::HTTP::FORBIDDEN
                 raise
             else
+                @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
                 super
             end
         end

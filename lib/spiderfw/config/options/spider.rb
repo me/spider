@@ -46,4 +46,6 @@ module Spider
     config_option 'session.file.path', _("The folder where to store file sessions"), :default => lambda{ return Spider.paths[:var]+'/sessions' }
     
     config_option 'shared_store.type', _("Which shared store to use"), :default => 'memory'
+    
+    config_option 'http.nonce_life', _("Life in seconds of HTTP Digest Authentication nonces"), :type => Fixnum, :default => 60
 end
