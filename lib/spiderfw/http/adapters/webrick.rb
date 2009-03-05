@@ -104,6 +104,7 @@ module Spider; module HTTP
             controller_request.webrick_request = request
             path = request.path.chomp('/')
             controller_request.action = path
+            controller_request.request_time = request.request_time
 
             r, w = IO.pipe
             response.body = r

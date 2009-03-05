@@ -92,6 +92,7 @@ module Spider; module HTTP
             controller_request.server = Mongrel
             controller_request.body = request.body
             controller_request.action = path
+            controller_request.request_time = Time.now
 
             controller_response = Spider::Response.new
             controller_response.server_output = MongrelIO.new(response, controller_response)
