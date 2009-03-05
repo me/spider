@@ -9,6 +9,10 @@ module Spider; module WebDAV
         CRLF = "\r\l"
         PUT_READ_BUFFER = 16384
         
+        def self.default_action
+            ''
+        end
+        
         def init
             @options = {
                 :FileSystemCoding			=> "UTF-8",
@@ -28,8 +32,8 @@ module Spider; module WebDAV
 		
 		def normalize_path(path)
 		    path.sub!(/http:\/\/[^\/]+\/#{dispatch_prefix}/, '')
-		    path = '/'+path unless path[0].chr == '/'
-		    path.gsub!(/\/+$/, '')
+		    path = '/'+path unless !path.empty? && path[0].chr == '/'
+		    path.gsub!(/\/+$/, '') unless path == '/'
 		    path = Spider::HTTP.urldecode(path)
 	    end
 	    
@@ -69,21 +73,22 @@ module Spider; module WebDAV
                 do_COPY(path)
             when 'MOVE'
                 do_MOVE(path)
+            when 'HEAD'
+                do_GET(path, true)
             end
         end
         
         def do_OPTIONS
-    		debug "run do_OPTIONS"
-
     		@response.headers["DAV"] = vfs.locking? ? "2" : "1"
     		@response.headers["MS-Author-Via"] = "DAV"
     	end
+    	        
         
-        def do_GET(path)
+        def do_GET(path, just_head=false)
             begin
                 properties = vfs.properties(path)
             rescue Errno::ENOENT => e
-                raise NotFound
+                raise NotFound.new(path)
             end
             @response.headers['ETag'] = properties.etag
             if (not_modified?(properties.mtime, properties.etag))
@@ -94,8 +99,10 @@ module Spider; module WebDAV
                 @response.headers['Content-Type'] = properties.content_type
                 @response.headers['Content-Length'] = properties.size
                 @response.headers['Last-Modified'] = properties.mtime.httpdate
-                vfs.stream(path, "rb") do |f|
-                    print f.read
+                unless just_head
+                    vfs.stream(path, "rb") do |f|
+                        print f.read
+                    end
                 end
             end
         end
@@ -106,12 +113,12 @@ module Spider; module WebDAV
 
     		if @request.env['RANGE']
     			ranges = WEBrick::HTTPUtils::parse_range_header(@request.env['RANGE']) or
-    				raise HTTPStatus.new(Spider::HTTP::BAD_REQUEST),
+    				raise HTTPStatus.BAD_REQUEST,
     					"Unrecognized range-spec: \"#{@request.env['RANGE']}\""
     		end
 
     		if !ranges.nil? && ranges.length != 1
-    			raise HTTPStatus.new(Spider::HTTP::NOT_IMPLEMENTED)
+    			raise HTTPStatus.NOT_IMPLEMENTED
     		end
 
     		begin						
@@ -121,7 +128,7 @@ module Spider; module WebDAV
     					#ranges.each do |range|
     					#	first, last = prepare_range(range, filesize)
     					#	first + req.content_length != last and
-    					#		raise HTTPStatus::BadRequest
+    					#		raise HTTPStatus.BadRequest
     					#	f.pos = first
     					#	req.body {|buf| f << buf }
     					#end
@@ -137,9 +144,9 @@ module Spider; module WebDAV
     				end
     			end
     		rescue Errno::ENOENT
-    			raise HTTPStatus.new(Spider::HTTP::CONFLICT)
+    			raise HTTPStatus.CONFLICT
     		rescue Errno::ENOSPC
-    		    raise HTTPStatus.new(Spider::HTTP::WEBDAV_INSUFFICIENT_STORAGE)
+    		    raise HTTPStatus.WEBDAV_INSUFFICIENT_STORAGE
     		end
     	end
         
@@ -151,10 +158,9 @@ module Spider; module WebDAV
 
     		begin
     		    b = @request.read_body
-    		    debug("BODY: #{b}")
     			req_doc = REXML::Document.new b
     		rescue REXML::ParseException
-    			raise HTTPStatus.new(Spider::HTTP::BAD_REQUEST)
+    			raise HTTPStatus.BAD_REQUEST
     		end
             # debug("REQ_DOC:")
             # debug(req_doc)
@@ -167,11 +173,11 @@ module Spider; module WebDAV
     			all_props += %w(supportedlock lockdiscovery)
     		end	 
 
-    		if @request.read_body.nil? || !REXML::XPath.match(req_doc, "/propfind/allprop", ns).empty?
+    		if @request.read_body.empty? || !REXML::XPath.match(req_doc, "/propfind/allprop", ns).empty?
     			req_props = all_props
     		elsif !REXML::XPath.match(req_doc, "/propfind/propname", ns).empty?
     			# TODO: support propname
-    			raise HTTPStatus.new(Spider::HTTP::NOT_IMPLEMENTED)
+    			raise HTTPStatus.NOT_IMPLEMENTED
     		elsif !REXML::XPath.match(req_doc, "/propfind/prop", ns).empty?
     			REXML::XPath.each(req_doc, "/propfind/prop/*", ns){|e|
     				req_props << [e.name, e.namespace]
@@ -186,7 +192,7 @@ module Spider; module WebDAV
     	def do_PROPPATCH(path)
 
     		if not vfs.exist?(path)
-    			raise NotFound
+    			raise NotFound.new(path)
     		end
 
     		ret = []
@@ -230,7 +236,7 @@ module Spider; module WebDAV
     	end
     	
     	def do_LOCK(path)
-    		raise HTTPStatus.new(Spider::HTTP::NOT_IMPLEMENTED) unless vfs.locking?
+    		raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
             
             body_str = @request.read_body
     		begin
@@ -254,7 +260,7 @@ module Spider; module WebDAV
     				end
     			end
 
-    			raise HTTPStatus.new(Spider::HTTP::NO_CONTENT)
+    			raise HTTPStatus.NO_CONTENT
     		else
     			ns = {""=>"DAV:"}
     			item = REXML::XPath.first(req_doc, "/lockinfo", ns)
@@ -263,10 +269,18 @@ module Spider; module WebDAV
     			depth = @request.env['HTTP_DEPTH'] =~ /^infinite$/i ? 'infinite' : 0
     			scope = (v = REXML::XPath.first(item, 'lockscope/*', ns)) && v.name
     			type = (v = REXML::XPath.first(item, 'locktype/*', ns)) && v.name
-    			owner = REXML::XPath.first(item, 'owner/*', ns)
-
+    			#owner = REXML::XPath.first(item, 'owner/*', ns)
+    			owner = REXML::XPath.first(item, 'owner')
+    			owner = owner.elements.size > 0 ? owner.elements[1] : owner.text
+                if (request_timeout = @request.env['HTTP_TIMEOUT'])
+                    timeout_parts = request_timeout.split(/,\s+/)
+                    timeout = timeout_parts[0]
+                end
+                    
+                
     			# Try to lock the resource
     			lock = vfs.lock(path, :depth => depth, :scope => scope, :type => type, :owner => owner, :uid => @request.user_id)
+    			lock.timeout = timeout if (timeout)
                 if not lock
     			    @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'	
     			    @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS	
@@ -277,20 +291,27 @@ module Spider; module WebDAV
                 @response.headers['Lock-Token'] = "<opaquelocktoken:#{lock.token}>" if lock
 
     			# Respond with propfinding the lockdiscovery property
+    			# FIXME: cleanup, the code is repeated from propfind_response
+    			propstat = get_propstat(path, ['lockdiscovery'])
+    			prop = REXML::XPath.first(propstat, 'D:prop')
+    			prop.attributes['xmlns:D'] = 'DAV:'
+    			resp = REXML::Document.new << prop
+    			@response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
+                @response.status = Spider::HTTP::OK
+                $stdout << resp.to_s
     			
-    			propfind_response(path, ['lockdiscovery'], 0)
     		end
     	end
 
     	def do_UNLOCK(path)
-    		raise HTTPStatus.new(Spider::HTTP::NOT_IMPLEMENTED) unless vfs.locking?
+    		raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
 
     		if not @request.env['HTTP_LOCK_TOKEN'] =~ /<opaquelocktoken:(.*)>/
     			raise BadRequest
     		end
 
     		if vfs.unlock(path, $1, @request.user_id)
-    			raise HTTPStatus.new(Spider::HTTP::NO_CONTENT)
+    			raise HTTPStatus.NO_CONTENT
     		else
     			raise Forbidden
     		end
@@ -305,11 +326,11 @@ module Spider; module WebDAV
     		rescue Errno::ENOENT, Errno::EACCES
     			raise Forbidden
     		rescue Errno::ENOSPC
-    			raise HTTPStatus.new(Spider::HTTP::WEBDAV_INSUFFICIENT_STORAGE)
+    			raise HTTPStatus.WEBDAV_INSUFFICIENT_STORAGE
     		rescue Errno::EEXIST
-    			raise HTTPStatus.new(Spider::HTTP::CONFLICT)
+    			raise HTTPStatus.CONFLICT
     		end
-    		raise HTTPStatus.new(Spider::HTTP::CREATED)
+    		raise HTTPStatus.CREATED
     	end
     	
     	def do_DELETE(path)
@@ -321,7 +342,7 @@ module Spider; module WebDAV
     		rescue Errno::EPERM
     			raise Forbidden
     		end
-    		raise HTTPStatus.new(Spider::HTTP::NO_CONTENT)
+    		raise HTTPStatus.NO_CONTENT
     	end
 
     	def do_COPY(path)
@@ -334,13 +355,13 @@ module Spider; module WebDAV
     				vfs.cp(src, dest, false)
     			end
     		rescue Errno::ENOENT
-    			raise HTTPStatus.new(Spider::HTTP::CONFLICT)
+    			raise HTTPStatus.CONFLICT
     			# FIXME: use multi status(?) and check error URL.
     		rescue Errno::ENOSPC
-    			raise HTTPStatus.new(Spider::HTTP::WEBDAV_INSUFFICIENT_STORAGE)
+    			raise HTTPStatus.WEBDAV_INSUFFICIENT_STORAGE
     		end
 
-    		raise exists_p ? HTTPStatus.new(Spider::HTTP::NO_CONTENT) : HTTPStatus.new(Spider::HTTP::CREATED)
+    		raise exists_p ? HTTPStatus.NO_CONTENT : HTTPStatus.CREATED
     	end
 
     	def do_MOVE(path)
@@ -352,13 +373,13 @@ module Spider; module WebDAV
     			lock = check_lock(src)
     			vfs.unlock_all(lock.resource) if vfs.locking? and lock
     		rescue Errno::ENOENT
-    			raise HTTPStatus.new(Spider::HTTP::CONFLICT)
+    			raise HTTPStatus.CONFLICT
     			# FIXME: use multi status(?) and check error URL.
     		rescue Errno::ENOSPC
-    			raise HTTPStatus.new(Spider::HTTP::WEBDAV_INSUFFICIENT_STORAGE)
+    			raise HTTPStatus.WEBDAV_INSUFFICIENT_STORAGE
     		end
 
-    		raise exists_p ? HTTPStatus.new(Spider::HTTP::NO_CONTENT) : HTTPStatus.new(Spider::HTTP::CREATED)
+    		raise exists_p ? HTTPStatus.NO_CONTENT : HTTPStatus.CREATED
     	end
     	
     	def propfind_response(path, props, depth)
@@ -371,8 +392,6 @@ module Spider; module WebDAV
             @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
             @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS
     		res =  build_multistat(ret).to_s
-    		debug("RESPONSE BODY:")
-    		debug(res)
     		$stdout << res
     		
     	end
@@ -386,7 +405,6 @@ module Spider; module WebDAV
     		return ret_set if !(vfs.directory?(path) && depth >= 0)
 
     		vfs.ls(path) {|d|
-                debug("DOING PATH #{d}")
     			if vfs.directory?("#{path}/#{d}")
     				ret_set += get_rec_prop("#{path}/#{d}",
 											::WEBrick::HTTPUtils.normalize_path(
@@ -414,7 +432,6 @@ module Spider; module WebDAV
     			pe = REXML::Element.new "D:prop"
     			props.each {|pname, pnamespace|
     			    namespace_method_prefix = ''
-    			    debug("PNAMESPACE: #{pnamespace}")
     			    if (!pnamespace || pnamespace.empty? || pnamespace == 'DAV:')
     			        namespace_method_prefix = 'dav_'
 			        elsif (pnamespace =~ /http:\/\/([^\/]+)(\/)?/)
@@ -422,13 +439,11 @@ module Spider; module WebDAV
 		            end
     				begin 
     				    begin
-    				        debug("METH: get_prop_#{namespace_method_prefix}#{pname}, get_prop_#{namespace_method_prefix}#{pname}")
         					if respond_to?("get_prop_#{namespace_method_prefix}#{pname}", true)
         						prop_el = __send__("get_prop_#{namespace_method_prefix}#{pname}", file, st)
         					elsif (st.respond_to?("#{namespace_method_prefix}#{pname}"))
         					    prop_el = gen_element(["#{pname}", pnamespace], st.send("#{namespace_method_prefix}#{pname}"))
     					    else
-    					        debug("ATTRIBUTE NOT FOUND #{pname}")
         						raise Spider::Controller::NotFound.new(file)
         					end
     					rescue VFS::PropertyNotFound => e
@@ -531,8 +546,7 @@ module Spider; module WebDAV
     	end
 
     	def get_prop_dav_lockdiscovery(file, props)
-    	    debug("LOCKDISC")
-    		raise NotFound unless vfs.locking?
+    		raise NotFound.new(file) unless vfs.locking?
 
     		locks = vfs.locked?(file)
     		return nil unless locks
@@ -545,7 +559,11 @@ module Spider; module WebDAV
 
     			if lock.owner
     				owner = REXML::Element.new('D:owner')
-    				owner << lock.owner
+    				if (lock.owner.is_a?(String))
+    				    owner.text = lock.owner
+				    else
+    				    owner << lock.owner
+				    end
 
     				e << owner
     			end
@@ -564,22 +582,22 @@ module Spider; module WebDAV
 
     		discovery
     	end
+    	
+    	def get_prop_dav_supportedlock(file, props)
+    		e = REXML::Element.new('D:supportedlock')
+    		e << lock_entry('lockentry', 'exclusive', 'write')
+    		e << lock_entry('lockentry', 'shared', 'write')
+
+    		e
+    	end
 
     	def lock_entry(name, scope, type)
     		entry = REXML::Element.new("D:#{name}")
 
     		entry << gen_element('D:lockscope', scope ? gen_element("D:#{scope}") : nil)
     		entry << gen_element('D:locktype', type ? gen_element("D:#{type}") : nil)
-
+            
     		entry
-    	end
-
-    	def get_prop_dav_supportedlock(props)
-    		e = REXML::Element.new('D:supportedlock')
-    		e << lock_entry('lockentry', 'exclusive', 'write')
-    		e << lock_entry('lockentry', 'shared', 'write')
-
-    		e
     	end
         
         def not_modified?(mtime, etag)
@@ -692,15 +710,11 @@ module Spider; module WebDAV
 
     		# Get locks on this resource
     		locks = vfs.locked?(path)
-    		debug("LOCKS:")
-    		debug(locks)
     		
     		return nil unless locks && !locks.empty?
 
     		# Check if the current user is the owner of one of the locks
     		matches = parse_if_header
-    		debug("MATCHES:")
-    		debug(matches)
 
     		locks.each do |lock|
     			matches.each do |match|
@@ -708,7 +722,7 @@ module Spider; module WebDAV
     			end
     		end
 
-    		raise HTTPStatus.new(Spider::HTTP::WEBDAV_LOCKED)
+    		raise HTTPStatus.WEBDAV_LOCKED
     	end
     	
     	def parse_if_header
@@ -730,13 +744,16 @@ module Spider; module WebDAV
     	end
     	
     	def if_match(lock, match)
-            debug("IF MATCH:")
-            debug(lock)
-            debug(match)
-            debug("CONFRONTO #{map_path_to_request(lock.resource)}, #{match[0]}")
+            # debug("IF MATCH:")
+            # debug(lock)
+            # debug(match)
+            # debug("CONFRONTO #{lock.resource}, #{match[0]}")
+            # debug("TOKEN NON CORRISPONDENTE #{lock.token}, #{match[1]}") unless lock.token == match[1]
     		return false unless lock.token == match[1]
+    		# debug("UID NON CORRISPONDENTE #{lock.uid}, #{@request.user_id}") unless lock.uid == @request.user_id
     		return false unless lock.uid == @request.user_id
-    		return false if not match[0].empty? and map_path_to_request(lock.resource) != match[0]
+    		# debug("#resource non corrispondente #{lock.resource}, #{match[0]}")  if not match[0].empty? and lock.resource != match[0]
+    		return false if not match[0].empty? and lock.resource != match[0]
     		true
     	end
         
@@ -759,13 +776,12 @@ module Spider; module WebDAV
     		depth.nil? || depth == 0 or raise BadRequest
     		debug "copy/move requested. Destination=#{@request.env['HTTP_DESTINATION']}"
     		dest_uri = URI.parse(@request.env['HTTP_DESTINATION'])
-    		unless "#{@request.env['HTTP_HOST']}" == "#{dest_uri.host}:#{dest_uri.port}"
-    			raise HTTPStatus.new(Spider::HTTP::BAD_GATEWAY)
-    			# TODO: anyone needs to copy other server?
-    		end
+            # unless "#{@request.env['HTTP_HOST']}" == "#{dest_uri.host}:#{dest_uri.port}"
+            #   raise HTTPStatus.BAD_GATEWAY
+            #   # TODO: anyone needs to copy other server?
+            # end
     		src	= path
     		dest = normalize_path(@request.env['HTTP_DESTINATION'])
-    		debug("Normalized dest: #{dest}")
 
     		src == dest and raise Forbidden
 
@@ -783,7 +799,7 @@ module Spider; module WebDAV
     				debug "copy/move precheck: Overwrite flag=T, deleting #{dest}"
     				vfs.rm(dest)
     			else
-    				raise HTTPStatus.new(Spider::HTTP::PRECONDITION_FAILED)
+    				raise HTTPStatus.PRECONDITION_FAILED
     			end
     		end
 

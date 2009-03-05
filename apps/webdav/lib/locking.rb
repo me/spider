@@ -10,11 +10,12 @@ module Locking
 	end
 	
 	class Lock
-		attr_reader :resource, :properties, :token
+		attr_reader :resource, :properties, :token, :created
 		
 		def initialize(resource, properties)
 			@resource = resource
 			@properties = properties
+			@created = Time.now
 			
 			@token = UUID.new.generate
 		end
@@ -36,6 +37,10 @@ module Locking
 		def timeout
 			@properties[:timeout]
 		end
+		
+		def timeout=(val)
+		    @properties[:timeout] = val
+	    end
 	end
 	
 	module ClassMethods
@@ -93,7 +98,14 @@ module Locking
 	
 	def check_timeout(resource)
 		lockstore[resource].delete_if do |lock|
-			lock.timeout and lock.timeout.downcase != 'infinite' and lock.timeout < Time.now
+		    if (lock.timeout && lock.timeout)
+		        if (lock.timeout =~ /Second-(\d+)/)
+		            t = Time.now
+		            t += $1.to_i
+		            return true if (Time.now - lock.created) < $1.to_i
+	            end
+            end
+            return false
 		end
 		
 		if lockstore[resource].empty?
