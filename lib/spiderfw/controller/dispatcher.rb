@@ -51,7 +51,15 @@ module Spider
                 try_meth = "#{method}_#{meth_action.downcase}"
                 return obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
             end
-            return obj.send(method, route_action, *(new_arguments))
+            begin
+                return obj.send(method, route_action, *(new_arguments))
+            rescue => exc
+                if (obj.respond_to?(:try_rescue))
+                    obj.send(:try_rescue, exc)
+                else
+                    raise
+                end
+            end
         end
 
         

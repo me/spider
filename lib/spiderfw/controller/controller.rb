@@ -72,57 +72,43 @@ module Spider
         
         def dispatch_prefix
             return '' if @request.action.empty?
-            @request.action[0..@request.action.index(@action)-1].gsub(/\/+$/, '')
+            index = @request.action.index(@action)
+            return '' if index == 0
+            @request.action[0..index-1].gsub(/\/+$/, '')
         end
         
         
         def execute(action='', *arguments)
             return if @done
-            debug("Controller #{self} executing #{action} with arguments")
-            debug(arguments)
+            debug("Controller #{self} executing #{action} with arguments #{arguments}")
             @call_path = action
             # before(action, *arguments)
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
-                begin
-                    method = action.empty? ? self.class.default_action : action
-                    additional_arguments = []
-                    if (action =~ /^([^:]+)(:.+)$/)
-                        method = $1
-                    elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
-                        method = $1
-                        additional_arguments = [$2]
-                    end
-                    if (can_dispatch?(:execute, action))
-                        #run_chain(:execute, action, *arguments)
-                        do_dispatch(:execute, action)
-#                        after(action, *arguments)
-                    elsif (self.class.method_defined?(method.to_sym))
-                        send(method, *(arguments+additional_arguments))
-                    else
-                        raise NotFound.new(action)
-                    end
-                rescue => exc
-                    debug("CONTROLLER TRY_RESCUE #{exc}")
-                    try_rescue(exc)
+                method = action.empty? ? self.class.default_action : action
+                additional_arguments = []
+                if (action =~ /^([^:]+)(:.+)$/)
+                    method = $1
+                elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
+                    method = $1
+                    additional_arguments = [$2]
                 end
-            end
+                if (can_dispatch?(:execute, action))
+                    #run_chain(:execute, action, *arguments)
+                    do_dispatch(:execute, action)
+#                        after(action, *arguments)
+                elsif (self.class.method_defined?(method.to_sym))
+                    send(method, *(arguments+additional_arguments))
+                else
+                    raise NotFound.new(action)
+                end
+            end   
         end
         
         def before(action='', *arguments)
             catch(:done) do
-                begin
-                    debug("IN BEFORE; I AM #{self}")
-                    # begin
-                    #     run_chain(:before)
-                    #     #return dispatch(:before, action, *arguments)
-                    # rescue => exc
-                    #     try_rescue(exc)
-                    # end
-                    do_dispatch(:before, action, *arguments)
-                rescue => exc
-                    try_rescue(exc)
-                end
+                debug("#{self} before")
+                do_dispatch(:before, action, *arguments)
             end
         end
                 
@@ -130,11 +116,7 @@ module Spider
         
         def after(action='', *arguments)
             catch(:done) do
-                begin
-                    do_dispatch(:after, action, *arguments)
-                rescue => exc
-                    try_rescue(exc)
-                end
+                do_dispatch(:after, action, *arguments)
             end
             # begin
             #     run_chain(:after)
