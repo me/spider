@@ -1,3 +1,5 @@
+require 'apps/core/auth/lib/login_authenticator'
+
 module Spider; module Auth
     
     class LoginController < Spider::Controller
@@ -15,12 +17,13 @@ module Spider; module Auth
         end
         
         def do_login
-            user = LoginUser.find(:login => @request.params['login'], :password => @request.params['password'])
-            if (user.length == 1)
-                @request.session['uid'] = user[0].uid
+            authenticator = LoginAuthenticator.new
+            uid = authenticator.authenticate(@request.params['login'], @request.params['password'])
+            if (uid)
+                @request.session['uid'] = uid
                 Spider::Logger.debug("SESSION:")
                 Spider::Logger.debug(@request.session)
-                Spider::Auth.current_user = user[0].uid
+                Spider::Auth.current_user = uid
                 if (@request.session['login_redirect'])
                     redir_to = @request.session['login_redirect']
                     @request.session.delete('login_redirect')

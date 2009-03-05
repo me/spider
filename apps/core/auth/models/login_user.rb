@@ -1,7 +1,7 @@
 module Spider; module Auth
     
     class LoginUser < User
-        element :login, String, :unique => true
+        element :username, String, :unique => true
         element :password, Password
 
         
