@@ -45,7 +45,6 @@ module Spider
         
         
         def persist
-            Spider::Logger.debug("Persisting session #{@sid}")
             self.class[@sid] = @data
         end
         
