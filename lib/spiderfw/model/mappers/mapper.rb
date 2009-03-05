@@ -192,7 +192,7 @@ module Spider; module Model
                 @model.primary_keys.each do |key|
                     condition[key.name] = map_condition_value(key.type, obj.get(key))
                 end
-                Spider::Logger.debug("Condition:")
+                Spider::Logger.debug("Deleting with condition:")
                 Spider::Logger.debug(condition)
             else
                 condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)

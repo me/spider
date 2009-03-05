@@ -243,10 +243,8 @@ module Spider; module Model; module Mappers
         end
         
         def can_join?(element)
-            Spider::Logger.debug("Can join? #{element}")
             return false if element.multiple?
             return false if element.storage != @storage
-            Spider::Logger.debug("TRUE")
             return true
         end
         
