@@ -137,6 +137,12 @@ module Spider; module Model
             @objects.length
         end
         
+        def has_more?
+            return false unless query.limit
+            pos = query.offset.to_i + length
+            return pos < total_rows
+        end
+        
         def current_length
             @objects.length
         end
