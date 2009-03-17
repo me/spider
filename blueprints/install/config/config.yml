@@ -1,0 +1,12 @@
+runmode: 'devel'
+template.cache.disable: true
+client.text_editor: 'textmate'
+locale: 'it'
+session.store: 'memory'
+
+#set devel:
+storages:
+    default: 'db:sqlite://var/db.sqlite'
+    
+set devel:
+    debugger.start: true
