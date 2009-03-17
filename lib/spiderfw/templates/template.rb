@@ -92,7 +92,7 @@ module Spider
         
         def load(path=nil)
             @path = path if path
-            debug("TEMPLATE LOADING #{@path}")
+#            debug("TEMPLATE LOADING #{@path}")
             cache_path = @path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
             @compiled = self.class.cache.fetch(cache_path) do
                 compile
@@ -148,7 +148,7 @@ module Spider
         
         #def init(request, scene)
         def init(scene=nil)
-            Spider::Logger.debug("Template #{@path} INIT")
+#            Spider::Logger.debug("Template #{@path} INIT")
             load unless loaded?
             scene ||= (@scene || Scene.new)       
             scene = Scene.new(scene) if scene.class == Hash
@@ -172,13 +172,13 @@ module Spider
             load unless loaded?
             scene ||= (@scene || Scene.new)       
             scene = Scene.new(scene) if scene.class == Hash
-            debug("Template #{@path} rendering with scene:")
-            debug(scene)
+            # debug("Template #{@path} rendering with scene:")
+            # debug(scene)
             init(scene) unless init_done?
             init_sub unless init_sub_done?
             scene.widgets ||= {}
             scene.widgets.merge!(@widgets)
-            Spider::Logger.debug("Template #{@path} RUN")
+#            Spider::Logger.debug("Template #{@path} RUN")
             scene.instance_eval(@compiled.run_code, @compiled.cache_path+'/run.rb')
         end
         

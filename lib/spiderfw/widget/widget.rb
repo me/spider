@@ -182,7 +182,7 @@ module Spider
                     @scene[name] = instance_variable_get("@#{name}")
                 end
             end
-            debug("WIDGET #{full_id} INIT TEMPLATE WITH SCENE #{@scene}")
+#            debug("WIDGET #{full_id} INIT TEMPLATE WITH SCENE #{@scene}")
             template.request = @request
             template.response = @response
             @template.init(@scene)
@@ -222,14 +222,14 @@ module Spider
         end
         
         def run
-            debug("RUNNING init_widget ON #{full_id} BECAUSE NOT DONE") unless init_widget_done?
+#            debug("RUNNING init_widget ON #{full_id} BECAUSE NOT DONE") unless init_widget_done?
             init_widget unless init_widget_done?
             if (self.class.scene_attributes) # Repeat for new instance variables
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end
             end
-            debug("WIDGET #{full_id} RENDERING WITH SCENE #{@scene}")
+#            debug("WIDGET #{full_id} RENDERING WITH SCENE #{@scene}")
             @scene.widget = {
                 :id_path => @id_path,
                 :full_id => full_id,
