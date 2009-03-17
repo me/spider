@@ -82,7 +82,7 @@ module Spider
         def [](key)
             val = @values[key]
             
-            if (!val && @options[key] && @options[key][:params][:default])
+            if (val.nil? && @options[key] && @options[key][:params][:default])
                 default = @options[key][:params][:default]
                 val = (default.class == Proc) ? default.call() : default
             end
