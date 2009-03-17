@@ -1,0 +1,10 @@
+.spider.components.admin .heading{
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    padding-left: 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-bottom: 3px solid gray;
+    background-color: #FAFAFA;
+}

@@ -1,0 +1,25 @@
+<div class="{ @widget[:css_class] }">
+    <tpl:resource type="css" src="table.css" />
+    <table class="{ @widget[:css_class] }">
+        <tr class="heading_row">
+            <th sp:each="@elements |element|">
+                { @labels[element] }
+            </th>
+        </tr>
+        <tr sp:each_index="@rows |row_i|" class="row { (row_i%2==0) ? 'odd' : 'even' }">
+            <td sp:each="@elements |element|">
+                { @rows[row_i][element] }
+            </td>
+        </tr>
+        <tr class="paginator" sp:if="@paginate">
+            <td colspan={ @elements.size } >
+                <a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
+                Pagina { @page } di { @pages }
+                <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>
+            </td>
+        </tr>
+    </table>
+    <div >
+        
+    </div>
+</div>

@@ -1,0 +1,22 @@
+<div class="{ @widget[:css_class] }">
+    <tpl:resource type="css" src="crud.css" />
+    <div sp:if="@saved" class="top">
+        Salvataggio effettuato
+    </div>
+    <div sp:if="@action == :form" class="top">
+        <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=table">
+            Torna all'elenco
+        </a>
+    </div>
+    <div sp:if="@action == :table" class="top">
+        <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=form">
+            Crea nuovo
+        </a>
+    </div>
+    <core:table sp:if="@action == :table" id="table" model="@model">
+        <tpl:override-content search="table tr:nth-child(2) td">
+            <a href="{ @links_to_form[row_i] }" sp:tag-if="element == @key_element"><tpl:overridden /></a>
+        </tpl:override>
+    </core:table>
+    <forms:form sp:if="@action == :form" id="form" model="@model" />
+</div>

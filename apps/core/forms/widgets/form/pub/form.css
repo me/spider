@@ -1,0 +1,22 @@
+.spider.forms.form .fields{
+    border: 1px solid #CDCDCD;
+    padding: 6px;
+}
+
+.spider.forms.form label{
+    display: block;
+    float: left;
+    width: 8em;
+}
+
+.spider.forms.form .row{
+    clear: both;
+    margin-bottom: 5px;
+}
+
+.spider.forms.form .buttons{
+    clear: both;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #CDCDCD;
+}

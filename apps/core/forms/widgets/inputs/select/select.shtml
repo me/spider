@@ -1,0 +1,6 @@
+<select name="{ @name }" sp:attr-if="@multiple, 'multiple'">
+    <option sp:if="@blank_option"> </option>
+    <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@values[i] == @value_pks, 'selected'">
+        { @data[i].to_s }
+    </option>
+</select>

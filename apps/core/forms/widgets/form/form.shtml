@@ -1,0 +1,26 @@
+<div class="{ @widget[:css_class] }">
+    <tpl:resource type="css" src="form.css" />
+    <div sp:if="@error" class='errors'>
+        Errori:
+        <ul>
+            <sp:pass sp:each="@errors |k, v|">
+                    <li sp:each="v |err|">
+                        { err }
+                    </li>
+            </sp:pass>
+        </ul>
+                
+    </div>
+    <form action="{ @action }" method="POST" { @enctype }>
+        <input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
+        <div class="fields">
+            <div class="row" sp:each="@elements |element|">
+                <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>
+                <sp:run obj="@inputs[element]" />
+            </div>
+        </div>
+        <div class="row buttons">
+            <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
+        </div>
+    </form>
+</div>

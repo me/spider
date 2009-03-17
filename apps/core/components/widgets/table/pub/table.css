@@ -1,0 +1,29 @@
+.spider.components.table table{
+    border: 1px solid #BDBDBD;
+    border-collapse: collapse;
+}
+
+.spider.components.table td, .spider.components.table th{
+    border: 1px solid #BDBDBD;
+    padding: 2px 6px;
+}
+
+.spider.components.table th{
+    text-align: center;
+    background-color: #FAFAFA;
+}
+
+.spider.components.table tr.even{
+    background-color: #FCFCFC;
+}
+
+.spider.components.table .paginator{
+    text-align: center;
+    margin-top: 6px;
+    margin-left: 6px;
+}
+
+.spider.components.table .paginator a{
+    margin-left: 10px;
+    margin-right: 10px;
+}

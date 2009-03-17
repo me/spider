@@ -1,0 +1,3 @@
+<sp:template>
+    <input type="text" name="{ @name }" value="{ @value }" size="{ @size }">
+</sp:template>
