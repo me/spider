@@ -18,10 +18,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def self.new_connection(file)
-            db = SQLite3::Database.new(file)
-            db.results_as_hash = true
-            return db
+            @db = SQLite3::Database.new(file)
+            @db.results_as_hash = true
+            return @db
         end
+        
         
         def parse_url(url)
             if (url =~ /(.+?):\/\/(.+)/)

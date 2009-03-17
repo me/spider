@@ -29,7 +29,7 @@ module Spider; module Auth
                     @request.session.delete('login_redirect')
                     redirect(redir_to)
                 else
-                    print "OK! LOGGATO!"
+                    $out << "OK! LOGGATO!"
                 end
             else
                 @scene.failed_login = true

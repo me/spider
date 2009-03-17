@@ -34,7 +34,7 @@ module Spider; module Helpers
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
             f = File.open(full_path, 'r')
             while (block = f.read(1024)) do
-                print block
+                $out << block
             end
         end
         

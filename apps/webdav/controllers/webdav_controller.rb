@@ -101,7 +101,7 @@ module Spider; module WebDAV
                 @response.headers['Last-Modified'] = properties.mtime.httpdate
                 unless just_head
                     vfs.stream(path, "rb") do |f|
-                        print f.read
+                        $out << f.read
                     end
                 end
             end
@@ -231,7 +231,7 @@ module Spider; module WebDAV
     		}
     		@response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
     		@response.status = Spider::HTTP::WEBDAV_MULTI_STATUS
-    		print build_multistat([[request_uri, *ret]]).to_s
+    		$out << build_multistat([[request_uri, *ret]]).to_s
     		
     	end
     	
@@ -284,7 +284,7 @@ module Spider; module WebDAV
                 if not lock
     			    @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'	
     			    @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS	
-    				print build_multistat([[request_uri, elem_status(Spider::HTTP::WEBDAV_LOCKED)]]).to_s
+    				$out << build_multistat([[request_uri, elem_status(Spider::HTTP::WEBDAV_LOCKED)]]).to_s
     				done
     			end
     			
@@ -686,7 +686,7 @@ module Spider; module WebDAV
     				@response.headers['Content-Type'] = properties.content_type
     				@response.headers['Content-Range'] = "#{first}-#{last}/#{filesize}"
     				@response.headers['Content-Length'] = properties.size == 0 ? 0 : last - first + 1
-    				print content
+    				$out << content
     			else
     			    @response.status = Spider::HTTP::BAD_REQUEST
     			    done

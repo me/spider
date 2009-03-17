@@ -8,10 +8,10 @@ module Spider; module TemplateBlocks
             c = ""
             init = ""
             start = get_start
-            c += "print '#{start}'\n"
+            c += "$out << '#{start}'\n"
             c, init = compile_content(c, init)
             end_tag = get_end
-            c += "print '#{end_tag}'\n" if end_tag
+            c += "$out << '#{end_tag}'\n" if end_tag
             return CompiledBlock.new(init, c)
         end
         
