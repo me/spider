@@ -903,10 +903,18 @@ module Spider; module Model
         def merge!(obj)
             obj.class.elements_array.select{ |el| obj.element_has_value?(el) && !el.integrated?}.each do |el|
                 val = obj.get(el)
+                if (val.respond_to?(:clone))
+                    begin; val = val.clone; rescue TypeError; end;
+                end
                 set_loaded_value(el, val)
             end
             @loaded_elements.merge!(obj.loaded_elements)
-                
+        end
+        
+        def clone
+            obj = self.class.new
+            obj.merge!(self)
+            return obj
         end
         
         def keys_to_condition
