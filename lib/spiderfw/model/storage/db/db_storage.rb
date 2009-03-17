@@ -322,6 +322,7 @@ module Spider; module Model; module Storage; module Db
             sql = ""
             sql += "LIMIT #{query[:limit]} " if query[:limit]
             sql += "OFFSET #{query[:offset]} " if query[:offset]
+            return sql
         end
         
         def sql_insert(insert)
