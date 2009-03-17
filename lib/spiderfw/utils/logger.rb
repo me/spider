@@ -5,17 +5,29 @@ module Spider
     module Logger
         
         class << self
+            
+            # def [](dest)
+            #     @@loggers ||= {}
+            #     @@loggers[dest]
+            # end
         
-            def open(dest, level=:WARN)
-                @@loggers ||= []
+            def open(dest, level= :WARN)
+                @@loggers ||= {}
                 logger = ::Logger.new(dest)
                 logger.level = ::Logger.const_get(level)
-                @@loggers << logger
+                @@loggers[dest] = logger
             end
+            
+            def reopen(dest, level= :WARN)
+                raise RuntimeError, "No open logger for #{dest}" unless @@loggers && @@loggers[dest]
+                @@loggers.delete(dest)
+                self.open(dest, level)
+            end
+                
         
             def send_to_loggers(action, *args)
                 return unless @@loggers
-                @@loggers.each{ |logger| logger.send(action, *args) }
+                @@loggers.each{ |dest, logger| logger.send(action, *args) }
             end
         
             def debug(*args)
