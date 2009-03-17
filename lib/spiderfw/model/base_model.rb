@@ -749,7 +749,7 @@ module Spider; module Model
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
-                        val == nil ? true : check.match(val)
+                        val == nil || val.empty? ? true : check.match(val)
                     when Proc
                         Proc.call(msg)
                     end
