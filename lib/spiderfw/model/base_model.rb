@@ -125,11 +125,11 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (!type.subclass_of?(BaseModel)) # || !attributes[:multiple])
+                if (type.subclass_of?(BaseModel)) #  && attributes[:multiple])
                     # FIXME: we can load eagerly single relations if we can do a join
-                    attributes[:lazy] = :default
-                else
                     attributes[:lazy] = true
+                else
+                    attributes[:lazy] = :default
                 end
             end
             
@@ -237,9 +237,9 @@ module Spider; module Model
                 next if params[:except].include?(el.name)
                 next if elements[el.name] # don't overwrite existing elements
                 attributes = el.attributes.clone.merge({
-                    :integrated_from => elements[element_name],
-                    :hidden => params[:hidden]
+                    :integrated_from => elements[element_name]
                 })
+                attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
                     attributes[:reverse] = add_rev
                     attributes.delete(:add_reverse)
