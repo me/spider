@@ -94,12 +94,17 @@ module Spider; module Model
         end
         
         def save(obj, request=nil)
-            # Load local primary keys if they exist
-            @model.elements_array.select{ |el| el.attributes[:local_pk]}.each{ |local_pk| obj.get(local_pk) }
+            
             if (@model.extended_models)
                 is_insert = false
+                # Load local primary keys if they exist
+                # FIXME: load without cloning?
+                check_obj = obj.clone
+                @model.elements_array.select{ |el| el.attributes[:local_pk] }.each do |local_pk|
+                    check_obj.get(local_pk)
+                end
                 @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
-                    if (!obj.element_has_value?(local_pk))
+                    if (!check_obj.element_has_value?(local_pk))
                         is_insert = true
                         break
                     end
@@ -233,24 +238,29 @@ module Spider; module Model
             load(objects, Query.new(nil, [element.name]))
         end
         
-        def load(objects, query)
+        def load_element!(objects, element)
+            load(objects, Query.new(nil, [element.name]), :no_expand_request => true)
+        end
+        
+        def load(objects, query, options={})
             objects = queryset_siblings(objects) unless objects.is_a?(QuerySet)
             request = query.request
             condition = Condition.or
             objects.each do |obj|
                 condition << obj.keys_to_condition
             end
-            return find(Query.new(condition, request), objects)
+            return find(Query.new(condition, request), objects, options)
         end
         
         
-        def find(query, query_set=nil)
+        def find(query, query_set=nil, options={})
             set = nil
             Spider::Model.with_identity_mapper do |im|
                 im.put(query_set)
                 if (@model.attributes[:condition])
                     query.condition = Condition.and(query.condition, @model.attributes[:condition])
                 end
+                expand_request(query.request) unless options[:no_expand_request]
                 query = prepare_query(query, query_set)
                 query.request.total_rows = true unless query.request.total_rows = false
                 result = fetch(query)
@@ -360,6 +370,7 @@ module Spider; module Model
             end
             sub_request = Request.new
             @model.primary_keys.each{ |key| sub_request[key.name] = true }
+            sub_request[element.attributes[:reverse]] = true
             condition = Condition.or
             index_by = []
             @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
@@ -418,6 +429,17 @@ module Spider; module Model
             @model.primary_keys.each do |key|
                 request[key] = true
             end
+            request.each do |k, v|
+                next unless element = @model.elements[k]
+                if (element.integrated?)
+                    integrated_from = element.integrated_from
+                    integrated_from_element = element.integrated_from_element
+                    request.request("#{integrated_from.name}.#{integrated_from_element}")
+                end
+            end
+        end
+        
+        def expand_request(request, obj=nil)
             lazy_groups = []
             request.each do |k, v|
                 unless element = @model.elements[k]
@@ -432,14 +454,6 @@ module Spider; module Model
                 next if (obj && obj.element_loaded?(name))
                 if (element.lazy_groups && (lazy_groups - element.lazy_groups).length < lazy_groups.length)
                     request.request(name)
-                end
-            end
-            request.each do |k, v|
-                next unless element = @model.elements[k]
-                if (element.integrated?)
-                    integrated_from = element.integrated_from
-                    integrated_from_element = element.integrated_from_element
-                    request.request("#{integrated_from.name}.#{integrated_from_element}")
                 end
             end
         end
