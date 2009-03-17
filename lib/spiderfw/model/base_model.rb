@@ -384,6 +384,16 @@ module Spider; module Model
             self.name
         end
         
+        def self.label(val=nil)
+            @label = val if (val)
+            @label || self.name
+        end
+        
+        def self.label_plural(val=nil)
+            @label_plural = val if (val)
+            @label_plural || self.name
+        end
+        
         ########################################################
         #   Methods returning information about the elements   #
         ########################################################
@@ -669,6 +679,15 @@ module Spider; module Model
             return send(first).set(rest) if (rest)
             return send("#{element}=", value)
         end
+        
+        def [](element)
+            get(element)
+        end
+        
+        def []=(element, value)
+            set(element, value)
+        end
+            
         
         def set_hash(hash)
             hash.each { |key, val| set(key, val) }
