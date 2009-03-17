@@ -1,14 +1,15 @@
 
 $SPIDER_PATH = File.expand_path(File.dirname(__FILE__)+'/..')
 $SPIDER_LIB = $SPIDER_PATH+'/lib'
-$SPIDER_RUN_PATH = Dir.pwd
+$SPIDER_RUN_PATH ||= Dir.pwd
 ENV['GETTEXT_PATH'] += ',' if (ENV['GETTEXT_PATH'])
 ENV['GETTEXT_PATH'] ||= ''
 ENV['GETTEXT_PATH'] += $SPIDER_PATH+'/data/locale,'+$SPIDER_RUN_PATH+'/data/locale'
 #$:.push($SPIDER_LIB+'/spiderfw')
-$:.push(Dir.pwd)
+$:.push($SPIDER_RUN_PATH)
 
 $:.push($SPIDER_PATH)
+Dir.chdir($SPIDER_RUN_PATH)
 #p $:
 
 
@@ -31,16 +32,19 @@ module Spider
             @apps_to_load = []
             @apps ||= {}
             @app_paths = []
-            @root = Dir.pwd
+            @root = $SPIDER_RUN_PATH
             setup_paths(@root)
             @logger = Spider::Logger
             @logger.open(STDERR, :DEBUG)
-            @logger.open(@paths[:log]+'/error.log', :ERROR)
+            if (File.exist?(@paths[:log]))
+                @logger.open(@paths[:log]+'/error.log', :ERROR)
+            end
 #            @controller = Controller
             @server = {}
             @paths[:spider] = $SPIDER_PATH
             
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
+            @logger.reopen(STDERR, Spider.conf.get('debug.console.level'))
             
             @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
@@ -116,8 +120,7 @@ module Spider
         
         # FIXME: cleanup
         def find_apps
-            Logger.debug("Loading apps:")
-            Logger.debug(@apps_to_load)
+            Logger.debug("Loading apps "+@apps_to_load.join(', '))
             found = false
             @apps_to_load.uniq.each do |app|
                 if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app))
