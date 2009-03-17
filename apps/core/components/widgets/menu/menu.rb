@@ -33,6 +33,10 @@ module Spider; module Components
             add_widget(widget)
         end
         
+        def widget_resources
+            @current_widget.resources
+        end
+        
     end
     
 end; end
