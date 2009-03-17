@@ -57,6 +57,7 @@ module Spider
         
         
         def get_route(path)
+            path = path.clone
             path.slice!(0) if path.length > 0 && path[0].chr == "/"
             return Route.new(:path => path, :dest => Spider::SpiderController, :action => path)
         end
