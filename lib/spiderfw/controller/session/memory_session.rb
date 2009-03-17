@@ -44,10 +44,6 @@ module Spider
         end
         
         
-        def persist
-            self.class[@sid] = @data
-        end
-        
         def restore
             sess = self.class[@sid] || {}
             @data = sess[:data]

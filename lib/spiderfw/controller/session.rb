@@ -1,8 +1,7 @@
 require 'uuid'
+require 'spiderfw/controller/session/flash_hash'
 
 module Spider
-    
-
     
     class Session
         attr_reader :sid
@@ -40,17 +39,14 @@ module Spider
         def initialize(sid=nil)
             @sid = sid || generate_sid
             restore
+            Spider::Logger.debug("SESSION RESTORED:")
+            Spider::Logger.debug(@data)
             @data ||= {}
+            @data[:_flash].reset if @data[:_flash]
         end
         
         def generate_sid
             UUID.new.generate
-        end
-        
-        def restore
-        end
-        
-        def persist
         end
         
         def [](key)
@@ -66,11 +62,31 @@ module Spider
         end
         
         def persist
+            # Spider::Logger.debug("PERSISTING SESSION:")
+            # Spider::Logger.debug(@data)
+            clear_empty_hashes!(@data)
+            @data[:_flash].purge if @data[:_flash]
             self.class[@sid] = @data
         end
         
         def restore
             @data = self.class[@sid]
+        end
+        
+        def flash
+            @data[:_flash] ||= FlashHash.new
+        end
+        
+        def clear_empty_hashes!(h)
+            h.each do |k, v|
+                if (v.is_a?(Hash))
+                    if (v.empty?)
+                        h.delete(k)
+                    else
+                        clear_empty_hashes!(v)
+                    end
+                end
+            end
         end
         
         
