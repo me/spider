@@ -2,36 +2,43 @@ module Spider
     
     module TemplateBlocks
         
-        def self.parse_element(el, allowed_blocks=nil)
+        def self.parse_element(el, allowed_blocks=nil, template=nil)
+            return nil if (el.class == ::Hpricot::BogusETag)
             if (el.class == ::Hpricot::Text)
                 block = :Text
             elsif (el.attributes['sp:if'])
                 block = :If    
-            elsif (el.attributes['sp:each'])
+            elsif (el.attributes['sp:tag-if'])
+                block = :TagIf
+            elsif (el.attributes['sp:attr-if'])
+                block = :AttrIf
+            elsif (el.attributes['sp:each'] || el.attributes['sp:each_index'])
                 block = :Each
             elsif (el.name == 'sp:render')
                 block = :Render
+            elsif (el.name == 'sp:run')
+                block = :Run
             elsif (el.name == 'sp:yield')
                 block = :Yield
-            elsif (el.name == 'sp:pass')
+            elsif (el.name == 'sp:pass' || el.name == 'sp:template')
                 block = :Pass
             elsif (Spider::Template.registered?(el.name))
                 klass = Spider::Template.get_registered_class(el.name)
                 if (klass.subclass_of?(::Spider::Widget))
                     block = :Widget
                 else
-                    Spider.logger.debug("IS NOT A WIDGET!") # FIXME
+                    Spider.logger.error("Could not parse #{el.name} tag")
                 end
             else
                 block = :HTML
             end
             return nil unless (!allowed_blocks || allowed_blocks.include?(block))
-            return const_get(block).new(el, allowed_blocks)
+            return const_get(block).new(el, template, allowed_blocks)
         end
         
         class Block
             
-            def initialize(el, template, allowed_blocks=nil)
+            def initialize(el, template=nil, allowed_blocks=nil)
                 @el = el
                 @template = template
                 @allowed_blocks = allowed_blocks
@@ -43,10 +50,10 @@ module Spider
                 last_block = nil
                 el.each_child do |ch|
                     #Spider.logger.debug "TRAVERSING CHILD #{ch}"
-                    # Gives the preceding block the change to "eat" the next elements
+                    # Gives the preceding block the chance to "eat" the next elements
                     next if (last_block && last_block.get_following(ch))
-                    last_block = TemplateBlocks.parse_element(ch, @allowed_blocks)
-                    content_blocks << last_block
+                    last_block = TemplateBlocks.parse_element(ch, @allowed_blocks, @template)
+                    content_blocks << last_block if (last_block)
                 end
                 return content_blocks
             end
@@ -57,11 +64,12 @@ module Spider
                 blocks = parse_content(@el)
                 blocks.each do |block|
                     compiled = block.compile
-                    if (compiled.run_code =~ /nil/)
-                        Spider::Logger.debug("NIL BLOCK")
-                        Spider::Logger.debug(block)
-                        Spider::Logger.debug(compiled.run_code)
-                    end
+                    next unless compiled
+                    # if (compiled.run_code =~ /nil/)
+                    #     Spider::Logger.debug("NIL BLOCK")
+                    #     Spider::Logger.debug(block)
+                    #     Spider::Logger.debug(compiled.run_code)
+                    # end
                     c += compiled.run_code if (compiled.run_code)
                     init += compiled.init_code if (compiled.init_code)
                 end
@@ -91,18 +99,37 @@ module Spider
                 return res
             end
             
+            def scan_vars(str, &block)
+                res = ""
+                scanner = ::StringScanner.new(str)
+                pos = 0
+                while scanner.scan_until(/\{ ([^}]+) \}/)
+                    text = scanner.pre_match[pos..-1]
+                    pos = scanner.pos
+                    yield text, scanner.matched[2..-3]
+                end
+                return scanner.rest
+            end
+            
             
             def inspect
                 @el
             end
             
-            def var_to_scene(var)
+            def var_to_scene(var, container='self')
                 first, rest = var.split('.', 2)
-                if (var[0].chr == '@')
-                    scene_var = "self[:#{first[1..-1]}]"
+                if (first =~ /([^\[]+)(\[.+)/)
+                    var_name = $1
+                    array_rest = $2
                 else
-                    scene_var = first
+                    var_name = first
                 end
+                if (var[0].chr == '@')
+                    scene_var = "#{container}[:#{var_name[1..-1]}]"
+                else
+                    scene_var = var_name
+                end
+                scene_var += array_rest if (array_rest)
                 scene_var += '.'+rest if (rest)
                 return scene_var
             end
@@ -126,7 +153,10 @@ require 'spiderfw/templates/blocks/html'
 require 'spiderfw/templates/blocks/text'
 require 'spiderfw/templates/blocks/each'
 require 'spiderfw/templates/blocks/if'
+require 'spiderfw/templates/blocks/tag_if'
+require 'spiderfw/templates/blocks/attr_if'
 require 'spiderfw/templates/blocks/render'
 require 'spiderfw/templates/blocks/yield'
 require 'spiderfw/templates/blocks/pass'
 require 'spiderfw/templates/blocks/widget'
+require 'spiderfw/templates/blocks/run'

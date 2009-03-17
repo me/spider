@@ -7,23 +7,37 @@ module Spider; module TemplateBlocks
         def compile
             c = ""
             init = ""
+            start = get_start
+            c += "print '#{start}'\n"
+            c, init = compile_content(c, init)
+            end_tag = get_end
+            c += "print '#{end_tag}'\n" if end_tag
+            return CompiledBlock.new(init, c)
+        end
+        
+        def get_start
             start = "<"+@el.name
             @el.attributes.each do |key, val|
                 start += " #{key}=\""
-                if (val =~ /(.*)\{ (.+) \}(.*)/)
-                    start += $1+"'+"+var_to_scene($2)+".to_s+'"+$3
-                else
-                    start += val
+                rest = scan_vars(val) do |text, code|
+                    start += text+"'+("+vars_to_scene(code)+").to_s+'"
                 end
+                start += rest
+#                start += replace_vars(val)
+                # if (val =~ /(.*)\{ (.+) \}(.*)/)
+                #     start += $1+"'+"+var_to_scene($2)+".to_s+'"+$3
+                # else
+                #     start += val
+                # end
                 start += '"'
             end
             start += " /" unless @el.etag
             start += ">"
-            c += "print '#{start}'\n"
-            blocks = parse_content(@el)
-            c, init = compile_content(c, init)
-            c += "print '#{escape_text(@el.etag.inspect)}'\n" if @el.etag
-            return CompiledBlock.new(init, c)
+            return start
+        end
+        
+        def get_end
+            return escape_text(@el.etag.inspect) if @el.etag
         end
         
     end

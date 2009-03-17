@@ -12,8 +12,8 @@ module Spider
             @invalid = {}
         end
         
-        def fetch(path, template_obj, &block)
-            return refresh(path, template_obj, &block) unless fresh?(path)
+        def fetch(path, &block)
+            return refresh(path, &block) unless fresh?(path)
             return load_cache(path)
         end
         
@@ -47,11 +47,27 @@ module Spider
             @invalid[path] = true
         end
         
-        def refresh(path, template_obj, &block)
+        def refresh(path, &block)
             debug("Refreshing cache for #{path}")
             res = block.call()
-            write_cache(path, res, template_obj)
+            write_cache(path, res)
             return res
+        end
+        
+        def get_compiled_template(path)
+            compiled = Spider::CompiledTemplate.new
+            compiled.cache_path = path
+            init_code = IO.read(path+'/init.rb')
+            run_code = IO.read(path+'/run.rb')
+            block = Spider::TemplateBlocks::CompiledBlock.new(init_code, run_code)
+            compiled.block = block
+            Dir.new(path).each do |entry|
+                next if entry[0].chr == '.'
+                sub_path = "#{path}/#{entry}"
+                next unless File.directory?(sub_path)
+                compiled.subtemplates[entry] = get_compiled_template(sub_path)
+            end
+            return compiled
         end
         
         def load_cache(template_path)
@@ -59,26 +75,33 @@ module Spider
             full_path = get_location(template_path)
             lock_file = File.new(full_path)
             lock_file.flock(File::LOCK_SH)
-            init_code = IO.read(full_path+'/init.rb')
-            run_code = IO.read(full_path+'/run.rb')
+            compiled = get_compiled_template(full_path)
             lock_file.flock(File::LOCK_UN)
-            return Spider::TemplateBlocks::CompiledBlock.new(init_code, run_code)
+            return compiled
         end
         
-        def write_cache(template_path, compiled_block, template_obj)
+        def write_compiled_template(compiled, path)
+            compiled.cache_path = path
+            File.open(path+'/init.rb', 'w') do |file|
+                file.puts(compiled.block.init_code)
+            end
+            File.open(path+'/run.rb', 'w') do |file|
+                file.puts(compiled.block.run_code)
+            end
+            compiled.subtemplates.each do |id, sub|
+                sub_path = "#{path}/#{id}"
+                FileUtils.mkpath(sub_path)
+                write_compiled_template(sub, sub_path)
+            end
+        end
+        
+        def write_cache(template_path, compiled_template)
             full_path = get_location(template_path)
             FileUtils.mkpath(full_path)
             lock_file = File.new(full_path)
             lock_file.flock(File::LOCK_EX)
-            File.open(full_path+'/init.rb', 'w') do |file|
-                file.puts(compiled_block.init_code)
-            end
-            File.open(full_path+'/run.rb', 'w') do |file|
-                file.puts(compiled_block.run_code)
-            end
-            modified = {
-                template_obj.path => File.mtime(template_obj.path)
-            }
+            write_compiled_template(compiled_template, full_path)
+            modified = compiled_template.collect_mtimes
             File.open(full_path+'/check', 'w') do |file|
                 file.puts(Marshal.dump(modified))
             end

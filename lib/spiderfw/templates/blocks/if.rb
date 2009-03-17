@@ -7,17 +7,21 @@ module Spider; module TemplateBlocks
         def compile
             init = ""
             cond = vars_to_scene(@el.attributes['sp:if'])
-            scanner = ::StringScanner.new(cond)
-            pos = 0
             c = "if (#{cond})\n"
                 
             @el.remove_attribute('sp:if')
-            content = Spider::TemplateBlocks.parse_element(@el).compile
+            content = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile
             content.run_code.each_line do |line|
                 c += '  '+line
             end
             c += "end\n"
-            init += content.init_code
+            unless (content.init_code.strip.empty?)
+                init = "if (#{cond})\n"
+                content.init_code.each_line do |line|
+                    init += "  #{line}"
+                end
+                init += "end\n"
+            end
             return CompiledBlock.new(init, c)
         end
         

@@ -17,35 +17,36 @@ module Spider
             super
         end
         
-        def init_template(path)
-            template = self.class.init_template(path)
+        def load_template(path)
+            template = self.class.load_template(path)
             return template
-        end
-        
-        # def init_template(path=nil)
-        #     path ||= self.class.current_default_template
-        #     template = init_template(path)
-        #     template.init(@request, @scene)
-        #     return template
-        # end
-            
+        end 
         
         def render_layout(path, content={})
-            layout = self.class.init_layout(path)
+            layout = self.class.load_layout(path)
             layout.render(content)
         end
         
-        def render(path=nil, scene=nil, options={})
-            scene ||= @scene
-            template = init_template(path)
-            chosen_layout = options[:layout] || @layout
-            if (@layout)
-                l = @layout.is_a?(Layout) ? @layout : self.class.init_layout(@layout)
-                l.template = template
-                l.render(scene)
-            else
-                template.render(scene)
+        def render(path=nil, options={})
+            scene = options[:scene] || @scene
+            request = options[:request] || @request
+            response = options[:response] || @response
+            template = load_template(path)
+            template.request = request
+            template.response = response
+            template.init
+            template.init_sub
+            unless (@_partial_render)
+                chosen_layout = options[:layout] || @layout
+                if (chosen_layout)
+                    l = chosen_layout.is_a?(Layout) ? chosen_layout : self.class.load_layout(chosen_layout)
+                    l.template = template
+                    l.render(scene)
+                else
+                    template.render(scene)
+                end
             end
+            return template
         end
         
         
@@ -53,14 +54,11 @@ module Spider
             obj = super
             if (obj.is_a?(Visual))
                 set_layout = @layout || @dispatcher_layout
-                obj.dispatcher_layout = self.class.init_layout(set_layout) if set_layout
+                obj.dispatcher_layout = self.class.load_layout(set_layout) if set_layout
             end
             return obj
         end
         
-
-            
-            
         
         module ClassMethods
 
@@ -100,14 +98,18 @@ module Spider
                 return nil
             end
             
-            def init_template(path)
+            def load_template(path)
+                # TODO: check multiple paths, multiple extensions
                 unless respond_to?(:template_path)
                     raise NotImplementedError, "The template_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
-                return Spider::Template.new(template_path+'/'+path+'.shtml')
+                t = Spider::Template.new(template_path+'/'+path+'.shtml')
+                t.request = @request
+                t.response = @response
+                return t
             end
             
-            def init_layout(path, scene={})
+            def load_layout(path, scene={})
                 unless respond_to?(:layout_path)
                     raise NotImplementedError, "The layout_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
