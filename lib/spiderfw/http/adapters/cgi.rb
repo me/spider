@@ -2,34 +2,15 @@ $:.push(ENV['SPIDER_PATH']+'/lib')
 require 'spiderfw'
 require 'spiderfw/controller/controller_io'
 require 'spiderfw/controller/http_controller'
+require 'spiderfw/http/adapters/cgi_io'
 
-class CGIIO < Spider::ControllerIO
-    attr_reader :headers_sent
-    
-    def initialize(out, controller_response)
-        @out = out
-        @controller_response = controller_response
-        @headers_sent = false
+module Spider; module HTTP
+    class CGIServer < Server
+        @supports = {
+            :chunked_request => false
+        }
     end
-    
-    def write(msg)
-        send_headers unless @headers_sent
-        @out << msg
-    end
-    
-    def send_headers
-        Spider::Logger.debug("sending headers")
-        @controller_response.prepare_headers
-        @headers_sent = true
-        @out << "Status: #{@controller_response.status}\n"
-        @controller_response.headers.each do |key, val|
-            @out << "#{key}: #{val}\n"
-        end
-        @out << "\n"
-    end
-    
-    
-end
+end; end
 
 def prepare_env
     return {
@@ -61,10 +42,13 @@ Spider::Logger.debug('-----------')
 
 env = prepare_env
 body = $stdin.read(env['CONTENT_LENGTH'].to_i)
-controller_request = Spider::Request.new(:http, env, body)
+controller_request = Spider::Request.new(env)
+controller_request.server = Spider::HTTP::CGIServer
+controller_request.body = body
 path = env['REQUEST_PATH']+''
+controller_request.action = path
 controller_response = Spider::Response.new
-controller_response.body = CGIIO.new(STDOUT, controller_response)
+controller_response.server_output = CGIIO.new(STDOUT, controller_response)
 begin
     controller = ::Spider::HTTPController.new(controller_request, controller_response)
     controller.before(path)
@@ -74,5 +58,5 @@ rescue => exc
     Spider.logger.error(exc)
     controller.ensure()
 ensure
-    controller_response.body.send_headers unless controller_response.body.headers_sent
+    controller_response.server_output.send_headers unless controller_response.server_output.headers_sent
 end
