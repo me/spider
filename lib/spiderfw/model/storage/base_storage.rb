@@ -63,7 +63,12 @@ module Spider; module Model; module Storage
                 File.open(path, 'a+') do |f|
                     f.rewind
                     f.flock File::LOCK_EX
-                    seq, increment_str = f.gets.split('|')
+                    cur = f.gets
+                    if (cur)
+                        seq, increment_str = cur.split('|')
+                    else
+                        seq, increment_str = 0, 1
+                    end
                     seq = seq.to_i
                     increment = increment_str.to_i if increment_str
                     f.close
