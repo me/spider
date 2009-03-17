@@ -317,11 +317,13 @@ module Spider
         end
         
         def resources
-            res = @resources.clone
-            seen = {}
+            res = @resources.clone + widget_resources
+            return res
+        end
+        
+        def widget_resources
+            res = []
             @widgets.each do |id, w|
-                next if seen[w.class]
-                seen[w.class] = true
                 res += w.resources
             end
             return res
