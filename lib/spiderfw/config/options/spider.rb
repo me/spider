@@ -48,4 +48,10 @@ module Spider
     config_option 'shared_store.type', _("Which shared store to use"), :default => 'memory'
     
     config_option 'http.nonce_life', _("Life in seconds of HTTP Digest Authentication nonces"), :type => Fixnum, :default => 60
+    # TODO: implement in webrick/others, check if has a performance gain
+    config_option 'http.auto_headers', _("Automatically send headers on first output (breaks the debugger)"), :default => true
+    config_option 'http.seize_stdout', _("Redirect standard output to the browser"), :default => false
+    
+    config_option 'debug.console.level', _("Level of debug output to console"), :type => Symbol, :default => :INFO #,
+#                    :process => lambda{ |v| v.upcase }
 end

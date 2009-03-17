@@ -10,16 +10,17 @@ module Spider
         
         
         def initialize(request, response, scene=nil)
-            @response = response
-            @response.status = Spider::HTTP::OK
-            @response.headers = {
-                
+            response.status = Spider::HTTP::OK
+            response.headers = {
+                'Content-Type' => 'text/plain',
                 'Connection' => 'close'
             }
             @previous_stdout = $stdout
             Thread.current[:stdout] = response.server_output
-            $stdout = ThreadOut
-            super
+            $out = ThreadOut
+            $stdout = ThreadOut if Spider.conf.get('http.seize_stdout')
+            request.extend(HTTPRequest)
+            super(request, response, scene)
         end
         
         def before(action='', *arguments)
@@ -76,6 +77,13 @@ module Spider
                 @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
                 super
             end
+        end
+        
+        module HTTPRequest
+            def path
+                self.env['REQUEST_PATH']
+            end
+            
         end
     
         
