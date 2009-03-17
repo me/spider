@@ -38,23 +38,32 @@ module Spider; module HTTP
         end
         
         def write(msg)
-            send_headers unless @response.header_sent
+            unless @response.header_sent
+                #Spider::Logger.debug("Sending headers because wrote #{msg}")
+                send_headers
+            end
             @response.write(msg)
+        end
+        
+        def self.send_headers(controller_response, response)
+            controller_response.prepare_headers
+            response.status = controller_response.status
+            response.send_status(nil)
+            controller_response.headers.each do |key, val|
+                if (val.is_a?(Array))
+                    val.each{ |v| response.header[key] = v }
+                else
+                    response.header[key] = val
+                end
+            end
+            response.send_header
         end
         
         def send_headers
             Spider::Logger.debug("---SENDING HEADERS----")
-            @controller_response.prepare_headers
-            @response.status = @controller_response.status
-            @response.send_status(nil)
-            @controller_response.headers.each do |key, val|
-                if (val.is_a?(Array))
-                    val.each{ |v| @response.header[key] = v }
-                else
-                    @response.header[key] = val
-                end
-            end
-            @response.send_header
+            
+            self.class.send_headers(@controller_response, @response)
+
             
         end
         
@@ -95,13 +104,19 @@ module Spider; module HTTP
             controller_request.request_time = Time.now
 
             controller_response = Spider::Response.new
-            controller_response.server_output = MongrelIO.new(response, controller_response)
+            if (Spider.conf.get('http.auto_headers'))
+                Spider::Logger.debug("ENABLING AUTO HEADERS: #{Spider.conf.get('http.auto_headers')}")
+                controller_response.server_output = MongrelIO.new(response, controller_response)
+            else
+                controller_response.server_output = response
+            end
 
             begin
                 controller = ::Spider::HTTPController.new(controller_request, controller_response)
                 controller.extend(Spider::FirstResponder)
                 Spider::Logger.debug("CONTROLLER: #{controller}")
                 controller.before(path)
+                MongrelIO.send_headers(controller_response, response) unless Spider.conf.get('http.auto_headers')
                 controller.execute(path)
                 Spider::Logger.debug("Response:")
                 Spider::Logger.debug(controller.response)
@@ -112,7 +127,7 @@ module Spider; module HTTP
                 Spider.logger.error(exc)
                 controller.ensure() if controller
             ensure
-                controller_response.server_output.send_headers unless response.header_sent
+                MongrelIO.send_headers(controller_response, response) unless response.header_sent
                 Spider::Logger.debug("---- Closing Mongrel Response ---- ")
                 response.finished
                 
