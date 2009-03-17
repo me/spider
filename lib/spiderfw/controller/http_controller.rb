@@ -1,5 +1,4 @@
 require 'spiderfw/controller/spider_controller'
-require 'spiderfw/controller/formats/html'
 require 'spiderfw/controller/session/memory_session'
 require 'spiderfw/controller/session/file_session'
 
@@ -36,12 +35,12 @@ module Spider
             elsif (@request.env['REQUEST_METHOD'] == 'GET')
                 @request.params = Spider::HTTP.parse_query(@request.env['QUERY_STRING'])
             end
-            @extensions = {
-                'js' => {:format => :js, :content_type => 'application/javascript'},
-                'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
-                #'json' => {:format => :json, :content_type => 'text/x-json'}
-                'json' => {:format => :json, :content_type => 'text/plain'}
-            }
+            # @extensions = {
+            #     'js' => {:format => :js, :content_type => 'application/javascript'},
+            #     'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
+            #     #'json' => {:format => :json, :content_type => 'text/x-json'}
+            #     'json' => {:format => :json, :content_type => 'text/plain'}
+            # }
 
             super
         end
