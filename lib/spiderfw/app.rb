@@ -1,3 +1,5 @@
+require 'spiderfw/controller/app_controller'
+
 module Spider
     
     module App
@@ -7,26 +9,33 @@ module Spider
                 
                 include Spider::DataTypes
                 
-                @controller ||= :MainController
+                #@controller ||= :"Spider::AppController"
                 class << self
-                    attr_reader :path, :pub_path, :test_path, :setup_path
+                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path
+                    attr_reader :route_url
                     attr_reader :short_prefix
                     
                     def init
-                        @pub_path ||= @path+'/public'
+                        @pub_path ||= @path+'/pub'
                         @test_path ||= @path+'/test'
                         @setup_path ||= @path+'/setup'
+                        @widgets_path ||= @path+'/widgets'
+                        @route_url ||= Inflector.underscore(self.name)
                     end
                     
                     def controller
                         #controllers = self.const_get(:Controllers)
-                        controller = const_defined?(@controller) ? const_get(@controller) : Spider::Controller
+                        if (!@controller || !const_defined?(@controller))
+                            @controller = :AppController
+                            return const_set(@controller, Spider::AppController.clone)
+                            
+                        end
+                        return const_get(@controller)
                         # default_helpers = [:StaticContent]
                         #                         default_helpers.each do |helper|
                         #                             h = Spider::Helpers.const_get(helper)
                         #                             controller.class_eval{ include(h) } unless (controller.include?(h))
                         #                         end
-                        return controller
                     end
                     
                     def models
@@ -50,6 +59,19 @@ module Spider
                     
                     def controllers
                         self.constants.map{ |m| const_get(m) }.select{ |m| m.subclass_of? Spider::Controller }
+                    end
+                    
+                    def register_tag(tag, obj)
+                        @tags ||= {}
+                        @tags[tag] = obj
+                    end
+                    
+                    def get_tag(tag)
+                        @tags[tag]
+                    end
+                    
+                    def has_tag?(tag)
+                        @tags[tag] ? true : false
                     end
                     
                 end
