@@ -4,7 +4,7 @@ require 'uuid'
 module Spider; module Auth
     
     class User < Spider::Model::BaseModel
-        element :uid, String, :primary_key => true
+        element :uid, String, :primary_key => true, :read_only => true
         many :groups, Spider::Auth::Group, :add_multiple_reverse => :users
         
         with_mapper_subclasses do
