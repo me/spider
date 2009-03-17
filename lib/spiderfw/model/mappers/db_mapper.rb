@@ -90,7 +90,7 @@ module Spider; module Model; module Mappers
                                     key_type = key.model.primary_keys[0].type
                                     key_value = element_val.get(key.name).get(key.model.primary_keys[0])
                                 else
-                                    key_type = key.model? ? key.model.primary_keys[0].type : key.type 
+                                    key_type = key.model? ? key.model.primary_keys[0].type : key.type
                                     key_value = element_val.get(key.name)
                                 end
                                 store_key = schema.foreign_key_field(element.name, key.name)
