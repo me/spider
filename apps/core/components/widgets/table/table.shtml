@@ -3,7 +3,9 @@
     <table class="{ @widget[:css_class] }">
         <tr class="heading_row">
             <th sp:each="@elements |element|">
-                { @labels[element] }
+                <a sp:tag-if="@sortable[element]" href="{ @request[:path] }?_w{ @widget[:param] }[sort]={ element }">
+                    { @labels[element] }
+                </a>
             </th>
         </tr>
         <tr sp:each_index="@rows |row_i|" class="row { (row_i%2==0) ? 'odd' : 'even' }">
@@ -19,7 +21,4 @@
             </td>
         </tr>
     </table>
-    <div >
-        
-    </div>
 </div>
