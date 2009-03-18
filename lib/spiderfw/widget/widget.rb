@@ -1,6 +1,6 @@
 require 'spiderfw/controller/controller'
 require 'spiderfw/templates/template'
-require 'spiderfw/templates/visual'
+require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/widget/widget_attributes'
 require 'spiderfw/controller/mixins/http'
 

@@ -1,7 +1,7 @@
 require 'spiderfw/templates/template'
 require 'spiderfw/templates/layout'
 
-module Spider
+module Spider; module ControllerMixins
     
     # Mixin for objects using templates
     module Visual
@@ -126,4 +126,4 @@ module Spider
     end
     
     
-end
+end; end

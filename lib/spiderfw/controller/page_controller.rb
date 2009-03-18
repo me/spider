@@ -1,7 +1,7 @@
 module Spider
 
     class PageController < Controller
-        include Visual
+        include ControllerMixins::Visual
 
         def initialize(request, response, scene=nil)
             super
