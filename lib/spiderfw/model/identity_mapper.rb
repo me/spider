@@ -21,6 +21,7 @@ module Spider; module Model
                     values[k.name]
                 raise IdentityMapperException, "Can't get without all primary keys" unless pks[k.name]
             end
+            pks.extend(HashComparison)
             obj = (@objects[model][pks] ||= model.new(pks))
             pks.each{ |k, v| obj.element_loaded(k) }
             values.reject{|k,v| model.elements[k].primary_key? }.each do |k, v|
@@ -47,6 +48,16 @@ module Spider; module Model
                 else
                     return @objects[obj.class][pks] = obj
                 end
+            end
+        end
+
+        
+        module HashComparison
+            def eql?(h)
+                self == h
+            end
+            def hash
+                self.to_a.hash
             end
         end
         
