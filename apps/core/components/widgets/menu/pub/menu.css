@@ -9,6 +9,10 @@
     padding-right: 20px;
 }
 
+.spider.components.menu .menu li.active{
+    font-weight: bold;
+}
+
 .spider.components.menu .content{
     float: left;
 }

@@ -2,7 +2,7 @@
     <tpl:resource type="css" src="menu.css" />
     <div id="menu" class="menu">
         <ul>
-            <li sp:each="@items |item|">
+            <li sp:each="@items |item|" class="{ item == @current ? 'active' : 'inactive' }">
                 <a href="{ @links[item] }">{ @labels[item] }</a>
             </li>
         </ul>
