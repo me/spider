@@ -179,7 +179,20 @@ module Spider
             scene.widgets ||= {}
             scene.widgets.merge!(@widgets)
 #            Spider::Logger.debug("Template #{@path} RUN")
-            scene.instance_eval(@compiled.run_code, @compiled.cache_path+'/run.rb')
+            if Spider.conf.get('template.safe')
+                debug("RENDERING IN SAFE MODE!")
+                debug(@compiled.run_code)
+                # FIXME: must send header before safe mode
+                current_thread = Thread.current
+                t = Thread.new { 
+                    Thread.current[:stdout] = current_thread[:stdout]
+                    $SAFE = 4
+                    scene.instance_eval(@compiled.run_code, @compiled.cache_path+'/run.rb')
+                }
+                t.join
+            else
+                scene.instance_eval(@compiled.run_code, @compiled.cache_path+'/run.rb')
+            end
         end
         
 

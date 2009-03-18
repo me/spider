@@ -29,6 +29,7 @@ module Spider
     
     # Templates
     config_option 'template.cache.disable', _("Refresh template cache every time"), { :default => false }
+    config_option 'template.safe', _("Run templates in safe mode"), { :default => false }
     
     # Model
     
