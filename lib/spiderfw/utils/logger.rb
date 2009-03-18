@@ -26,6 +26,7 @@ module Spider
                 
         
             def send_to_loggers(action, *args)
+                return if $SAFE > 1
                 return unless @@loggers
                 @@loggers.each{ |dest, logger| logger.send(action, *args) }
             end
