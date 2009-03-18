@@ -3,7 +3,7 @@ require 'uuid'
 require 'digest/md5'
 require 'macaddr'
 
-module Spider; module Helpers
+module Spider; module ControllerMixins
     
     module HTTP
         

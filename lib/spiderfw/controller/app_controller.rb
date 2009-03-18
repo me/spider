@@ -1,4 +1,4 @@
-require 'spiderfw/controller/helpers/static_content'
+require 'spiderfw/controller/mixins/static_content'
 
 module Spider
     

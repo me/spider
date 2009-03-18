@@ -1,4 +1,4 @@
-module Spider; module Helpers
+module Spider; module ControllerMixins
     
     module StaticContent
         

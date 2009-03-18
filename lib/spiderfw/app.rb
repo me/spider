@@ -31,11 +31,6 @@ module Spider
                             
                         end
                         return const_get(@controller)
-                        # default_helpers = [:StaticContent]
-                        #                         default_helpers.each do |helper|
-                        #                             h = Spider::Helpers.const_get(helper)
-                        #                             controller.class_eval{ include(h) } unless (controller.include?(h))
-                        #                         end
                     end
                     
                     def models

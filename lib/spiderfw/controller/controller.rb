@@ -7,15 +7,15 @@ require 'spiderfw/controller/controller_exceptions'
 require 'spiderfw/controller/first_responder'
 require 'spiderfw/widget/widget'
 
-require 'spiderfw/controller/helpers/http'
-require 'spiderfw/controller/helpers/static_content'
+require 'spiderfw/controller/mixins/http'
+require 'spiderfw/controller/mixins/static_content'
 
 module Spider
     
     class Controller
         include Dispatcher
         include Logger
-        include Helpers
+        include ControllerMixins
         
         class << self
 

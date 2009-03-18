@@ -5,7 +5,7 @@ require 'spiderfw/controller/session/file_session'
 module Spider
     
     class HTTPController < Controller
-        include Helpers::HTTP
+        include HTTP
         
         
         def initialize(request, response, scene=nil)

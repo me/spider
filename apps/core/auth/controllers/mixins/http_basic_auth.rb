@@ -1,7 +1,7 @@
 module Spider; module Auth
     
     module HTTPBasicAuth
-        include Spider::Helpers::HTTP
+        include HTTP
         
         def before(action='', *arguments)
             if (uid = check_basic_auth(LoginAuthenticator.new))

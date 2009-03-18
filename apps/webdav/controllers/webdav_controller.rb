@@ -5,7 +5,7 @@ require 'iconv'
 module Spider; module WebDAV
     
     class WebDAVController < Spider::Controller
-        include Spider::Helpers::HTTP
+        include Spider::ControllerMixins::HTTP
         CRLF = "\r\l"
         PUT_READ_BUFFER = 16384
         
@@ -450,7 +450,7 @@ module Spider; module WebDAV
     					    raise Spider::Controller::NotFound.new(e.file)
 					    end
     					pe << prop_el if prop_el
-    				rescue Spider::Helpers::HTTP::HTTPStatus, Spider::Controller::NotFound => e
+    				rescue Spider::ControllerMixins::HTTP::HTTPStatus, Spider::ControllerMixins::NotFound => e
     					# FIXME: add to errstat
     					ps = REXML::Element.new("D:propstat")
     					ps << gen_element('D:prop', gen_element("D:#{pname}"))

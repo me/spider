@@ -3,7 +3,7 @@ require 'apps/core/auth/lib/digest_authenticator'
 module Spider; module Auth
     
     module HTTPDigestAuth
-        include Spider::Helpers::HTTP
+        include HTTP
         
         def before(action='', *arguments)
             if (uid = check_digest_auth(DigestAuthenticator.new))
