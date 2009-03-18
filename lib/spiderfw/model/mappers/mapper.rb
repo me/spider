@@ -25,6 +25,7 @@ module Spider; module Model
             element = element.name if (element.is_a? Element)
             element = @model.elements[element]
             return false if (element.attributes[:unmapped])
+            return false if (element.attributes[:computed_from])
             return false if @no_map_elements[element.name]
             return true
         end
@@ -285,7 +286,7 @@ module Spider; module Model
                     obj_res = set.find(search)  # FIXME: find a better way
                     if (obj_res && obj_res[0])
                         obj_res[0].merge!(obj)
-                        obj.loaded_elements.each{ |name, bool| set.element_loaded(name)}
+                        obj.loaded_elements.each{ |name, bool| set.element_loaded(name) }
                     else
                         set << obj
                     end
