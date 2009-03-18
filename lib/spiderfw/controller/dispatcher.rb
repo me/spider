@@ -46,13 +46,14 @@ module Spider
             obj, route_action, new_arguments = dispatch(method, action, *arguments)
             return nil unless obj
             meth_action = route_action.length > 0 ? route_action : obj.class.default_action
-            unless meth_action.empty?
-                meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
-                try_meth = "#{method}_#{meth_action.downcase}"
-                obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
-            end
             begin
-                return obj.send(method, route_action, *(new_arguments))
+                res = obj.send(method, route_action, *(new_arguments))
+                unless meth_action.empty?
+                    meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
+                    try_meth = "#{method}_#{meth_action.downcase}"
+                    res = obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
+                end
+                return res
             rescue => exc
                 if (obj.respond_to?(:try_rescue))
                     obj.send(:try_rescue, exc)
