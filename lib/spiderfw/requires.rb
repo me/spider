@@ -11,3 +11,4 @@ require 'spiderfw/utils/periodic_runner'
 require 'spiderfw/config/configuration'
 require 'spiderfw/config/configurable'
 require 'spiderfw/model/model'
+

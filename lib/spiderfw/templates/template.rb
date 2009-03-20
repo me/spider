@@ -30,9 +30,9 @@ module Spider
                 @allowed_blocks
             end
 
-            def load(path, scene={})
+            def load(path)
                 raise RuntimeError, "Template #{path} does not exist" unless File.exist?(path)
-                template = self.new(scene)
+                template = self.new(path)
                 template.load(path)
                 return template
             end
@@ -75,13 +75,13 @@ module Spider
         
         
         
-        def initialize(path=nil, scene=nil)
+        def initialize(path=nil)
             @path = path
-            @scene = scene
             @widgets = {}
             @subtemplates = {}
             @id_path = []
             @resources = []
+            @content = {}
         end
         
         def bind(scene)
@@ -146,14 +146,12 @@ module Spider
             widget.parse_content_xml(content) if content
         end
         
-        #def init(request, scene)
-        def init(scene=nil)
+        def init(scene)
 #            Spider::Logger.debug("Template #{@path} INIT")
             load unless loaded?
-            scene ||= (@scene || Scene.new)       
-            scene = Scene.new(scene) if scene.class == Hash
             # debug("Template #{@path} init")
             # debug(@compiled.init_code)
+            @scene = scene
             instance_eval(@compiled.init_code, @compiled.cache_path+'/init.rb')
             @init_done = true
         end
@@ -168,17 +166,16 @@ module Spider
         def prepare
         end
         
-        def render(scene=nil)
+        def render(scene)
             load unless loaded?
-            scene ||= (@scene || Scene.new)       
-            scene = Scene.new(scene) if scene.class == Hash
             # debug("Template #{@path} rendering with scene:")
             # debug(scene)
             init(scene) unless init_done?
             init_sub unless init_sub_done?
-            scene.widgets ||= {}
-            scene.widgets.merge!(@widgets)
+            # scene.widgets ||= {}
+            # scene.widgets.merge!(@widgets)
 #            Spider::Logger.debug("Template #{@path} RUN")
+            @content.merge!(@widgets)
             if Spider.conf.get('template.safe')
                 debug("RENDERING IN SAFE MODE!")
                 debug(@compiled.run_code)
@@ -187,12 +184,23 @@ module Spider
                 t = Thread.new { 
                     Thread.current[:stdout] = current_thread[:stdout]
                     $SAFE = 4
-                    scene.instance_eval(@compiled.run_code, @compiled.cache_path+'/run.rb')
+                    scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb')
+                    scene.__run_template
+                    scene.__run_template do |widget|
+                        @content[widget].run
+                    end
                 }
                 t.join
             else
-                scene.instance_eval(@compiled.run_code, @compiled.cache_path+'/run.rb')
+                scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb')
+                scene.__run_template do |widget|
+                    @content[widget].run
+                end
             end
+        end
+        
+        def run
+            render(@scene)
         end
         
 

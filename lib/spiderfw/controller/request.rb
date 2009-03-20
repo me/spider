@@ -34,6 +34,11 @@ module Spider
             @body = b
         end
         
+        # Original request path
+        def path
+            @action
+        end
+        
     end
     
 end

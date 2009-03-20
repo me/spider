@@ -29,14 +29,16 @@ module Spider; module ControllerMixins
         
         def render(path=nil, options={})
             scene = options[:scene] || @scene
+            scene ||= get_scene
+            scene = prepare_scene(scene)
             request = options[:request] || @request
             response = options[:response] || @response
             template = load_template(path)
             template.request = request
             template.response = response
-            template.init
+            template.init(scene)
             template.init_sub
-            unless (@_partial_render)
+            unless (@_partial_render) # TODO: implement or remove
                 chosen_layout = options[:layout] || @layout
                 if (chosen_layout)
                     l = chosen_layout.is_a?(Layout) ? chosen_layout : self.class.load_layout(chosen_layout)
@@ -109,11 +111,11 @@ module Spider; module ControllerMixins
                 return t
             end
             
-            def load_layout(path, scene={})
+            def load_layout(path)
                 unless respond_to?(:layout_path)
                     raise NotImplementedError, "The layout_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
-                return Spider::Layout.new(layout_path+'/'+path+'.shtml', scene)
+                return Spider::Layout.new(layout_path+'/'+path+'.shtml')
             end
             
             

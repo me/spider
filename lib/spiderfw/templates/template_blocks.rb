@@ -85,7 +85,7 @@ module Spider
                 return res
             end
             
-            def vars_to_scene(str)
+            def vars_to_scene(str, container='self')
                 res = ""
                 scanner = ::StringScanner.new(str)
                 pos = 0
@@ -93,7 +93,7 @@ module Spider
                     text = scanner.pre_match[pos..-1]
                     pos = scanner.pos
                     res += text
-                    res += "scene[:#{scanner.matched[1..-1]}]"
+                    res += "#{container}[:#{scanner.matched[1..-1]}]"
                 end
                 res += scanner.rest
                 return res

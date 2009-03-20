@@ -79,6 +79,7 @@ module Spider
         end
         
         module HTTPRequest
+            
             def path
                 self.env['REQUEST_PATH']
             end

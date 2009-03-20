@@ -2,13 +2,14 @@ require 'spiderfw/controller/controller_io'
 require 'spiderfw/controller/request'
 require 'spiderfw/controller/response'
 require 'spiderfw/controller/scene'
-require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/controller/controller_exceptions'
 require 'spiderfw/controller/first_responder'
-require 'spiderfw/widget/widget'
 
+require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/controller/mixins/http'
 require 'spiderfw/controller/mixins/static_content'
+
+require 'spiderfw/controller/helpers/widget_helper'
 
 module Spider
     
@@ -16,6 +17,7 @@ module Spider
         include Dispatcher
         include Logger
         include ControllerMixins
+        include Helpers
         
         class << self
 
@@ -45,7 +47,7 @@ module Spider
                     return true if check.is_a?(Regexp) && action =~ check
                 end
                 return false
-            end      
+            end
             
         end
         
@@ -55,7 +57,7 @@ module Spider
         def initialize(request, response, scene=nil)
             @request = request
             @response = response
-            @scene = scene || Scene.new
+            @scene = scene || get_scene
             @dispatch_path = ''
             init
             #@parent = parent
@@ -135,8 +137,22 @@ module Spider
             @done = val
             @dispatch_previous.done = val if @dispatch_previous
         end
-
         
+        def get_scene(scene=nil)
+            scene = Scene.new(scene) if scene.class == Hash
+            scene ||= Scene.new
+            # debugger
+            # scene.extend(SceneMethods)
+            return scene
+        end
+        
+        def prepare_scene(scene)
+            scene.request = {
+                :path => @request.path
+            }
+            return scene
+        end
+
         protected
 
         def dispatched_object(route)
@@ -148,8 +164,6 @@ module Spider
         end
         
 
-
-        
         def try_rescue(exc)
             raise exc
         end
@@ -164,10 +178,14 @@ module Spider
             do_dispatch(:execute, action)
             return true
         end
-
         
+        module SceneMethods
+        end
+
+
     end
     
     
 end
 
+require 'spiderfw/widget/widget'

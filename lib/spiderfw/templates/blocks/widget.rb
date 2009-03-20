@@ -50,7 +50,7 @@ module Spider; module TemplateBlocks
                 t_param = 't'
             end
             init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{html}', #{t_param})\n"
-            c = "self[:widgets][:#{id}].run\n"
+            c = "yield :#{id}\n"
             return CompiledBlock.new(init, c)
         end
         

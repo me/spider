@@ -1,14 +1,14 @@
+require 'spiderfw/controller/controller'
+
 module Spider
 
     class PageController < Controller
-        include ControllerMixins::Visual
+        include Visual
+        include WidgetHelper
 
         def initialize(request, response, scene=nil)
             super
             @widgets = {}
-            @scene.request = {
-                :path => request.path
-            }
         end
         
         
@@ -26,23 +26,14 @@ module Spider
             template.widgets = @widgets
             return template
         end
-        
-        def render(path=nil, scene=nil)
-            scene ||= @scene
-            scene[:widgets] = @widgets
-            super(path, scene)
-        end
-        
-        def param_name(widget_or_id_path)
-            id_path = widget_or_id_path.is_a?(Widget) ? widget_or_id_path.id_path : widget_or_id_path
-            pre = id_path.map{ |part| "[#{part}]"}.join('')
-        end
-        
-        def params_for(widget_or_id_path, params)
-            pre = param_name(widget_or_id_path)
-            params.map{ |k, v| "#{pre}[#{k}]=#{v}"}.join('&')
-        end
-            
+        # 
+        # def render(path=nil, scene=nil)
+        #     scene ||= @scene
+        #     scene[:widgets] = @widgets
+        #     super(path, scene)
+        # end
+        # 
+
 
 
     end

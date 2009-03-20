@@ -153,13 +153,7 @@ module Spider; module ControllerMixins
                 Spider::HTTP.status_messages[@code]
             end
         end
-        
-        class HTTPRequest
-            
-            
-            
-        end
-        
+
         
     end
     

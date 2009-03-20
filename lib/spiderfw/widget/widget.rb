@@ -10,7 +10,7 @@ module Spider
         include HTTP
         
         attr_accessor :request, :scene, :template_name, :widgets, :template, :id, :id_path
-        attr_reader :attributes, :widget_attributes
+        attr_reader :attributes, :widget_attributes, :css_class
         
         @@common_attributes = {
             :id => {}
@@ -222,38 +222,20 @@ module Spider
         end
         
         def run
-#            debug("RUNNING init_widget ON #{full_id} BECAUSE NOT DONE") unless init_widget_done?
             init_widget unless init_widget_done?
             if (self.class.scene_attributes) # Repeat for new instance variables
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end
             end
-#            debug("WIDGET #{full_id} RENDERING WITH SCENE #{@scene}")
-            @scene.widget = {
-                :id_path => @id_path,
-                :full_id => full_id,
-                :param => param_name(self),
-                :pub_path => self.class.pub_url,
-                :css_class => @css_class || Inflector.underscore(self.class.name).gsub('_', '-').gsub('/', ' ')
-            }
             render
         end
         
         def render
+            prepare_scene(@scene) # FIXME
             @template.render(@scene)
         end
-        
-        # def render(path=nil, scene=nil)
-        #     scene ||= @scene
-        #     debug("WIDGET RENDERING, SCENE:")
-        #     debug(scene)
-        #     self.class.scene_elements.each do |element|
-        #         scene[element] = instance_variable_get("@#{element}")
-        #     end
-        #     super(path, scene)
-        # end
-                
+                        
         def try_rescue(exc)
             if (exc.is_a?(NotFound))
                 error("Widget path not found: #{exc.path}")
