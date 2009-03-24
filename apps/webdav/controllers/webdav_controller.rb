@@ -31,7 +31,7 @@ module Spider; module WebDAV
 		end
 		
 		def normalize_path(path)
-		    path.sub!(/http:\/\/[^\/]+\/#{dispatch_prefix}/, '')
+		    path.sub!(/http:\/\/[^\/]+\/#{call_path}/, '')
 		    path = '/'+path unless !path.empty? && path[0].chr == '/'
 		    path.gsub!(/\/+$/, '') unless path == '/'
 		    path = Spider::HTTP.urldecode(path)
@@ -39,7 +39,7 @@ module Spider; module WebDAV
 	    
 	    def map_path_to_request(path)
 	        path.sub!(/^\/+/, '')
-	        '/'+dispatch_prefix+'/'+path
+	        '/'+call_path+'/'+path
         end
         
         def vfs

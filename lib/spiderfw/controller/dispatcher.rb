@@ -3,9 +3,7 @@ module Spider
     # The includer of this module has to define a method dispatched_object, which must
     # return a child object given the class, the next action, and the route parameters
     module Dispatcher
-        attr_reader :dispatched_action
         attr_accessor :dispatch_previous
-        attr_accessor :action
         
         def self.included(klass)
            klass.extend(ClassMethods)
@@ -33,11 +31,9 @@ module Spider
         
         def dispatch(method, action='', *arguments)
             return nil unless can_dispatch?(method, action)
-            @dispatched_action = action
             obj, route = @dispatch_next[action]
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
-            obj.action = route.action
             return [obj, route.action, new_arguments]
 #            return obj.send(method, route.action, *(new_arguments))
         end
@@ -91,6 +87,7 @@ module Spider
                 case try
                 when true
                     action = path
+                    matched = path
                 when String
                     test_path = path
                     if (options[:ignore_case])
@@ -99,6 +96,7 @@ module Spider
                     end
                     if (test_path[0..(try.length-1)] == try)
                         action = path[(try.length)..-1]
+                        matched = try
                     end
                 when Regexp
                     action_index = options[:action_match]
@@ -106,6 +104,7 @@ module Spider
                     if (match)
                         action = action_index ? match[action_index] : match.post_match
                         params = match[1..(match.length-1)]
+                        matched = match[0]
                     end
                 when Proc
                     res = try.call(path, self)
@@ -113,6 +112,7 @@ module Spider
                         if (res.is_a?(Array))
                             action = res[0]
                             params = res[1]
+                            matched = res[1]
                         else
                             action = res
                         end
@@ -128,9 +128,8 @@ module Spider
                         dest = self
                     end
                     params ||= []
-                    # no leading slash 
-                    action.slice!(0) if action.length > 0 && action[0].chr == '/'
-                    return Route.new(:path => path, :dest => dest, :action => action, 
+                    action.sub!(/^\/+/, '') # no leading slash
+                    return Route.new(:path => path, :dest => dest, :action => action, :matched => matched,
                                      :params => params, :options => options)
                 end
             end
@@ -190,7 +189,7 @@ module Spider
         end
         
         class Route
-            attr_accessor :path, :dest, :action, :params, :options
+            attr_accessor :path, :dest, :action, :params, :options, :matched
             
             def initialize(args)
                 @path = args[:path]
@@ -198,6 +197,7 @@ module Spider
                 @action = args[:action]
                 @params = args[:params] || []
                 @options = args[:options] || {}
+                @matched = args[:matched]
             end
             
         end

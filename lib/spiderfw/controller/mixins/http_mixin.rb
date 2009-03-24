@@ -20,6 +20,16 @@ module Spider; module ControllerMixins
             done
         end
         
+        def request_path
+            p = super
+            if (maps = Spider.conf.get('http.proxy_mapping'))
+                maps.each do |proxy, spider|
+                    return spider + p[proxy.length..-1] if (p[0..proxy.length-1] == proxy)
+                end
+            end
+            return p
+        end
+        
         def before(action='', *arguments)
             # Redirect to url + slash if controller is called without action
             if (action == '' && @request.env['PATH_INFO'][-1].chr != '/')

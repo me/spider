@@ -52,7 +52,7 @@ module Spider
         end
         
         attr_reader :request, :response
-        attr_reader :action
+        attr_accessor :dispatch_action
         
         def initialize(request, response, scene=nil)
             @request = request
@@ -72,11 +72,17 @@ module Spider
             self.class.to_s
         end
         
-        def dispatch_prefix
-            return '' if @request.action.empty?
-            index = @request.action.index(@action)
-            return '' if index == 0
-            @request.action[0..index-1].gsub(/\/+$/, '')
+        def call_path
+            act = @dispatch_action || ''
+            if (@dispatch_previous)
+                prev = @dispatch_previous.call_path 
+                act = prev+'/'+act unless prev.empty?
+            end
+            return ('/'+act).gsub(/\/+/, '/')
+        end
+        
+        def request_path
+            call_path
         end
         
         
@@ -150,6 +156,9 @@ module Spider
             scene.request = {
                 :path => @request.path
             }
+            scene.controller = {
+                :request_path => request_path
+            }
             return scene
         end
 
@@ -159,6 +168,7 @@ module Spider
             klass = route.dest
             return klass if klass.class != Class
             obj = klass.new(@request, @response, @scene)
+            obj.dispatch_action = route.matched || ''
 #            obj.dispatch_path = @dispatch_path + route.path
             return obj
         end

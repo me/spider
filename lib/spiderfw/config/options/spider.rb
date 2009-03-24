@@ -52,6 +52,8 @@ module Spider
     # TODO: implement in webrick/others, check if has a performance gain
     config_option 'http.auto_headers', _("Automatically send headers on first output (breaks the debugger)"), :default => true
     config_option 'http.seize_stdout', _("Redirect standard output to the browser"), :default => false
+    config_option 'http.proxy_mapping', _("If the request is proxyied, the urls used to reach spider, with the corresponding paths called by the proxy"),
+        :type => Hash
     
     config_option 'debug.console.level', _("Level of debug output to console"), :type => Symbol, :default => :INFO #,
 #                    :process => lambda{ |v| v.upcase }
