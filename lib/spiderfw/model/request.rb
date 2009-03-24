@@ -18,8 +18,12 @@ module Spider; module Model
         end
         
         def request(element)
-            element.to_s.split(',').each do |el|
-                self[el.strip] = true
+            if (element.is_a?(Element))
+                self[element.name.to_s] = true
+            else
+                element.to_s.split(',').each do |el|
+                    self[el.strip] = true
+                end
             end
         end
     

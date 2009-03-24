@@ -201,6 +201,7 @@ module Spider; module Model
                 Spider::Logger.debug("Deleting with condition:")
                 Spider::Logger.debug(condition)
             else
+
                 condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)
             end
             prepare_query_condition(condition)

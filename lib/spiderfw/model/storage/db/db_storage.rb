@@ -200,7 +200,7 @@ module Spider; module Model; module Storage; module Db
                 sql, bind_vars = sql_select(query)
                 execute(sql, *bind_vars)
             when :count
-                query[:keys] = 'COUNT(*) AS N'
+                query[:keys] = ['COUNT(*) AS N']
                 sql, bind_vars = sql_select(query)
                 return execute(sql, *bind_vars)[0]['N']
             end

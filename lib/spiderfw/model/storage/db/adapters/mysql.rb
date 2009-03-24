@@ -204,7 +204,9 @@ module Spider; module Model; module Storage; module Db
              @last_query_type = :select
              bind_vars = query[:bind_vars] || []
              tables_sql, tables_values = sql_tables(query)
-             sql = "SELECT SQL_CALC_FOUND_ROWS #{sql_keys(query)} FROM #{tables_sql} "
+             sql = "SELECT "
+             sql += "SQL_CALC_FOUND_ROWS " unless query[:query_type] == :count
+             sql += "#{sql_keys(query)} FROM #{tables_sql} "
              bind_vars += tables_values
              where, vals = sql_condition(query)
              bind_vars += vals

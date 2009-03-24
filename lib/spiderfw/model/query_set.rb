@@ -99,6 +99,9 @@ module Spider; module Model
             
 
         def [](index)
+            if (index.is_a?(Range))
+                return index.map{ |i| self[i] }
+            end
             load unless @objects[index] || @loaded || !autoload?
             val = @objects[index]
             val.set_parent(self, nil) if val
@@ -141,6 +144,10 @@ module Spider; module Model
             return false unless query.limit
             pos = query.offset.to_i + length
             return pos < total_rows
+        end
+        
+        def total_rows
+            return @total_rows ? @total_rows : @model.mapper.count(@query.condition)
         end
         
         def current_length

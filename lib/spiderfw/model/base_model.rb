@@ -359,6 +359,10 @@ module Spider; module Model
             @attributes ||= {}
         end
         
+        def self.attribute(name, value)
+            @attributes[name] = value
+        end
+        
         def self.sequence(name)
             @sequences ||= []
             @sequences << name
@@ -1093,10 +1097,16 @@ module Spider; module Model
         
         def to_s
             self.class.each_element do |el|
-                return get(el) if (el.type == String && !el.primary_key?)
+                if (el.type == String && !el.primary_key?)
+                    v = get(el)
+                    return v ? v.to_s : ''
+                end
             end
             el = self.class.elements_array[0]
-            return get(el) if element_has_value?(el)
+            if element_has_value?(el)
+                v = get(el)
+                return v  ? v.to_s : ''
+            end
             return ''
         end
         

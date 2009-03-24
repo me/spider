@@ -156,8 +156,9 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def count(condition)
-            storage_query = prepare_select(query)
-            storage_query[:type] = :count
+#            debugger
+            storage_query = prepare_select(Query.new(condition, @model.primary_keys))
+            storage_query[:query_type] = :count
             return @storage.query(storage_query)
         end
         

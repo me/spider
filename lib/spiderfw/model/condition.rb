@@ -54,8 +54,11 @@ module Spider; module Model
             @comparisons = {}
             @subconditions = []
             @polymorphs = []
-            if (params.length == 1)
-                super
+            params.reject!{ |p| p.nil? }
+            if (params.length == 1 && params[0].is_a?(Hash) && !params[0].is_a?(Condition))
+                params[0].each do |k, v|
+                    set(k, '=', v)
+                end
             else
                 # FIXME: must have an instantiate method
                 params.each{ |item| self << (item.is_a?(self.class) ? item : self.class.new(item)) } 
@@ -98,6 +101,14 @@ module Spider; module Model
         end
         
         def set(field, comparison, value)
+            if (value.is_a?(Array))
+                or_cond = self.class.or
+                value.each do |v|
+                    or_cond.set(field, comparison, v)
+                end
+                @subconditions << or_cond
+                return self
+            end
             field = field.to_s
             parts = field.split('.', 2)
             if (parts[1])
