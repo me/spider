@@ -3,10 +3,19 @@ module Spider; module Components
     class Admin < Spider::Widget
         tag 'admin'
         
-        i_attribute :models, :process => lambda{ |models| models.split(/,\s*/).map{|m| const_get_full(m) } }
+        i_attribute :models, :process => lambda{ |models| models.split(/,[\s\n]*/).map{|m| const_get_full(m) } }
         
         def init
             @items = []
+        end
+        
+        def parse_content(doc)
+            doc = super
+            @models ||= []
+            doc.search('admin:model').each do |mod|
+                @models << const_get_full(mod.innerText)
+            end
+            return doc
         end
 
         def start

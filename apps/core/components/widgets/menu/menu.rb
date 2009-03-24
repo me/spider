@@ -10,6 +10,7 @@ module Spider; module Components
             @items = []
             @labels = {}
             @links = {}
+            @all_widgets = {}
         end
 
         def start
@@ -21,7 +22,7 @@ module Spider; module Components
                 @current = @items[0]
             end
             session[:current] = @current
-            debug("MENU CURRENT #{@current}")
+            add_widget(@all_widgets[@current])
             @current_widget = @widgets[@current.to_sym]
             @current_label = @labels[@current]
         end
@@ -30,7 +31,7 @@ module Spider; module Components
             @items << widget.id
             @labels[widget.id] = label
             @links[widget.id] = @request.path+'?_w'+params_for(self, {:action => widget.id})
-            add_widget(widget)
+            @all_widgets[widget.id] = widget
         end
         
         def widget_resources

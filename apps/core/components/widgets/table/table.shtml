@@ -14,7 +14,7 @@
             </td>
         </tr>
         <tr class="paginator" sp:if="@paginate">
-            <td colspan={ @elements.size } >
+            <td colspan="{ @elements.size }" >
                 <a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
                 Pagina { @page } di { @pages }
                 <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>

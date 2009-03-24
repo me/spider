@@ -5,10 +5,11 @@ module Spider; module Forms
         is_attribute :action
         i_attribute :model
         attribute :submit_text, :default => _('Submit')
-        is_attribute :pk
+        is_attr_accessor :pk
         attr_to_scene :inputs, :elements, :labels, :error, :errors
         
         attr_accessor :pk
+        attr_reader :obj
         
         def init
             @inputs = {}
@@ -32,8 +33,8 @@ module Spider; module Forms
             create_inputs
             debug("FORM executing")
             save if params['submit']
-            obj = load
-            set_values(obj) if (obj)
+            @obj = load
+            set_values(@obj) if (@obj)
             @scene.submit_text = @attributes[:submit_text]
         end
         

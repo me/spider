@@ -3,20 +3,54 @@
     <div sp:if="@saved" class="top">
         Salvataggio effettuato
     </div>
+    <div sp:if="@deleted" class="top">
+        Cancellazione effettuata
+    </div>
     <div sp:if="@action == :form" class="top">
         <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=table">
             Torna all'elenco
         </a>
     </div>
-    <div sp:if="@action == :table" class="top">
-        <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=form">
-            Crea nuovo
-        </a>
-    </div>
-    <core:table sp:if="@action == :table" id="table" model="@model">
-        <tpl:override-content search="table tr:nth-child(2) td">
-            <a href="{ @links_to_form[row_i] }" sp:tag-if="element == @key_element"><tpl:overridden /></a>
-        </tpl:override>
-    </core:table>
-    <forms:form sp:if="@action == :form" id="form" model="@model" />
+    <core:confirm id="ask_delete" sp:if="@ask_delete">
+        <tpl:content name="text">
+            Sei sicuro di voler cancellare i seguenti elementi?
+            <ul>
+                <li sp:each="@rows_to_del |row|">
+                    { row }
+                </li>
+            </ul>
+        </tpl:content>
+    </core:confirm>
+    <sp:pass sp:if="!@ask_delete">
+        <div sp:if="@action == :table" class="top">
+            <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=form">
+                Crea nuovo
+            </a>
+        </div>
+        <core:table sp:if="@action == :table" id="table" model="@model">
+            <tpl:override-content search="table .row td">
+                <a href="{ @links_to_form[row_i] }" sp:tag-if="element == @key_element"><tpl:overridden /></a>
+            </tpl:override-content>
+            <tpl:append search="table .heading_row">
+                <th>Sel.</th>
+            </tpl:append>
+            <tpl:override search="table">
+                <form action="{ @request[:path] }" method="POST">
+                    <tpl:overridden />
+                    <div class="crud_table_actions">
+                        <input type='submit' name="_w{ param_name(@crud) }[delete]" value="Cancella selezionati">
+                    </div>
+                </form>
+            </tpl:override>
+            <tpl:append search="table .row">
+                <td><input type='checkbox' name="_w{ param_name(@crud) }[selected][{ @rows[row_i][@key_element] }]"></td>
+            </tpl:append>
+            <tpl:override-attr search="table .paginator td" name="colspan" value="{ elements.size + 1 }" />
+        </core:table>
+        <!-- form -->
+        <forms:form sp:if="@action == :form" id="form" model="@model" />
+        <div sp:if="@action == :form && @have_form_tables" class="sub_form_tables">
+            <sp:run obj="@form_tables" />
+        </div>
+    </sp:pass>
 </div>

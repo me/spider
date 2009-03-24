@@ -3,9 +3,10 @@ module Spider; module Components
     class Table < Spider::Widget
         tag 'table'
         i_attribute :model, :required => true
-        attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
+        is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
+        attr_accessor :queryset
         
         def prepare
             if (@attributes[:paginate])
@@ -32,24 +33,52 @@ module Spider; module Components
         end
         
         def execute
-            @scene.elements = @attributes[:elements] || @attributes[:model].elements_array.map{ |el| el.name }
+            @elements ||= @model.elements_array.map{ |el| el.name }
             @scene.sortable = {}
             @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.mapped?(el) ? true : false }
             @scene.labels = {}
-            @scene.elements.each do |el|
+            @elements.each do |el|
                 @scene.labels[el] = @model.elements[el].label
             end
-            @scene.rows = @model.all
+            @rows = @queryset ? @queryset : @model.all
             if (@attributes[:paginate])
-                @scene.rows.limit = @attributes[:row_limit]
-                @scene.rows.offset = @offset
+                @rows.limit = @attributes[:row_limit]
+                @rows.offset = @offset
                 @scene.page = @page
                 @scene.paginate = true
             end
-            @scene.rows.order_by(*@sort) if @sort
-            @scene.rows.load
-            @scene.has_more = @scene.rows.has_more?
-            @scene.pages = (@scene.rows.total_rows.to_f / @attributes[:row_limit]).ceil
+            @rows.order_by(*@sort) if @sort
+            @rows.load
+            @scene.rows = prepare_rows(@rows)
+            @scene.has_more = @rows.has_more?
+            @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
+        end
+        
+        def prepare_rows(rows)
+            res = []
+            rows.each do |row|
+                res_row = {}
+                @elements.each do |el|
+                    if (@model.elements[el].multiple?)
+                        list = "<ul>"
+                        row[el].load
+                        row[el][0..2].each{ |sub|
+                            sub_desc = sub.nil? ? '' : sub.to_s
+
+                            list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
+                        }
+                        list += "<li>...</li>" if (row[el].total_rows > 3)
+                        list += "</ul>"
+                        res_row[el] = list
+                    else
+                        res_row[el] = row[el].to_s
+                    end
+                end
+                debug("RES ROW:")
+                debug(res_row)
+                res << res_row
+            end
+            return res
         end
         
         

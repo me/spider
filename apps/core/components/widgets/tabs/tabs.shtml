@@ -1,0 +1,2 @@
+<sp:template extend="SPIDER/apps/core/components/widgets/menu/menu.shtml">
+</sp:template>

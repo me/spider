@@ -1,0 +1,8 @@
+<sp:template extend="SPIDER/apps/core/components/table/table.shtml">
+    <sp:prepend search="table">
+        <form action="{ @request[:path] }" method="GET">
+            <input type="text" name="_w{ param_name(@widget) }['q']" value="{ @q }">
+            <input type="submit" name="submit" value="Trova">
+        </form>
+    </sp:prepend>
+</sp:template>
