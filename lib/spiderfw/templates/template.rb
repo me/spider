@@ -15,6 +15,8 @@ module Spider
         @@registered = {}
         @@namespaces = {}
         @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
+        @@overrides = ['content', 'override', 'override-content', 'override-attr',
+                        'append', 'prepend', 'delete']
         
         class << self
             
@@ -73,7 +75,9 @@ module Spider
             
         end
         
-        
+        def override_tags
+            @@overrides
+        end
         
         def initialize(path=nil)
             @path = path
@@ -82,6 +86,8 @@ module Spider
             @id_path = []
             @resources = []
             @content = {}
+            @dependencies = []
+            @overrides = []
         end
         
         def bind(scene)
@@ -102,9 +108,9 @@ module Spider
         def compile
             compiled = CompiledTemplate.new
             compiled.source_path = @path
-            doc = open(@path){ |f| Hpricot.XML(f) }
-            root = doc.root
+            root = get_el(@path)
             @overrides.each{ |o| apply_override(root, o) } if (@overrides)
+            root.search('tpl:placeholder').remove # remove empty placeholders
             res =  root.children_of_type('tpl:resource')
             res_init = ""
             res.each do |r|
@@ -118,7 +124,40 @@ module Spider
                 compiled.subtemplates[id] = sub.compile
             end
             compiled.block.init_code = res_init + compiled.block.init_code
+            compiled.devel_info["source.xml"] = root.to_html
             return compiled
+        end
+        
+        def get_el(path)
+            doc = open(@path){ |f| Hpricot.XML(f) }
+            root = doc.root
+            overrides = []
+            override_tags.each do |tag|
+                overrides += root.children_of_type('tpl:'+tag)
+            end
+            overrides.each{ |o| o.set_attribute('class', 'to_delete') }
+            root.search('.to_delete').remove
+            @overrides += overrides
+            if (root.name == 'sp:template' && ext = root.attributes['extend'])
+                ext = real_path(ext)
+                @dependencies << ext
+                tpl = Template.new(ext)
+                root = tpl.get_el
+            else
+                root.search('tpl:include').each do |incl|
+                    src = real_path(incl.attributes[:src])
+                    @dependencies << src
+                    tpl = Template.new(src)
+                    incl.swap(tpl.get_el.to_html)
+                end
+            end
+            return root
+        end
+        
+        def real_path(path)
+            # FIXME: security check for allowed paths?
+            path.sub!(/^SPIDER/, Spider.paths[:root])
+            return path
         end
             
         
@@ -222,21 +261,38 @@ module Spider
         
         def apply_override(el, override)
             search_string = override.attributes['search']
-            return unless search_string
-            # Fix Hpricot bug!
-            search_string.gsub!(/nth-child\((\d+)\)/) do |match|
-                "nth-child(#{$1.to_i-2})"
+            if (search_string)
+                # Fix Hpricot bug!
+                search_string.gsub!(/nth-child\((\d+)\)/) do |match|
+                    "nth-child(#{$1.to_i-2})"
+                end
+                found = el.parent.search(search_string)
+            elsif (override.name == 'tpl:content')
+                found = el.search("tpl:placeholder[@name='#{override.attributes['name']}']")
+            else
+                found = [el]
             end
-            found = el.parent.search(search_string)
-            found.each do |f|
-                if (override.name == 'tpl:override-content')
-                    overridden = f.innerHTML
-                    f.innerHTML = override.innerHTML
-                    f.search('tpl:overridden').each{ |o| o.swap(overridden) }
-                elsif (override.name == 'tpl:override')
-                    overridden = f.to_html
-                    f.swap(override.innerHTML)
-                    f.search('tpl:overridden').each{ |o| o.swap(overridden) }
+            if (override.name == 'tpl:delete')
+                found.remove
+            else
+                found.each do |f|
+                    if (override.name == 'tpl:override-content')
+                        overridden = f.innerHTML
+                        f.innerHTML = override.innerHTML
+                        f.search('tpl:overridden').each{ |o| o.swap(overridden) }
+                    elsif (override.name == 'tpl:override' || override.name == 'tpl:content')
+    #                    debugger
+                        overridden = f.to_html
+                        parent = f.parent
+                        f.swap(override.innerHTML)
+                        parent.search('tpl:overridden').each{ |o| o.swap(overridden) }
+                    elsif (override.name == 'tpl:override-attr')
+                        f.set_attribute(override.attributes["name"], override.attributes["value"])
+                    elsif (override.name == 'tpl:append')
+                        f.innerHTML += override.innerHTML
+                    elsif (override.name == 'tpl:prepend')
+                        f.innerHTML = override.innerHTML + f.innerHTML
+                    end
                 end
             end
         end
@@ -261,10 +317,12 @@ module Spider
     end
     
     class CompiledTemplate
-        attr_accessor :block, :source_path, :cache_path, :subtemplates
+        attr_accessor :block, :source_path, :cache_path, :subtemplates, :devel_info
+        
         
         def initialize()
             @subtemplates = {}
+            @devel_info = {}
         end
         
         def init_code

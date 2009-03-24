@@ -3,11 +3,11 @@ module Spider
     module TemplateBlocks
         
         def self.parse_element(el, allowed_blocks=nil, template=nil)
-            return nil if (el.class == ::Hpricot::BogusETag)
+            return nil if (el.class == ::Hpricot::BogusETag || el.class == ::Hpricot::Comment)
             if (el.class == ::Hpricot::Text)
                 block = :Text
             elsif (el.attributes['sp:if'])
-                block = :If    
+                block = :If
             elsif (el.attributes['sp:tag-if'])
                 block = :TagIf
             elsif (el.attributes['sp:attr-if'])

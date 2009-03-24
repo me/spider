@@ -5,6 +5,7 @@ module Spider
     
     class TemplateCache
         include Logger
+        
    
         def initialize(root_path)
             FileUtils.mkpath(root_path)
@@ -92,6 +93,13 @@ module Spider
                 sub_path = "#{path}/#{id}"
                 FileUtils.mkpath(sub_path)
                 write_compiled_template(sub, sub_path)
+            end
+            compiled.devel_info.each do |name, val|
+                FileUtils.mkpath("#{path}/__info")
+                sub_path = "#{path}/__info/#{name}"
+                File.open(sub_path, 'w') do |f|
+                    f.puts(val)
+                end
             end
         end
         

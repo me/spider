@@ -25,7 +25,10 @@ module Spider; module TemplateBlocks
             end
             # Hpricot fails me when doing a direct search for >tpl:override
             # overrides = @el.search('>tpl:override') + @el.search('>tpl:override-content')
-            overrides = @el.children_of_type('tpl:override') + @el.children_of_type('tpl:override-content')
+            overrides = []
+            @template.override_tags.each do |tag|
+                overrides += @el.children_of_type('tpl:'+tag)
+            end
             template = nil
             if (overrides.length > 0)
                 template_name = klass.find_template(template_attr)
