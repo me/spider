@@ -57,6 +57,7 @@ module Spider
                     @values[key] ||= Configuration.new(@prefix+".#{key}")
                     val.each { |k, v| self[key][k.to_s] = v }
                 else
+                    config_option(key, '__no_doc__') unless @options[key]
                     val = convert_val(@options[key][:params][:type], val) if (@options[key][:params][:type])
                     self[key] = val
                 end
