@@ -5,18 +5,18 @@ module Spider; module Helpers
         def prepare_scene(scene)
             scene = super
             if (self.is_a?(Widget))
-                scene.widget = widget_to_hash(self)
+                scene.widget = widget_to_scene(self)
             end
             scene.widgets = {}
             if (@widgets)
                 @widgets.each do |id, w|
-                    scene.widgets[id] = widget_to_hash(w)
+                    scene.widgets[id] = widget_to_scene(w)
                 end
             end
             return scene
         end
         
-        def widget_to_hash(w)
+        def widget_to_scene(w)
             {
                 :id_path => w.id_path,
                 :full_id => w.full_id,
