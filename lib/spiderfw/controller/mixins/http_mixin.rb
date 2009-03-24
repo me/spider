@@ -5,7 +5,7 @@ require 'macaddr'
 
 module Spider; module ControllerMixins
     
-    module HTTP
+    module HTTPMixin
         
         def self.included(klass)
             klass.extend(ClassMethods)

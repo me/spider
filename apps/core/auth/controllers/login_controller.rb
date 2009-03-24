@@ -3,7 +3,7 @@ require 'apps/core/auth/lib/login_authenticator'
 module Spider; module Auth
     
     class LoginController < Spider::Controller
-        include HTTP
+        include HTTPMixin
         include Visual
         
         def before(action='')

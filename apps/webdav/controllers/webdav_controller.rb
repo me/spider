@@ -5,7 +5,7 @@ require 'iconv'
 module Spider; module WebDAV
     
     class WebDAVController < Spider::Controller
-        include Spider::ControllerMixins::HTTP
+        include HTTPMixin
         CRLF = "\r\l"
         PUT_READ_BUFFER = 16384
         

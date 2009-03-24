@@ -5,7 +5,7 @@ require 'spiderfw/controller/session/file_session'
 module Spider
     
     class HTTPController < Controller
-        include HTTP
+        include HTTPMixin
         
         
         def initialize(request, response, scene=nil)

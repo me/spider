@@ -2,12 +2,12 @@ require 'spiderfw/controller/controller'
 require 'spiderfw/templates/template'
 require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/widget/widget_attributes'
-require 'spiderfw/controller/mixins/http'
+require 'spiderfw/controller/mixins/http_mixin'
 
 module Spider
     
     class Widget < PageController
-        include HTTP
+        include HTTPMixin
         
         attr_accessor :request, :scene, :template_name, :widgets, :template, :id, :id_path
         attr_reader :attributes, :widget_attributes, :css_class
