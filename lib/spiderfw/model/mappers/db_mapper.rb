@@ -156,8 +156,9 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def count(condition)
-#            debugger
-            storage_query = prepare_select(Query.new(condition, @model.primary_keys))
+            q = Query.new(condition, @model.primary_keys)
+            prepare_query(q)
+            storage_query = prepare_select(q)
             storage_query[:query_type] = :count
             return @storage.query(storage_query)
         end
@@ -257,7 +258,7 @@ module Spider; module Model; module Mappers
             if (query.limit && query.order.empty?)
                 @model.primary_keys.each do |key|
                     elements << key.name unless elements.include?(key.name)
-                    query.order << [key.name, 'asc']
+                    query.order_by(key.name, :asc)
                 end
             end
             order, order_joins = prepare_order(query)
@@ -469,30 +470,52 @@ module Spider; module Model; module Mappers
             return join
         end
         
+        def get_deep_join(dotted_element)
+            return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
+            parts = dotted_element.to_s.split('.').map{ |el| el.to_sym }
+            current_model = @model
+            joins = []
+            el = nil
+            parts.each do |part|
+                el = current_model.elements[part]
+                if (el.integrated?)
+                    joins << get_join(el.integrated_from)
+                    current_model = el.integrated_from.type
+                    el = current_model.elements[el.integrated_from_element]
+                end
+                if (el.model? && current_model.mapper.can_join?(el))
+                    joins << get_join(el)
+                    current_model = el.model
+                end
+            end
+            return [joins, current_model, el]
+        end
+        
         def prepare_order(query)
             joins = []
             fields = []
             query.order.each do |order|
-                element_name, direction = order
-                parts = element_name.to_s.split('.')
-                current_model = @model
-                parts.each do |part|
-                    el = current_model.elements[part.to_sym]
-                    if (el.integrated?)
-                        joins << get_join(el.integrated_from)
-                        current_model = el.integrated_from.type
-                        el = current_model.elements[el.integrated_from_element]
+                order_element, direction = order
+                el_model = @model
+                if (order_element.is_a?(QueryFuncs::Function))
+                    func_fields = []
+                    func_elements = order_element.inner_elements
+                    func_elements.each do |el_name, owner_func|
+                        el_joins, el_model, el = get_deep_join(el_name)
+                        joins += el_joins
+                        owner_func.mapper_fields ||= {}
+                        owner_func.mapper_fields[el.name] = el_model.mapper.schema.qualified_field(el.name)
                     end
-                    if (el.model? && current_model.mapper.can_join?(el))
-                        joins << get_join(el)
-                        current_model = el.model
-                    elsif (field = current_model.mapper.schema.qualified_field(el.name))
-                        fields << [field, direction]
-                    end
+                    field = storage.function(order_element)
+                else
+                    el_joins, el_model, el = get_deep_join(order_element)
+                    field = el_model.mapper.schema.qualified_field(el.name)
                 end
+                fields << [field, direction]
             end
             return [fields, joins]
         end
+
         
         def map_type(type)
             st = type
@@ -500,7 +523,6 @@ module Spider; module Model; module Mappers
                 st = Model.simplify_type(st)
             end
             return type unless st
-#            raise MapperException, "No defined mapping for type #{type}" unless st
             return st
         end
         

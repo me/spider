@@ -37,11 +37,20 @@ module Spider; module Model
            end
        end
        
-       def order_by(*labels)
-           labels.each do |l|
-               parts = l.to_s.split(' ')
+       def order_by(*elements)
+           if (elements.length == 2 && [:asc, :desc].include?(elements[1]))
+               @order << elements
+               return self
+           end
+           elements.each do |l|
+               if (l.is_a?(String))
+                   parts = l.split(' ')
+                   name = parts[0]
+                   order = parts[1]
+               end
                @order << [parts[0], parts[1]]
            end
+           return self
        end
        
        def select(*elements)
@@ -83,3 +92,5 @@ module Spider; module Model
 
     
 end; end
+
+require 'spiderfw/model/query_funcs'

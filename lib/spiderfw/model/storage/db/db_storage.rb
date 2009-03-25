@@ -173,6 +173,23 @@ module Spider; module Model; module Storage; module Db
             return db_attributes
         end
         
+        def function(func)
+            fields = func.elements.map{ |func_el|
+                if (func_el.is_a?(Spider::QueryFuncs::Function))
+                    function(func_el)
+                else
+                    func.mapper_fields[func_el]
+                end
+            }.join(', ')
+            case func.func_name
+            when :length
+                return "LENGTH(#{fields})"
+            when :trim
+                return "TRIM(#{fields})"
+            end
+            raise NotImplementedError, "#{self.class} does not support function #{type}"
+        end
+        
         ##################################################################
         #   Preparing values                                             #
         ##################################################################
