@@ -41,7 +41,7 @@ module Spider
                     
                     def get_models(m)
                         models = []
-                        if m.subclass_of? Spider::Model::BaseModel
+                        if m.respond_to?(:subclass_of?) && m.subclass_of?(Spider::Model::BaseModel)
                              models << m
                              m.constants.each do |c|
                                  sub_mod = m.const_get(c)
