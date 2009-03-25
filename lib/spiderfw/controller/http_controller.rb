@@ -30,7 +30,7 @@ module Spider
             @request.session = Session.get(@request.cookies['sid'])
             @response.cookies['sid'] = @request.session.sid
             @response.cookies['sid'].path = '/'
-            if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] == 'application/x-www-form-urlencoded')
+            if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
                 @request.params = Spider::HTTP.parse_query(@request.read_body)
             elsif (@request.env['REQUEST_METHOD'] == 'GET')
                 @request.params = Spider::HTTP.parse_query(@request.env['QUERY_STRING'])
