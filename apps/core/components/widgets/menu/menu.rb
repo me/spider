@@ -35,7 +35,8 @@ module Spider; module Components
         end
         
         def widget_resources
-            @current_widget.resources
+            return @current_widget.resources if @current_widget
+            return []
         end
         
     end
