@@ -239,6 +239,8 @@ module Spider; module WebDAV
     		raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
             
             body_str = @request.read_body
+            debug("LOCK REQUEST:")
+            debug(body_str)
     		begin
     			req_doc = REXML::Document.new body_str
     		rescue REXML::ParseException
@@ -298,7 +300,9 @@ module Spider; module WebDAV
     			resp = REXML::Document.new << prop
     			@response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
                 @response.status = Spider::HTTP::OK
-                $stdout << resp.to_s
+                debug("LOCK RESPONSE:")
+                debug(resp.to_s)
+                $out << resp.to_s
     			
     		end
     	end
@@ -392,16 +396,19 @@ module Spider; module WebDAV
             @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
             @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS
     		res =  build_multistat(ret).to_s
-    		$stdout << res
+    		debug("PROPFIND RESPONSE:")
+    		debug(res)
+    		$out << res
     		
     	end
     	
     	def get_rec_prop(path, r_uri, props, depth = 5000)
+#    	    debugger
     	    debug "get prop file='#{path}' depth=#{depth}"
     		ret_set = []
     		depth -= 1
     		ret_set << [r_uri, get_propstat(path, props)]
-
+            
     		return ret_set if !(vfs.directory?(path) && depth >= 0)
 
     		vfs.ls(path) {|d|
@@ -450,7 +457,7 @@ module Spider; module WebDAV
     					    raise Spider::Controller::NotFound.new(e.file)
 					    end
     					pe << prop_el if prop_el
-    				rescue Spider::ControllerMixins::HTTP::HTTPStatus, Spider::ControllerMixins::NotFound => e
+    				rescue Spider::ControllerMixins::HTTPMixin::HTTPStatus, Spider::Controller::NotFound => e
     					# FIXME: add to errstat
     					ps = REXML::Element.new("D:propstat")
     					ps << gen_element('D:prop', gen_element("D:#{pname}"))
@@ -466,7 +473,9 @@ module Spider; module WebDAV
     			propstat.elements << pe
     			propstat.elements << elem_status(Spider::HTTP::OK)
     		rescue Exception => e
-    		    debug("EXCEPTION! #{e}")
+    		    debug("EXCEPTION!")
+    		    debug(e)
+#    		    debugger
     			propstat.elements << elem_status(Spider::HTTP::INTERNAL_SERVER_ERROR)
     		end
 
@@ -547,7 +556,6 @@ module Spider; module WebDAV
 
     	def get_prop_dav_lockdiscovery(file, props)
     		raise NotFound.new(file) unless vfs.locking?
-
     		locks = vfs.locked?(file)
     		return nil unless locks
 
@@ -644,12 +652,12 @@ module Spider; module WebDAV
     					content = io.read(last - first + 1)
     					have_range = true
 
-    					$stdout << "--" << boundary << CRLF
-    					$stdout << "Content-Type: #{mtype}" << CRLF
-    					$stdout << "Content-Range: #{first}-#{last}/#{filesize}" << CRLF
-    					$stdout << CRLF
-    					$stdout << content
-    					$stdout << CRLF
+    					$out << "--" << boundary << CRLF
+    					$out << "Content-Type: #{mtype}" << CRLF
+    					$out << "Content-Range: #{first}-#{last}/#{filesize}" << CRLF
+    					$out << CRLF
+    					$out << content
+    					$out << CRLF
     				end
 
                     unless have_range
@@ -657,7 +665,7 @@ module Spider; module WebDAV
                         @response.status = Spider::HTTP::REQUESTED_RANGE_NOT_SATISFIABLE
                         done
                     end
-    				$stdout << "--" << boundary << "--" << CRLF
+    				$out << "--" << boundary << "--" << CRLF
     				
     			elsif range = ranges[0]
     				if filesize == 0 and range.first == 0 and range.last == -1 then

@@ -67,7 +67,6 @@ module Spider; module WebDAV; module VFS
         end
         
         def touch(path)
-            Spider::Logger.debug("TOUCHING #{path}")
             File.new(map_path(path), 'w').close
         end
         
