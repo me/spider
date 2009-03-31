@@ -38,6 +38,7 @@ module Spider
             @logger.open(STDERR, :DEBUG)
             if (File.exist?(@paths[:log]))
                 @logger.open(@paths[:log]+'/error.log', :ERROR)
+#                @logger.open(@paths[:log]+'/debug.log', :DEBUG)
             end
 #            @controller = Controller
             @server = {}
@@ -71,6 +72,7 @@ module Spider
             @paths[:var] = root+'/var'
             @paths[:certs] = @paths[:config]+'/certs'
             @paths[:tmp] = root+'/tmp'
+            @paths[:data] = root+'/data'
             @paths[:log] = @paths[:var]+'/log'
         end
         
