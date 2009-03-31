@@ -471,7 +471,7 @@ module Spider; module Model; module Mappers
         end
         
         def get_deep_join(dotted_element)
-            return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
+            #return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
             parts = dotted_element.to_s.split('.').map{ |el| el.to_sym }
             current_model = @model
             joins = []
@@ -510,6 +510,7 @@ module Spider; module Model; module Mappers
                 else
                     el_joins, el_model, el = get_deep_join(order_element)
                     field = el_model.mapper.schema.qualified_field(el.name)
+                    joins += el_joins
                 end
                 fields << [field, direction]
             end

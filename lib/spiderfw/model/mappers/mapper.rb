@@ -43,7 +43,7 @@ module Spider; module Model
             when :keys
                 # do nothing; keys will be set by save
             else
-                raise MapperException, "#{action} action not implemented"
+                raise MapperError, "#{action} action not implemented"
             end
         end
         
@@ -70,7 +70,7 @@ module Spider; module Model
         #############################################################
         
         def have_references?(element)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         ##############################################################
@@ -80,11 +80,23 @@ module Spider; module Model
         def before_save(obj, mode)
             normalize(obj)
             @model.elements_array.each do |el|
-                raise MapperException, "Element #{el.name} is required" if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
+                if (el.attributes[:set_before_save])
+                    set_data = el.attributes[:set_before_save]
+                    if (el.model? && set_data.is_a?(Hash))
+                        if (obj.element_has_value?(el))
+                            set_data.each{ |k, v| obj.get(el).set(k, v) }
+                        else
+                            obj.set(el, el.model.new(set_data))
+                        end 
+                    else
+                        obj.set(el, set_data)
+                    end
+                end
+                raise RequiredError.new(el) if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
                 if (el.unique? && !el.integrated? && obj.element_modified?(el))
                     existent = @model.find(el.name => obj.get(el))
                     if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
-                        raise MapperException, "Element #{el.name} is not unique"
+                        raise NotUniqueError.new(el)
                     end
                 end
             end
@@ -95,7 +107,6 @@ module Spider; module Model
         end
         
         def save(obj, request=nil)
-            
             if (@model.extended_models)
                 is_insert = false
                 # Load local primary keys if they exist
@@ -138,7 +149,7 @@ module Spider; module Model
         
         def save_element_associations(obj, element)
             if (element.attributes[:junction])
-                element.mapper.delete({element.attributes[:reverse] => obj})
+                element.mapper.delete({element.attributes[:reverse] => obj.primary_keys})
                 val = obj.get(element)
                 if (val.is_a?(QuerySet) && val.model == element.type) # construct the junction
                     qs = QuerySet.static(element.model, val.map{ |el_obj|
@@ -201,7 +212,6 @@ module Spider; module Model
                 Spider::Logger.debug("Deleting with condition:")
                 Spider::Logger.debug(condition)
             else
-
                 condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)
             end
             prepare_query_condition(condition)
@@ -209,27 +219,27 @@ module Spider; module Model
         end
         
         def delete_all!
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         def do_delete(obj)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         def do_insert(obj)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         def do_update(obj)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         def lock(obj=nil, mode=:exclusive)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         def sequence_next(name)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         ##############################################################
@@ -267,6 +277,7 @@ module Spider; module Model
                 query.request.total_rows = true unless query.request.total_rows = false
                 result = fetch(query)
                 set = query_set || QuerySet.new(@model)
+                was_loaded = set.loaded
                 set.loaded = true
                 set.index_by(*@model.primary_keys)
                 set.query = query
@@ -278,7 +289,7 @@ module Spider; module Model
                     end
                     return set
                 end
-                set.total_rows = result.total_rows
+                set.total_rows = result.total_rows if (!was_loaded)
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
                     next unless obj
@@ -321,13 +332,13 @@ module Spider; module Model
         end
         
         def fetch(query)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         
         # FIXME: cleanup "other", polymorphs should be passed in a better way
         def map(request, result, obj)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         # Load external elements, according to query, 
@@ -398,6 +409,7 @@ module Spider; module Model
         
         def queryset_siblings(obj)
             return QuerySet.new(@model, obj) unless obj._parent
+            orig_obj = obj
             path = []
             seen = {obj => true}
             while (obj._parent && !seen[obj._parent])
@@ -406,6 +418,7 @@ module Spider; module Model
                 seen[obj] = true
             end
             res = path.empty? ? obj : obj.all_children(path)
+            raise RuntimeError, "Broken object path" if (obj && !path.empty? &&  res.length < 1)
             res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
             return res
         end
@@ -413,7 +426,7 @@ module Spider; module Model
 
         
         def map_back_value(type, value)
-            raise MapperException, "Unimplemented"
+            raise MapperError, "Unimplemented"
         end
         
         
@@ -463,7 +476,7 @@ module Spider; module Model
         # FIXME: better name, move somewhere else
         def prepare_query_condition(condition)
             condition.each_with_comparison do |k, v, c|
-                raise MapperException, "Condition for nonexistent element #{k}" unless element = @model.elements[k]
+                raise MapperError, "Condition for nonexistent element #{k}" unless element = @model.elements[k]
                 if (element.integrated?)
                     condition.delete(k)
                     integrated_from = element.integrated_from
@@ -539,7 +552,35 @@ module Spider; module Model
     #   Exceptions                                               #
     ##############################################################
     
-    class MapperException < RuntimeError
+    class MapperError < RuntimeError; end
+    class MapperElementError < MapperError
+        def initialize(element)
+            @element = element
+        end
+        def element
+            @element
+        end
+        def self.create_subclass(msg)
+            e = Class.new(self)
+            e.msg = msg
+            return e
+        end
+        def self.msg=(msg)
+            @msg = msg
+        end
+        def self.msg
+            @msg
+        end
+        def message
+            _(self.class.msg) % @element.label
+        end
+        def to_s
+            message
+        end
     end
+    RequiredError = MapperElementError.create_subclass("Element %s is required")
+    NotUniqueError = MapperElementError.create_subclass("Element %s is not unique")
+
+        
     
 end; end

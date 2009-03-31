@@ -125,7 +125,7 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (type.subclass_of?(BaseModel)) #  && attributes[:multiple])
+                if (type.subclass_of?(BaseModel) && attributes[:multiple])
                     # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = true
                 else
@@ -181,6 +181,7 @@ module Spider; module Model
             #instance_variable_setter
             define_method("#{name}=") do |val|
                 element = self.class.elements[name]
+                @_autoload = false unless element.primary_key?
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
                     unless integrated_obj
@@ -559,6 +560,7 @@ module Spider; module Model
             @modified_elements = {}
             @value_observers = {}
             @all_values_observers = []
+            @_extra = {}
             @model = self.class
             @all_values_observers << Proc.new do |element, old_value|
                 @_has_values = true
@@ -629,6 +631,9 @@ module Spider; module Model
                 if (element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
                 end
+                if (element.attributes[:set] && element.attributes[:set].is_a?(Hash))
+                    element.attributes[:set].each{ |k, v| obj.set(k, v) }
+                end
             else
                 obj = prepare_value(element, obj)
             end
@@ -647,7 +652,6 @@ module Spider; module Model
             end
             return children
         end
-        
         
         def set_parent(obj, element)
             @_parent = obj
@@ -685,11 +689,21 @@ module Spider; module Model
         end
         
         def [](element)
-            get(element)
+            element = element.name if element.is_a?(Element)
+            if (self.class.elements[element])
+                get(element)
+            else
+                @_extra[element]
+            end
         end
         
         def []=(element, value)
-            set(element, value)
+            element = element.name if element.is_a?(Element)
+            if (self.class.elements[element])
+                set(element, value)
+            else
+                @_extra[element] = value
+            end
         end
             
         
@@ -757,7 +771,7 @@ module Spider; module Model
                     when Proc
                         Proc.call(msg)
                     end
-                    raise FormatError.new(name, msg) unless test
+                    raise FormatError.new(element, msg) unless test
                 end
             end
         end
@@ -816,11 +830,25 @@ module Spider; module Model
             end
             return true
         end
+        
+        ##############################################################
+        #   Iterators                                                #
+        ##############################################################
+        
+        def each
+            self.class.elements.each do |name, el|
+                yield name, get(name)
+            end
+        end
 
         def each_val
             self.class.elements.select{ |name, el| element_has_value?(name) }.each do |name, el|
                 yield name, get(name)
             end
+        end
+        
+        def primary_keys
+            self.class.primary_keys.inject({}){ |h, k| h[k.name] = get(k) }
         end
 
             
@@ -1118,7 +1146,6 @@ module Spider; module Model
         
         
         def to_json(state=nil, &proc)
-            
             if (@tmp_json_seen && !block_given?)
                 pks = self.class.primary_keys.map{ |k| get(k).to_json }
                 pks = pks[0] if pks.length == 1
@@ -1126,7 +1153,7 @@ module Spider; module Model
             end
             @tmp_json_seen = true
             json = ""
-            Spider::Model.with_identity_mapper do |im|
+            #Spider::Model.with_identity_mapper do |im|
                 self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                     (int = get(el)) && int.instance_variable_set("@tmp_json_seen", true)
                 end
@@ -1155,7 +1182,7 @@ module Spider; module Model
                 self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                     (int = get(el)) && int.instance_variable_set("@tmp_json_seen", false)
                 end
-            end
+            #end
             return json
         end
         
@@ -1206,9 +1233,6 @@ module Spider; module Model
             end
             return h
         end
-            
-             
-        
         
     end
     

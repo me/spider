@@ -25,6 +25,8 @@ module Spider; module Model
             @objects = []
             @raw_data = []
             @owner = nil
+            @_parent = nil
+            @_parent_element = nil
             @index_lookup = {}
             @total_rows = nil
             @fetch_window = nil
@@ -285,9 +287,10 @@ module Spider; module Model
         
         def to_json(state=nil, &proc)
             load unless @loaded || !autoload?
-            return "[" +
+            res =  "[" +
                 self.map{ |obj| obj.to_json(&proc) }.join(',') +
                 "]"
+            return res
         end
 
         

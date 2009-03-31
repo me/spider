@@ -56,7 +56,7 @@ module Spider; module Model
                    
                    define_method("#{name}_leafs") do
                        if mapper.type != :db
-                           raise MapperException, "The #{name}_leafs method is supported only for db storage"
+                           raise MapperError, "The #{name}_leafs method is supported only for db storage"
                        end
                        element = self.elements[name]
                        left_el = element.attributes[:tree_left]; right_el = element.attributes[:tree_right]

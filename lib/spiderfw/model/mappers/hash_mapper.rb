@@ -18,7 +18,7 @@ module Spider; module Model; module Mappers
                     desc = el.name
                 end
             end
-            raise MapperException, "Model has no primary key or no description element" unless primary_key && desc
+            raise MapperError, "Model has no primary key or no description element" unless primary_key && desc
             res =  @model.data.map{ |id, val| {primary_key => id, desc => val} }.select do |row|
                 check_condition(query.condition, row)
             end

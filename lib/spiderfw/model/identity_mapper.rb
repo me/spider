@@ -12,6 +12,8 @@ module Spider; module Model
         end
         
         def get(model, values)
+            # Spider::Logger.debug("IM GETTING #{model}")
+            # Spider::Logger.debug("IM GETTING #{values}")
             @objects[model] ||= {}
             pks = {}
             model.primary_keys.each do |k| 
@@ -27,6 +29,7 @@ module Spider; module Model
             values.reject{|k,v| model.elements[k].primary_key? }.each do |k, v|
                 obj.set_loaded_value(k, v)
             end
+#            Spider::Logger.debug("RETURNING #{obj.class} #{obj.object_id}")
             return obj
         end
         

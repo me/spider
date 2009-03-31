@@ -99,8 +99,7 @@ module Spider
             attr_reader :element
             
             def initialize(element, message)
-                element = element.name if element.is_a?(Element)
-                @element = element.to_s
+                @element = element
                 @message = message
                 super(message)
             end
