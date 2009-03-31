@@ -1,4 +1,5 @@
 require 'spiderfw/model/element'
+require 'iconv'
 
 module Spider; module Model
     
@@ -1146,6 +1147,7 @@ module Spider; module Model
         
         
         def to_json(state=nil, &proc)
+            ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
             if (@tmp_json_seen && !block_given?)
                 pks = self.class.primary_keys.map{ |k| get(k).to_json }
                 pks = pks[0] if pks.length == 1
@@ -1174,7 +1176,11 @@ module Spider; module Model
                                  val = yield(self, el)
                                  val ? "#{name}: #{val}" : nil
                              else
-                                 val = get(name).to_json
+                                 val = get(name)
+                                 if (el.type == 'text' || el.type == 'longText')
+                                     val = ic.iconv(val + ' ')[0..-2]
+                                 end
+                                 val = val.to_json
                                  "#{name}: #{val}"
                              end
                         }.select{ |pair| pair}.join(',') + "}"
