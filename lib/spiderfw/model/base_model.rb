@@ -357,11 +357,16 @@ module Spider; module Model
             @polymorphic_models[model] = {:through => through}
         end
 
-        def self.attributes
+        def self.attributes(val=nil)
             @attributes ||= {}
+            if (val)
+                @attributes.merge!(val)
+            end
+            @attributes
         end
         
         def self.attribute(name, value)
+            @attributes ||= {}
             @attributes[name] = value
         end
         
@@ -390,8 +395,9 @@ module Spider; module Model
             self.name
         end
         
-        def self.label(val=nil)
-            @label = val if (val)
+        def self.label(sing=nil, plur=nil)
+            @label = sing if sing
+            @label_plural = plur if plur
             @label || self.name
         end
         
@@ -543,6 +549,16 @@ module Spider; module Model
         def self.load(*params)
             res = find(*params)
             return res[0]
+        end
+        
+        def self.free_query_condition(q)
+            c = Condition.or
+            self.elements_array.each do |el|
+                if (el.type == String || el.type == Text)
+                    c.set(el.name, 'ilike', '%'+q+'%')
+                end
+            end
+            return c
         end
         
         def self.count(condition=nil)
