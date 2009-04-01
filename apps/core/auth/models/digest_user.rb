@@ -4,14 +4,14 @@ module Spider; module Auth
     
     class DigestUser < LoginUser
         extend_model superclass
-        element :realm, String
-        element :ha1, String
+        element :realm, String, :hidden => true
+        element :ha1, String, :hidden => true
         
         module MapperMethods
             def before_save(obj, mode)
                 if (mode == :insert) || (mode == :update && (obj.elements_modified?(:username, :password, :realm)))
                     if (!obj.element_modified?(:password))
-                        raise RuntimeError, "You must always supply the password to a DigestUser when updating username or realm"
+                        raise RuntimeError, _("You must always supply the password to a DigestUser when updating username or realm")
                     end
                     pass_obj = obj.get(:password)
                     pass = pass_obj.get
