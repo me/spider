@@ -182,7 +182,7 @@ module Spider; module Model
             #instance_variable_setter
             define_method("#{name}=") do |val|
                 element = self.class.elements[name]
-                @_autoload = false unless element.primary_key?
+                #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
                     unless integrated_obj
