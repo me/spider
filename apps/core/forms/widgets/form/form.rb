@@ -58,6 +58,8 @@ module Spider; module Forms
                     input_attributes = {:size => 5} if (el.type == Fixnum)
                 elsif (el.type == Spider::DataTypes::Password)
                     input = create_widget(Password, el.name, @request, @response)
+                elsif (el.type == Spider::DataTypes::Bool)
+                    input = create_widget(Checkbox, el.name, @request, @response)
                 elsif (el.model? && [:choice, :multiple_choice].include?(el.association) && !el.extended?)
                     klass = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
                         SearchSelect : Select
@@ -134,11 +136,12 @@ module Spider; module Forms
             end
             if inputs_done && !@error
                 begin
-                    obj.save
+                    obj.save_all
                     debug("SAVED")
                     @saved = true
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(',')
                 rescue => exc
+                    Spider::Logger.error(exc)
                     @error = true
                     @save_errors << exc.message
                 end
