@@ -125,10 +125,13 @@ module Spider; module Model
             save_mode = (!is_insert && obj.primary_keys_set?) ? :update : :insert
             normalize(obj)
             before_save(obj, save_mode)
-            if (@model.extended_models)
-                @model.extended_models.each do |m, el|
-                    obj.get(el).save if obj.element_modified?(el)
-                end
+            # if (@model.extended_models)
+            #     @model.extended_models.each do |m, el|
+            #         obj.get(el).save if obj.element_modified?(el)
+            #     end
+            # end
+            @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
+                obj.get(el).save if obj.element_modified?(el)
             end
             if (save_mode == :update)
                 do_update(obj)
