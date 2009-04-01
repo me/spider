@@ -1,0 +1,21 @@
+<div class='input'>
+    <div sp:if="@no_result" class="notice">
+        Nessun risultato trovato per "{ @text_query }".
+    </div>
+    <input sp:if="@next_step == :text" type="text" name="{ @name }[text]" value="" size="{ @size }" />
+    <div sp:if="@next_step == :select" class="notice">
+        Per favore, affina la ricerca:
+    </div>
+    <select name="{ @name }[sel]" sp:if="@next_step == :select" sp:attr-if="@multiple, 'multiple'">
+        <option sp:if="@blank_option"> </option>
+        <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@values[i] == @value_pks, 'selected'">
+            { @data[i].to_s }
+        </option>
+    </select>
+    <div sp:if="@value_desc">
+        { @value_desc } 
+        <span sp:if="!@next_step">
+            (Cambia <input type="checkbox" name="{ @name }[clear]" value="1">)
+        </span>
+    </div>
+</div>

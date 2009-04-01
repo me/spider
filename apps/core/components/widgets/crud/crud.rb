@@ -48,7 +48,7 @@ module Spider; module Components
             end
         end
         
-        def execute
+        def after_execute
             if (@action == :table)
                 if params['do_delete'] && params['selected'] && params['selected'].length > 0
                     delete_rows

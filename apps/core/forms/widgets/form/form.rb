@@ -32,6 +32,9 @@ module Spider; module Forms
         def start
             create_inputs
             debug("FORM executing")
+        end
+        
+        def execute
             save if params['submit']
             @obj = load
             set_values(@obj) if (@obj)
@@ -46,14 +49,18 @@ module Spider; module Forms
                     input = create_widget(Text, el.name, @request, @response)
                     input_attributes = {:size => 5} if (el.type == Fixnum)
                 elsif (el.model? && [:choice, :multiple_choice].include?(el.association))
-                    input = create_widget(Select, el.name, @request, @response)
+                    klass = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
+                        SearchSelect : Select
+                    input = create_widget(klass, el.name, @request, @response)
                     input.multiple = true if el.multiple?
                     input.model = el.model
                 end
                 if (input)
+                    input.id_path.insert(input.id_path.length-1, 'data')
                     @elements << el.name
                     input.id = el.name
-                    input.name = '_w'+param_name(input.id_path[0..-2]+['data']+input.id_path[-1..-1])
+                    input.form = self
+#                    input.name = '_w'+param_name(input.id_path[0..-2]+['data']+input.id_path[-1..-1])
                     input.label = @labels[el.name]
                     @inputs[el.name] = input
                     if (input_attributes)
@@ -66,7 +73,7 @@ module Spider; module Forms
         
         def set_values(obj)
             @inputs.each do |element_name, input|
-                input.value = @data[element_name.to_s] || obj.get(element_name)
+                input.value ||= obj.get(element_name)
             end
         end
         
@@ -88,17 +95,24 @@ module Spider; module Forms
         def save
             obj = instantiate_obj
             @error = false
+            inputs_done = true
             @elements.each do |element_name|
+                break unless inputs_done
                 debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
                 begin
-                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
+                    if (@inputs[element_name].done?)
+                        obj.set(element_name, @inputs[element_name].value)
+                    else
+                        inputs_done = false
+                    end
+#                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
                 rescue FormatError => exc
                     @error = true
                     @errors[element_name] ||= []
                     @errors[element_name] << exc.message
                 end
             end
-            unless @error
+            if inputs_done && !@error
                 obj.save
                 debug("SAVED")
                 @saved = true

@@ -20,3 +20,14 @@
     padding: 10px;
     border: 1px solid #CDCDCD;
 }
+
+.spider.forms.form .input{
+    float: left;
+    margin-bottom: 5px;
+}
+
+.spider.forms.form .input .notice{
+    margin-top: 3px;
+    margin-bottom: 3px;
+    font-size: .9em;
+}
