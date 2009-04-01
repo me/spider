@@ -6,8 +6,8 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Spider \n"
-"POT-Creation-Date: 2008-11-20 23:42+0100\n"
+"Project-Id-Version: Spider 0.3\n"
+"POT-Creation-Date: 2009-04-01 17:43+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,13 +16,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: lib/spiderfw/cmd/cmd.rb:19
+#: apps/core/auth/models/digest_user.rb:14
+msgid ""
+"You must always supply the password to a DigestUser when updating username "
+"or realm"
+msgstr "È necessario sempre specificare la password di un DigestUser quando si modifica lo username"
+
+#: apps/core/forms/widgets/form/form.rb:7
+msgid "Save"
+msgstr "Salva"
+
+#: apps/core/forms/widgets/form/form.rb:8
+msgid "Insert"
+msgstr "Inserisci"
+
+#: lib/spiderfw/cmd/cmd.rb:17
 msgid "Global options:"
 msgstr "Opzioni globali:"
 
-#: lib/spiderfw/cmd/cmd.rb:20
+#: lib/spiderfw/cmd/cmd.rb:18
 msgid "Be verbose when outputting info"
 msgstr "Sii prolisso"
+
+#: lib/spiderfw/cmd/cmd.rb:19
+msgid "Cd to a directory before running"
+msgstr "Spostati in una cartella prima dell'esecuzione"
 
 #: lib/spiderfw/cmd/commands/cert.rb:8
 msgid "Manage certificates"
@@ -65,6 +83,22 @@ msgid "The module name; by default, the app name will be camelized"
 msgstr ""
 "Il nome del modulo; di default, il nome dell'applicazione sarà cammellizzato"
 
+#: lib/spiderfw/cmd/commands/init.rb:33
+msgid "Create an installation"
+msgstr "Crea un'installazione"
+
+#: lib/spiderfw/cmd/commands/init.rb:36
+msgid "The path where to create the installation (defaults to the path)"
+msgstr "Il percorso dove creare l'installazione (di default il percorso corrente)"
+
+#: lib/spiderfw/cmd/commands/model.rb:6
+msgid "Manage models"
+msgstr "Gestisci i modelli"
+
+#: lib/spiderfw/cmd/commands/model.rb:10
+msgid "Sync models"
+msgstr "Sincronizza i modelli"
+
 #: lib/spiderfw/cmd/commands/setup.rb:8
 msgid "Setup an application"
 msgstr "Esegui il setup di un'applicazione"
@@ -73,11 +107,11 @@ msgstr "Esegui il setup di un'applicazione"
 msgid "Setup to a specific version"
 msgstr "Esegui il setup fino a una versione specifica"
 
-#: lib/spiderfw/cmd/commands/test.rb:9
+#: lib/spiderfw/cmd/commands/test.rb:6
 msgid "Manage tests"
 msgstr "Gestisci i test"
 
-#: lib/spiderfw/cmd/commands/test.rb:14
+#: lib/spiderfw/cmd/commands/test.rb:11
 msgid "Run tests"
 msgstr "Esegui i test"
 
@@ -111,30 +145,35 @@ msgstr "Utilizzo il webserver %s"
 msgid "Listening on port %s"
 msgstr "In ascolto sulla porta %s"
 
-#: lib/spiderfw/config/configuration.rb:28
-#: lib/spiderfw/config/configuration.rb:43
+#: lib/spiderfw/config/configuration.rb:18
+#: lib/spiderfw/config/configuration.rb:34
+#: lib/spiderfw/config/configuration.rb:53
 msgid "%s is not a configuration option"
 msgstr "%s non è un'opzione di configurazione"
 
-#: lib/spiderfw/config/options/spider.rb:19
+#: lib/spiderfw/config/options/spider.rb:18
 msgid "The internal server to use"
 msgstr "Il server interno da usare"
 
-#: lib/spiderfw/config/options/spider.rb:22
+#: lib/spiderfw/config/options/spider.rb:21
 msgid "Whether to show the stack trace on error"
 msgstr "Mostrare o no lo stack trace degli errori"
 
-#: lib/spiderfw/config/options/spider.rb:25
+#: lib/spiderfw/config/options/spider.rb:24
 msgid "Reload application and spider sources on each request"
 msgstr "Ricarica i sorgenti delle applicazioni e di spider a ogni richiesta"
 
-#: lib/spiderfw/config/options/spider.rb:29
+#: lib/spiderfw/config/options/spider.rb:28
 msgid "The text editor installed on the client"
 msgstr "L'editro di testo installato nel client"
 
-#: lib/spiderfw/config/options/spider.rb:32
+#: lib/spiderfw/config/options/spider.rb:31
 msgid "Refresh template cache every time"
 msgstr "Aggiorna la cache dei template a ogni richiesta"
+
+#: lib/spiderfw/config/options/spider.rb:32
+msgid "Run templates in safe mode"
+msgstr "Esegui i template in modalità sicura"
 
 #: lib/spiderfw/config/options/spider.rb:36
 msgid "A list of named storages"
@@ -144,7 +183,60 @@ msgstr "Una lista di archivi con nome"
 msgid "Start the debugger"
 msgstr "Avvia il debugger"
 
-#: lib/spiderfw/model/base_model.rb:365
+#: lib/spiderfw/config/options/spider.rb:40
+msgid "The locale to use"
+msgstr "Il locale da utilizzare"
+
+#: lib/spiderfw/config/options/spider.rb:42
+msgid "Sleep time for the periodic runner"
+msgstr "Tempo di sleep per il runner periodico"
+
+#: lib/spiderfw/config/options/spider.rb:44
+msgid "Where to store the session"
+msgstr "Dove salvare la sessione"
+
+#: lib/spiderfw/config/options/spider.rb:45
+msgid "Lifetime in seconds of the sessions"
+msgstr "Vita in secondi delle sessioni"
+
+#: lib/spiderfw/config/options/spider.rb:46
+msgid "Number of seconds to wait before session purge check"
+msgstr "Numero di secondi da aspettare prima di un controllo di pulizia"
+
+#: lib/spiderfw/config/options/spider.rb:47
+msgid "The folder where to store file sessions"
+msgstr "La cartella dove salvare le sessioni"
+
+#: lib/spiderfw/config/options/spider.rb:49
+msgid "Which shared store to use"
+msgstr "Che tipo di shared store usare"
+
+#: lib/spiderfw/config/options/spider.rb:51
+msgid "Life in seconds of HTTP Digest Authentication nonces"
+msgstr "Vita in secondi dei nonce per l'Autenticazione HTTP Digest"
+
+#: lib/spiderfw/config/options/spider.rb:53
+msgid "Automatically send headers on first output (breaks the debugger)"
+msgstr ""
+"Invia automaticamente i header al primo output (interferisce con il debugger)"
+
+#: lib/spiderfw/config/options/spider.rb:54
+msgid "Redirect standard output to the browser"
+msgstr "Ridirigi lo standard output al browser"
+
+#: lib/spiderfw/config/options/spider.rb:55
+msgid ""
+"If the request is proxyied, the urls used to reach spider, with the "
+"corresponding paths called by the proxy"
+msgstr ""
+"Se la richiesta è passata attraverso un proxy, gli url usati per raggiungere "
+"spider, con i corrispondenti percorsi chiamati dal proxy"
+
+#: lib/spiderfw/config/options/spider.rb:58
+msgid "Level of debug output to console"
+msgstr "Livello di debug da inviare in console"
+
+#: lib/spiderfw/model/base_model.rb:783
 msgid "%s is not in the correct format"
 msgstr "%s non è nel formato corretto"
 
