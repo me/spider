@@ -49,8 +49,10 @@
         </core:table>
         <!-- form -->
         <forms:form sp:if="@action == :form" id="form" model="@model" />
+        <!--
         <div sp:if="@action == :form && @have_form_tables" class="sub_form_tables">
             <sp:run obj="@form_tables" />
         </div>
+        -->
     </sp:pass>
 </div>
