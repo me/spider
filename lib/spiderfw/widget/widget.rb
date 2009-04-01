@@ -106,7 +106,7 @@ module Spider
             end
             
             def route_url
-                '/'+self.app.route_url+'/w/'+relative_url
+                Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+self.app.route_url+'/w/'+relative_url)
             end
             
             def pub_url
@@ -158,6 +158,9 @@ module Spider
         def execute
         end
         
+        def after_execute
+        end
+        
         def init_widget
             @id ||= @attributes[:id]
             unless @template
@@ -189,16 +192,22 @@ module Spider
             @widgets.merge!(@template.widgets)
             start
             @widget_attributes.each do |w_id, a|
-                w_id_parts = w_id.split('.', 2)
+                w_id_parts = w_id.to_s.split('.', 2)
                 if (w_id_parts[1])
                     w_id = w_id_parts[0]
                     sub_w = w_id_parts[1]
                 end
                 w_id = w_id.to_sym
+                Spider::Logger.debug("WIDGET ATTRIBUTE:")
+                Spider::Logger.debug(a)
                 if (@widgets[w_id])
                     if (sub_w)
                         @widgets[w_id].widget_attributes[sub_w] = a
                     else
+                        if (!a[:name])
+                            Spider::Logger.error("No name for attribute #{a.to_s}")
+                            next
+                        end
                         @widgets[w_id].attributes[a[:name].to_sym] = a[:value]
                     end
                 end
@@ -214,7 +223,17 @@ module Spider
             end
             #@resources += @template.resources
             @template.init_sub_done = true
+        end
+        
+        def run_execute
             execute
+            @widgets.each do |wname, w|
+                w.run_execute
+            end
+            after_execute
+            @widgets.each do |wname, w|
+                w.after_execute
+            end
         end
         
         def init_widget_done?
@@ -248,7 +267,7 @@ module Spider
             p = @request.params['_w']
             return {} unless p
             @id_path.each do |id| 
-                p = p[id]
+                p = p[id.to_s]
                 return {} unless p
             end
             return p
@@ -309,6 +328,10 @@ module Spider
                 res += w.resources
             end
             return res
+        end
+        
+        def request_path
+            HTTPMixin.reverse_proxy_mapping(@request.env['REQUEST_PATH'])
         end
         
     end

@@ -198,6 +198,7 @@ module Spider
         def init_sub
             @widgets.each do |id, widget|
                 widget.init_widget
+                widget.run_execute
             end
             @init_sub_done = true
         end
