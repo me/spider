@@ -513,7 +513,7 @@ module Spider; module Model
         end
         
         def execute()
-            p "Executing #{@action} on #{@object}"
+            Spider::Logger.debug "Executing #{@action} on #{@object}"
             @object.mapper.execute_action(@action, @object)
         end
         
