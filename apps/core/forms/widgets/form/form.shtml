@@ -3,6 +3,9 @@
     <div sp:if="@error" class='errors'>
         Errori:
         <ul>
+            <sp:pass sp:each="@save_errors |m|">
+                <li> { m }</li>
+            </sp:pass>
             <sp:pass sp:each="@errors |k, v|">
                     <li sp:each="v |err|">
                         { err }

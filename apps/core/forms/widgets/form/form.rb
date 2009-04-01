@@ -4,9 +4,10 @@ module Spider; module Forms
         tag 'form'
         is_attribute :action
         i_attribute :model
-        attribute :submit_text, :default => _('Submit')
+        attribute :save_submit_text, :default => _('Save')
+        attribute :insert_submit_text, :default => _('Insert')
         is_attr_accessor :pk
-        attr_to_scene :inputs, :elements, :labels, :error, :errors
+        attr_to_scene :inputs, :elements, :labels, :error, :errors, :save_errors
         
         attr_accessor :pk
         attr_reader :obj
@@ -15,6 +16,7 @@ module Spider; module Forms
             @inputs = {}
             @elements = []
             @errors = {}
+            @save_errors = []
             @labels = {}
         end
         
@@ -37,17 +39,25 @@ module Spider; module Forms
         def execute
             save if params['submit']
             @obj = load
-            set_values(@obj) if (@obj)
-            @scene.submit_text = @attributes[:submit_text]
+            if (@obj)
+                set_values(@obj) 
+                @scene.submit_text = @attributes[:save_submit_text]
+            else
+                @scene.submit_text = @attributes[:insert_submit_text]
+            end
         end
         
         def create_inputs
             @model.each_element do |el|
                 next if el.hidden? || el.primary_key? || el.attributes[:local_pk]
                 input = nil
-                if (el.type == String || el.type == Fixnum)
+                if el.read_only?
+                    input = create_widget(Input, el.name, @request, @response)
+                elsif (el.type == String || el.type == Fixnum)
                     input = create_widget(Text, el.name, @request, @response)
                     input_attributes = {:size => 5} if (el.type == Fixnum)
+                elsif (el.type == Spider::DataTypes::Password)
+                    input = create_widget(Password, el.name, @request, @response)
                 elsif (el.model? && [:choice, :multiple_choice].include?(el.association))
                     klass = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
                         SearchSelect : Select
@@ -98,10 +108,20 @@ module Spider; module Forms
             inputs_done = true
             @elements.each do |element_name|
                 break unless inputs_done
+                el = @model.elements[element_name]
+                next if el.read_only?
+                input = @inputs[element_name]
+                next unless input.modified?
                 debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
+                if (input.error?)
+                    @error = true
+                    @errors[element_name] ||= []
+                    @errors[element_name] += input.errors
+                    next
+                end
                 begin
-                    if (@inputs[element_name].done?)
-                        obj.set(element_name, @inputs[element_name].value)
+                    if (input.done?)
+                        obj.set(element_name, input.value)
                     else
                         inputs_done = false
                     end
@@ -113,10 +133,15 @@ module Spider; module Forms
                 end
             end
             if inputs_done && !@error
-                obj.save
-                debug("SAVED")
-                @saved = true
-                @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(',')
+                begin
+                    obj.save
+                    debug("SAVED")
+                    @saved = true
+                    @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(',')
+                rescue => exc
+                    @error = true
+                    @save_errors << exc.message
+                end
             end
         end
         

@@ -1,7 +1,7 @@
 module Spider; module Forms
     
     class Input < Spider::Widget
-        attr_accessor :form
+        attr_accessor :form, :errors
         i_attr_accessor :name
         is_attr_accessor :value
         is_attr_accessor :label
@@ -12,6 +12,8 @@ module Spider; module Forms
         
         def init
             @done = true
+            @errors = []
+            @modified = true
         end
         
         def prepare_scene(scene)
@@ -38,6 +40,19 @@ module Spider; module Forms
         
         def done?
             @done
+        end
+        
+        def error?
+            @error
+        end
+        
+        def add_error(str)
+            @errors << str
+            @error = true
+        end
+        
+        def modified?
+            @modified
         end
         
         
