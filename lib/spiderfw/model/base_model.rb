@@ -882,6 +882,10 @@ module Spider; module Model
                 return false unless obj = instance_variable_get(:"@#{element.integrated_from.name}")
                 return obj.element_has_value?(element.integrated_from_element)
             end
+            if (element.attributes[:computed_from])
+                element.attributes[:computed_from].each{ |el| return false unless element_has_value?(el) }
+                return true
+            end
             if (!mapper.mapped?(element))
                 return send("#{element_name}?") if (respond_to?("#{element_name}?"))
                 return get(element) == nil ? false : true if (!mapper.mapped?(element))

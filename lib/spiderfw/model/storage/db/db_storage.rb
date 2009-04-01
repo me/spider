@@ -66,7 +66,7 @@ module Spider; module Model; module Storage; module Db
         
         def disconnect
             self.class.release_connection(@conn, @connection_params)
-            @conn = nil
+            #@conn = nil
         end
         
         def get_mapper(model)

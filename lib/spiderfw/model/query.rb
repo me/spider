@@ -85,6 +85,11 @@ module Spider; module Model
            @polymorphs.length > 0
        end
        
+       def clone
+           # FIXME: not sure cloning is ok on those two
+           return self.class.new(@condition.clone, @request.clone)
+       end
+       
        
         
     end

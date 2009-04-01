@@ -228,6 +228,7 @@ module Spider; module Model
 
         def order_by(*elements)
             @query.order_by *elements
+            return self
         end
         
         def set(element, value)
@@ -409,12 +410,16 @@ module Spider; module Model
             return self
         end
             
-            
+        
                     
         
         # def unit_of_work
         #     return Spider::Model.unit_of_work
         # end
+        
+        def clone
+            self.class.new(self.model, self.query.clone)
+        end
 
     end
 

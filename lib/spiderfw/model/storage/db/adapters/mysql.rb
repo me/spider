@@ -113,7 +113,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def commit
-            @conn.commit
+            @conn.commit if @conn
             disconnect
         end
         
