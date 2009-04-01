@@ -22,12 +22,11 @@ module Spider; module Forms
         end
         
         def prepare_value(val)
-            val
+            val == {} ? nil : val
         end
         
         def prepare
-            v = prepare_value(params)
-            self.value = v if v != {}
+            self.value = prepare_value(params)
         end
         
         # def name
