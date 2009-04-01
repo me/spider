@@ -72,17 +72,17 @@ module Spider; module Components
                     @widgets[:table].scene.links_to_form = links
                 end
             elsif (@action == :form)
-                tab_els = @model.elements_array.select{ |el| el.multiple? && el.association != :multiple_choice }
-                if (tab_els.length > 0)
-                    @scene.have_form_tables = true
-                    tabs = Tabs.new(@request, @response)
-                    tab_els.each do |el|
-                        formTable = Table.new(@request, @response)
-                        formTable.queryset = @widgets[:form].obj[el.name]
-                        tabs.add(el.label, formTable)
-                    end
-                    @widgets[:form_tables] = tabs
-                end
+                # tab_els = @model.elements_array.select{ |el| el.multiple? && el.association != :multiple_choice }
+                #                 if (tab_els.length > 0)
+                #                     @scene.have_form_tables = true
+                #                     tabs = Tabs.new(@request, @response)
+                #                     tab_els.each do |el|
+                #                         formTable = Table.new(@request, @response)
+                #                         formTable.queryset = @widgets[:form].obj[el.name]
+                #                         tabs.add(el.label, formTable)
+                #                     end
+                #                     @widgets[:form_tables] = tabs
+                #                 end
                 if (@widgets[:form].saved?)
                     flash[:saved] = true
                     redirect("#{@request.path}?_w"+params_for(self, :action => :table))

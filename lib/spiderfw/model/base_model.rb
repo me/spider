@@ -105,6 +105,7 @@ module Spider; module Model
                         assoc_type.element(other_name, orig_type)
                         assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
                         if (proc)                                   #        to be hidden, but the integrated el instead
+                            attributes[:extended] = true
                             attributes[:keep_junction] = true
                             assoc_type.class_eval(&proc)
                         end

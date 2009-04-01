@@ -58,12 +58,12 @@ module Spider; module Forms
                     input_attributes = {:size => 5} if (el.type == Fixnum)
                 elsif (el.type == Spider::DataTypes::Password)
                     input = create_widget(Password, el.name, @request, @response)
-                elsif (el.model? && [:choice, :multiple_choice].include?(el.association))
+                elsif (el.model? && [:choice, :multiple_choice].include?(el.association) && !el.extended?)
                     klass = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
                         SearchSelect : Select
                     input = create_widget(klass, el.name, @request, @response)
                     input.multiple = true if el.multiple?
-                    input.model = el.model
+                    input.model = el.type
                 end
                 if (input)
                     input.id_path.insert(input.id_path.length-1, 'data')
