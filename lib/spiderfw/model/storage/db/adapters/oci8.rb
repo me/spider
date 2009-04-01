@@ -58,7 +58,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def commit
-            @conn.commit
+            @conn.commit if @conn
             disconnect
         end
         
@@ -173,6 +173,8 @@ module Spider; module Model; module Storage; module Db
              # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
              if query[:limit] # Oracle is so braindead
+                 replaced_fields = {}
+                 replace_cnt = 0
                  # add first field to order if none is found; order is needed for limit
                  query[:order] << [query[:keys][0], 'desc'] if query[:order].length < 1
                  query[:order].each do |o|
@@ -182,7 +184,9 @@ module Spider; module Model; module Storage; module Db
                      #       query[:keys].push(field)
                      #       i = query[:keys].length < 1
                      #   end
-                     query[:keys] << "#{field} AS #{field.sub('.', '_')}"
+                     transformed = "O#{replace_cnt += 1}"
+                     replaced_fields[field] = transformed
+                     query[:keys] << "#{field} AS #{transformed}"
                  end
              end
              keys = sql_keys(query)
@@ -206,7 +210,10 @@ module Spider; module Model; module Storage; module Db
                      limit = "oci8_row_num < :#{@bind_cnt+=1}"
                      bind_vars << query[:limit] + 1
                  end
-                 sql = "SELECT * FROM (#{sql}) WHERE #{limit} order by #{order.gsub('.', '_')}"
+                 replaced_fields.each do |f, repl|
+                     order = order.gsub(f, repl)
+                 end
+                 sql = "SELECT * FROM (#{sql}) WHERE #{limit} order by #{order}"
              else
                  sql += "ORDER BY #{order} " if order && !order.empty?
              end
@@ -370,6 +377,16 @@ module Spider; module Model; module Storage; module Db
          
          def sequence_name(name)
              shorten_identifier(name, 30).upcase
+         end
+         
+         def schema_field_varchar2_equal?(current, field)
+             # FIXME: can't find the length
+             return true
+         end
+         
+         def schema_field_number_equal?(current, field)
+             # FIXME: where is the precision?
+             return true
          end
          
         
