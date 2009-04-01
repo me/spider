@@ -20,15 +20,22 @@ module Spider; module ControllerMixins
             done
         end
         
-        def request_path
-            p = super
+        def self.reverse_proxy_mapping(url)
+            return url unless url
             if (maps = Spider.conf.get('http.proxy_mapping'))
                 maps.each do |proxy, spider|
-                    return spider + p[proxy.length..-1] if (p[0..proxy.length-1] == proxy)
+                    return proxy + url[spider.length..-1] if (spider == "" || url[0..spider.length-1] == spider)
                 end
             end
-            return p
+            return url
         end
+        
+        def request_path
+            HTTPMixin.reverse_proxy_mapping(super)
+        end
+        
+        # for widgets
+
         
         def before(action='', *arguments)
             # Redirect to url + slash if controller is called without action
@@ -138,6 +145,7 @@ module Spider; module ControllerMixins
                 @http_auth_realm = val if val
                 @http_auth_realm
             end
+            
         end
         
         class HTTPStatus < RuntimeError
