@@ -84,7 +84,9 @@ module Spider; module Model; module Storage; module Db
         def value_to_mapper(type, value)
             case type.name
             when 'DateTime'
-                return value ? value.to_date : nil
+                return nil unless value
+                return value.to_datetime if value.is_a?(Time)
+                return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
             when 'Text'
                 return value ? value.read : ''
             else
