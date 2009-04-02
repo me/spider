@@ -72,6 +72,11 @@ module Spider; module Model; module Storage; module Db
             case type.name
             when 'Spider::DataTypes::Binary'
                 return OCI8::BLOB.new(@conn, value)
+            when 'String', 'Spider::DataTypes::Text'
+                enc = @configuration['encoding']
+                if (enc && enc.downcase != 'utf-8')
+                    value = Iconv.conv(enc, 'utf-8', value)
+                end
             end
             return value
         end
@@ -87,11 +92,16 @@ module Spider; module Model; module Storage; module Db
                 return nil unless value
                 return value.to_datetime if value.is_a?(Time)
                 return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
-            when 'Text'
-                return value ? value.read : ''
-            else
-                return value
+            when 'Spider::DataTypes::Text'
+                value =  value ? value.read : ''
             end
+            if (type == 'Spider::DataTypes::Text' || type == 'String')
+                enc = @configuration['encoding']
+                if (enc && enc.downcase != 'utf-8')
+                    value = Iconv.conv('utf-8', enc, value) if value
+                end
+            end
+            return value
         end
 
          def execute(sql, *bind_vars)

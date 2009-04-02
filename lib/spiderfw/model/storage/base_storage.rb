@@ -10,7 +10,12 @@ module Spider; module Model; module Storage
         
         def initialize(url)
             @url = url
+            @configuration = {}
             parse_url(url)
+        end
+        
+        def configure(conf)
+            @configuration.merge!(conf)
         end
         
         def parse_url(url)

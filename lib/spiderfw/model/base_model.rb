@@ -494,13 +494,15 @@ module Spider; module Model
             storage_regexp = /([\w\d]+?):(.+)/
             if (storage_string !~ storage_regexp)
                 orig_string = storage_string
-                storage_string = Spider.conf.get('storages')[storage_string]
+                storage_conf = Spider.conf.get('storages')[storage_string]
+                storage_string = storage_conf['url'] if storage_conf
                 if (!storage_string || storage_string !~ storage_regexp)
                     raise ModelException, "No named storage found for #{orig_string}"
                 end
             end
             type, url = $1, $2
             storage = Storage.get_storage(type, url)
+            storage.configure(storage_conf) if storage_conf
             return storage
         end
          

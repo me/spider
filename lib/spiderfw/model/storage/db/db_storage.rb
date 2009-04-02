@@ -1,5 +1,6 @@
 require 'spiderfw/model/storage/base_storage'
 require 'spiderfw/model/mappers/db_mapper'
+require 'iconv'
 
 module Spider; module Model; module Storage; module Db
     
