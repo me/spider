@@ -87,8 +87,6 @@ module Spider
             find_apps
             require (@paths[:config]+'/options') if File.exist?(@paths[:config]+'/options.rb')
             load_apps_options
-            load_configuration($SPIDER_PATH+'/config')
-            load_configuration(@root+'/config')
             
             GetText.locale = config.get('locale')
 
@@ -96,18 +94,21 @@ module Spider
         end
         
         def load_all_apps
-            Find.find(@paths[:apps]) do |path|
+            Find.find($SPIDER_PATH+'/apps', @paths[:apps]) do |path|
                 if (File.basename(path) == '_init.rb')
-                    @apps_to_load << File.dirname(path)[0..$SPIDER_RUN_PATH+'/apps/'.length-1]
+                    @app_paths << File.dirname(path)
                     Find.prune
                 elsif (File.exist?("#{path}/_init.rb"))
-                    @apps_to_load << path[0..$SPIDER_RUN_PATH+'/apps/'.length-1]
+                    @app_paths << path
                     Find.prune
                 end
             end
+            init_apps
         end
         
         def init_apps
+            load_configuration($SPIDER_PATH+'/config')
+            load_configuration(@root+'/config')
             @app_paths.each do |path|
                 require path+'/_init.rb'
             end
@@ -245,9 +246,28 @@ module Spider
             end
         end
         
+        def test_setup
+        end
+        
+        def test_teardown
+        end
+        
+        def _test_setup
+            @apps.each do |name, mod|
+                mod.test_setup if mod.respond_to?(:test_setup)
+            end
+        end
+        
+        def _test_teardown
+            @apps.each do |name, mod|
+                mod.test_teardown if mod.respond_to?(:test_teardown)
+            end
+        end
+        
     end
     
 end
+
 
 # load instead of require for reload_sources to work correctly
 load 'spiderfw/config/options/spider.rb'
