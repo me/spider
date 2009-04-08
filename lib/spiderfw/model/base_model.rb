@@ -86,20 +86,29 @@ module Spider; module Model
                 else
                     attributes[:anonymous_model] = true
                     attributes[:owned] = true unless attributes[:owned] != nil
-                    attributes[:junction] = true
-                    attributes[:junction_id] ||= :id
                     first_model = self.first_definer(name)
                     assoc_type_name = Spider::Inflector.camelize(name)
-                    if (first_model.const_defined?(assoc_type_name))
+                    create_junction = true
+                    if (first_model.const_defined?(assoc_type_name) )
                         assoc_type = first_model.const_get(assoc_type_name)
-                    else
+                        if (!assoc_type.attributes[:junction]) # other kind of inline model
+                            assoc_type_name += 'Junction'
+                            create_junction = false if (first_model.const_defined?(assoc_type_name))
+                        else
+                            create_junction = false
+                        end
+                    end
+                    if (create_junction)
+                        attributes[:junction] = true
+                        attributes[:junction_id] ||= :id
                         assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
+                        assoc_type.attributes[:sub_model] = true
                         assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
-                        self_name = self.short_name.downcase.to_sym
+                        self_name = self.short_name.gsub('/', '_').downcase.to_sym
                         attributes[:reverse] = self_name
                         assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
                         # FIXME! fix in case of clashes with existent elements
-                        other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).downcase.to_sym
+                        other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
                         other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
                         attributes[:junction_their_element] = other_name
                         assoc_type.element(other_name, orig_type)
@@ -195,16 +204,22 @@ module Spider; module Model
                     @modified_elements[name] = true unless element.primary_key?
                     return res
                 end
-                if (val && element.model? && !val.is_a?(BaseModel) && !val.is_a?(QuerySet))
-                    if (element.multiple? && val.is_a?(Enumerable))
-                        qs = instantiate_element(name)
-                        val.each do |row|
-                            row = element.model.new(row) unless row.is_a?(BaseModel)
-                            qs << row
+                if (val && element.model?)
+                    if (element.multiple?)
+                        unless (val.is_a?(QuerySet))
+                            qs = instantiate_element(name)
+                            if (val.is_a?(Enumerable))
+                                val.each do |row|
+                                    row = element.type.new(row) unless row.is_a?(BaseModel)
+                                    qs << row
+                                end
+                            else
+                                qs << val
+                            end
+                            val = qs
                         end
-                        val = qs
                     else
-                        val = element.model.new(val)
+                        val = element.model.new(val) unless val.is_a?(BaseModel)
                     end
                 end
                 val = prepare_child(element.name, val)
@@ -497,7 +512,7 @@ module Spider; module Model
                 storage_conf = Spider.conf.get('storages')[storage_string]
                 storage_string = storage_conf['url'] if storage_conf
                 if (!storage_string || storage_string !~ storage_regexp)
-                    raise ModelException, "No named storage found for #{orig_string}"
+                    raise ModelException, "No storage '#{orig_string}' found"
                 end
             end
             type, url = $1, $2
@@ -630,16 +645,18 @@ module Spider; module Model
             if (element.model?)
                 # convert between junction and real type if needed
                 if (obj.is_a?(QuerySet) && element.attributes[:junction])
-                    if (element.attributes[:keep_junction] && obj.model == element.type)
-                        qs = QuerySet.new(element.model)
-                        obj.each{ |el_obj| 
-                            qs << {element.reverse => self, element.attributes[:junction_their_element] => el_obj}
-                        }
-                        obj = qs
-                    elsif (!element.attributes[:keep_junction] && obj.model == element.model)
-                        qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
-                        obj = qs
-                    end 
+                    obj.no_autoload do
+                        if (element.attributes[:keep_junction] && obj.model == element.type)
+                            qs = QuerySet.new(element.model)
+                            obj.each{ |el_obj| 
+                                qs << {element.reverse => self, element.attributes[:junction_their_element] => el_obj}
+                            }
+                            obj = qs
+                        elsif (!element.attributes[:keep_junction] && obj.model == element.model)
+                            qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
+                            obj = qs
+                        end 
+                    end
                 end
                 obj.identity_mapper = self.identity_mapper
                 # FIXME: cleanup the single reverse thing, doesn't have much sense now with junctions

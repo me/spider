@@ -19,6 +19,7 @@ module Spider; module Model
             @tasks = {}
             @processed_tasks = {}
             @objects.each do |obj_id, obj|
+                next unless obj.mapper && obj.mapper.class.write?
                 task = Spider::Model::MapperTask.new(obj, :save)
                 @tasks[task] ||= task
                 find_dependencies(task)
@@ -26,6 +27,7 @@ module Spider; module Model
             tasks = tsort()
             tasks.each{ |task| p task}
             tasks.each do |task|
+                Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
             end
         end

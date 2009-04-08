@@ -10,7 +10,8 @@ module Spider; module Model
                 @data = val
             end
             
-            def data
+            def data(val=nil)
+                self.data = val if (val)
                 @data
             end
             

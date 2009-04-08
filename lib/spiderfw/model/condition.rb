@@ -244,10 +244,11 @@ module Spider; module Model
                 @condition_context = condition_context
             end
             
-            [:==, :<, :>, :<=, :>=, :like, :ilike].each do |op|
+            [:==, :<, :>, :<=, :>=, :like, :ilike, :not].each do |op|
                 define_method(op) do |val|
                     replace = {
-                        :== => '='
+                        :== => '=',
+                        :not => '<>'
                     }
                     if (replace[op])
                         op = replace[op]

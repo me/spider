@@ -4,6 +4,10 @@ module Spider; module Model
         attr_accessor :storage
         attr_reader :type
 
+
+        def self.write?
+            true
+        end
         
         def initialize(model, storage)
             @model = model
@@ -100,9 +104,15 @@ module Spider; module Model
                     end
                 end
             end
+            if (@model.extended_models)
+                @model.extended_models.each do |m, el|
+                    obj.get(el).save if obj.element_modified?(el)
+                end
+            end
         end
         
         def after_save(obj, mode)
+            save_associations(obj)
             obj.reset_modified_elements
         end
         
@@ -123,13 +133,7 @@ module Spider; module Model
                 end
             end
             save_mode = (!is_insert && obj.primary_keys_set?) ? :update : :insert
-            normalize(obj)
             before_save(obj, save_mode)
-            if (@model.extended_models)
-                @model.extended_models.each do |m, el|
-                    obj.get(el).save if obj.element_modified?(el)
-                end
-            end
             # @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
             #     obj.get(el).save if obj.element_modified?(el)
             # end
@@ -138,7 +142,6 @@ module Spider; module Model
             else
                 do_insert(obj)
             end
-            save_associations(obj)
             after_save(obj, save_mode)
         end
 
@@ -186,9 +189,6 @@ module Spider; module Model
         def save_all(root)
             uow = UnitOfWork.new
             uow.add(root)
-            @model.elements.select{ |n, el| mapped?(el) && el.model? && root.element_has_value?(el) && root.get(el).modified? }.each do |name, element|
-                uow.add(root.send(name))
-            end
             uow.run()
         end
         
@@ -294,7 +294,7 @@ module Spider; module Model
                     end
                     return set
                 end
-                set.total_rows = result.total_rows if (!was_loaded)
+                set.total_rows = result.total_rows # if (!was_loaded)
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
                     next unless obj
@@ -497,6 +497,10 @@ module Spider; module Model
             end
         end
         
+        def get_dependencies(obj, action)
+            return []
+        end
+        
         
     end
     
@@ -536,13 +540,18 @@ module Spider; module Model
             return eql?(task)
         end
         
+        # def to_s
+        #     "#{@action} on #{@object} (#{object.class})\n"
+        # end
         
         def inspect
             if (@action && @object)
-                str = "#{@action} on #{@object}\n"
-                str += "-dependencies:\n"
-                @dependencies.each do |dep|
-                    str += "---#{dep.action} on #{dep.object}\n"
+                str = "#{@action} on #{@object} (#{object.class})\n"
+                if (@dependencies.length > 0)
+                    str += "-dependencies:\n"
+                    @dependencies.each do |dep|
+                        str += "---#{dep.action} on #{dep.object}\n"
+                    end
                 end
             else
                 str = "Root Task"

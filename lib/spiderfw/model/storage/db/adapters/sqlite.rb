@@ -23,6 +23,15 @@ module Spider; module Model; module Storage; module Db
             return @db
         end
         
+        def connect
+            @conn = self.class.new_connection(*@connection_params)
+        end
+        
+        def disconnect
+            @conn.close if @conn
+            @conn = nil
+        end
+        
         
         def parse_url(url)
             if (url =~ /(.+?):\/\/(.+)/)

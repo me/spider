@@ -7,7 +7,7 @@ module Spider
     module Model
         
         @base_types = [
-            String, Spider::DataTypes::Text, Fixnum, DateTime, Spider::DataTypes::Bool
+            String, Spider::DataTypes::Text, Fixnum, Float, DateTime, Spider::DataTypes::Bool
         ]
         class <<self; attr_reader :base_types; end
         
@@ -88,6 +88,45 @@ module Spider
             else
                 IdentityMapper.new do |im|
                     yield im
+                end
+            end
+        end
+        
+        def self.sync_schema(model_or_app)
+            models = []
+            mod = const_get_full(model_or_app)
+            if (mod.is_a?(Module) && mod.include?(Spider::App))
+                mod.models.each { |m| models << m }
+            elsif (mod.subclass_of?(Spider::Model::BaseModel))
+                models << mod
+            end
+            models.each do |m|
+                Spider::Logger.debug("SYNCING #{m}")
+                m.mapper.sync_schema if m.mapper.respond_to?(:sync_schema)
+            end
+        end
+        
+        def self.load_fixtures(file)
+            if (file =~ /\.([^\.]+)$/)
+                extension = $1
+            else
+                raise ArgumentError, "Can't determine type of fixtures file #{file}"
+            end
+            data = {}
+            case extension
+            when 'yml'
+                require 'yaml'
+                data = YAML.load_file(file)
+            end
+             # Ruby 1.9: steps are not needed with ordered hashes
+            data = [data] unless data.is_a?(Array)
+            data.each do |step|
+                step.each do |mod_name, mod_data|
+                    mod = const_get_full(mod_name)
+                    mod_data.each do |row|
+                        obj = mod.new(row)
+                        obj.insert
+                    end
                 end
             end
         end

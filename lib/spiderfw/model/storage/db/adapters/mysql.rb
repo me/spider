@@ -307,10 +307,17 @@ module Spider; module Model; module Storage; module Db
          end
          
          def schema_field_text_equal?(current, field)
+             # FIXME
              return true
          end
          
          def schema_field_datetime_equal?(current, field)
+             # FIXME
+             return true
+         end
+
+         def schema_field_float_equal?(current, field)
+             # FIXME
              return true
          end
          

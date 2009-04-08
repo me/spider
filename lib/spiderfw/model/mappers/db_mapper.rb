@@ -11,6 +11,10 @@ module Spider; module Model; module Mappers
             @type = :db
         end
         
+        def self.write?
+            true
+        end
+        
         def have_references?(element)
             element_name = element.is_a?(Spider::Model::Element) ? element.name : element
             schema.has_foreign_fields?(element_name) || schema.field(element_name)
@@ -621,9 +625,9 @@ module Spider; module Model; module Mappers
             deps = []
             case action
             when :keys
-                deps << [task, MapperTask.new(obj, :save)] unless obj.primary_keys_set?
+                deps << [task, MapperTask.new(obj, :save)] unless obj.primary_keys_set? || (!obj.mapper || !obj.mapper.class.write?)
             when :save
-                elements = @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el)}
+                elements = @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el) && obj.element_modified?(el)}
                 # n <-> n and n|1 <-> 1
                 elements.select{ |n, el| !el.has_single_reverse? }.each do |name, element|
                     if (element.multiple?)
@@ -636,10 +640,12 @@ module Spider; module Model; module Mappers
                     end
                 end
                 elements.select{ |n, el| el.multiple? && el.has_single_reverse? }.each do |name, element|
-                    set = obj.send(element.name)
-                    set.each do |set_obj|
-                        sub_task = MapperTask.new(set_obj, :save)
-                        deps << [sub_task, MapperTask.new(obj, :keys)]
+                    if (element.model? && element.type.mapper && element.type.mapper.class.write?)
+                        set = obj.send(element.name)
+                        set.each do |set_obj|
+                            sub_task = MapperTask.new(set_obj, :save)
+                            deps << [sub_task, MapperTask.new(obj, :keys)]
+                        end
                     end
                 end
             end
@@ -780,6 +786,7 @@ module Spider; module Model; module Mappers
             sequences = schema.sequences.values
 
             @model.elements_array.select{ |el| el.attributes[:anonymous_model] }.each do |el|
+                next if el.model.mapper.class != self.class
                 schema_description.merge!(el.model.mapper.schema.get_schemas)
                 sequences += el.model.mapper.schema.sequences.values
                 # Spider::Logger.debug("MERGING SEQUENCES:")

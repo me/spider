@@ -5,6 +5,10 @@ module Spider; module Model; module Mappers
 
     class HashMapper < Spider::Model::Mapper
         
+        def self.write?
+            false
+        end
+        
         # TODO: This is only for one-element hashes; make this a subclass of
         # a generic hashmapper
         def fetch(query)
