@@ -15,7 +15,8 @@ module Spider
                 cur = ''
                 @options = prefix.split('.').inject(@options) do |o, part|
                     cur += '.' unless cur.empty?; cur += part
-                    raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % cur unless o[part]
+                    config_option(cur, '__auto__') unless o[part]
+                    #raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % cur unless o[part]
                     o[part]
                 end
             end
@@ -31,7 +32,8 @@ module Spider
 
         
         def []=(key, val)
-            raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key unless @options && @options[key]
+            config_option(key, "__auto__") unless @options[key]
+            #raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key unless @options && @options[key]
             process = @options[key][:params][:process]
             val = process.call(val) if (process)
             first, rest = key.split('.', 2)
@@ -57,7 +59,7 @@ module Spider
                     @values[key] ||= Configuration.new(@prefix+".#{key}")
                     val.each { |k, v| self[key][k.to_s] = v }
                 else
-                    config_option(key, '__no_doc__') unless @options[key]
+                    config_option(key, '__auto__') unless @options[key]
                     val = convert_val(@options[key][:params][:type], val) if (@options[key][:params][:type])
                     self[key] = val
                 end
