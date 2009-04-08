@@ -10,19 +10,9 @@ class ModelCommand < CmdParse::Command
         sync_cmd.short_desc = _("Sync models")
         
         sync_cmd.set_execution_block do |req_models|
-            models = []
             req_models || []
             req_models.each do |model|
-                mod = const_get_full(model)
-                if (mod.is_a?(Module) && mod.include?(Spider::App))
-                    mod.models.each { |m| models << m }
-                elsif (mod.subclass_of?(Spider::Model::BaseModel))
-                    models << mod
-                end
-            end
-            models.each do |m|
-                Spider::Logger.debug("SYNCING #{m}")
-                m.mapper.sync_schema if m.mapper.respond_to?(:sync_schema)
+                Spider::Model.sync_schema(model)
             end
         end
         self.add_command(sync_cmd)
