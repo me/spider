@@ -6,13 +6,23 @@ module Spider; module Forms
         is_attr_accessor :multiple
         is_attr_accessor :blank_option, :type => TrueClass, :default => true
         
+        def prepare_scene(scene)
+            scene = super
+            scene.name += '[]' if @multiple
+            return scene
+        end
+        
         def execute
             @scene.data = @model.all
             @scene.values = {}
             debug("SELECT VALUE:")
             debug(@value)
+            @scene.selected = {}
             if (@value)
-                @scene.value_pks = @model.primary_keys.map{|k| @value.get(k) }.join(',')
+                val = @multiple ? @value : [@value]
+                val.each do |v|
+                    @scene.selected[@model.primary_keys.map{|k| v.get(k) }.join(',')] = true
+                end
             end
             @scene.data.each_index do |i|
                 @scene.values[i] = @model.primary_keys.map{|k| @scene.data[i][k] }.join(',')
@@ -25,18 +35,32 @@ module Spider; module Forms
             debug("SETTING SELECT VALUE TO")
             debug(val)
             return if (val.nil? || (val.is_a?(String) && val.empty?))
-            if (val.is_a?(@model))
+            if (val.is_a?(@model) || val.is_a?(Spider::Model::QuerySet))
                 return super
             else
-                if (val.is_a?(String))
-                    parts = val.split(',')
-                    pk = {}
-                    @model.primary_keys.each{ |k| pk[k.name] = parts.shift}
+                if (@multiple)
+                    val = [val] unless val.is_a?(Array)
+                    qs = Spider::Model::QuerySet.static(@model)
+                    val.each do |v|
+                        obj = @model.new(str_to_pks(v))
+                        qs << obj
+                    end
+                    return super(qs)
                 else
-                    pk = val
+                    return super(@model.new(str_to_pks(val)))
                 end
-                return super(@model.new(pk))
             end
+        end
+        
+        def str_to_pks(val)
+            if (val.is_a?(String))
+                parts = val.split(',')
+                pk = {}
+                @model.primary_keys.each{ |k| pk[k.name] = parts.shift}
+            else
+                pk = val
+            end
+            return pk
         end
 
     end

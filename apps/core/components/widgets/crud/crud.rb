@@ -65,7 +65,7 @@ module Spider; module Components
                 end
                 if (@widgets[:table])
                     links = {}
-                    table_rows = @widgets[:table].scene.rows
+                    table_rows = @widgets[:table].scene.data
                     table_rows.each_index do |i|
                         links[i] = "#{@request_path}?_w"+params_for(self, :edit => table_rows[i][@key_element])
                     end

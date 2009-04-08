@@ -4,8 +4,10 @@ module Spider; module Components
         tag 'table'
         i_attribute :model, :required => true
         is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
+        i_attribute :num_elements, :default => 7
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
+        attribute :max_element_length, :type => Fixnum, :default => 15
         attr_accessor :queryset
         
         def prepare
@@ -32,8 +34,20 @@ module Spider; module Components
             @sort = [@sort] if @sort && !@sort.is_a?(Array)
         end
         
+        def choose_elements
+            els = []
+            cnt = 1
+            @model.elements_array.each do |el|
+                break if cnt > @num_elements
+                next if el.multiple? && el.association != :multiple_choice
+                cnt += 1
+                els << el.name
+            end
+            return els
+        end
+        
         def execute
-            @elements ||= @model.elements_array.map{ |el| el.name }
+            @elements ||= choose_elements
             @scene.sortable = {}
             @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.mapped?(el) ? true : false }
             @scene.labels = {}
@@ -50,6 +64,7 @@ module Spider; module Components
             @rows.order_by(*@sort) if @sort
             @rows.load
             @scene.rows = prepare_rows(@rows)
+            @scene.data = @rows
             @scene.has_more = @rows.has_more?
             @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
         end
@@ -59,19 +74,30 @@ module Spider; module Components
             rows.each do |row|
                 res_row = {}
                 @elements.each do |el|
+                    if (!row[el])
+                        row[el] = ''
+                        next
+                    end
                     if (@model.elements[el].multiple?)
                         list = "<ul>"
-                        row[el].load
                         row[el][0..2].each{ |sub|
                             sub_desc = sub.nil? ? '' : sub.to_s
-
+                            sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
                             list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
                         }
-                        list += "<li>...</li>" if (row[el].total_rows > 3)
+                        list += "<li>...</li>" if (row[el].length > 3)
                         list += "</ul>"
                         res_row[el] = list
                     else
-                        res_row[el] = row[el].to_s
+                        str = row[el].to_s
+                        str = str.split("\n").map{ |str_row|
+                            if str_row.length > @attributes[:max_element_length]
+                                str_row[0..@attributes[:max_element_length]]+'...' 
+                            else
+                                str_row
+                            end
+                        }.join("\n")
+                        res_row[el] = str
                     end
                 end
                 debug("RES ROW:")

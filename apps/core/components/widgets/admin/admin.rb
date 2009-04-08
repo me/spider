@@ -11,10 +11,18 @@ module Spider; module Components
         
         def parse_content(doc)
             doc = super
-            @models ||= []
+            mods = []
             doc.search('admin:model').each do |mod|
-                @models << const_get_full(mod.innerText)
+                mods << const_get_full(mod.innerText)
             end
+            doc.search('admin:app').each do |app_tag|
+                app = const_get_full(app_tag.innerText)
+                mods += app.models.select do |m|
+                    !m.attributes[:sub_model] && m.mapper.class.write?
+                end
+            end
+            @models ||= []
+            @models += mods
             return doc
         end
 

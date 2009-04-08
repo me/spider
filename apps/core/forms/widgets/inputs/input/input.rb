@@ -19,6 +19,7 @@ module Spider; module Forms
         def prepare_scene(scene)
             scene = super
             scene.name = @name || '_w'+param_name(self)
+            return scene
         end
         
         def prepare_value(val)
