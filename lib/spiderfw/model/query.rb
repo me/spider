@@ -47,6 +47,8 @@ module Spider; module Model
                    parts = l.split(' ')
                    name = parts[0]
                    order = parts[1]
+               else
+                   parts = [l, :asc]
                end
                @order << [parts[0], parts[1]]
            end
