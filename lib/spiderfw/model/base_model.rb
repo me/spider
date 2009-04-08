@@ -244,6 +244,13 @@ module Spider; module Model
 
         end
         
+        def self.remove_element(el)
+            el = el.name if el.is_a?(Element)
+            @elements.delete(el)
+            @elements_order.delete(el)
+        end
+            
+        
         def self.integrate(element_name, params={})
             params ||= {}
             elements[element_name].attributes[:integrated_model] = true
@@ -321,6 +328,7 @@ module Spider; module Model
                 @elements = {}
                 @elements_order = []
             end
+            primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks]) 
             integrated_name = params[:name]
             if (!integrated_name)
                 integrated_name = (self.parent_module == model.parent_module) ? model.short_name : model.name
@@ -885,7 +893,7 @@ module Spider; module Model
         end
         
         def primary_keys
-            self.class.primary_keys.inject({}){ |h, k| h[k.name] = get(k) }
+            self.class.primary_keys.map{ |k| get(k) }
         end
 
             
