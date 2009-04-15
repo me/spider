@@ -30,10 +30,12 @@ module Spider
             @request.session = Session.get(@request.cookies['sid'])
             @response.cookies['sid'] = @request.session.sid
             @response.cookies['sid'].path = '/'
-            if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
-                @request.params = Spider::HTTP.parse_query(@request.read_body)
-            elsif (@request.env['REQUEST_METHOD'] == 'GET')
+            @request.params = {}
+            if (@request.env['QUERY_STRING'])
                 @request.params = Spider::HTTP.parse_query(@request.env['QUERY_STRING'])
+            end
+            if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
+                @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
             end
             # @extensions = {
             #     'js' => {:format => :js, :content_type => 'application/javascript'},
