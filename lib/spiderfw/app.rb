@@ -69,6 +69,9 @@ module Spider
                         @tags[tag] ? true : false
                     end
                     
+                    def route(path, dest=nil, options=nil)
+                        self.controller.route(path, dest, options)
+                    end
                 end
                 
                 # controllers = Spider::App::Controllers.clone
