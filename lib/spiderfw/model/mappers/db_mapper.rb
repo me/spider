@@ -299,6 +299,9 @@ module Spider; module Model; module Mappers
                     polym_request.reject!{|k, v| 
                         model.elements[k].integrated? && model.elements[k].integrated_from.name == extension_element
                     }
+                    model.elements_array.select{ |el| el.attributes[:local_pk] }.each do |el|
+                        polym_request[el.name] = true
+                    end
                     polym_select = model.mapper.prepare_select(Query.new(nil, polym_request)) # FIXME!
                     polym_select[:keys].map!{ |key| "#{key} AS #{key.gsub('.', '_')}"}
                     keys += polym_select[:keys]
@@ -317,7 +320,7 @@ module Spider; module Model; module Mappers
                     }
                 end
             end
-            tables = [@schema.table]
+            tables = [schema.table]
             
             joins = prepare_joins(joins)
             return nil if (keys.empty?)
