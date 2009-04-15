@@ -16,27 +16,33 @@ module Spider; module Utils
                 raise ArgumentError, "You must supply the FileSharedStore with a path, or a name a configured base path"
             end
             FileUtils.mkpath(@path)     
+            @sync = Sync.new
         end
         
-        def [](key, &proc)
+        def [](key)
             path = map_path(key)
             if (File.exist?(path))
+                @sync.lock(Sync::SH)
                 f = File.new(path, 'r')
                 f.flock(File::LOCK_SH)
                 data = Marshal.restore(f.read)
                 f.flock(File::LOCK_UN)
                 f.close
+                @sync.lock(Sync::UN)
             end
             return data
         end
         
         def []=(key, value)
             path = map_path(key)
+            @sync.lock(Sync::EX)
             f = File.new(path, 'w')
             f.flock(File::LOCK_EX)
             f.puts(Marshal.dump(value))
+            f.flush
             f.flock(File::LOCK_UN)
             f.close
+            @sync.lock(Sync::UN)
         end
 
         
