@@ -27,7 +27,7 @@ module Spider
             def [](sid)
                 check_purge
                 @mutex.synchronize{
-                    @sessions[sid]
+                    @sessions[sid] ? @sessions[sid][:data] : nil
                 }
             end
             
