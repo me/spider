@@ -145,17 +145,36 @@ module Spider; module Model
             after_save(obj, save_mode)
         end
 
+        def association_elements
+             @model.elements_array.select{ |el| mapped?(el) && !el.integrated? && !have_references?(el) }
+        end
         
         def save_associations(obj)
-            @model.elements_array.select{ |el| mapped?(el) && !el.integrated? &&
-                    !have_references?(el) && obj.element_has_value?(el) }.each do |el|
+            association_elements.select{ |el| obj.element_has_value?(el) }.each do |el|
                 save_element_associations(obj, el)
             end
         end
         
-        def save_element_associations(obj, element)
+        def delete_element_associations(obj, element)
             if (element.attributes[:junction])
                 element.mapper.delete({element.attributes[:reverse] => obj.primary_keys})
+            else
+                associated = obj.get(element)
+                if (element.multiple? && element.owned?)
+                    condition = Condition.and
+                    associated.each do |child|
+                        condition_row = Condition.or
+                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
+                        condition << condition_row
+                    end
+                    element.mapper.delete(condition)
+                end
+            end
+        end
+        
+        def save_element_associations(obj, element)
+            delete_element_associations(obj, element)
+            if (element.attributes[:junction])
                 val = obj.get(element)
                 if (val.is_a?(QuerySet) && val.model == element.type) # construct the junction
                     qs = QuerySet.static(element.model, val.map{ |el_obj|
@@ -171,16 +190,6 @@ module Spider; module Model
                 end
                 val.insert
             else
-                associated = obj.get(element)
-                if (element.multiple? && element.owned?)
-                    condition = Condition.and
-                    associated.each do |child|
-                        condition_row = Condition.or
-                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
-                        condition << condition_row
-                    end
-                    element.mapper.delete(condition)
-                end
                 associated.set(element.reverse, obj)
                 associated.save
             end
@@ -208,19 +217,45 @@ module Spider; module Model
         end
         
         def delete(obj_or_condition)
-            if (obj_or_condition.is_a?(BaseModel))
-                obj = obj_or_condition
+            
+            def prepare_delete_condition(obj)
                 condition = Condition.and
                 @model.primary_keys.each do |key|
                     condition[key.name] = map_condition_value(key.type, obj.get(key))
                 end
-                Spider::Logger.debug("Deleting with condition:")
-                Spider::Logger.debug(condition)
+                return condition
+            end
+            
+            storage.start_transaction
+            if (obj_or_condition.is_a?(BaseModel))
+                condition = prepare_delete_condition(obj_or_condition)
+            elsif (obj_or_condition.is_a?(QuerySet))
+                qs = obj_or_condition
+                condition = Condition.or
+                qs.each{ |obj| condition << prepare_delete_condition(obj) }
             else
                 condition = obj_or_condition.is_a?(Condition) ? obj_or_condition : Condition.new(obj_or_condition)
             end
+            Spider::Logger.debug("Deleting with condition:")
+            Spider::Logger.debug(condition)
             prepare_query_condition(condition)
+            cascade = @model.elements_array.select{ |el| el.attributes[:delete_cascade] }
+            assocs = association_elements.select do |el|
+                !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
+            end
+            unless cascade.empty? && assocs.empty?
+                curr = find(Query.new(condition))
+                curr.each do |curr_obj|
+                    cascade.each do |el|
+                        el.model.mapper.delete(curr_obj.get(el))
+                    end
+                    assocs.each do |el|
+                        delete_element_associations(curr_obj, el)
+                    end
+                end
+            end
             do_delete(condition)
+            storage.commit
         end
         
         def delete_all!
@@ -592,8 +627,8 @@ module Spider; module Model
             message
         end
     end
-    RequiredError = MapperElementError.create_subclass("Element %s is required")
-    NotUniqueError = MapperElementError.create_subclass("Element %s is not unique")
+    RequiredError = MapperElementError.create_subclass(_("Element %s is required"))
+    NotUniqueError = MapperElementError.create_subclass(_("Element %s is not unique"))
 
         
     

@@ -91,26 +91,26 @@ module Spider; module Model
                     create_junction = true
                     if (first_model.const_defined?(assoc_type_name) )
                         assoc_type = first_model.const_get(assoc_type_name)
-                        if (!assoc_type.attributes[:junction]) # other kind of inline model
+                        if (!assoc_type.attributes[:sub_model]) # other kind of inline model
                             assoc_type_name += 'Junction'
                             create_junction = false if (first_model.const_defined?(assoc_type_name))
                         else
                             create_junction = false
                         end
                     end
+                    attributes[:junction] = true
+                    attributes[:junction_id] ||= :id
+                    self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
+                    attributes[:reverse] = self_name
+                    other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
+                    other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
+                    attributes[:junction_their_element] = other_name
                     if (create_junction)
-                        attributes[:junction] = true
-                        attributes[:junction_id] ||= :id
                         assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
                         assoc_type.attributes[:sub_model] = true
                         assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
-                        self_name = self.short_name.gsub('/', '_').downcase.to_sym
-                        attributes[:reverse] = self_name
                         assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
                         # FIXME! fix in case of clashes with existent elements
-                        other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
-                        other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
-                        attributes[:junction_their_element] = other_name
                         assoc_type.element(other_name, orig_type)
                         assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
                         if (proc)                                   #        to be hidden, but the integrated el instead
@@ -127,12 +127,14 @@ module Spider; module Model
             if (attributes[:add_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_reverse]
-                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name, :added_reverse => true)
+                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name, :added_reverse => true, 
+                        :delete_cascade => attributes[:reverse_delete_cascade])
                 end
             elsif (attributes[:add_multiple_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_multiple_reverse]
-                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true, :added_reverse => true)
+                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true, 
+                        :added_reverse => true, :delete_cascade => attributes[:reverse_delete_cascade])
                 end
             end
             if (attributes[:lazy] == nil)
@@ -329,6 +331,10 @@ module Spider; module Model
                 @elements_order = []
             end
             primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks]) 
+            unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
+                # FIXME: check if :id is already defined
+                element(:id, Fixnum, :autoincrement => true, :local_pk => true)
+            end
             integrated_name = params[:name]
             if (!integrated_name)
                 integrated_name = (self.parent_module == model.parent_module) ? model.short_name : model.name
@@ -339,7 +345,7 @@ module Spider; module Model
             @extended_models[model] = integrated_name
             attributes = {}
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
-            process_models = [self] + (@subclasses || [])
+            attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
             integrate(integrated_name, :keep_pks => true)
             if (params[:add_polymorphic])
