@@ -125,6 +125,13 @@ module Spider; module Model
             return self
         end
         
+        def range(field, lower, upper)
+            c = self.class.and
+            c.set(field, '>=', lower)
+            c.set(field, '<=', upper)
+            self << c
+        end
+        
         def delete(field)
             super
             @comparisons.delete(field.to_sym)
