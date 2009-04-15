@@ -156,6 +156,10 @@ module Spider; module Model
             @objects.length
         end
         
+        def empty?
+            @objects.empty?
+        end
+        
         def index_by(*elements)
             names = elements.map{ |el| (el.class == Spider::Model::Element) ? el.name.to_s : el.to_s }
             index_name = names.sort.join(',')
