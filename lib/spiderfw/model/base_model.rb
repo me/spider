@@ -107,7 +107,7 @@ module Spider; module Model
                     attributes[:junction_their_element] = other_name
                     if (create_junction)
                         assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
-                        assoc_type.attributes[:sub_model] = true
+                        assoc_type.attributes[:sub_model] = self
                         assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
                         assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
                         # FIXME! fix in case of clashes with existent elements
@@ -509,12 +509,16 @@ module Spider; module Model
             @mapper_procs << proc
         end
         
-        def self.use_storage(name)
-            @use_storage = name
+        def self.use_storage(name=nil)
+            @use_storage = name if name
+            @use_storage
         end
         
         def self.storage
             return @storage if @storage
+            if (!@use_storage && self.attributes[:sub_model])
+                @use_storage = self.attributes[:sub_model].use_storage
+            end
             return @use_storage ? get_storage(@use_storage) : get_storage
         end
         
@@ -537,7 +541,7 @@ module Spider; module Model
          
         def self.mapper
             return @mapper if @mapper
-            return get_mapper(storage)
+            return @mapper = get_mapper(storage)
         end
 
         def self.get_mapper(storage)
