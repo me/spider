@@ -209,6 +209,18 @@ module Spider; module Model
         def uniq!
             @subconditions.uniq!
         end
+        
+        def clone
+            c = self.class.new
+            c.conjunction = @conjunction
+            self.each do |key, val|
+                c[key] = val
+            end
+            @subconditions.each do |sub|
+                c << sub.clone
+            end
+            return c
+        end
     
     end
     

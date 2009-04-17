@@ -299,7 +299,7 @@ module Spider; module Model
             objects = queryset_siblings(objects) unless objects.is_a?(QuerySet)
             request = query.request
             condition = Condition.or
-            objects.each do |obj|
+            objects.each_current do |obj|
                 condition << obj.keys_to_condition
             end
             return find(Query.new(condition, request), objects, options)
@@ -322,9 +322,9 @@ module Spider; module Model
                 was_loaded = set.loaded
                 set.loaded = true
                 set.index_by(*@model.primary_keys)
-                set.query = query
+                set.last_query = query
                 if !result || result.empty?
-                    set.each do |obj|
+                    set.each_current do |obj|
                         query.request.keys.each do |element_name|
                             obj.set_loaded_value(element_name, nil) unless @model.elements[element_name].integrated?
                         end
@@ -350,7 +350,7 @@ module Spider; module Model
 
                 set = get_external(set, query)
                 # FIXME: avoid the repetition
-                set.each do |obj|
+                set.each_current do |obj|
                     query.request.keys.each do |element_name|
                         obj.set_loaded_value(element_name, nil) unless obj.element_loaded?(element_name) || @model.elements[element_name].integrated?
                     end
@@ -436,15 +436,15 @@ module Spider; module Model
 # #                debugger
 #                 condition["#{element.attributes[:reverse]}.#{pk.name}"] = a
 #             else
-            objects.each do |obj|
+            objects.each_current do |obj|
 #                if (@model.primary_keys.length == 1)
 #                    condition
 #                else
-                    condition_row = Condition.and
-                    @model.primary_keys.each do |key|
-                        condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
-                    end
-                    condition << condition_row
+                condition_row = Condition.and
+                @model.primary_keys.each do |key|
+                    condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
+                end
+                condition << condition_row
 #                end
             end
 #            end

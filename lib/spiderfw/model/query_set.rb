@@ -3,9 +3,9 @@ module Spider; module Model
     class QuerySet
         include Enumerable
         attr_accessor :_parent, :_parent_element
-        attr_reader :raw_data, :loaded_elements
-        attr_accessor :query, :model, :owner, :total_rows
-        attr_accessor :loaded, :fetch_window
+        attr_reader :raw_data, :loaded_elements, :objects
+        attr_accessor :query, :last_query, :model, :owner, :total_rows
+        attr_accessor :loaded, :fetch_window, :keep_window
         attr_accessor :append_element
         
         def self.static(model, query_or_val=nil)
@@ -30,6 +30,8 @@ module Spider; module Model
             @index_lookup = {}
             @total_rows = nil
             @fetch_window = nil
+            @window_current_start = nil
+            @keep_window = 100
             @autoload = query_or_val.is_a?(Query) ? true : false
             @identity_mapper = nil
             @loaded = false
@@ -104,24 +106,28 @@ module Spider; module Model
             if (index.is_a?(Range))
                 return index.map{ |i| self[i] }
             end
-            load unless @objects[index] || @loaded || !autoload?
-            val = @objects[index]
+            start = start_for_index(index)
+            array_index = (index - start) + 1
+            load_to_index(index) unless (@objects[array_index] && (!@fetch_window || @window_current_start == start)) || loaded?(index) || !autoload?
+            val = @objects[array_index]
             val.set_parent(self, nil) if val
             return val
         end
         
         def []=(index, val)
-            load unless @loaded || !autoload?
+            #load_to_index(index) unless loaded?(index) || !autoload?
             val = instantiate_object(val) unless val.is_a?(@model)
             @loaded_elements.merge!(val.loaded_elements)
             @fixed.each do |fkey, fval|
                 val.set(fkey, fval)
             end
-            @objects[index] = val
+            array_index = index
+            array_index -= @window_current_start-1 if @window_current_start
+            @objects[array_index] = val
         end
         
         def last
-            load unless @loaded || !autoload?
+            load unless (@loaded || !autoload?) && loaded?(total_rows-1)
             @objects.last
         end
         
@@ -172,10 +178,8 @@ module Spider; module Model
             @index_lookup.each_key do |index|
                 @index_lookup[index] = {}
             end
-            no_autoload(false) do
-                each do |obj|
-                    index_object(obj)
-                end
+            each_current do |obj|
+                index_object(obj)
             end
             return self
         end
@@ -198,19 +202,35 @@ module Spider; module Model
                 sub.to_s
             end
         end
-                
+        
+        def each_current
+            @objects.each { |obj| yield obj }
+        end
 
         def each
-            load unless @loaded || !autoload?
-            @objects.each do |obj| 
+            self.each_index do |i|
+                obj = @objects[i]
                 obj.set_parent(self, nil)
                 yield obj
             end
         end
 
         def each_index
-            load unless @loaded || !autoload?
-            @objects.each_index{ |index| yield index }
+            @window_current_start = nil if (@fetch_window)
+            while (!@fetch_window || (has_more? || !@fetch_window))
+                load_next unless !autoload? || (!@fetch_window && @loaded)
+                @objects.each_index do |i|
+                    yield i
+                end
+                break unless autoload? && @fetch_window
+            end
+        end
+        
+        def each_current_index
+            @objects.each_index do |i|
+                i += @window_current_start-1 if @window_current_start
+                yield i
+            end
         end
         
         def merge(query_set)
@@ -247,8 +267,49 @@ module Spider; module Model
         end
         
         def load
-            mapper.find(@query, self)
+            @objects = []
+            @loaded = false
+            @loaded_elements = {}
+            return load_next if @fetch_window && !@query.offset
+            mapper.find(@query.clone, self)
             @loaded = true
+            return self
+        end
+        
+        def start_for_index(i)
+            return 1 unless @fetch_window
+            page = i / @fetch_window + 1
+            return (page - 1) * @fetch_window + 1
+        end
+        
+        def load_to_index(i)
+            return load unless @fetch_window
+            page = i / @fetch_window + 1
+            load_next(page)
+        end
+        
+        def load_next(page=nil)
+            if (@fetch_window)
+                @query.limit = @fetch_window
+                if (page)
+                    @window_current_start = (page - 1) * @fetch_window + 1
+                else
+                    if (!@window_current_start)
+                        @window_current_start = 1
+                    else
+                        @window_current_start += @fetch_window
+                    end
+                end
+                @query.offset = @window_current_start-1
+            end
+            return load
+        end
+        
+        def loaded?(index=nil)
+            return @loaded if !@loaded || !index || !@fetch_window
+            return false unless @window_current_start
+            return true if index >= @window_current_start-1 && index < @window_current_start+@fetch_window-1
+            return false
         end
         
         def save
@@ -291,7 +352,7 @@ module Spider; module Model
         end
         
         def to_json(state=nil, &proc)
-            load unless @loaded || !autoload?
+            load unless loaded? || !autoload?
             res =  "[" +
                 self.map{ |obj| obj.to_json(&proc) }.join(',') +
                 "]"
@@ -300,7 +361,7 @@ module Spider; module Model
 
         
         def cut(*params)
-            load unless @loaded || !autoload?
+            load unless loaded? || !autoload?
             return self.map{ |obj| obj.cut(*params) }
         end
         

@@ -4,8 +4,8 @@ require 'spiderfw/model/request'
 module Spider; module Model
     
     class Query
-        attr_accessor :order, :offset, :limit
-        attr_reader :condition, :request, :polymorphs
+        attr_accessor :order, :offset, :limit, :polymorphs
+        attr_reader :condition, :request
         
         def self.where(*params)
             return self.class.new.condition.where(*params)
@@ -93,7 +93,12 @@ module Spider; module Model
        
        def clone
            # FIXME: not sure cloning is ok on those two
-           return self.class.new(@condition.clone, @request.clone)
+           cl = self.class.new(@condition.clone, @request.clone)
+           cl.order = @order.clone
+           cl.offset = @offset
+           cl.limit = @limit
+           cl.polymorphs = @polymorphs.clone
+           return cl
        end
        
        

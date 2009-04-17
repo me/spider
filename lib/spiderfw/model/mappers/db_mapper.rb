@@ -607,9 +607,9 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         def associate_external(element, objects, result)
-             result.reindex
-             objects.element_loaded(element.name)
-             objects.each do |obj|
+            result.reindex
+            objects.element_loaded(element.name)
+            objects.each_current do |obj|
                 search_params = {}
                 @model.primary_keys.each do |key|
                     field = @schema.field(key.name)

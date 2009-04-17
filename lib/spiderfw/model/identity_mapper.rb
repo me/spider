@@ -36,9 +36,7 @@ module Spider; module Model
         def put(obj, check=false)
             return nil unless obj
             if (obj.is_a?(QuerySet))
-                obj.no_autoload(false) do
-                    obj.each_index{ |i| obj[i] = put(obj[i], check) }
-                end
+                obj.each_current_index{ |i| obj[i] = put(obj[i], check) }
                 return obj
             else
                 raise IdentityMapperException, "Can't get without all primary keys" unless obj.primary_keys_set?
