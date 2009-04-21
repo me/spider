@@ -190,6 +190,7 @@ module Spider; module Model
                 end
                 val.insert
             else
+                associated = obj.get(element)
                 associated.set(element.reverse, obj)
                 associated.save
             end
@@ -621,7 +622,7 @@ module Spider; module Model
             @msg
         end
         def message
-            _(self.class.msg) % @element.label
+            self.class.name.to_s + " " + _(self.class.msg) % @element.label
         end
         def to_s
             message
