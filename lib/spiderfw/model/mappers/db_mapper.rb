@@ -56,18 +56,18 @@ module Spider; module Model; module Mappers
             end
         end
         
-        def do_delete(condition)
+        def do_delete(condition, force=false)
             #delete = prepare_delete(obj)
             del = {}
             del[:condition], del[:joins] = prepare_condition(condition)
             del[:table] = schema.table
-            sql, values =  storage.sql_delete(del)
+            sql, values =  storage.sql_delete(del, force)
             storage.execute(sql, *values)
         end
         
-        def delete_all!
-            storage.execute("DELETE FROM #{schema.table}")
-        end
+        # def delete_all!
+        #     storage.execute("DELETE FROM #{schema.table}")
+        # end
         
         def sql_execute(sql, *values)
             storage.execute(sql, *values)

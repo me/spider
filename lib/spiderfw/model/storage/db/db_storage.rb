@@ -368,10 +368,12 @@ module Spider; module Model; module Storage; module Db
             }.join(', ')
         end
         
-        def sql_delete(delete)
+        def sql_delete(delete, force=false)
             @last_query_type = :delete
             where, bind_vars = sql_condition(delete)
-            sql = "DELETE FROM #{delete[:table]} WHERE #{where}"
+            where = "1=0" if !force && (!where || where.empty?)
+            sql = "DELETE FROM #{delete[:table]}"
+            sql += " WHERE #{where}" if where && !where.empty?
             return [sql, bind_vars]
         end
         

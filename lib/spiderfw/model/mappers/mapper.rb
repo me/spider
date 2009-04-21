@@ -216,7 +216,7 @@ module Spider; module Model
         def bulk_update(values, conditon)
         end
         
-        def delete(obj_or_condition)
+        def delete(obj_or_condition, force=false)
             
             def prepare_delete_condition(obj)
                 condition = Condition.and
@@ -254,12 +254,12 @@ module Spider; module Model
                     end
                 end
             end
-            do_delete(condition)
+            do_delete(condition, force)
             storage.commit
         end
         
         def delete_all!
-            raise MapperError, "Unimplemented"
+            delete(@model.all, true)
         end
         
         def do_delete(obj)
