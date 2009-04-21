@@ -6,6 +6,10 @@ module Spider; module Auth
         include HTTPMixin
         include Visual
         
+        def self.authenticator
+            LoginAuthenticator.new
+        end
+        
         def before(action='')
             super
             @response.headers['Content-Type'] = 'text/html'
@@ -17,7 +21,7 @@ module Spider; module Auth
         end
         
         def do_login
-            authenticator = LoginAuthenticator.new
+            authenticator = self.class.authenticator
             uid = authenticator.authenticate(@request.params['login'], @request.params['password'])
             if (uid)
                 @request.session['uid'] = uid
