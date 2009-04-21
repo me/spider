@@ -516,8 +516,9 @@ module Spider; module Model
         
         # FIXME: better name, move somewhere else
         def prepare_query_condition(condition)
+            model = condition.polymorph ? condition.polymorph : @model
             condition.each_with_comparison do |k, v, c|
-                raise MapperError, "Condition for nonexistent element #{k}" unless element = @model.elements[k]
+                raise MapperError, "Condition for nonexistent element #{k}" unless element = model.elements[k]
                 if (element.integrated?)
                     condition.delete(k)
                     integrated_from = element.integrated_from

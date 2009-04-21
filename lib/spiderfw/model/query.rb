@@ -72,11 +72,15 @@ module Spider; module Model
            return self
        end
        
-       def with_polymorph(type, query=nil)
+       def with_polymorph(type, request=nil)
            query = self.class.new(query) unless query.is_a?(self.class)
            @polymorphs << type
-           @request.with_polymorphs(type, query.request)
+           @request.with_polymorphs(type, request)
            return self
+       end
+       
+       def only_polymorphs
+           @request.only_polymorphs
        end
        
        ##############################

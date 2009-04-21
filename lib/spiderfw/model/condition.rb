@@ -3,8 +3,8 @@ require 'spiderfw/model/model_hash'
 module Spider; module Model
     
     class Condition < ModelHash
-        attr_accessor :conjunction
-        attr_reader :subconditions, :comparisons, :polymorphs#, :raw
+        attr_accessor :conjunction, :polymorph
+        attr_reader :subconditions, :comparisons #, :raw
         attr_accessor :conjunct # a hack to keep track of which is the last condition in blocks
         
         def get_deep_obj
@@ -53,7 +53,6 @@ module Spider; module Model
             @conjunction = :or
             @comparisons = {}
             @subconditions = []
-            @polymorphs = []
             params.reject!{ |p| p.nil? }
             if (params.length == 1 && params[0].is_a?(Hash) && !params[0].is_a?(Condition))
                 params[0].each do |k, v|
@@ -73,7 +72,7 @@ module Spider; module Model
             @conjunction = res.conjunction
             @comparisons = res.comparisons
             @subconditions = res.subconditions
-            @polymorphs = res.polymorphs
+            @polymorph = res.polymorph
         end
         
         def each_with_comparison
@@ -135,9 +134,7 @@ module Spider; module Model
         def delete(field)
             super
             @comparisons.delete(field.to_sym)
-        end
-        
-        
+        end    
         
         def parse_comparison(comparison)
             if (comparison =~ Regexp.new("(.+)(#{self.class.comparison_operators_regexp})(.+)"))

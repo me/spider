@@ -249,16 +249,29 @@ module Spider; module Model; module Storage; module Db
             sql = query[:tables].map{ |table|
                 str = table
                 if (query[:joins] && query[:joins][table])
-                    
-                    query[:joins][table].each_key do |to_table|
-                        join, join_values = sql_joins(query[:joins][table][to_table])
-                        str += " "+join
-                        values += join_values
-                    end
+                    join_str, join_values = sql_tables_join(query, table)
+                    str += " "+join_str
+                    values += join_values
                 end
                 str
             }.join(', ')
             return [sql, values]
+        end
+        
+        def sql_tables_join(query, table)
+            str = ""
+            values = []
+            query[:joins][table].each_key do |to_table|
+                join, join_values = sql_joins(query[:joins][table][to_table])
+                str += " "+join
+                values += join_values
+                if (query[:joins][to_table])
+                    sub_str, sub_values = sql_tables_join(query, to_table)
+                    str += " "+sub_str
+                    values += sub_values
+                end
+            end
+            return str, values
         end
         
         
