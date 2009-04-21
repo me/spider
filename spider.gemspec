@@ -32,6 +32,7 @@ Gem::Specification.new do |s|
   s.add_dependency("uuid", ["> 2.0"])
   s.add_dependency("rufus-scheduler", ["> 1.0"])
   s.add_dependency("mime-types", ["> 1.0"])
+  s.add_dependency("locale", ["> 2.0"])
   s.add_development_dependency("rake", ["> 0.7.3"])
   s.add_development_dependency("ruby-debug", ["> 0.9.3"])
   s.requirements << "Optional dependencies: openssl, sqlite3, webrick, mongrel, ruby-oci8 =1.0.3"
