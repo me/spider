@@ -124,6 +124,9 @@ module Spider; module Model
                 through_model = type
             end
             rev_model = assoc_type ? assoc_type : self
+            
+            @elements[name] = Element.new(name, type, attributes)
+            
             if (attributes[:add_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_reverse]
@@ -146,7 +149,7 @@ module Spider; module Model
                 end
             end
             
-            @elements[name] = Element.new(name, type, attributes)
+            
             
             if (attributes[:element_position])
                 @elements_order.insert(attributes[:element_position], name)
@@ -331,10 +334,6 @@ module Spider; module Model
                 @elements_order = []
             end
             primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks]) 
-            unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
-                # FIXME: check if :id is already defined
-                element(:id, Fixnum, :autoincrement => true, :local_pk => true)
-            end
             integrated_name = params[:name]
             if (!integrated_name)
                 integrated_name = (self.parent_module == model.parent_module) ? model.short_name : model.name
@@ -348,6 +347,11 @@ module Spider; module Model
             attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
             integrate(integrated_name, :keep_pks => true)
+            unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
+                # FIXME: check if :id is already defined
+                pk_name = @elements[:id] ? :"id_#{self.short_name.downcase}" : :id
+                element(pk_name, Fixnum, :autoincrement => true, :local_pk => true)
+            end
             if (params[:add_polymorphic])
                 model.polymorphic(self, :through => integrated_name)
             end
@@ -699,7 +703,7 @@ module Spider; module Model
             children = []
             no_autoload do
                 el = path.shift
-                if element_has_value?(el) && children = get(el)
+                if self.class.elements[el] && element_has_value?(el) && children = get(el)
                     if path.length >= 1
                         children = children.all_children(path)
                     end
@@ -1269,7 +1273,7 @@ module Spider; module Model
             end
             if (params[0].is_a?(Hash))
                 where ||= {}
-                where.merge!(params[0])
+                params[0].each{ |k, v| where[k.to_sym] = v}
             else
                 where ||= {}
                 params.each{ |p| where[p] = 0 if p.is_a?(Symbol)}
