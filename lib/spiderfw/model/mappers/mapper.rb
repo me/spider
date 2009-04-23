@@ -313,6 +313,7 @@ module Spider; module Model
                 if (@model.attributes[:condition])
                     query.condition = Condition.and(query.condition, @model.attributes[:condition])
                 end
+                @model.primary_keys.each{ |key| query.request[key] = true}
                 expand_request(query.request) unless options[:no_expand_request]
                 query = prepare_query(query, query_set)
                 query.request.total_rows = true unless query.request.total_rows = false
@@ -429,13 +430,24 @@ module Spider; module Model
             index_by = []
             @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
             
+#             if (@model.primary_keys.length == 1)
+#                 pk = @model.primary_keys[0]
+#                 a = objects.map{ |o| o.get(pk) }
+# #                debugger
+#                 condition["#{element.attributes[:reverse]}.#{pk.name}"] = a
+#             else
             objects.each do |obj|
-                condition_row = Condition.and
-                @model.primary_keys.each do |key|
-                    condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
-                end
-                condition << condition_row
+#                if (@model.primary_keys.length == 1)
+#                    condition
+#                else
+                    condition_row = Condition.and
+                    @model.primary_keys.each do |key|
+                        condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
+                    end
+                    condition << condition_row
+#                end
             end
+#            end
             unless condition.empty?                
                 if (element.condition)
                     condition = Condition.and(condition, element.condition)
