@@ -9,7 +9,7 @@ module Spider
     class Widget < PageController
         include HTTPMixin
         
-        attr_accessor :request, :scene, :template_name, :widgets, :template, :id, :id_path
+        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template
         attr_reader :attributes, :widget_attributes, :css_class
         
         @@common_attributes = {
@@ -112,21 +112,10 @@ module Spider
             def pub_url
                 route_url+'/pub'
             end
-                
-            
-            def find_template(name=nil)
-                path = template_path
-                return 'default' if (File.exist?(path+'/default.shtml'))
-                Dir.entries(path).each do |entry|
-                    next if entry[0].chr == '.' || !File.file?(path+'/'+entry)
-                    # TODO: other extensions
-                    next unless entry =~ /(.+)\.(shtml)$/
-                    return $1
-                end
-                return nil 
-            end
             
         end
+        
+        i_attribute :use_template
         
         def initialize(request, response, scene=nil)
             super
@@ -135,6 +124,7 @@ module Spider
             @id_path = []
             @widget_attributes = {}
             @resources = []
+            @use_template ||= Spider::Inflector.underscore(self.class.name).split('/')[-1]
         end
         
         def full_id
@@ -161,11 +151,11 @@ module Spider
         def after_execute
         end
         
-        def init_widget
+        def do_prepare
+            return if @prepare_done
             @id ||= @attributes[:id]
             unless @template
-                template_name = self.class.find_template
-                @template = load_template(template_name)
+                @template = load_template(@use_template)
             end
             @template.id_path = @id_path
             self.class.attributes.each do |k, params|
@@ -180,6 +170,11 @@ module Spider
                 end
             end
             prepare
+            @prepare_done = true
+        end
+        
+        def init_widget
+            do_prepare unless @prepare_done
             if (self.class.scene_attributes)
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
@@ -252,6 +247,7 @@ module Spider
         
         def render
             prepare_scene(@scene) # FIXME
+            debug("WIDGET #{self}, #{self.object_id} rendering")
             @template.render(@scene)
         end
                         
@@ -305,8 +301,18 @@ module Spider
         def parse_content(doc)
             attributes = doc.search('sp:attribute')
             attributes.each do |a|
-                name = a.attributes['name']
-                value = a.attributes['value']
+                name = a.attributes['name'].to_sym
+                kvs = a.children_of_type('sp:value')
+                if (kvs.length > 0)
+                    value = {}
+                    kvs.each do |kv|
+                        key = kv.attributes['key']
+                        val = kv.innerText
+                        value[key] = val
+                    end
+                else
+                    value = a.attributes['value']
+                end
                 if (w = a.attributes['widget'])
                     @widget_attributes[w] = {:name => name, :value => value}
                 else
@@ -333,6 +339,23 @@ module Spider
         def request_path
             HTTPMixin.reverse_proxy_mapping(@request.env['REQUEST_PATH'])
         end
+        
+        def owner_controller
+            w = self
+            while (w.is_a?(Widget) && w.template && w.template.owner)
+                return nil unless w.containing_template
+                w = w.containing_template.owner
+            end
+            return w
+        end
+        
+        def prepare_scene(scene)
+            scene = super
+            # FIXME: owner_controller should be (almost) always defined
+            scene.controller[:request_path] = owner_controller.request_path if owner_controller
+            return scene
+        end
+            
         
     end
     
