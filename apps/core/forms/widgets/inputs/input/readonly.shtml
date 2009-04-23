@@ -1,0 +1,6 @@
+<sp:template>
+    <div class="input">
+        { @formatted_value }
+    </div>
+    <div style="clear: both"></div>
+</sp:template>

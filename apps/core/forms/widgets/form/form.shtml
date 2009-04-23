@@ -17,12 +17,13 @@
     <form action="{ @action }" method="POST" { @enctype }>
         <input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
         <div class="fields">
-            <div class="row" sp:each="@elements |element|">
+            <div class="row" sp:each="@names |element|">
                 <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>
                 <sp:run obj="@inputs[element]" />
             </div>
         </div>
         <div class="row buttons">
+            <input sp:each="@submit_buttons |text|" type='submit' name='_w{ @widget[:param] }[submit]' value='{ text }'>
             <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
         </div>
     </form>
