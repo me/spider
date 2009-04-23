@@ -587,9 +587,9 @@ module Spider; module Model; module Mappers
             value = storage.value_to_mapper(type, value)
             case type.name
             when 'Fixnum'
-                return value.to_i
+                return value ? value.to_i : nil
             when 'Float'
-                return value.to_f
+                return value ? value.to_f : nil
             when 'Spider::DataTypes::Bool'
                 return value == 1 ? true : false
             end
