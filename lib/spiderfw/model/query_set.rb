@@ -364,6 +364,10 @@ module Spider; module Model
             end
         end
         
+        def to_s
+            self.map{ |o| o.to_s }.join(', ')
+        end
+        
         def method_missing(method, *args, &proc)     
             return @query.send(method, *args, &proc)
         end
