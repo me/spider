@@ -749,10 +749,10 @@ module Spider; module Model
         
         def [](element)
             element = element.name if element.is_a?(Element)
-            if (self.class.elements[element])
+            begin
                 get(element)
-            else
-                @_extra[element]
+            rescue NoMethodError
+                return @_extra[element]
             end
         end
         
