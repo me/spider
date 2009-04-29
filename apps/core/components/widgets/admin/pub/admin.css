@@ -1,10 +1,44 @@
-.spider.components.admin .heading{
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    padding-top: 10px;
-    padding-left: 20px;
-    font-size: 1.1em;
-    font-weight: bold;
-    border-bottom: 3px solid gray;
-    background-color: #FAFAFA;
+*{
+    padding:0px;
+    margin:0px;
 }
+.spider.components.admin .heading{
+    margin: 0px 0px 0px 72px;
+    padding: 0px 0px 0 0px;
+    width: 1004px;
+    height: 170px;
+    background: #2c2c2c url('img/bg_header.png') top left no-repeat;
+    font-family: Arial, sans-serif;
+}
+
+.heading #title {
+    padding-top: 33px; 
+    padding-left: 45px;
+    color: #518191;
+    font-size: 30px;
+    letter-spacing: 7px;
+}
+.heading #section {
+    padding-top: 30px;
+    color: #f9f9f9;
+    font-size: 35px;
+}
+.heading #section #label{
+    background: #d40000;
+    padding: 10px 14px;
+    border:2px solid #ff0a0a;
+    border-right:none;
+}
+.heading #section #ribbon{
+    padding: 12px 9px;
+    background: url('img/section-bottom.jpg') bottom right no-repeat
+}
+
+body {
+    background-color: white;
+    background-image: url('img/body_bg.jpg');
+    background-repeat: repeat-y;
+    background-attachment: scroll;
+    background-position: left top;
+}
+

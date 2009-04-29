@@ -1,12 +1,15 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="menu.css" />
-    <div id="menu" class="menu">
-        <ul>
-            <li sp:each="@items |item|" class="{ item == @current ? 'active' : 'inactive' }">
-                <a href="{ @links[item] }">{ @labels[item] }</a>
-            </li>
+    <div id="menu_top"></div>
+        <div id="menu" class="menu">
+                <ul>
+                    <li sp:each="@items |item|" class="{ item == @current ? 'active' : 'inactive' }">
+                    <a href="{ @links[item] }">{ @labels[item] }</a>
+             </li>
         </ul>
-    </div>
+	<div id="menu_bottom"></div>
+	</div>
+    
     <div id="content" class="content">
         <sp:run obj="@current_widget" />
     </div>

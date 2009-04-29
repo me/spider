@@ -1,9 +1,44 @@
 .spider.components.crud .top{
-    padding: 6px;
+    padding: 5px 25px;
     margin-bottom: 10px;
-    border: 1px solid #CDCDCD;
+    background: #1188c1;
 }
 
+.spider.components.crud .top a {
+    text-decoration: none;
+    font-size: 85%;
+    color: white;
+}
+.spider.components.crud .top a:hover {
+    background-color: #fffcb4;
+    color: #1188c1;
+    padding: 4px 40px 4px 2px;
+}
+
+.spider.components.crud .top .add {
+    background: url('img/add.gif') no-repeat 90px 50%;
+    padding-right: 40px;
+}
+.spider.components.crud .top .back {
+    background: url('img/back.gif') no-repeat 120px 50%;
+    padding-right: 40px;
+}
+
+
 .crud_table_actions{
-    margin-top: 10px;
+    text-align: right;
+    padding: 10px 20px 0px 0px;
+}
+
+.crud_table_actions input{
+    cursor: pointer;
+    background-color: #1188c1;
+    border:none;
+    border-top:1px solid #d1d8e5;
+    outline-color: #333;
+    outline-style: solid;
+    outline-width: 1px;
+    padding: 4px;
+    color: white;
+    font-weight:bold;
 }
