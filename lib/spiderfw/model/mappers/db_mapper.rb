@@ -56,18 +56,18 @@ module Spider; module Model; module Mappers
             end
         end
         
-        def do_delete(condition)
+        def do_delete(condition, force=false)
             #delete = prepare_delete(obj)
             del = {}
             del[:condition], del[:joins] = prepare_condition(condition)
             del[:table] = schema.table
-            sql, values =  storage.sql_delete(del)
+            sql, values =  storage.sql_delete(del, force)
             storage.execute(sql, *values)
         end
         
-        def delete_all!
-            storage.execute("DELETE FROM #{schema.table}")
-        end
+        # def delete_all!
+        #     storage.execute("DELETE FROM #{schema.table}")
+        # end
         
         def sql_execute(sql, *values)
             storage.execute(sql, *values)
@@ -234,7 +234,7 @@ module Spider; module Model; module Mappers
                     end
                     if (!polym_result.empty?)
                         polym_obj = model.new
-                        polym_obj.mapper.map(polym_request, polym_result, polym_obj)
+                        polym_obj = polym_obj.mapper.map(polym_request, polym_result, polym_obj)
                         polym_obj.set_loaded_value(model.extended_models[@model], obj)
                         obj = polym_obj
                         break
@@ -293,12 +293,21 @@ module Spider; module Model; module Mappers
                 end
             end
             if (query.request.polymorphs?)
+                only_conditions = {:conj => 'or', :values => []} if (query.request.only_polymorphs?)
                 query.request.polymorphs.each do |model, polym_request|
                     extension_element = model.extended_models[@model]
                     model.mapper.prepare_query_request(polym_request)
                     polym_request.reject!{|k, v| 
                         model.elements[k].integrated? && model.elements[k].integrated_from.name == extension_element
                     }
+                    polym_only = {:conj => 'and', :values => []} if (query.request.only_polymorphs?)
+                    model.elements_array.select{ |el| el.attributes[:local_pk] }.each do |el|
+                        polym_request[el.name] = true
+                        if (query.request.only_polymorphs?)
+                            polym_only[:values] << [model.mapper.schema.qualified_field(el.name), '<>', nil]
+                        end
+                    end
+                    only_conditions[:values] << polym_only if query.request.only_polymorphs?
                     polym_select = model.mapper.prepare_select(Query.new(nil, polym_request)) # FIXME!
                     polym_select[:keys].map!{ |key| "#{key} AS #{key.gsub('.', '_')}"}
                     keys += polym_select[:keys]
@@ -309,16 +318,23 @@ module Spider; module Model; module Mappers
                         join_fields[from_field] = to_field 
                     end
                     # FIXME: move to get_join
-                    joins << {
+                    join = {
                         :type => :left_outer,
                         :from => @schema.table,
                         :to => model.mapper.schema.table,
                         :keys => join_fields
                     }
+                    joins << join
                 end
+
             end
-            tables = [@schema.table]
-            
+            if (only_conditions)
+                if (condition[:conj].downcase != 'and')
+                    condition = {:conj => 'and', :values => [condition]}
+                end
+                condition[:values] << only_conditions
+            end
+            tables = [schema.table]
             joins = prepare_joins(joins)
             return nil if (keys.empty?)
             return {
@@ -354,9 +370,12 @@ module Spider; module Model; module Mappers
         
         def prepare_condition(condition)
             # FIXME: move to mapper
+            model = condition.polymorph ? condition.polymorph : @model
+            model_schema = model.mapper.schema
+            # debugger if condition.polymorph
             condition.each_with_comparison do |k, v, comp|
                 # normalize condition values
-                element = @model.elements[k.to_sym]
+                element = model.elements[k.to_sym]
                 if (!v.is_a?(Condition) && element.model?)
                     condition.delete(element.name)
                     if (v.is_a?(BaseModel))
@@ -376,35 +395,35 @@ module Spider; module Model; module Mappers
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
             condition.each_with_comparison do |k, v, comp|
-                element = @model.elements[k.to_sym]
-                next unless mapped?(element)
+                element = model.elements[k.to_sym]
+                next unless model.mapper.mapped?(element)
                 if (element.model?)
                     if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
-                            field = schema.qualified_foreign_key_field(element.name, el_k)
+                            field = model_schema.qualified_foreign_key_field(element.name, el_k)
                             op = comp ? comp : '='
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
                         end
                         cond[:values] << element_cond
                     else
-                        if (element.storage == @storage)
+                        if (element.storage == model.mapper.storage)
                             element.mapper.prepare_query_condition(v)
                             element_condition, element_joins = element.mapper.prepare_condition(v)
                             joins += element_joins
-                            joins << get_join(element)
+                            joins << model.mapper.get_join(element)
                             cond[:values] << element_condition
                         else
                            remaining_condition ||= Condition.new
                            remaining_condition.set(k, comp, v)
                         end
                     end
-                elsif(schema.field(element.name))
-                    field = schema.qualified_field(element.name)
+                elsif(model_schema.field(element.name))
+                    field = model_schema.qualified_field(element.name)
                     op = comp ? comp : '='
-                    cond[:values] << [field, op, map_condition_value(@model.elements[k.to_sym].type, v)]
+                    cond[:values] << [field, op, map_condition_value(model.elements[k.to_sym].type, v)]
                 end
                 
             end
@@ -568,9 +587,9 @@ module Spider; module Model; module Mappers
             value = storage.value_to_mapper(type, value)
             case type.name
             when 'Fixnum'
-                return value.to_i
+                return value ? value.to_i : nil
             when 'Float'
-                return value.to_f
+                return value ? value.to_f : nil
             when 'Spider::DataTypes::Bool'
                 return value == 1 ? true : false
             end

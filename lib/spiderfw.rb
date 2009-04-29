@@ -149,6 +149,7 @@ module Spider
         
         def find_apps_in_folder(path)
             path += '/' unless path[-1].chr == '/'
+            return unless File.directory?(path)
             found = false
             Dir.new(path).each do |f|
                 next if f[0].chr == '.'

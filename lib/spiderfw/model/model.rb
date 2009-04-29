@@ -92,7 +92,7 @@ module Spider
             end
         end
         
-        def self.sync_schema(model_or_app)
+        def self.sync_schema(model_or_app, force=false)
             models = []
             mod = const_get_full(model_or_app)
             if (mod.is_a?(Module) && mod.include?(Spider::App))
@@ -102,7 +102,7 @@ module Spider
             end
             models.each do |m|
                 Spider::Logger.debug("SYNCING #{m}")
-                m.mapper.sync_schema if m.mapper.respond_to?(:sync_schema)
+                m.mapper.sync_schema(force) if m.mapper.respond_to?(:sync_schema)
             end
         end
         

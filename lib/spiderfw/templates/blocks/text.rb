@@ -19,7 +19,7 @@ module Spider; module TemplateBlocks
                 c += "$out << '#{escape_text(text)}'\n" if (text && text.length > 0)
                 case scanner.matched
                 when /\{ (.+) \}/
-                    c += "$out << #{var_to_scene($1)}\n"
+                    c += "$out << #{vars_to_scene($1)}\n"
                 when /_\((.+)\)/
                     c += "$out << _('#{escape_text($1)}')\n"
                 when /<%(.+)%>/

@@ -27,3 +27,5 @@ require 'apps/core/auth/controllers/login_controller'
 require 'apps/core/auth/controllers/mixins/auth_helper'
 require 'apps/core/auth/controllers/mixins/http_basic_auth'
 require 'apps/core/auth/controllers/mixins/http_digest_auth'
+
+Spider::Auth.route 'login', Spider::Auth::LoginController

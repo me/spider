@@ -16,10 +16,14 @@ module Spider; module Components
                 mods << const_get_full(mod.innerText)
             end
             doc.search('admin:app').each do |app_tag|
-                app = const_get_full(app_tag.innerText)
-                mods += app.models.select do |m|
-                    !m.attributes[:sub_model] && m.mapper.class.write?
+                except = []
+                if (app_tag.attributes['except'])
+                    except = app_tag.attributes['except'].split(',').map{ |e| e.strip }
                 end
+                app = const_get_full(app_tag.innerText.strip)
+                mods += app.models.select{ |m|
+                    !m.attributes[:sub_model] && m.mapper.class.write? && !except.include?(m.name.split('::')[-1])
+                }.sort{ |a, b| a.name <=> b.name }
             end
             @models ||= []
             @models += mods

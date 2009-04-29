@@ -43,7 +43,7 @@
                 </form>
             </tpl:override>
             <tpl:append search="table .row">
-                <td><input type='checkbox' name="_w{ param_name(@crud) }[selected][{ @rows[row_i][@key_element] }]"></td>
+                <td><input type='checkbox' name="_w{ param_name(@crud) }[selected][{ @data[row_i][@key_element] }]"></td>
             </tpl:append>
             <tpl:override-attr search="table .paginator td" name="colspan" value="{ elements.size + 1 }" />
         </core:table>

@@ -9,7 +9,7 @@ module Spider
         include Logger
         
         attr_accessor :widgets, :overrides, :compiled, :id_path
-        attr_accessor :request, :response
+        attr_accessor :request, :response, :owner
         attr_reader :path, :subtemplates, :widgets
         
         @@registered = {}
@@ -164,23 +164,20 @@ module Spider
         def loaded?
             @compiled ? true : false
         end
-        
-        def init_done?
-            @init_done ? true : false
-        end
-        
-        def init_sub_done?
-            @init_sub_done ? true : false
-        end
-        
+                
         def init_sub_done=(val)
             @init_sub_done = val
+        end
+        
+        def execute_done?
+            @execute_done
         end
         
         def add_widget(id, widget, attributes=nil, content=nil, template=nil)
             @widgets[id.to_sym] ||= widget
             widget.id_path = @id_path + [id]
             widget.attributes = attributes if attributes
+            widget.containing_template = self
             widget.template = template if template
             widget.parse_content_xml(content) if content
         end
@@ -195,12 +192,45 @@ module Spider
             @init_done = true
         end
         
+        def init_done?
+            @init_done ? true : false
+        end
+        
+        def prepare_sub
+            @widgets.each do |id, widget|
+                widget.do_prepare
+            end
+            @prepare_sub_done = true
+        end
+        
+        def prepare_sub_done?
+            @prepare_sub_done
+        end
+        
         def init_sub
             @widgets.each do |id, widget|
                 widget.init_widget
-                widget.run_execute
             end
             @init_sub_done = true
+        end
+        
+        def init_sub_done?
+            @init_sub_done ? true : false
+        end
+        
+        
+        def run_execute
+#            execute
+            prepare_sub unless prepare_sub_done?
+            init_sub unless init_sub_done?
+            @widgets.each do |wname, w|
+                w.run_execute
+            end
+#            after_execute
+            @widgets.each do |wname, w|
+                w.after_execute
+            end
+            @execute_done = true
         end
         
         def prepare
@@ -211,7 +241,9 @@ module Spider
             # debug("Template #{@path} rendering with scene:")
             # debug(scene)
             init(scene) unless init_done?
+            prepare_sub unless prepare_sub_done?
             init_sub unless init_sub_done?
+            run_execute unless execute_done?
             # scene.widgets ||= {}
             # scene.widgets.merge!(@widgets)
 #            Spider::Logger.debug("Template #{@path} RUN")

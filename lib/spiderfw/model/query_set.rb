@@ -156,6 +156,10 @@ module Spider; module Model
             @objects.length
         end
         
+        def empty?
+            @objects.empty?
+        end
+        
         def index_by(*elements)
             names = elements.map{ |el| (el.class == Spider::Model::Element) ? el.name.to_s : el.to_s }
             index_name = names.sort.join(',')
@@ -358,6 +362,10 @@ module Spider; module Model
                 end
                 h
             end
+        end
+        
+        def to_s
+            self.map{ |o| o.to_s }.join(', ')
         end
         
         def method_missing(method, *args, &proc)     

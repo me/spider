@@ -91,26 +91,26 @@ module Spider; module Model
                     create_junction = true
                     if (first_model.const_defined?(assoc_type_name) )
                         assoc_type = first_model.const_get(assoc_type_name)
-                        if (!assoc_type.attributes[:junction]) # other kind of inline model
+                        if (!assoc_type.attributes[:sub_model]) # other kind of inline model
                             assoc_type_name += 'Junction'
                             create_junction = false if (first_model.const_defined?(assoc_type_name))
                         else
                             create_junction = false
                         end
                     end
+                    attributes[:junction] = true
+                    attributes[:junction_id] ||= :id
+                    self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
+                    attributes[:reverse] = self_name
+                    other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
+                    other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
+                    attributes[:junction_their_element] = other_name
                     if (create_junction)
-                        attributes[:junction] = true
-                        attributes[:junction_id] ||= :id
                         assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
-                        assoc_type.attributes[:sub_model] = true
+                        assoc_type.attributes[:sub_model] = self
                         assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
-                        self_name = self.short_name.gsub('/', '_').downcase.to_sym
-                        attributes[:reverse] = self_name
                         assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
                         # FIXME! fix in case of clashes with existent elements
-                        other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
-                        other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
-                        attributes[:junction_their_element] = other_name
                         assoc_type.element(other_name, orig_type)
                         assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
                         if (proc)                                   #        to be hidden, but the integrated el instead
@@ -124,15 +124,20 @@ module Spider; module Model
                 through_model = type
             end
             rev_model = assoc_type ? assoc_type : self
+            
+            @elements[name] = Element.new(name, type, attributes)
+            
             if (attributes[:add_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_reverse]
-                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name, :added_reverse => true)
+                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name, :added_reverse => true, 
+                        :delete_cascade => attributes[:reverse_delete_cascade])
                 end
             elsif (attributes[:add_multiple_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
                     attributes[:reverse] ||= attributes[:add_multiple_reverse]
-                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true, :added_reverse => true)
+                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true, 
+                        :added_reverse => true, :delete_cascade => attributes[:reverse_delete_cascade])
                 end
             end
             if (attributes[:lazy] == nil)
@@ -144,7 +149,7 @@ module Spider; module Model
                 end
             end
             
-            @elements[name] = Element.new(name, type, attributes)
+            
             
             if (attributes[:element_position])
                 @elements_order.insert(attributes[:element_position], name)
@@ -339,9 +344,14 @@ module Spider; module Model
             @extended_models[model] = integrated_name
             attributes = {}
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
-            process_models = [self] + (@subclasses || [])
+            attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
             integrate(integrated_name, :keep_pks => true)
+            unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
+                # FIXME: check if :id is already defined
+                pk_name = @elements[:id] ? :"id_#{self.short_name.downcase}" : :id
+                element(pk_name, Fixnum, :autoincrement => true, :local_pk => true)
+            end
             if (params[:add_polymorphic])
                 model.polymorphic(self, :through => integrated_name)
             end
@@ -503,12 +513,16 @@ module Spider; module Model
             @mapper_procs << proc
         end
         
-        def self.use_storage(name)
-            @use_storage = name
+        def self.use_storage(name=nil)
+            @use_storage = name if name
+            @use_storage
         end
         
         def self.storage
             return @storage if @storage
+            if (!@use_storage && self.attributes[:sub_model])
+                @use_storage = self.attributes[:sub_model].use_storage
+            end
             return @use_storage ? get_storage(@use_storage) : get_storage
         end
         
@@ -531,7 +545,7 @@ module Spider; module Model
          
         def self.mapper
             return @mapper if @mapper
-            return get_mapper(storage)
+            return @mapper = get_mapper(storage)
         end
 
         def self.get_mapper(storage)
@@ -689,7 +703,7 @@ module Spider; module Model
             children = []
             no_autoload do
                 el = path.shift
-                if element_has_value?(el) && children = get(el)
+                if self.class.elements[el] && element_has_value?(el) && children = get(el)
                     if path.length >= 1
                         children = children.all_children(path)
                     end
@@ -735,10 +749,10 @@ module Spider; module Model
         
         def [](element)
             element = element.name if element.is_a?(Element)
-            if (self.class.elements[element])
+            begin
                 get(element)
-            else
-                @_extra[element]
+            rescue NoMethodError
+                return @_extra[element]
             end
         end
         
@@ -1259,7 +1273,7 @@ module Spider; module Model
             end
             if (params[0].is_a?(Hash))
                 where ||= {}
-                where.merge!(params[0])
+                params[0].each{ |k, v| where[k.to_sym] = v}
             else
                 where ||= {}
                 params.each{ |p| where[p] = 0 if p.is_a?(Symbol)}

@@ -14,6 +14,7 @@ module Spider; module Forms
         
         def execute
             @scene.data = @model.all
+            
             @scene.values = {}
             debug("SELECT VALUE:")
             debug(@value)

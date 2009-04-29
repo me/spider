@@ -19,12 +19,37 @@ module Spider; module ControllerMixins
         
         def load_template(path)
             template = self.class.load_template(path)
+            template.owner = self
+            template.request = request
+            template.response = response
             return template
-        end 
+        end
+        
+        def template_exists?(name)
+            self.class.template_exists?(name)
+        end
+        
+        
+        def init_template(path, scene=nil)
+            scene ||= @scene
+            scene ||= get_scene
+            template = load_template(path)
+            template.init(scene)
+            template.prepare_sub
+            return template
+        end
         
         def render_layout(path, content={})
             layout = self.class.load_layout(path)
+            layout.request = @request
             layout.render(content)
+        end
+        
+        def init_layout(layout)
+            l = layout.is_a?(Layout) ? layout : self.class.load_layout(layout)
+            l.owner = self
+            l.request = request
+            return l
         end
         
         def render(path=nil, options={})
@@ -33,15 +58,14 @@ module Spider; module ControllerMixins
             scene = prepare_scene(scene)
             request = options[:request] || @request
             response = options[:response] || @response
-            template = load_template(path)
-            template.request = request
-            template.response = response
-            template.init(scene)
+            template = init_template(path, scene)
+            template.prepare_sub
             template.init_sub
+            template.run_execute
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layout = options[:layout] || @layout
                 if (chosen_layout)
-                    l = chosen_layout.is_a?(Layout) ? chosen_layout : self.class.load_layout(chosen_layout)
+                    l = init_layout(chosen_layout)
                     l.template = template
                     l.render(scene)
                 else
@@ -100,15 +124,46 @@ module Spider; module ControllerMixins
                 return nil
             end
             
-            def load_template(path)
-                # TODO: check multiple paths, multiple extensions
+            def template_paths
                 unless respond_to?(:template_path)
                     raise NotImplementedError, "The template_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
-                t = Spider::Template.new(template_path+'/'+path+'.shtml')
-                t.request = @request
-                t.response = @response
-                return t
+                return [template_path]
+            end
+                
+            
+            def load_template(name)
+                # TODO: check multiple paths, multiple extensions
+                if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
+                    name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])
+                    t = Spider::Template.new(name+'.shtml')
+                else
+                    template_paths.each do |path|
+                        full = path+'/'+name+'.shtml'
+                        next unless File.exist?(full)
+                        t = Spider::Template.new(full)
+                        break
+                    end
+                end
+                if (t)
+                    t.request = @request
+                    t.response = @response
+                    return t
+                end
+                raise "Template #{path} not found"
+            end
+            
+            def template_exists?(name, paths=nil)
+                if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
+                    name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])
+                    return true if File.exist?(name)
+                end
+                paths ||= template_paths
+                paths.each do |path|
+                    full = path+'/'+name+'.shtml'
+                    return true if File.exist?(full)
+                end
+                return false
             end
             
             def load_layout(path)

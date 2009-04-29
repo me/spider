@@ -42,6 +42,14 @@ module Spider; module Model
         def polymorphs?
             @polymorphs.empty? ? false : true
         end
+        
+        def only_polymorphs
+            @only_polymorphs = true
+        end
+        
+        def only_polymorphs?
+            @only_polymorphs
+        end
     
     end
 

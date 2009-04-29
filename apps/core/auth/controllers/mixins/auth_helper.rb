@@ -7,8 +7,9 @@ module Spider; module Auth
         end
         
         def before(action='', *arguments)
+            return super if action.index(Spider::Auth.route_url) == 0
             self.class.auth_require_users.each do |params|
-                
+                @current_require = params
                 if (@request.session['uid'])
                     Spider::Auth.current_user = @request.session['uid']
                 end
@@ -48,6 +49,16 @@ module Spider; module Auth
                 end
             end
             super
+        end
+        
+        def try_rescue(exc)
+            if (exc.is_a?(Unauthorized))
+                base = @current_require[:redirect] ? @current_require[:redirect] : '/'+Spider::Auth.route_url+'/login?'
+                redir_url = base + 'redirect='+URI.escape(@request.path)
+                redirect(redir_url, Spider::HTTP::TEMPORARY_REDIRECT)
+            else
+                super
+            end
         end
 
         module ClassMethods

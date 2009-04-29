@@ -3,9 +3,10 @@ require 'spiderfw/model/model_hash'
 module Spider; module Model
     
     class Condition < ModelHash
-        attr_accessor :conjunction
-        attr_reader :subconditions, :comparisons, :polymorphs#, :raw
+        attr_accessor :conjunction, :polymorph
+        attr_reader :subconditions, :comparisons #, :raw
         attr_accessor :conjunct # a hack to keep track of which is the last condition in blocks
+        alias :hash_set :[]=
         
         def get_deep_obj
             c = self.class.new
@@ -53,7 +54,6 @@ module Spider; module Model
             @conjunction = :or
             @comparisons = {}
             @subconditions = []
-            @polymorphs = []
             params.reject!{ |p| p.nil? }
             if (params.length == 1 && params[0].is_a?(Hash) && !params[0].is_a?(Condition))
                 params[0].each do |k, v|
@@ -73,7 +73,7 @@ module Spider; module Model
             @conjunction = res.conjunction
             @comparisons = res.comparisons
             @subconditions = res.subconditions
-            @polymorphs = res.polymorphs
+            @polymorph = res.polymorph
         end
         
         def each_with_comparison
@@ -103,7 +103,7 @@ module Spider; module Model
         def set(field, comparison, value)
             if (value.is_a?(Array))
                 or_cond = self.class.or
-                value.each do |v|
+                value.uniq.each do |v|
                     or_cond.set(field, comparison, v)
                 end
                 @subconditions << or_cond
@@ -112,25 +112,34 @@ module Spider; module Model
             field = field.to_s
             parts = field.split('.', 2)
             if (parts[1])
-                self[parts[0]] = get_deep_obj() unless self[parts[0]]
+                hash_set(parts[0], get_deep_obj()) unless self[parts[0]]
                 self[parts[0]].set(parts[1], comparison, value)
             elsif (self[field])
                 c = Condition.new
                 c.set(field, comparison, value)
                 @subconditions << c
             else
-                self[field] = value
+                hash_set(field, value)
                 @comparisons[field.to_sym] = comparison
             end
             return self
         end
         
+        def []=(key, value)
+            set(key, '=', value)
+        end
+        
+        def range(field, lower, upper)
+            c = self.class.and
+            c.set(field, '>=', lower)
+            c.set(field, '<=', upper)
+            self << c
+        end
+        
         def delete(field)
             super
             @comparisons.delete(field.to_sym)
-        end
-        
-        
+        end    
         
         def parse_comparison(comparison)
             if (comparison =~ Regexp.new("(.+)(#{self.class.comparison_operators_regexp})(.+)"))

@@ -5,10 +5,7 @@ class Class
     end
     
     def subclass_of?(klass)
-        testklass = self
-        testklass = testklass.superclass while (testklass != nil && testklass != klass)
-        return true if testklass == klass
-        return false
+        self.ancestors.include?(klass)
     end
     
 end
