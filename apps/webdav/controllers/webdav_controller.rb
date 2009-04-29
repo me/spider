@@ -108,7 +108,6 @@ module Spider; module WebDAV
         end
         
         def do_PUT(path)
-
     		check_lock(path)
 
     		if @request.env['RANGE']
@@ -412,8 +411,9 @@ module Spider; module WebDAV
     		return ret_set if !(vfs.directory?(path) && depth >= 0)
 
     		vfs.ls(path) {|d|
-    			if vfs.directory?("#{path}/#{d}")
-    				ret_set += get_rec_prop("#{path}/#{d}",
+    		    sub_path = (path == '/' ? '/'+d : "#{path}/#{d}")
+    			if vfs.directory?(sub_path)
+    				ret_set += get_rec_prop(sub_path,
 											::WEBrick::HTTPUtils.normalize_path(
 												r_uri+::WEBrick::HTTPUtils.escape(
 													codeconv_str_fscode2utf("/#{d}/"))),
@@ -422,7 +422,7 @@ module Spider; module WebDAV
     				ret_set << [::WEBrick::HTTPUtils.normalize_path(
     											r_uri+::WEBrick::HTTPUtils.escape(
     												codeconv_str_fscode2utf("/#{d}"))),
-    					get_propstat("#{path}/#{d}", props)]
+    					get_propstat(sub_path, props)]
     			end
     		}
     		ret_set

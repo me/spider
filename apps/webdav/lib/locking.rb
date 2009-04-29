@@ -161,7 +161,7 @@ module Locking
 	end
 	
 	def refresh(lock)
-		return unless lock.timeout or lock.timeout.downcase == 'infinite' or not @timeout
+		return if !lock.timeout || lock.timeout.downcase == 'infinite' || !@timeout
 		
 		lock.timeout += @timeout
 	end
