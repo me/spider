@@ -36,33 +36,48 @@ module Spider; module Model; module Mappers
         
         # Inserts passed object into the database
         def do_insert(obj)
-            @storage.start_transaction if @storage.supports_transactions?
-            if (obj.model.managed? || !obj.primary_keys_set?)
-                assign_primary_keys(obj)
-            end
-            sql, values = prepare_insert(obj)
-            if (sql)
-                @storage.execute(sql, *values)
-                @storage.commit if @storage.in_transaction?
+            begin
+                @storage.start_transaction if @storage.supports_transactions?
+                if (obj.model.managed? || !obj.primary_keys_set?)
+                    assign_primary_keys(obj)
+                end
+                sql, values = prepare_insert(obj)
+                if (sql)
+                    @storage.execute(sql, *values)
+                end
+            rescue => exc
+                @storage.rollback if @storage.in_transaction?
+                raise exc
             end
         end
         
         def do_update(obj)
-            storage.start_transaction if storage.supports_transactions?
-            sql, values = prepare_update(obj)
-            if (sql)
-                storage.execute(sql, *values)
-                storage.commit if storage.in_transaction?
+            begin
+                storage.start_transaction if storage.supports_transactions?
+                sql, values = prepare_update(obj)
+                if (sql)
+                    storage.execute(sql, *values)
+                
+                end
+            rescue => exc
+                @storage.rollback if @storage.in_transaction?
+                raise exc
             end
         end
         
         def do_delete(condition, force=false)
             #delete = prepare_delete(obj)
-            del = {}
-            del[:condition], del[:joins] = prepare_condition(condition)
-            del[:table] = schema.table
-            sql, values =  storage.sql_delete(del, force)
-            storage.execute(sql, *values)
+            begin
+                storage.start_transaction if storage.supports_transactions?
+                del = {}
+                del[:condition], del[:joins] = prepare_condition(condition)
+                del[:table] = schema.table
+                sql, values =  storage.sql_delete(del, force)
+                storage.execute(sql, *values)
+            rescue => exc
+                @storage.rollback if @storage.in_transaction?
+                raise exc
+            end
         end
         
         # def delete_all!
