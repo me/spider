@@ -276,7 +276,7 @@ module Spider; module Model; module Storage; module Db
              }.join(', ')
          end
          
-         def sql_delete(del)
+         def sql_delete(del, force=false)
              @bind_cnt = 0
              super
          end

@@ -36,6 +36,7 @@ module Spider; module WebDAV; module VFS
         end
 
         def stream(path, acc)
+            return Errno::ENOENT if directory?(path)
             vfs, rest = get(path)
             vfs.stream(rest, acc){ |f| yield f }
             # if (vfs.is_a?(MappedFile))
