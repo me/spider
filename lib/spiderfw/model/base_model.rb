@@ -167,9 +167,16 @@ module Spider; module Model
             end
             
             ivar = :"@#{ name }"
+            
+            unless self.const_defined?(:ElementMethods)
+                em = self.const_set(:ElementMethods, Module.new)
+                include em
+                
+            end
+            element_methods = self.const_get(:ElementMethods)
 
             #instance variable getter
-            define_method(name) do
+            element_methods.send(:define_method, name) do
                 element = self.class.elements[name]
                 if (element.integrated?)
                     integrated = get(element.integrated_from.name)
@@ -195,7 +202,7 @@ module Spider; module Model
             end
 
             #instance_variable_setter
-            define_method("#{name}=") do |val|
+            element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
