@@ -213,8 +213,8 @@ module Spider; module Model
         def clone
             c = self.class.new
             c.conjunction = @conjunction
-            self.each do |key, val|
-                c[key] = val
+            self.each_with_comparison do |key, val, comparison|
+                c.set(key, comparison, val)
             end
             @subconditions.each do |sub|
                 c << sub.clone
