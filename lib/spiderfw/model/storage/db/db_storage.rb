@@ -25,20 +25,29 @@ module Spider; module Model; module Storage; module Db
             def get_connection(*args)
                 @connection_semaphore ||= Mutex.new
                 @connections ||= {}
+                @free_connections ||= {}
+                max_connections = Spider.conf.get('storage.db.pool.size')
+                
                 @connection_semaphore.synchronize{
+                    @free_connections[args] ||= []
                     @connections[args] ||= []
-                    if (@connections[args].length > 0)
-                         # TODO: mantain a pool instead of a single connection
-                        return @connections[args].pop
+                    if (@free_connections[args].empty?)
+                        if @connections[args].length <= max_connections
+                            conn = new_connection(*args)
+                            @connections[args] << conn
+                        else
+                            sleep(0.001) while @free_connections.empty?
+                            conn = @free_connections[args].pop
+                        end
                     end
-                    conn = new_connection(*args)
-                    @connections[args] << conn
+                    
                     return conn
                 }
             end
             
+            
             def release_connection(conn, conn_params)
-                @connections[conn_params] << conn
+                @free_connections[conn_params] << conn
             end
             
         end
