@@ -260,7 +260,9 @@ module Spider; module Model
         end
         
         def delete_all!
-            delete(@model.all, true)
+            all = @model.all
+            all.fetch_window = 100
+            delete(all, true)
         end
         
         def do_delete(obj)
