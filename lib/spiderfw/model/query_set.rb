@@ -92,7 +92,6 @@ module Spider; module Model
                 obj = instantiate_object(obj)
             end
             @objects << obj
-            @loaded_elements.merge!(obj.loaded_elements)
             @fixed.each do |key, val|
                 obj.set(key, val)
             end
@@ -117,13 +116,24 @@ module Spider; module Model
         def []=(index, val)
             #load_to_index(index) unless loaded?(index) || !autoload?
             val = instantiate_object(val) unless val.is_a?(@model)
-            @loaded_elements.merge!(val.loaded_elements)
             @fixed.each do |fkey, fval|
                 val.set(fkey, fval)
             end
             array_index = index
             array_index -= @window_current_start-1 if @window_current_start
             @objects[array_index] = val
+        end
+        
+        def update_loaded_elements
+            f_loaded = {}
+            self.each_current do |obj|
+                @loaded_elements.each do |el|
+                    f_loaded[el] = false unless obj.loaded_elements[el]
+                end
+            end
+            @loaded_elements = {}
+            @loaded_elements.merge!(@objects[0].loaded_elements)
+            @loaded_elements.merge!(f_loaded)
         end
         
         def last

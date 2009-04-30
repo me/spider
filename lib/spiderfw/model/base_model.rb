@@ -814,9 +814,6 @@ module Spider; module Model
         def element_loaded(element_name)
             element_name = element_name.name if (element_name.class == Element)
             @loaded_elements[element_name] = true
-            if (@_parent && @_parent.is_a?(QuerySet))
-                @_parent.element_loaded(element_name)
-            end
         end
         
         def element_loaded?(element)
