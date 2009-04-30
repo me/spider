@@ -321,6 +321,10 @@ module Spider; module Model; module Storage; module Db
              return true
          end
          
+         def schema_field_varchar_equal?(current, field)
+             # FIXME
+             return true
+         end
          
          
          # Mapper extension

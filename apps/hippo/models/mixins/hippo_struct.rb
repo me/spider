@@ -20,6 +20,17 @@ module Hippo
         end
     
         module ClassMethods
+            
+            def element(name, type, attributes={}, &proc)
+                el = super
+                if (el.attributes[:junction])
+                    el.model.elements[:id].attributes[:primary_key] = false
+                    el.model.elements[el.attributes[:reverse]].attributes[:primary_key] = true
+                    el.model.elements[el.attributes[:junction_their_element]].attributes[:primary_key] = true
+                end
+                return el
+            end
+
         
             def binding(val=nil)
                 if val
