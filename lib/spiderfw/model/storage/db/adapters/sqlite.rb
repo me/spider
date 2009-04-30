@@ -24,7 +24,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def connect
-            @conn = self.class.new_connection(*@connection_params)
+            @conn = self.class.new_connection(*@connection_params) unless @conn
         end
         
         def disconnect
@@ -74,21 +74,23 @@ module Spider; module Model; module Storage; module Db
          end
 
          def execute(sql, *bind_vars)
-             if (bind_vars && bind_vars.length > 0)
-                 debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
-             end
-             debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
+             begin
+                 if (bind_vars && bind_vars.length > 0)
+                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                 end
+                 debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
 
-             result = connection.execute(sql, *bind_vars)
-             @last_insert_row_id = connection.last_insert_row_id
-             result.extend(StorageResult)
-             @last_result = result
-             if block_given?
-                 result.each{ |row| yield row }
+                 result = connection.execute(sql, *bind_vars)
+                 @last_insert_row_id = connection.last_insert_row_id
+                 result.extend(StorageResult)
+                 @last_result = result
+                 if block_given?
+                     result.each{ |row| yield row }
+                 else
+                     return result
+                 end
+             ensure
                  disconnect unless in_transaction?
-             else
-                 disconnect unless in_transaction?
-                 return result
              end
          end
          
