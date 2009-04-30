@@ -68,7 +68,7 @@ module Spider; module Model
                 model = app_or_model.subclass_of?(Spider::Model::BaseModel) ? app_or_model : app_or_model.const_get(self.short_name)
                 @conversions ||= {}
                 @conversions[name] = model
-                Spider::Logger.debug("Converting #{self} from #{model}")
+                #Spider::Logger.debug("Converting #{self} from #{model}")
                 model.primary_keys.each do |k|
                     element(conversion_key(name, k), k.type) unless k.attributes[:no_conv_map]
                 end
