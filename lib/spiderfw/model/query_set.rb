@@ -159,6 +159,7 @@ module Spider; module Model
         end
         
         def has_more?
+            return true if autoload? && !@loaded
             return false unless query.limit
             pos = query.offset.to_i + length
             return pos < total_rows
@@ -227,7 +228,7 @@ module Spider; module Model
 
         def each_index
             @window_current_start = nil if (@fetch_window)
-            while (!@fetch_window || (has_more? || !@fetch_window))
+            while (!@fetch_window || has_more?)
                 load_next unless !autoload? || (!@fetch_window && @loaded)
                 @objects.each_index do |i|
                     yield i
