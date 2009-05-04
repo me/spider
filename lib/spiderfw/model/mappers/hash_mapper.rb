@@ -5,6 +5,11 @@ module Spider; module Model; module Mappers
 
     class HashMapper < Spider::Model::Mapper
         
+        def initialize(model, storage)
+            super
+            @type = :hash
+        end
+        
         def self.write?
             false
         end
