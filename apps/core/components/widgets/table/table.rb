@@ -76,7 +76,7 @@ module Spider; module Components
             rows.each do |row|
                 res_row = {}
                 @elements.each do |el|
-                    if (!row[el])
+                    if (!row[el] && [String, Spider::DataTypes::Text].include?(@model.elements[el].type))
                         row[el] = ''
                         next
                     end
