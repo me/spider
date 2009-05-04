@@ -22,6 +22,14 @@ module Spider; module Model
                         our_element = self.elements[el.name]
                         next unless our_element
                         if (el.model?)
+                            if (our_element.model.is_a?(InlineModel))
+                                objects = el.multiple? ? obj.get(el) : [obj.get(el)]
+                                objects.each do |sub_obj|
+                                    next unless sub_obj # WTF?
+                                    res.set(el.name, obj.get(el).get(el.model.primary_keys[0]))
+                                end
+                                next
+                            end
                             next unless our_element.model.is_a?(Converted)
                             next if our_element.attributes[:added_reverse] || our_element.has_single_reverse?
                             objects = el.multiple? ? obj.get(el) : [obj.get(el)]
@@ -51,8 +59,15 @@ module Spider; module Model
                     cond[element.type.conversion_key(self.converting, k)] = src.get(k)
                 end
                 res = element.type.find(cond)
-                raise ConversionException, "The converted object was not unique" if res.length > 1
-                dest.set(element, res[0])
+                if res.length > 1
+                    Spider::Logger.error("The converted object was not unique")
+                    Spider::Logger.error(res)
+                end
+                if (element.multiple?)
+                    dest.get(element) << res[0]
+                else
+                    dest.set(element, res[0])
+                end
             end
 
             def converting(name=nil) 
