@@ -1,3 +1,6 @@
+require 'webrick/httputils'
+require 'mime/types'
+
 module Spider; module ControllerMixins
     
     module StaticContent
@@ -13,7 +16,8 @@ module Spider; module ControllerMixins
             return path.gsub('..', '')
         end
         
-        def serve_static(path)
+        def serve_static(path=nil)
+            raise Spider::Controller::NotFound.new(path) unless path
             path = sanitize_path(path)
             full_path = self.class.app.pub_path+'/'+path
             raise Spider::Controller::NotFound.new(path) unless File.exist?(full_path)
@@ -32,6 +36,11 @@ module Spider; module ControllerMixins
         def output_static(full_path)
             debug("Serving resource: #{full_path}")
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
+            stat = File.lstat(full_path)
+            ct = File.directory?(full_path) ? "httpd/unix-directory" : WEBrick::HTTPUtils::mime_type(full_path, ::MIME::Types)
+            @response.headers['Content-Type'] = ct
+            @response.headers['Content-Length'] = stat.size
+            @response.headers['Last-Modified'] = stat.mtime.httpdate
             f = File.open(full_path, 'r')
             while (block = f.read(1024)) do
                 $out << block
