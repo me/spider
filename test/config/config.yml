@@ -1,0 +1,16 @@
+runmode: 'test'
+template.cache.disable: true
+client.text_editor: 'textmate'
+locale: 'it'
+session.store: 'memory'
+http.auto_headers: true
+template.safe: false
+
+#set devel:
+storages:
+    default:
+        url: 'db:sqlite://var/db.test.sqlite'
+    
+set test:
+    debugger.start: true
+    debug.console.level: 'DEBUG'

@@ -1,0 +1,55 @@
+- 'Zoo::Food':
+    -   id: 'meat'
+        name: 'Meat'
+    -   id: 'vegetables'
+        name: 'Vegetables'
+    -   id: 'cereals'
+        name: 'Cereals'
+    -   id: 'fish'
+        name: 'Fish'
+    -   id: 'candy'
+        name: 'Candy'
+    -   id: 'apples'
+        name: 'Apples'
+    -   id: 'oranges'
+        name: 'Oranges'
+    -   id: 'nuts'
+        name: 'Nuts'
+    -   id: 'almonds'
+        name: 'Almonds'
+    
+
+- 'Zoo::Family':
+    -   id: 'felines'
+        name: 'Felidae'
+    -   id: 'canides'
+        name: 'Canidae'
+    -   id: 'parrots'
+        name: 'Psittacidae'
+
+- 'Zoo::Animal':
+    -   id: 'cat'
+        name: 'Cat'
+        comment: 'Cute kitty'
+        family: 'felines'
+        foods:
+            - meat
+            - cereals
+    -   id: 'lion'
+        name: 'Lion'
+        comment: 'Scary kitty'
+        family: 'felines'
+        foods:
+            - meat
+    -   id: 'dog'
+        name: 'Dog'
+        comment: "Man's best friend"
+        family: 'canides'
+        foods:
+            - meat
+            - vegetables
+            - cereals
+    -   id: 'parrot'
+        name: 'Parrot'
+        comment: 'Polly wants a cracker'
+        family: 'parrots'
