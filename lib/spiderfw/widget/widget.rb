@@ -101,6 +101,10 @@ module Spider
                 return p
             end
             
+            def default_template
+                Spider::Inflector.underscore(self.name).split('/')[-1]
+            end
+            
             def relative_url
                 template_path[template_path_parent.length+1..-1]
             end
@@ -124,7 +128,7 @@ module Spider
             @id_path = []
             @widget_attributes = {}
             @resources = []
-            @use_template ||= Spider::Inflector.underscore(self.class.name).split('/')[-1]
+            @use_template ||= self.class.default_template
         end
         
         def full_id
