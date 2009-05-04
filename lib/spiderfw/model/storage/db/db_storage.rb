@@ -28,25 +28,36 @@ module Spider; module Model; module Storage; module Db
                 @free_connections ||= {}
                 max_connections = Spider.conf.get('storage.db.pool.size')
                 
+                conn = nil
                 @connection_semaphore.synchronize{
                     @free_connections[args] ||= []
                     @connections[args] ||= []
                     if (@free_connections[args].empty?)
+                        #Spider::Logger.debug("NO FREE CONNECTION")
                         if @connections[args].length <= max_connections
                             conn = new_connection(*args)
+                            #Spider::Logger.debug("CREATED NEW CONNECTION #{conn}")
                             @connections[args] << conn
                         else
-                            sleep(0.001) while @free_connections.empty?
-                            conn = @free_connections[args].pop
+                            sleep_cnt = 0
+                            while @free_connections[args].empty? && sleep_cnt < 10000
+                                sleep(0.001)
+                                sleep_cnt += 1
+                            end
+                            raise StorageException, "Unable to get a connection" if sleep_cnt == 10000
+                            #Spider::Logger.debug("WAITED FOR FREE CONNECTION, GOT #{@free_connections[args].last}")
                         end
                     end
+                    conn ||= @free_connections[args].pop
+                    #Spider::Logger.debug("GOT CONNECTION #{args}")
                     
-                    return conn
                 }
+                return conn
             end
             
             
             def release_connection(conn, conn_params)
+                #Spider::Logger.debug("RELEASING CONNECTION #{conn_params}")
                 @free_connections[conn_params] << conn
             end
             
@@ -213,10 +224,23 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_to_mapper(type, value)
+            if (type.name == 'Spider::DataTypes::Text' || type.name == 'String')
+                enc = @configuration['encoding']
+                if (enc && enc.downcase != 'utf-8')
+                    value = Iconv.conv('utf-8', enc, value) if value
+                end
+            end
             return value
         end
         
         def prepare_value(type, value)
+            case type.name
+            when 'String', 'Spider::DataTypes::Text'
+                enc = @configuration['encoding']
+                if (enc && enc.downcase != 'utf-8')
+                    value = Iconv.conv(enc, 'utf-8', value.to_s)
+                end
+            end
             return value
         end
         

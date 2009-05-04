@@ -31,8 +31,8 @@ module Spider; module TemplateBlocks
             end
             template = nil
             if (overrides.length > 0)
-                template_name = klass.find_template(template_attr)
-                template = klass.load_template(template_name)
+                #template_name = klass.find_template(template_attr)
+                template = klass.load_template(template_attr || klass.default_template)
                 template.overrides = overrides
                 @template.add_subtemplate(id, template)
             end

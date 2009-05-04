@@ -123,43 +123,46 @@ module Spider; module Model; module Storage; module Db
         end
         
         def execute(sql, *bind_vars)
-             if (bind_vars && bind_vars.length > 0)
-                 debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
-             end
-             @last_executed = [sql, bind_vars]
-             debug("mysql executing:\n#{sql}\n[#{debug_vars}]")
-             @stmt = connection.prepare(sql)
-             res = @stmt.execute(*bind_vars)
-             have_result = (@stmt.field_count == 0 ? false : true)
-             if (have_result)
-                 result_meta = @stmt.result_metadata
-                 fields = result_meta.fetch_fields
-                 result = []
-                 while (a = res.fetch)
-                     h = {}
-                     fields.each_index{ |i| h[fields[i].name] = a[i]}
-                     if block_given?
-                         yield h
-                     else
-                         result << h
-                     end
-                 end
-                 if (@last_query_type == :select)
-                     rows_res = connection.query("select FOUND_ROWS()")
-                     @total_rows = rows_res.fetch_row[0].to_i
-                 end
-             end
-             @last_insert_id = connection.insert_id
-             @last_query_type = nil
-             disconnect unless in_transaction?
-             if (have_result)
-                 unless block_given?
-                     result.extend(StorageResult)
-                     return result
-                 end
-             else
-                 return res
-             end
+            begin
+                if (bind_vars && bind_vars.length > 0)
+                    debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                end
+                @last_executed = [sql, bind_vars]
+                debug("mysql executing:\n#{sql}\n[#{debug_vars}]")
+                @stmt = connection.prepare(sql)
+                res = @stmt.execute(*bind_vars)
+                have_result = (@stmt.field_count == 0 ? false : true)
+                if (have_result)
+                    result_meta = @stmt.result_metadata
+                    fields = result_meta.fetch_fields
+                    result = []
+                    while (a = res.fetch)
+                        h = {}
+                        fields.each_index{ |i| h[fields[i].name] = a[i]}
+                        if block_given?
+                            yield h
+                        else
+                            result << h
+                        end
+                    end
+                    if (@last_query_type == :select)
+                        rows_res = connection.query("select FOUND_ROWS()")
+                        @total_rows = rows_res.fetch_row[0].to_i
+                    end
+                end
+                @last_insert_id = connection.insert_id
+                @last_query_type = nil
+                if (have_result)
+                    unless block_given?
+                        result.extend(StorageResult)
+                        return result
+                    end
+                else
+                    return res
+                end
+            ensure
+                disconnect unless in_transaction?
+            end
          end
          
          def prepare(sql)
@@ -176,10 +179,11 @@ module Spider; module Model; module Storage; module Db
          end
          
          def prepare_value(type, value)
+             value = super(type, value)
              return value unless value
              case type.name
              when 'DateTime'
-                 return value.to_s
+                 return value.strftime("%Y-%m-%dT%H:%M:%S")
              when 'Fixnum'
                  return value.to_i
              end
@@ -187,12 +191,12 @@ module Spider; module Model; module Storage; module Db
          end
          
          def value_to_mapper(type, value)
-             return value unless value
+             return unless value
              case type.name
              when 'DateTime'
                  return DateTime.parse("#{value.year}-#{value.month}-#{value.day}T#{value.hour}:#{value.minute}:#{value.second}")
              end
-             return value
+             return super(type, value)
          end
          
          ##############################################################

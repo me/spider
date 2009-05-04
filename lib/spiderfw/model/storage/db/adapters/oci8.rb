@@ -68,15 +68,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def prepare_value(type, value)
+            value = super
             return OCI8NilValue.new(Spider::Model.ruby_type(type)) if (value == nil)
             case type.name
             when 'Spider::DataTypes::Binary'
                 return OCI8::BLOB.new(@conn, value)
-            when 'String', 'Spider::DataTypes::Text'
-                enc = @configuration['encoding']
-                if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv(enc, 'utf-8', value)
-                end
             end
             return value
         end
@@ -95,13 +91,7 @@ module Spider; module Model; module Storage; module Db
             when 'Spider::DataTypes::Text'
                 value =  value ? value.read : ''
             end
-            if (type == 'Spider::DataTypes::Text' || type == 'String')
-                enc = @configuration['encoding']
-                if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv('utf-8', enc, value) if value
-                end
-            end
-            return value
+            return super(type, value)
         end
 
          def execute(sql, *bind_vars)

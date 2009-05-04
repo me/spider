@@ -150,7 +150,7 @@ module Spider; module ControllerMixins
                     t.response = @response
                     return t
                 end
-                raise "Template #{path} not found"
+                raise "Template #{name} not found"
             end
             
             def template_exists?(name, paths=nil)
