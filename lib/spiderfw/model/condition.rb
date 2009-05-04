@@ -213,6 +213,7 @@ module Spider; module Model
         def clone
             c = self.class.new
             c.conjunction = @conjunction
+            c.polymorph = @polymorph
             self.each_with_comparison do |key, val, comparison|
                 c.set(key, comparison, val)
             end
