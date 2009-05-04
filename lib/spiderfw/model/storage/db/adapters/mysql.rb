@@ -176,10 +176,11 @@ module Spider; module Model; module Storage; module Db
          end
          
          def prepare_value(type, value)
+             value = super(type, value)
              return value unless value
              case type.name
              when 'DateTime'
-                 return value.to_s
+                 return value.strftime("%Y-%m-%dT%H:%M:%S")
              when 'Fixnum'
                  return value.to_i
              end
@@ -187,12 +188,12 @@ module Spider; module Model; module Storage; module Db
          end
          
          def value_to_mapper(type, value)
-             return value unless value
+             return unless value
              case type.name
              when 'DateTime'
                  return DateTime.parse("#{value.year}-#{value.month}-#{value.day}T#{value.hour}:#{value.minute}:#{value.second}")
              end
-             return value
+             return super(type, value)
          end
          
          ##############################################################
