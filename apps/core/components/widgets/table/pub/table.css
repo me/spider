@@ -8,13 +8,15 @@
 
 .spider.components.table td, .spider.components.table th{
     border: 1px solid white;
-    padding: 3px 6px;
+    padding: 2px 6px;
 }
 
 .spider.components.table th{
     text-align: left;
     background-color: #ececf6;
-    padding: 10px;
+    padding-left: 10px;
+    padding-top: 4px;
+    padding-bottom: 6px;
 }
 .spider.components.table th a, .spider.components.table th{
     color: #6172c3;
@@ -58,6 +60,11 @@
     background-color: white;
     font-size: 75%;
     color: #666699;
+}
+
+.spider.components.table .paginator td{
+    padding-top: 6px;
+    padding-bottom: 6px;
 }
 
 .spider.components.table .paginator a{
