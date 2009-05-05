@@ -302,7 +302,7 @@ module Spider; module Model
             request = query.request
             condition = Condition.or
             objects.each_current do |obj|
-                condition << obj.keys_to_condition
+                condition << obj.keys_to_condition if obj.primary_keys_set?
             end
             return find(Query.new(condition, request), objects, options)
         end
