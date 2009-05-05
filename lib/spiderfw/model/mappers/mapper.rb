@@ -318,7 +318,7 @@ module Spider; module Model
                 @model.primary_keys.each{ |key| query.request[key] = true}
                 expand_request(query.request) unless options[:no_expand_request]
                 query = prepare_query(query, query_set)
-                query.request.total_rows = true unless query.request.total_rows = false
+                query.request.total_rows = true unless query.request.total_rows == false
                 result = fetch(query)
                 set = query_set || QuerySet.new(@model)
                 was_loaded = set.loaded
@@ -333,7 +333,7 @@ module Spider; module Model
                     end
                     return set
                 end
-                set.total_rows = result.total_rows # if (!was_loaded)
+                set.total_rows = result.total_rows if (!was_loaded)
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
                     next unless obj
