@@ -443,7 +443,14 @@ module Spider; module Model; module Mappers
                 Spider::Logger.debug("JOIN A")
                 keys = {}
                 element.model.primary_keys.each do |key|
-                    keys[schema.foreign_key_field(element.name, key.name)] = element.mapper.schema.field(key.name)
+                    if (key.integrated?)
+                        # FIXME
+                        raise "Unimplemented join dereference for multiple primary keys" if key.integrated_from.model.primary_keys.length > 1
+                        el_field = element.mapper.schema.foreign_key_field(key.integrated_from.name, key.integrated_from.model.primary_keys[0].name)
+                    else
+                        el_field = element.mapper.schema.field(key.name)
+                    end
+                    keys[schema.foreign_key_field(element.name, key.name)] = el_field
                     # FIXME: works with models as primary keys through a hack in the field method of db_schema,
                     # assuming the model has only one key. the correct way would be to get another join
                 end
@@ -462,13 +469,11 @@ module Spider; module Model; module Mappers
                 keys = {}
                 @model.primary_keys.each do |key|
                     our_field = nil
-                    Spider::Logger.debug("OUR FIELD")
                     if (key.integrated?)
                         our_field = schema.foreign_key_field(key.integrated_from.name, key.integrated_from_element)
                     else
                         our_field = schema.field(key.name)
                     end
-                    Spider::Logger.debug("THEIR FIELD")
                     keys[our_field] = element.mapper.schema.foreign_key_field(element.reverse, key.name)
                 end
                 if (element.condition)
@@ -498,14 +503,20 @@ module Spider; module Model; module Mappers
             parts.each do |part|
                 el = current_model.elements[part]
                 if (el.integrated?)
-                    joins << get_join(el.integrated_from)
+                    joins << current_model.mapper.get_join(el.integrated_from)
                     current_model = el.integrated_from.type
                     el = current_model.elements[el.integrated_from_element]
                 end
-                if (el.model? && current_model.mapper.can_join?(el))
-                    joins << get_join(el)
+                if (el.model?) # && can_join?(el)
+                    joins << current_model.mapper.get_join(el)
                     current_model = el.model
                 end
+            end
+            while (el.integrated?)
+                joins << current_model.mapper.get_join(el.integrated_from)
+#                joins << current_model.integrated_from.mapper.get_join(el.integrated_from_element)
+                current_model = el.integrated_from.type
+                el = current_model.elements[el.integrated_from_element]
             end
             return [joins, current_model, el]
         end
