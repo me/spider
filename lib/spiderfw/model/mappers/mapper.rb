@@ -311,7 +311,7 @@ module Spider; module Model
         def find(query, query_set=nil, options={})
             set = nil
             Spider::Model.with_identity_mapper do |im|
-                im.put(query_set)
+#                im.put(query_set)
                 if (@model.attributes[:condition])
                     query.condition = Condition.and(query.condition, @model.attributes[:condition])
                 end
