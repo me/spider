@@ -10,6 +10,9 @@ $:.push($SPIDER_RUN_PATH)
 
 $:.push($SPIDER_PATH)
 Dir.chdir($SPIDER_RUN_PATH)
+
+$SPIDER_RUNMODE = ENV['SPIDER_RUNMODE']
+$SPIDER_CONFIG_SETS = ENV['SPIDER_CONFIG_SETS'].split(/\s+,\s+/) if ENV['SPIDER_CONFIG_SETS']
 #p $:
 
 
@@ -20,11 +23,12 @@ require 'spiderfw/requires'
 
 require 'spiderfw/version'
 
+
 module Spider
     
     class << self
         # Everything here must be thread safe!!!
-        attr_reader :logger, :controller, :apps, :server
+        attr_reader :logger, :controller, :apps, :server, :runmode
         
         def init(force=false)
             return if @init_done && !force
@@ -43,6 +47,12 @@ module Spider
 #            @controller = Controller
             @server = {}
             @paths[:spider] = $SPIDER_PATH
+            @runmode = nil
+            
+            self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
+            if ($SPIDER_CONFIG_SETS)
+                $SPIDER_CONFIG_SETS.each{ |set| @configuration.include_set(set) }
+            end
             
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
             @logger.reopen(STDERR, Spider.conf.get('debug.console.level'))
@@ -244,6 +254,16 @@ module Spider
                 dir = mod.path
                 logger.debug("Reloading app #{name} in #{dir}\n")
                 self.reload_sources_in_dir(dir)
+            end
+        end
+        
+        def runmode=(mode)
+            raise "Can't change runmode" if @runmode
+            @runmode = mode
+            @configuration.include_set(mode)
+            case mode
+            when 'devel' || 'test'
+                require 'ruby-debug'
             end
         end
         

@@ -22,9 +22,9 @@ module Spider; module Model; module Storage; module Db
         end
         
         def self.new_connection(user, pass, dbname, role)
-            @conn ||= ::OCI8.new(user, pass, dbname, role)
-            @conn.autocommit = true
-            return @conn
+            conn ||= ::OCI8.new(user, pass, dbname, role)
+            conn.autocommit = true
+            return conn
         end
         
         def disconnect
@@ -54,7 +54,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def in_transaction?
-            return @conn && @conn.autocommit?
+            return @conn && !@conn.autocommit?
         end
         
         def commit
@@ -95,43 +95,46 @@ module Spider; module Model; module Storage; module Db
         end
 
          def execute(sql, *bind_vars)
-             if (bind_vars && bind_vars.length > 0)
-                 debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
-             end
-             @last_executed = [sql, bind_vars]
-             debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
-             @cursor = connection.parse(sql)
-             return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
-             bind_vars.each_index do |i|
-                 var = bind_vars[i]
-                 if (var.is_a?(OCI8NilValue))
-                     @cursor.bind_param(i+1, nil, var.type, 0)
+             begin
+                 if (bind_vars && bind_vars.length > 0)
+                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                 end
+                 @last_executed = [sql, bind_vars]
+                 debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
+                 @cursor = connection.parse(sql)
+                 return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
+                 bind_vars.each_index do |i|
+                     var = bind_vars[i]
+                     if (var.is_a?(OCI8NilValue))
+                         @cursor.bind_param(i+1, nil, var.type, 0)
+                     else
+                         @cursor.bind_param(i+1, var)
+                     end
+                 end
+                 res = @cursor.exec
+                 have_result = (@cursor.type == ::OCI8::STMT_SELECT)
+                 # @cursor = connection.exec(sql, *bind_vars)
+                 if (have_result)
+                     result = []
+                     while (h = @cursor.fetch_hash)
+                         if block_given?
+                              yield h
+                          else
+                              result << h
+                          end
+                     end
+                 end
+                 if (have_result)
+                     unless block_given?
+                         result.extend(StorageResult)
+                         @last_result = result
+                         return result
+                     end
                  else
-                     @cursor.bind_param(i+1, var)
+                     return res
                  end
-             end
-             res = @cursor.exec
-             have_result = (@cursor.type == ::OCI8::STMT_SELECT)
-             # @cursor = connection.exec(sql, *bind_vars)
-             if (have_result)
-                 result = []
-                 while (h = @cursor.fetch_hash)
-                     if block_given?
-                          yield h
-                      else
-                          result << h
-                      end
-                 end
-             end
-             disconnect unless in_transaction?
-             if (have_result)
-                 unless block_given?
-                     result.extend(StorageResult)
-                     @last_result = result
-                     return result
-                 end
-             else
-                 return res
+             ensure
+                 disconnect unless in_transaction?
              end
          end
          

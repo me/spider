@@ -1,13 +1,7 @@
 module Spider
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
-        :action => Proc.new do |option|
-            Spider.configuration.include_set(option)
-            case option
-            when 'devel' || 'test'
-                require 'ruby-debug'
-            end
-        end
+        :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode }
     )
     
     # Storage

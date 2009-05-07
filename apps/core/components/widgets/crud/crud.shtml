@@ -7,7 +7,7 @@
         Cancellazione effettuata
     </div>
     <div sp:if="@action == :form" class="top">
-        <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=table">
+        <a class="back" href="{ @request[:path] }?_w{ @widget[:param] }[action]=table">
             Torna all'elenco
         </a>
     </div>
@@ -23,7 +23,7 @@
     </core:confirm>
     <sp:pass sp:if="!@ask_delete">
         <div sp:if="@action == :table" class="top">
-            <a href="{ @request[:path] }?_w{ @widget[:param] }[action]=form">
+            <a class="add" href="{ @request[:path] }?_w{ @widget[:param] }[action]=form">
                 Crea nuovo
             </a>
         </div>

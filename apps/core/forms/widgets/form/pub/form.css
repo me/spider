@@ -1,6 +1,8 @@
 .spider.forms.form .fields{
-    border: 1px solid #CDCDCD;
-    padding: 6px;
+    border:2px solid #D5D5F7;
+    background: #ececf6;
+    padding: 10px;
+    margin: 20px;
 }
 
 .spider.forms.form label{
@@ -16,9 +18,21 @@
 
 .spider.forms.form .buttons{
     clear: both;
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #CDCDCD;
+    text-align: right;
+}
+.spider.forms.form .buttons input {
+	background-color:#1188C1;
+	border-color: #d1d8e5;
+	border-style:solid none none;
+	border-width:1px medium medium;
+	color:white;
+	cursor:pointer;
+	font-weight:bold;
+	outline-color:#333333;
+	outline-style:solid;
+	outline-width:1px;
+	padding:4px;
+	margin-right: 20px;
 }
 
 .spider.forms.form .input{

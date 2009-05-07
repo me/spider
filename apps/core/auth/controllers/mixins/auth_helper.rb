@@ -53,7 +53,7 @@ module Spider; module Auth
         
         def try_rescue(exc)
             if (exc.is_a?(Unauthorized))
-                base = @current_require[:redirect] ? @current_require[:redirect] : '/'+Spider::Auth.route_url+'/login?'
+                base = @current_require[:redirect] ? @current_require[:redirect] : '/'+Spider::Auth.route_url+'/login/?'
                 redir_url = base + 'redirect='+URI.escape(@request.path)
                 redirect(redir_url, Spider::HTTP::TEMPORARY_REDIRECT)
             else

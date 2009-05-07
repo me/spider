@@ -1,5 +1,13 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="admin.css" />
-    <div class="heading">Amministrazione - { @current }</div>
+    <div class="heading">
+	    <div id="title">
+    	        Amministrazione
+	    </div>
+	    <div id="section">
+		<span id="label">{ @current }</span>
+		<span id="ribbon"></span>
+	    </div>
+    </div>
     <core:menu id="menu" />
 </div>

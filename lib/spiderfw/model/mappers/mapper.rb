@@ -302,7 +302,7 @@ module Spider; module Model
             request = query.request
             condition = Condition.or
             objects.each_current do |obj|
-                condition << obj.keys_to_condition
+                condition << obj.keys_to_condition if obj.primary_keys_set?
             end
             return find(Query.new(condition, request), objects, options)
         end
@@ -311,14 +311,14 @@ module Spider; module Model
         def find(query, query_set=nil, options={})
             set = nil
             Spider::Model.with_identity_mapper do |im|
-                im.put(query_set)
+#                im.put(query_set)
                 if (@model.attributes[:condition])
                     query.condition = Condition.and(query.condition, @model.attributes[:condition])
                 end
                 @model.primary_keys.each{ |key| query.request[key] = true}
                 expand_request(query.request) unless options[:no_expand_request]
                 query = prepare_query(query, query_set)
-                query.request.total_rows = true unless query.request.total_rows = false
+                query.request.total_rows = true unless query.request.total_rows == false
                 result = fetch(query)
                 set = query_set || QuerySet.new(@model)
                 was_loaded = set.loaded
@@ -333,7 +333,7 @@ module Spider; module Model
                     end
                     return set
                 end
-                set.total_rows = result.total_rows # if (!was_loaded)
+                set.total_rows = result.total_rows if (!was_loaded)
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
                     next unless obj
