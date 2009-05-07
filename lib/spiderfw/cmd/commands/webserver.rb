@@ -8,7 +8,7 @@ class WebServerCommand < CmdParse::Command
         @short_desc = _("Manage internal webserver")
 #        @description = _("")
         
-        @port = 8080
+        @port = Spider.conf.get('webserver.port')
         @server_name = Spider.conf.get('http.server')
         
         servers = {

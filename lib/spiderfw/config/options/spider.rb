@@ -24,6 +24,7 @@ module Spider
     config_option 'webserver.reload_sources', _("Reload application and spider sources on each request"), {
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
     }
+    config_option 'webserver.port', _("Port to use for the http server"), :default => 8080
     # Client
     config_option 'client.text_editor', _("The text editor installed on the client")
     
