@@ -123,7 +123,6 @@ module Spider; module HTTP
                 controller.after(path)
                 Spider::Logger.debug("Controller #{controller} DONE")
             rescue => exc
-                Spider.logger.error("EXCEPTION")
                 Spider.logger.error(exc)
                 controller.ensure() if controller
             ensure
