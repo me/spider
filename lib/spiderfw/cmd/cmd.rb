@@ -1,3 +1,5 @@
+require 'rubygems'
+require 'spiderfw/i18n/gettext'
 require 'cmdparse'
 require 'spiderfw/cmd/commands/webserver'
 require 'spiderfw/cmd/commands/init'

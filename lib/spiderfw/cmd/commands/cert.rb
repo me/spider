@@ -7,7 +7,6 @@ class CertCommand < CmdParse::Command
         super( 'cert', true, true )
         @short_desc = _("Manage certificates")
 #        @description = _("")
-        @path = Spider.paths[:certs]
    
         # start
         generate = CmdParse::Command.new( 'generate', false )
@@ -18,6 +17,7 @@ class CertCommand < CmdParse::Command
             }
         end
         generate.set_execution_block do |args|
+            @path ||= Spider.paths[:certs]
             FileUtils.mkpath(@path+'/private')
             key = OpenSSL::PKey::RSA.generate(4096)
             pub = key.public_key
