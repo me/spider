@@ -132,7 +132,8 @@ module Spider; module Model; module Storage; module Db
                     cnt = -1
                     debug("mysql executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
                 else
-                    debug("mysql executing:\n#{sql}\n[#{debug_vars.join(', ')}]")
+                    debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
+                    debug("mysql executing:\n#{sql}\n[#{debug_vars_str}]")
                 end
                 @stmt = connection.prepare(sql)
                 res = @stmt.execute(*bind_vars)
