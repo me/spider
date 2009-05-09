@@ -125,10 +125,15 @@ module Spider; module Model; module Storage; module Db
         def execute(sql, *bind_vars)
             begin
                 if (bind_vars && bind_vars.length > 0)
-                    debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                    debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                 end
                 @last_executed = [sql, bind_vars]
-                debug("mysql executing:\n#{sql}\n[#{debug_vars}]")
+                if (Spider.conf.get('db.replace_debug_vars'))
+                    cnt = -1
+                    debug("mysql executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
+                else
+                    debug("mysql executing:\n#{sql}\n[#{debug_vars.join(', ')}]")
+                end
                 @stmt = connection.prepare(sql)
                 res = @stmt.execute(*bind_vars)
                 have_result = (@stmt.field_count == 0 ? false : true)
