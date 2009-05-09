@@ -1,3 +1,5 @@
+require 'spiderfw/utils/hash_comparison'
+
 module Spider; module Model
     
     class IdentityMapper
@@ -52,15 +54,6 @@ module Spider; module Model
             end
         end
 
-        
-        module HashComparison
-            def eql?(h)
-                self == h
-            end
-            def hash
-                self.to_a.hash
-            end
-        end
         
     end
     
