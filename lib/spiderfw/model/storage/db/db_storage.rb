@@ -57,6 +57,7 @@ module Spider; module Model; module Storage; module Db
             
             
             def release_connection(conn, conn_params)
+                return unless conn
                 #Spider::Logger.debug("RELEASING CONNECTION #{conn_params}")
                 @free_connections[conn_params] << conn
             end
