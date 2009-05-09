@@ -194,7 +194,7 @@ module Spider; module Model; module Storage; module Db
              return unless value
              case type.name
              when 'DateTime'
-                 return DateTime.parse("#{value.year}-#{value.month}-#{value.day}T#{value.hour}:#{value.minute}:#{value.second}")
+                 return DateTime.civil(value.year, value.month, value.day, value.hour, value.minute, value.second)
              end
              return super(type, value)
          end
