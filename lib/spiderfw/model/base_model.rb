@@ -551,8 +551,7 @@ module Spider; module Model
         end
          
         def self.mapper
-            return @mapper if @mapper
-            return @mapper = get_mapper(storage)
+            @mapper ||= get_mapper(storage)
         end
 
         def self.get_mapper(storage)
@@ -1057,7 +1056,7 @@ module Spider; module Model
         ##############################################################
         
         def storage
-            return @storage ||= self.class.storage
+            return @storage || self.class.storage
         end
         
         def use_storage(storage)
@@ -1066,8 +1065,11 @@ module Spider; module Model
         end
         
         def mapper
-            @storage ||= self.class.storage
-            @mapper ||= self.class.get_mapper(@storage)
+            if (@storage)
+                @mapper ||= self.class.get_mapper(@storage)
+            else
+                @mapper ||= self.class.mapper
+            end
             return @mapper
         end
         
