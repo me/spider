@@ -298,7 +298,7 @@ module Spider; module Model; module Storage; module Db
          ##############################################################
 
          def list_tables
-             return execute("SELECT table_name FROM user_tables ORDER BY table_name").flatten
+             return execute("SELECT TABLE_NAME FROM user_tables ORDER BY table_name").map{ |r| r['TABLE_NAME'] }
          end
 
          def describe_table(table)
