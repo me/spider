@@ -486,6 +486,16 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
+        def drop_field(table_name, field_name)
+            sqls = sql_drop_field(table_name, field_name)
+            sqls.each{ |sql| execute(sql) }
+        end
+        
+        def drop_table(table_name)
+            sqls = sql_drop_table(table_name)
+            sqls.each{ |sql| execute(sql) }
+        end
+        
         def sql_table_field(name, type, attributes)
             f = "#{name} #{type}"
             if attributes[:length] && attributes[:length] != 0
@@ -504,6 +514,14 @@ module Spider; module Model; module Storage; module Db
         
         def sql_alter_field(table_name, name, type, attributes)
             ["ALTER TABLE #{table_name} ALTER #{sql_table_field(name, type, attributes)}"]
+        end
+        
+        def sql_drop_field(table_name, field_name)
+            ["ALTER TABLE #{table_name} DROP (#{field_name})"]
+        end
+        
+        def sql_drop_table(table_name)
+            ["DROP TABLE #{table_name}"]
         end
         
         def schema_field_equal?(current, field)
@@ -551,6 +569,14 @@ module Spider; module Model; module Storage; module Db
                 name.gsub!('_+', '_')
             end
             return name
+        end
+        
+        def list_tables
+            raise "Unimplemented"
+        end
+
+        def describe_table(table)
+            raise "Unimplemented"
         end
             
             
