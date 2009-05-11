@@ -253,7 +253,7 @@ module Spider; module Model; module Storage; module Db
             when :count
                 query[:keys] = ['COUNT(*) AS N']
                 sql, bind_vars = sql_select(query)
-                return execute(sql, *bind_vars)[0]['N']
+                return execute(sql, *bind_vars)[0]['N'].to_i
             end
         end
         
