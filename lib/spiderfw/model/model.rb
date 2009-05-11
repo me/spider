@@ -92,7 +92,7 @@ module Spider
             end
         end
         
-        def self.sync_schema(model_or_app, force=false)
+        def self.sync_schema(model_or_app, force=false, options={})
             models = []
             mod = const_get_full(model_or_app)
             if (mod.is_a?(Module) && mod.include?(Spider::App))
@@ -100,9 +100,30 @@ module Spider
             elsif (mod.subclass_of?(Spider::Model::BaseModel))
                 models << mod
             end
+            storages = []
+            tables = []
             models.each do |m|
                 Spider::Logger.debug("SYNCING #{m}")
-                m.mapper.sync_schema(force) if m.mapper.respond_to?(:sync_schema)
+                m.mapper.sync_schema(force, options) if m.mapper.respond_to?(:sync_schema)
+                if (options[:drop_tables] && m.mapper.respond_to?(:schema))
+                    storages << m.mapper.storage unless storages.include?(m.mapper.storage)
+                    tables += m.mapper.schema.get_schemas.keys
+                end
+            end
+            if (options[:drop_tables])
+                dt = options[:drop_tables]
+                tables.flatten
+                storage_tables = {}
+                storages.each do |s|
+                    s.list_tables.each do |t|
+                        storage_tables[t] = s
+                    end
+                end
+                storage_tables.each do |table_name, storage|
+                    if !tables.include?(table_name) && (dt == true || table_name[0..dt.length] == dt)
+                        storage.drop_table(table_name) 
+                    end
+                end
             end
         end
         
