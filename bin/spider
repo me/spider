@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 
-require "spiderfw"
+require 'spiderfw/env'
 require 'spiderfw/cmd/cmd'
-Spider::init()
 cmd = Spider::CommandLine::Cmd.new
 cmd.parse()
 

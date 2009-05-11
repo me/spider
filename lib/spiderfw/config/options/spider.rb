@@ -1,13 +1,7 @@
 module Spider
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
-        :action => Proc.new do |option|
-            Spider.configuration.include_set(option)
-            case option
-            when 'devel' || 'test'
-                require 'ruby-debug'
-            end
-        end
+        :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode }
     )
     
     # Storage
@@ -24,6 +18,7 @@ module Spider
     config_option 'webserver.reload_sources', _("Reload application and spider sources on each request"), {
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
     }
+    config_option 'webserver.port', _("Port to use for the http server"), :default => 8080
     # Client
     config_option 'client.text_editor', _("The text editor installed on the client")
     

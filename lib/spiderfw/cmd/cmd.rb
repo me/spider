@@ -1,3 +1,5 @@
+require 'rubygems'
+require 'spiderfw/i18n/gettext'
 require 'cmdparse'
 require 'spiderfw/cmd/commands/webserver'
 require 'spiderfw/cmd/commands/init'
@@ -17,6 +19,10 @@ module Spider; module CommandLine
                 opt.separator _("Global options:")
                 opt.on("--verbose", _("Be verbose when outputting info"), "-v" ) {|t| $verbose = true }
                 opt.on("--chdir", _("Cd to a directory before running"), "-c"){ |c| Dir.chdir(c) }
+                opt.on("--sets SETS", Array, _("Include configuration sets"), "-s"){ |sets|
+                    $SPIDER_CONFIG_SETS = sets
+                }
+                opt.on("--devel", _("Set runmode to devel"), "-d"){ $SPIDER_RUNMODE = 'devel' }
             end
 
             @cmd.add_command(CmdParse::HelpCommand.new, true)
