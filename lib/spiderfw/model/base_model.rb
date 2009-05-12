@@ -450,27 +450,17 @@ module Spider; module Model
         ########################################################
         #   Methods returning information about the elements   #
         ########################################################
-
-        def self.ensure_elements_eval
-            if @elements_definition
-                instance_eval(&@elements_definition)
-                @elements_definition = nil
-            end
-        end
         
         def self.elements
-            ensure_elements_eval
-            return @elements
+            @elements
         end
         
         def self.elements_array
-            ensure_elements_eval
             @elements_order.map{ |key| @elements[key] }
         end
 
         
         def self.each_element
-            ensure_elements_eval
             @elements_order.each do |name|
                 yield elements[name]
             end
