@@ -7,7 +7,7 @@
         Cancellazione effettuata
     </div>
     <div sp:if="@action == :form" class="top">
-        <a class="back" href="{ @request[:path] }?_w{ @widget[:param] }[action]=table">
+        <a class="back" href="{ File.dirname(@request[:path]) }">
             Torna all'elenco
         </a>
     </div>

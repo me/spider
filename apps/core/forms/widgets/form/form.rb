@@ -2,7 +2,7 @@ module Spider; module Forms
     
     class Form < Spider::Widget
         tag 'form'
-        is_attribute :action
+        is_attribute :form_action
         i_attribute :model
         i_attribute :elements
         i_attribute :widget_types
@@ -27,8 +27,8 @@ module Spider; module Forms
         end
         
         def prepare
-            @action = @request.path
-            @pk = params['pk'] if params['pk']
+            @form_action = @request.path
+            @pk = @_action_local
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| debug("EL: #{e.strip.to_sym}"); @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
@@ -52,8 +52,6 @@ module Spider; module Forms
             end
             @disabled ||= []
             @data = params['data'] || {}
-            debug("FORM DATA:")
-            debug(@data)
         end
         
         def start
@@ -133,7 +131,7 @@ module Spider; module Forms
         
         def instantiate_obj
             if (@pk)
-                parts = @pk.split(',')
+                parts = @pk.split(':')
                 h = {}
                 @model.primary_keys.each{ |k| h[k.name] = parts.shift}
                 return @model.new(h)
@@ -184,7 +182,7 @@ module Spider; module Forms
                     obj.save_all
                     debug("SAVED")
                     @saved = true
-                    @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(',')
+                    @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
                 rescue => exc
                     Spider::Logger.error(exc)
                     @error = true

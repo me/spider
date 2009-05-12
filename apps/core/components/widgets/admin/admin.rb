@@ -7,6 +7,11 @@ module Spider; module Components
         
         def init
             @items = []
+            @_action_to = :menu
+        end
+        
+        def prepare
+            @_pass_action = @_action
         end
         
         def parse_content(doc)

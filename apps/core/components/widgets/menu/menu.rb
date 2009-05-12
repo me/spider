@@ -11,26 +11,29 @@ module Spider; module Components
             @labels = {}
             @links = {}
             @all_widgets = {}
+            @widgets_by_action = {}
         end
 
         def start
-            @action = params['action']
-            @action ||= session[:current]
-            if (@action)
-                @current = @action
+            if (@_action_local)
+                act = @_action_local
             else
-                @current = @items[0]
+                redirect(request_path+'/'+@links[@items[0]]) unless @items.empty?
             end
-            session[:current] = @current
-            add_widget(@all_widgets[@current])
-            @current_widget = @widgets[@current.to_sym]
-            @current_label = @labels[@current]
+            widget = @widgets_by_action[act]
+            raise NotFound.new(request_path) unless widget
+            add_widget(widget)
+            @current = widget.id
+            @current_widget = widget
+            @current_label = @labels[widget.id]
         end
         
         def add(label, widget)
             @items << widget.id
             @labels[widget.id] = label
-            @links[widget.id] = @request.path+'?_w'+params_for(self, {:action => widget.id})
+            w_action = label.downcase.gsub(/\s+/, '_')
+            @widgets_by_action[w_action] = widget
+            @links[widget.id] = w_action
             @all_widgets[widget.id] = widget
         end
         

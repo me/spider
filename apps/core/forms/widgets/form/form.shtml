@@ -14,8 +14,7 @@
         </ul>
                 
     </div>
-    <form action="{ @action }" method="POST" { @enctype }>
-        <input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
+    <form action="{ @form_action }" method="POST" { @enctype }>
         <div class="fields">
             <div class="row" sp:each="@names |element|">
                 <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>

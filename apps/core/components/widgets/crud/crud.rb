@@ -8,19 +8,12 @@ module Spider; module Components
         is_attribute :action, :type => Symbol, :default => :table
         attribute :table_elements
         
+        def execute
+        end
+        
         def prepare
-            # debug("CRUD PARAMS:")
-            # debug(@request.params)
-            # debug(params)
-            debug("SESSION:")
-            debug(@request.session)
-            if params['edit'] || (params['form'] && params['form']['submit'])
-                @action = :form
-            elsif params['action']
-                @action = params['action'].to_sym
-            elsif session['action']
-                @action ||= session['action'].to_sym
-            end
+            @action = (@_action_local && @_action_local =~ /\d+/) ? :form : :table
+            @_pass_action = (@action == :form) ? @_action_local : nil
             @scene.saved = flash[:saved]
             if (params['delete_cancel'])
                 params.delete('delete')
@@ -39,8 +32,6 @@ module Spider; module Components
                 @widgets[:table].scene.key_element = @key_element
                 @widgets[:table].scene.crud_path = @full_path
                 @widgets[:table].scene.crud = widget_to_scene(self)
-            elsif (@action == :form)
-                @widgets[:form].pk = params['edit'] if params['edit']
             end
             if (@widgets[:ask_delete])
                 @widgets[:ask_delete].add_action('_w'+param_name(self)+'[delete_cancel]', 'Annulla')
@@ -67,7 +58,7 @@ module Spider; module Components
                     links = {}
                     table_rows = @widgets[:table].scene.data
                     table_rows.each_index do |i|
-                        links[i] = "#{@request_path}?_w"+params_for(self, :edit => table_rows[i][@key_element])
+                        links[i] = "#{request_path}/#{table_rows[i][@key_element]}"
                     end
                     @widgets[:table].scene.links_to_form = links
                 end
@@ -85,7 +76,7 @@ module Spider; module Components
                 #                 end
                 if (@widgets[:form].saved?)
                     flash[:saved] = true
-                    redirect("#{@request.path}?_w"+params_for(self, :action => :table))
+                    redirect(File.dirname(request_path))
                 end
             end
         end
