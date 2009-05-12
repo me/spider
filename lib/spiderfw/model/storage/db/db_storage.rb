@@ -228,7 +228,7 @@ module Spider; module Model; module Storage; module Db
             if (type.name == 'Spider::DataTypes::Text' || type.name == 'String')
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv('utf-8', enc, value) if value
+                    value = Iconv.conv('utf-8//IGNORE', enc, value) if value
                 end
             end
             return value
@@ -239,7 +239,7 @@ module Spider; module Model; module Storage; module Db
             when 'String', 'Spider::DataTypes::Text'
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv(enc, 'utf-8', value.to_s)
+                    value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
                 end
             end
             return value
