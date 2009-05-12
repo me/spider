@@ -858,30 +858,28 @@ module Spider; module Model; module Mappers
             add_fields = []
             alter_fields = []
             all_fields = []
-            unless (force)
-                unsafe = []
-                fields.each_key do |field|
-                    field_hash = {
-                        :name => field, 
-                        :type => fields[field][:type], 
-                        :attributes => fields[field][:attributes]
-                    }
-                    all_fields << field_hash
-                    if (!current_fields[field])
-                        add_fields << field_hash
-                    else
-                        type = fields[field][:type]
-                        attributes = fields[field][:attributes]
-                        attributes ||= {}
-                        if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
-                            Spider.logger.debug("DIFFERENT: #{field}")
-                            Spider.logger.debug(current_fields[field])
-                            Spider.logger.debug(fields[field])
-                            unless @storage.safe_schema_conversion?(current_fields[field], fields[field])
-                                unsafe << field 
-                            end
-                            alter_fields << field_hash
+            unsafe = []
+            fields.each_key do |field|
+                field_hash = {
+                    :name => field, 
+                    :type => fields[field][:type], 
+                    :attributes => fields[field][:attributes]
+                }
+                all_fields << field_hash
+                if (!current_fields[field])
+                    add_fields << field_hash
+                else
+                    type = fields[field][:type]
+                    attributes = fields[field][:attributes]
+                    attributes ||= {}
+                    if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
+                        Spider.logger.debug("DIFFERENT: #{field}")
+                        Spider.logger.debug(current_fields[field])
+                        Spider.logger.debug(fields[field])
+                        unless @storage.safe_schema_conversion?(current_fields[field], fields[field]) || force
+                            unsafe << field 
                         end
+                        alter_fields << field_hash
                     end
                 end
                 raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
