@@ -808,7 +808,7 @@ module Spider; module Model; module Mappers
             return real_keys
         end
 
-        def sync_schema(force=false)
+        def sync_schema(force=false, options={})
             schema_description = schema.get_schemas
             sequences = schema.sequences.values
 
@@ -826,6 +826,12 @@ module Spider; module Model; module Mappers
                     alter_table(table_name, table_schema[:columns], table_attributes, force)
                 else
                     create_table(table_name, table_schema[:columns], table_attributes)
+                end
+                if (options[:drop_fields])
+                    current = @storage.describe_table(table_name)[:columns]
+                    current.each_key do |cur|
+                        @storage.drop_field(table_name, cur) if (!table_schema[:columns][cur])
+                    end
                 end
             end
             sequences.compact.each do |db_name|
