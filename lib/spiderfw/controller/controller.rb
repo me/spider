@@ -94,6 +94,7 @@ module Spider
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
                 method = action.empty? ? self.class.default_action : action
+                method = method.split('/', 2)[0]
                 additional_arguments = []
                 if (action =~ /^([^:]+)(:.+)$/)
                     method = $1
@@ -106,7 +107,11 @@ module Spider
                     do_dispatch(:execute, action)
 #                        after(action, *arguments)
                 elsif (self.class.method_defined?(method.to_sym))
-                    send(method, *(arguments+additional_arguments))
+                    meth = self.method(method.to_sym)
+                    args = meth.arity == 0 ? [] : (arguments+additional_arguments)[0..meth.arity]
+                    args = [nil] if meth.arity == 1 && args.empty?
+                    @action = args[0]
+                    send(method, *args)
                 else
                     raise NotFound.new(action)
                 end

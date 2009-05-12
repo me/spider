@@ -35,6 +35,7 @@ module Spider; module ControllerMixins
             scene ||= get_scene
             template = load_template(path)
             template.init(scene)
+            template._action = @action
             template.prepare_sub
             return template
         end
@@ -59,6 +60,7 @@ module Spider; module ControllerMixins
             request = options[:request] || @request
             response = options[:response] || @response
             template = init_template(path, scene)
+            template._action_to = options[:action_to]
             template.prepare_sub
             template.init_sub
             template.run_execute

@@ -8,6 +8,7 @@ module Spider
     class Template
         include Logger
         
+        attr_accessor :_action, :_action_to
         attr_accessor :widgets, :overrides, :compiled, :id_path
         attr_accessor :request, :response, :owner
         attr_reader :path, :subtemplates, :widgets
@@ -198,6 +199,7 @@ module Spider
         
         def prepare_sub
             @widgets.each do |id, widget|
+                widget._action = @_action if !@_action_to || @_action_to.to_sym == id
                 widget.do_prepare
             end
             @prepare_sub_done = true

@@ -46,6 +46,7 @@ module Spider
                 res = obj.send(method, route_action, *(new_arguments))
                 unless meth_action.empty?
                     meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
+                    meth_action = meth_action.split('/', 2)[0]
                     try_meth = "#{method}_#{meth_action.downcase}"
                     res = obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
                 end

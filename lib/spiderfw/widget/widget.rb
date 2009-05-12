@@ -9,6 +9,7 @@ module Spider
     class Widget < PageController
         include HTTPMixin
         
+        attr_accessor :_action
         attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template
         attr_reader :attributes, :widget_attributes, :css_class
         
@@ -142,16 +143,27 @@ module Spider
             end
         end
         
-        
+        # This method may be defined by subclasses, and is executed right after the template is loaded
+        # and attributes are set. This is the place where the template may be modified before it is
+        # initialized.
         def prepare
         end
         
+        
+        # This method may be defined by subclasses, and is executed after the template is initialized,
+        # and subwidgets defined in the template are instantiated. This is the place where code may be added
+        # to create additional widgets, or modify the existing ones attributes.
         def start
         end
         
+        # This method may be defined by subclasses, and is run after all subwidgets have been initialized
+        # (i.e., instantiated and have prepare and start run), but before execute is called on subwidgets.
+        # This is the place to add the main widget logic.
         def execute
         end
         
+        # This method may be defined by subclasses, and is run after all subwidgets had the execute method
+        # run on them.
         def after_execute
         end
         
@@ -173,6 +185,8 @@ module Spider
                     instance_variable_set("@#{k}", v) unless instance_variable_get("@#{k}")
                 end
             end
+            @_action_local, @_action_rest = @_action.split('/', 2) if (@_action)
+            @_pass_action ||= @_action_rest
             prepare
             @prepare_done = true
         end
@@ -190,6 +204,10 @@ module Spider
             @template.init(@scene)
             @widgets.merge!(@template.widgets)
             start
+            @widgets.each do |id, w|
+                act = @_pass_action || @_action
+                w._action = act if !@_action_to || @_action_to.to_sym == id
+            end
             @widget_attributes.each do |w_id, a|
                 w_id_parts = w_id.to_s.split('.', 2)
                 if (w_id_parts[1])
