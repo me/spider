@@ -834,8 +834,18 @@ module Spider; module Model; module Mappers
                     end
                 end
             end
-            sequences.compact.each do |db_name|
-                storage.create_sequence(db_name) unless storage.sequence_exists?(db_name)
+            seen = {}
+            schema.sequences.each do |element_name, db_name|
+                next if seen[db_name]
+                if storage.sequence_exists?(db_name)
+                    sql = "SELECT MAX(#{schema.field(element_name)}) AS M FROM #{schema.table}"
+                    res = @storage.execute(sql)
+                    max = res[0]['M'].to_i
+                    storage.update_sequence(db_name, max)
+                else
+                    storage.create_sequence(db_name)
+                end
+                seen[db_name] = true
             end
         end
 
