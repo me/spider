@@ -105,6 +105,7 @@ module Spider; module HTTP
             path = request.path.chomp('/')
             controller_request.action = path
             controller_request.request_time = request.request_time
+            controller_request.body = request.body
 
             r, w = IO.pipe
             response.body = r
@@ -143,7 +144,9 @@ module Spider; module HTTP
         def prepare_env(request)
             # Spider.logger.debug("WEBRICK REQUEST: #{request}")
             # Spider.logger.debug("METAVARS: #{request.meta_vars}")
-            return request.meta_vars.clone
+            env = request.meta_vars.clone
+            env['HTTP_CONTENT_TYPE'] = env['CONTENT_TYPE']
+            return env
         end
 
     end
