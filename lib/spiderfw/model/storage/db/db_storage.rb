@@ -459,18 +459,10 @@ module Spider; module Model; module Storage; module Db
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
             if (alter_attributes[:primary_key])
-                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current[:attributes][:primary_key])
+                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current && current[:attributes][:primary_key])
                 sqls << "ALTER TABLE #{table_name} ADD PRIMARY KEY "+alter_attributes[:primary_key].join(', ')
             end
             return sqls
-            # if (@config[:drop_fields])
-            #     current.each_key do |field|
-            #         if (!fields[field])
-            #             sql = "ALTER TABLE #{name} DROP #{field}"
-            #             @storage.execute(sql)
-            #         end
-            #     end
-            # end
         end
         
         def create_table(create)
@@ -514,11 +506,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_alter_field(table_name, name, type, attributes)
-            ["ALTER TABLE #{table_name} ALTER #{sql_table_field(name, type, attributes)}"]
+            ["ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"]
         end
         
         def sql_drop_field(table_name, field_name)
-            ["ALTER TABLE #{table_name} DROP (#{field_name})"]
+            ["ALTER TABLE #{table_name} DROP COLUMN #{field_name}"]
         end
         
         def sql_drop_table(table_name)

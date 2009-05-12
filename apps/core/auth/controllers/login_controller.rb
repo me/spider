@@ -16,7 +16,7 @@ module Spider; module Auth
         end
         
         def index
-            @request.session['login_redirect'] = @request.params['redirect'] if (@request.params['redirect'])
+            @scene.redirect = @request.params['redirect'] if (@request.params['redirect'])
             render('login')
         end
         
@@ -28,9 +28,8 @@ module Spider; module Auth
                 Spider::Logger.debug("SESSION:")
                 Spider::Logger.debug(@request.session)
                 Spider::Auth.current_user = uid
-                if (@request.session['login_redirect'])
-                    redir_to = @request.session['login_redirect']
-                    @request.session.delete('login_redirect')
+                if (@request.params['redirect'] && !@request.params['redirect'].empty?)
+                    redir_to = @request.params['redirect']
                     redirect(redir_to)
                 else
                     $out << "Loggato"

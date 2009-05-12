@@ -834,8 +834,18 @@ module Spider; module Model; module Mappers
                     end
                 end
             end
-            sequences.compact.each do |db_name|
-                storage.create_sequence(db_name) unless storage.sequence_exists?(db_name)
+            seen = {}
+            schema.sequences.each do |element_name, db_name|
+                next if seen[db_name]
+                if storage.sequence_exists?(db_name)
+                    sql = "SELECT MAX(#{schema.field(element_name)}) AS M FROM #{schema.table}"
+                    res = @storage.execute(sql)
+                    max = res[0]['M'].to_i
+                    storage.update_sequence(db_name, max)
+                else
+                    storage.create_sequence(db_name)
+                end
+                seen[db_name] = true
             end
         end
 
@@ -858,30 +868,28 @@ module Spider; module Model; module Mappers
             add_fields = []
             alter_fields = []
             all_fields = []
-            unless (force)
-                unsafe = []
-                fields.each_key do |field|
-                    field_hash = {
-                        :name => field, 
-                        :type => fields[field][:type], 
-                        :attributes => fields[field][:attributes]
-                    }
-                    all_fields << field_hash
-                    if (!current_fields[field])
-                        add_fields << field_hash
-                    else
-                        type = fields[field][:type]
-                        attributes = fields[field][:attributes]
-                        attributes ||= {}
-                        if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
-                            Spider.logger.debug("DIFFERENT: #{field}")
-                            Spider.logger.debug(current_fields[field])
-                            Spider.logger.debug(fields[field])
-                            unless @storage.safe_schema_conversion?(current_fields[field], fields[field])
-                                unsafe << field 
-                            end
-                            alter_fields << field_hash
+            unsafe = []
+            fields.each_key do |field|
+                field_hash = {
+                    :name => field, 
+                    :type => fields[field][:type], 
+                    :attributes => fields[field][:attributes]
+                }
+                all_fields << field_hash
+                if (!current_fields[field])
+                    add_fields << field_hash
+                else
+                    type = fields[field][:type]
+                    attributes = fields[field][:attributes]
+                    attributes ||= {}
+                    if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
+                        Spider.logger.debug("DIFFERENT: #{field}")
+                        Spider.logger.debug(current_fields[field])
+                        Spider.logger.debug(fields[field])
+                        unless @storage.safe_schema_conversion?(current_fields[field], fields[field]) || force
+                            unsafe << field 
                         end
+                        alter_fields << field_hash
                     end
                 end
                 raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
