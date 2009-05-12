@@ -3,9 +3,11 @@ module Spider
     module TemplateBlocks
         
         def self.parse_element(el, allowed_blocks=nil, template=nil)
-            return nil if (el.class == ::Hpricot::BogusETag || el.class == ::Hpricot::Comment)
+            return nil if (el.class == ::Hpricot::BogusETag)
             if (el.class == ::Hpricot::Text)
                 block = :Text
+            elsif (el.class == ::Hpricot::Comment)
+                block = :Comment
             elsif (el.attributes['sp:if'])
                 block = :If
             elsif (el.attributes['sp:tag-if'])
@@ -150,6 +152,7 @@ module Spider
     
 end
 require 'spiderfw/templates/blocks/html'
+require 'spiderfw/templates/blocks/comment'
 require 'spiderfw/templates/blocks/text'
 require 'spiderfw/templates/blocks/each'
 require 'spiderfw/templates/blocks/if'
