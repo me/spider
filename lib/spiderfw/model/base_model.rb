@@ -578,6 +578,7 @@ module Spider; module Model
         
         def self.where(&proc)
             qs = QuerySet.new(self)
+            qs.autoload = true
             qs.where(&proc)
             return qs
         end
