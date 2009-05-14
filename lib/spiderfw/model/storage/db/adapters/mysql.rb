@@ -302,6 +302,8 @@ module Spider; module Model; module Storage; module Db
                  'BLOB'
              when 'Spider::DataTypes::Bool'
                  'TINYINT'
+             when 'BigDecimal', 'Spider::DataTypes::Decimal'
+                 'DECIMAL'
              end
          end
          

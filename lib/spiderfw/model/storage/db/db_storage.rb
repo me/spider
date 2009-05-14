@@ -168,6 +168,8 @@ module Spider; module Model; module Storage; module Db
                 'INT'
             when 'Float'
                 'REAL'
+            when 'BigDecimal', 'Spider::DataTypes::Decimal'
+                'DECIMAL'
             when 'DateTime'
                 'DATE'
             when 'Spider::DataTypes::Binary'
@@ -186,6 +188,9 @@ module Spider; module Model; module Storage; module Db
             when 'Float'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
                 db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
+            when 'BigDecimal'
+                db_attributes[:precision] = attributes[:precision] || 65
+                db_attributes[:scale] = attributes[:scale] || 2
             when 'Spider::DataTypes::Binary'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
             when 'Spider::DataTypes::Bool'
@@ -225,7 +230,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_to_mapper(type, value)
-            if (type.name == 'Spider::DataTypes::Text' || type.name == 'String')
+            if (type.name == 'String')
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
                     value = Iconv.conv('utf-8//IGNORE', enc, value) if value
@@ -236,11 +241,13 @@ module Spider; module Model; module Storage; module Db
         
         def prepare_value(type, value)
             case type.name
-            when 'String', 'Spider::DataTypes::Text'
+            when 'String'
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
                     value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
                 end
+            when 'BigDecimal'
+                value = value.to_f
             end
             return value
         end
@@ -491,12 +498,16 @@ module Spider; module Model; module Storage; module Db
         
         def sql_table_field(name, type, attributes)
             f = "#{name} #{type}"
-            if attributes[:length] && attributes[:length] != 0
-                f += "(#{attributes[:length]})"
-            elsif attributes[:precision]
-                f += "(#{attributes[:precision]}"
-                f += "#{attributes[:scale]}" if attributes[:scale]
-                f += ")"
+            if (type == 'DECIMAL')
+                f += "(#{attributes[:precision]}, #{attributes[:scale]})"
+            else
+                if attributes[:length] && attributes[:length] != 0
+                    f += "(#{attributes[:length]})"
+                elsif attributes[:precision]
+                    f += "(#{attributes[:precision]}"
+                    f += "#{attributes[:scale]}" if attributes[:scale]
+                    f += ")"
+                end
             end
             return f
         end
