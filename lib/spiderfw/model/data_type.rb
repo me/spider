@@ -45,6 +45,7 @@ module Spider
         end
         
         def map_back(mapper_type, val)
+            @val
         end
     
         # def serialize(val)
