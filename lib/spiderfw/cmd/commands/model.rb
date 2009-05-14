@@ -23,12 +23,21 @@ class ModelCommand < CmdParse::Command
             require 'spiderfw'
             req_models || []
             unsafe_fields = {}
-            req_models.each do |model|
-                begin
-                    Spider::Model.sync_schema(model, @force, :drop_fields => @drop, :drop_tables => @drop_tables)
-                rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
-                    unsafe_fields[model] = exc.fields
-                end 
+            req_models.each do |model_or_app|
+                models = []
+                mod = const_get_full(model_or_app)
+                if (mod.is_a?(Module) && mod.include?(Spider::App))
+                    mod.models.each { |m| models << m }
+                elsif (mod.subclass_of?(Spider::Model::BaseModel))
+                    models << mod
+                end
+                models.each do |model|
+                    begin
+                        Spider::Model.sync_schema(model, @force, :drop_fields => @drop, :drop_tables => @drop_tables)
+                    rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
+                        unsafe_fields[model] = exc.fields
+                    end 
+                end
             end
             unless unsafe_fields.empty?
                 puts _("Unable to modify the following fields:")
