@@ -156,19 +156,18 @@ module Spider
         end
         
         class FormatError < ::FormatError
-            attr_reader :element
+            attr_reader :element, :value
             
-            def initialize(element, message)
+            def initialize(element, value, message)
                 @element = element
                 @message = message
+                @value = value
                 super(message)
             end
-            
-
-            
-            # def to_s
-            #     message
-            # end
+                        
+            def to_s
+                @message % @value
+            end
             
         end
         
