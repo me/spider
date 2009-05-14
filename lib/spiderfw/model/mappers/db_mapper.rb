@@ -576,7 +576,7 @@ module Spider; module Model; module Mappers
         # This method is also called by map_condition_value
          def map_save_value(type, value, save_mode)
              value = map_value(type, value, :save)
-             return @storage.value_for_save(type, value, save_mode)
+             return @storage.value_for_save(Model.simplify_type(type), value, save_mode)
          end
 
         # Prepares a value for an sql condition.
@@ -586,13 +586,12 @@ module Spider; module Model; module Mappers
             end
             return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
             value = map_value(type, value, :condition)
-            return @storage.value_for_condition(type, value)
+            return @storage.value_for_condition(Model.simplify_type(type), value)
         end
 
         def map_back_value(type, value)
-            type = type.respond_to?('basic_type') ? type.basic_type : type
             value = value[0] if value.class == Array
-            value = storage.value_to_mapper(type, value)
+            value = storage.value_to_mapper(Model.simplify_type(type), value)
             case type.name
             when 'Fixnum'
                 return value ? value.to_i : nil
