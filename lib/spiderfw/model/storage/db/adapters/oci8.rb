@@ -28,8 +28,12 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
-            @conn.autocommit = true if @conn
-            super
+            begin
+                @conn.autocommit = true if @conn
+                super
+            rescue
+                self.class.remove_connection(@conn, @connection_params)
+            end
         end
         
         def parse_url(url)

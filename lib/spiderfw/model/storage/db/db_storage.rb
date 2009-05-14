@@ -58,8 +58,19 @@ module Spider; module Model; module Storage; module Db
             
             def release_connection(conn, conn_params)
                 return unless conn
-                #Spider::Logger.debug("RELEASING CONNECTION #{conn_params}")
                 @free_connections[conn_params] << conn
+            end
+            
+            def remove_connection(conn, conn_params)
+                @connection_semaphore.synchronize{
+                    @free_connections[conn_params].delete(conn)
+                    @connections[conn_params].delete(conn)
+                }
+            end
+                
+            
+            def connection_alive?
+                raise "Virtual"
             end
             
         end
@@ -87,6 +98,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
+            # The subclass should check if the connection is alive, and if it is not call remove_connection instead
             self.class.release_connection(@conn, @connection_params)
             #@conn = nil
         end
