@@ -30,6 +30,9 @@ module Spider; module QueryFuncs
             
         end
         
+        class ZeroArityFunction < Function
+        end
+        
         class UnaryFunction < Function
             
             def initialize(el)
@@ -41,11 +44,30 @@ module Spider; module QueryFuncs
             end
             
         end
+        
+        class BinaryFunction < Function
+            
+            def initialize(el1, el2)
+                @el1 = el1
+                @el2 = el2
+            end
+            
+            def elements
+                [@el1, @el2]
+            end
+        end
+            
+        
+        class CurrentDate < ZeroArityFunction
+        end
                     
         class Length < UnaryFunction
         end
         
         class Trim < UnaryFunction
+        end
+        
+        class Subtract < BinaryFunction
         end
         
     
