@@ -450,27 +450,17 @@ module Spider; module Model
         ########################################################
         #   Methods returning information about the elements   #
         ########################################################
-
-        def self.ensure_elements_eval
-            if @elements_definition
-                instance_eval(&@elements_definition)
-                @elements_definition = nil
-            end
-        end
         
         def self.elements
-            ensure_elements_eval
-            return @elements
+            @elements
         end
         
         def self.elements_array
-            ensure_elements_eval
             @elements_order.map{ |key| @elements[key] }
         end
 
         
         def self.each_element
-            ensure_elements_eval
             @elements_order.each do |name|
                 yield elements[name]
             end
@@ -551,8 +541,7 @@ module Spider; module Model
         end
          
         def self.mapper
-            return @mapper if @mapper
-            return @mapper = get_mapper(storage)
+            @mapper ||= get_mapper(storage)
         end
 
         def self.get_mapper(storage)
@@ -589,6 +578,7 @@ module Spider; module Model
         
         def self.where(&proc)
             qs = QuerySet.new(self)
+            qs.autoload = true
             qs.where(&proc)
             return qs
         end
@@ -750,7 +740,7 @@ module Spider; module Model
         def set(element, value)
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
-            return send(first).set(rest) if (rest)
+            return send(first).set(rest, value) if (rest)
             return send("#{element}=", value)
         end
         
@@ -787,7 +777,12 @@ module Spider; module Model
             else
                 case element.type.name
                 when 'DateTime'
-                    value = DateTime.parse(value) if value.is_a?(String)
+                    return nil if value.is_a?(String) && value.empty?
+                    begin
+                        value = DateTime.parse(value) if value.is_a?(String)
+                    rescue ArgumentError => exc
+                        raise FormatError.new(element, value, _("'%s' is not a valid date"))
+                    end
                 when 'String'
                 when 'Spider::DataTypes::Text'
                     value = value.to_s
@@ -826,7 +821,7 @@ module Spider; module Model
             element = self.class.elements[name]
             element.type.check(val) if (element.type.respond_to?(:check))
             if (checks = element.attributes[:check])
-                checks = {(_("%s is not in the correct format") % element.label) => checks} unless checks.is_a?(Hash)
+                checks = {(_("'%s' is not in the correct format") % element.label) => checks} unless checks.is_a?(Hash)
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
@@ -834,7 +829,7 @@ module Spider; module Model
                     when Proc
                         Proc.call(msg)
                     end
-                    raise FormatError.new(element, msg) unless test
+                    raise FormatError.new(element, val, msg) unless test
                 end
             end
         end
@@ -1057,7 +1052,7 @@ module Spider; module Model
         ##############################################################
         
         def storage
-            return @storage ||= self.class.storage
+            return @storage || self.class.storage
         end
         
         def use_storage(storage)
@@ -1066,8 +1061,11 @@ module Spider; module Model
         end
         
         def mapper
-            @storage ||= self.class.storage
-            @mapper ||= self.class.get_mapper(@storage)
+            if (@storage)
+                @mapper ||= self.class.get_mapper(@storage)
+            else
+                @mapper ||= self.class.mapper
+            end
             return @mapper
         end
         

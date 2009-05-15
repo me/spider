@@ -1,6 +1,9 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="table.css" />
-    <table class="{ @widget[:css_class] }">
+    <div sp:if="!@rows || @rows.length < 1" class="no_result">
+        Nessun elemento
+    </div>
+    <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }">
         <tr class="heading_row">
             <th sp:each="@elements |element|">
                 <a sp:tag-if="@sortable[element]" href="{ @request[:path] }?_w{ @widget[:param] }[sort]={ element }">

@@ -1,44 +1,46 @@
 *{
-    padding:0px;
-    margin:0px;
+    margin: 0;
+    padding: 0;
 }
+
+
+.spider.components.admin{
+    font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+    font-size: .9em;
+    margin-bottom: 10px;
+}
+
 .spider.components.admin .heading{
-    margin: 0px 0px 0px 72px;
-    padding: 0px 0px 0 0px;
-    width: 1004px;
-    height: 170px;
-    background: #2c2c2c url('img/bg_header.png') top left no-repeat;
-    font-family: Arial, sans-serif;
+   background-color: #417690;
+   padding: 8px 0px 5px 12px;
+   position: relative;
 }
 
-.heading #title {
-    padding-top: 33px; 
-    padding-left: 45px;
-    color: #518191;
-    font-size: 30px;
-    letter-spacing: 7px;
-}
-.heading #section {
-    padding-top: 30px;
-    color: #f9f9f9;
-    font-size: 35px;
-}
-.heading #section #label{
-    background: #d40000;
-    padding: 10px 14px;
-    border:2px solid #ff0a0a;
-    border-right:none;
-}
-.heading #section #ribbon{
-    padding: 12px 9px;
-    background: url('img/section-bottom.jpg') bottom right no-repeat
+.spider.components.admin .heading h1{
+    color: #F4F379;
+    font-size: 18px;
 }
 
-body {
-    background-color: white;
-    background-image: url('img/body_bg.jpg');
-    background-repeat: repeat-y;
-    background-attachment: scroll;
-    background-position: left top;
+.spider.components.admin .heading a{
+    color: white;
+    text-decoration: none;
 }
+
+.spider.components.admin .heading .tools{
+    position: absolute;
+    padding: 6px 10px;
+    right: 0;
+    top: 0;
+    text-align: right;
+    color: #FFFFCC;
+}
+
+.spider.components.admin .current_section{
+    padding: 4px 0px 3px 25px;
+    font-size: 1.1em;
+    background: white url(img/gray_gradient.gif) repeat-x scroll 0 -10px;
+    border-bottom: 1px solid gray;
+    margin-bottom: 15px;
+}
+
 

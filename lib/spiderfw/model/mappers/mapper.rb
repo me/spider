@@ -438,6 +438,7 @@ module Spider; module Model
 # #                debugger
 #                 condition["#{element.attributes[:reverse]}.#{pk.name}"] = a
 #             else
+            seen_conditions = {}
             objects.each_current do |obj|
 #                if (@model.primary_keys.length == 1)
 #                    condition
@@ -446,9 +447,11 @@ module Spider; module Model
                 @model.primary_keys.each do |key|
                     condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                 end
-                condition << condition_row
+                condition << condition_row unless seen_conditions[condition_row]
+                seen_conditions[condition_row] = true
 #                end
             end
+            seen_conditions = nil
 #            end
             unless condition.empty?                
                 if (element.condition)
@@ -546,6 +549,7 @@ module Spider; module Model
             condition.subconditions.each do |sub|
                 prepare_query_condition(sub)
             end
+            condition.simplify
         end
         
         def get_dependencies(obj, action)

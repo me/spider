@@ -85,7 +85,7 @@ module Spider; module Model
                 @conversions[name] = model
                 #Spider::Logger.debug("Converting #{self} from #{model}")
                 model.primary_keys.each do |k|
-                    element(conversion_key(name, k), k.type) unless k.attributes[:no_conv_map]
+                    element(conversion_key(name, k), k.type, :hidden => true) unless k.attributes[:no_conv_map]
                 end
             end
             

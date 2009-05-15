@@ -52,7 +52,7 @@ module Spider
                 dir = Spider.conf.get('session.file.path')
                 Find.find(dir) do |path|
                     next unless File.file?(path)
-                    File.unlink(path) if (File.mtime(path) + life < Time.now)
+                    File.unlink(path) if File.exist?(path) && (File.mtime(path) + life < Time.now)
                 end
             end
                 

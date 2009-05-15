@@ -4,7 +4,7 @@ module Spider; module Components
         tag 'confirm'
         is_attr_accessor :actions
         
-        def start
+        def prepare
             @scene.params = collapse_params(@request.params)
             if (!@actions)
                 add_action('_w'+param_name(self)+'[cancel]', 'Cancel')

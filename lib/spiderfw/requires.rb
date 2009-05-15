@@ -1,4 +1,3 @@
-require 'ruby-debug'
 require 'spiderfw/i18n/gettext'
 require 'spiderfw/exceptions'
 require 'spiderfw/utils/monkey/kernel'

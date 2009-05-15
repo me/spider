@@ -57,8 +57,20 @@ module Spider; module Model; module Storage; module Db
             
             
             def release_connection(conn, conn_params)
-                #Spider::Logger.debug("RELEASING CONNECTION #{conn_params}")
+                return unless conn
                 @free_connections[conn_params] << conn
+            end
+            
+            def remove_connection(conn, conn_params)
+                @connection_semaphore.synchronize{
+                    @free_connections[conn_params].delete(conn)
+                    @connections[conn_params].delete(conn)
+                }
+            end
+                
+            
+            def connection_alive?
+                raise "Virtual"
             end
             
         end
@@ -86,6 +98,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def disconnect
+            # The subclass should check if the connection is alive, and if it is not call remove_connection instead
             self.class.release_connection(@conn, @connection_params)
             #@conn = nil
         end
@@ -167,6 +180,8 @@ module Spider; module Model; module Storage; module Db
                 'INT'
             when 'Float'
                 'REAL'
+            when 'BigDecimal', 'Spider::DataTypes::Decimal'
+                'DECIMAL'
             when 'DateTime'
                 'DATE'
             when 'Spider::DataTypes::Binary'
@@ -185,6 +200,9 @@ module Spider; module Model; module Storage; module Db
             when 'Float'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
                 db_attributes[:precision] = attributes[:precision] if (attributes[:precision])
+            when 'BigDecimal'
+                db_attributes[:precision] = attributes[:precision] || 65
+                db_attributes[:scale] = attributes[:scale] || 2
             when 'Spider::DataTypes::Binary'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
             when 'Spider::DataTypes::Bool'
@@ -224,10 +242,10 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_to_mapper(type, value)
-            if (type.name == 'Spider::DataTypes::Text' || type.name == 'String')
+            if (type.name == 'String')
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv('utf-8', enc, value) if value
+                    value = Iconv.conv('utf-8//IGNORE', enc, value) if value
                 end
             end
             return value
@@ -235,11 +253,13 @@ module Spider; module Model; module Storage; module Db
         
         def prepare_value(type, value)
             case type.name
-            when 'String', 'Spider::DataTypes::Text'
+            when 'String'
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv(enc, 'utf-8', value.to_s)
+                    value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
                 end
+            when 'BigDecimal'
+                value = value.to_f
             end
             return value
         end
@@ -458,18 +478,10 @@ module Spider; module Model; module Storage; module Db
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
             if (alter_attributes[:primary_key])
-                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current[:attributes][:primary_key])
+                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current && current[:attributes][:primary_key])
                 sqls << "ALTER TABLE #{table_name} ADD PRIMARY KEY "+alter_attributes[:primary_key].join(', ')
             end
             return sqls
-            # if (@config[:drop_fields])
-            #     current.each_key do |field|
-            #         if (!fields[field])
-            #             sql = "ALTER TABLE #{name} DROP #{field}"
-            #             @storage.execute(sql)
-            #         end
-            #     end
-            # end
         end
         
         def create_table(create)
@@ -498,12 +510,16 @@ module Spider; module Model; module Storage; module Db
         
         def sql_table_field(name, type, attributes)
             f = "#{name} #{type}"
-            if attributes[:length] && attributes[:length] != 0
-                f += "(#{attributes[:length]})"
-            elsif attributes[:precision]
-                f += "(#{attributes[:precision]}"
-                f += "#{attributes[:scale]}" if attributes[:scale]
-                f += ")"
+            if (type == 'DECIMAL')
+                f += "(#{attributes[:precision]}, #{attributes[:scale]})"
+            else
+                if attributes[:length] && attributes[:length] != 0
+                    f += "(#{attributes[:length]})"
+                elsif attributes[:precision]
+                    f += "(#{attributes[:precision]}"
+                    f += "#{attributes[:scale]}" if attributes[:scale]
+                    f += ")"
+                end
             end
             return f
         end
@@ -513,11 +529,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_alter_field(table_name, name, type, attributes)
-            ["ALTER TABLE #{table_name} ALTER #{sql_table_field(name, type, attributes)}"]
+            ["ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"]
         end
         
         def sql_drop_field(table_name, field_name)
-            ["ALTER TABLE #{table_name} DROP (#{field_name})"]
+            ["ALTER TABLE #{table_name} DROP COLUMN #{field_name}"]
         end
         
         def sql_drop_table(table_name)

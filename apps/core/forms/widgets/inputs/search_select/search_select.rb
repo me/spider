@@ -9,7 +9,8 @@ module Spider; module Forms
             return nil
         end
         
-        def start
+        def prepare
+            super
             if (params['clear'])
                 @value = nil
                 @scene.next_step = :text
@@ -32,7 +33,7 @@ module Spider; module Forms
             @done = false if @scene.next_step && !@value
         end
         
-        def execute
+        def run
             if (@value)
                 @scene.value_desc = @value.to_s
             else
@@ -49,6 +50,7 @@ module Spider; module Forms
                     @scene.values[i] = @model.primary_keys.map{|k| @scene.data[i][k] }.join(',')
                 end
             end
+            super
         end
 
     end

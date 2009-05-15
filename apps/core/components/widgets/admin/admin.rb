@@ -4,9 +4,38 @@ module Spider; module Components
         tag 'admin'
         
         i_attribute :models, :process => lambda{ |models| models.split(/,[\s\n]*/).map{|m| const_get_full(m) } }
+        is_attr_accessor :title, :default => _("Administration")
         
         def init
             @items = []
+        end
+        
+        def route_widget
+            [:menu, @_action]
+        end
+        
+        def prepare_widgets
+            @models.each do |model|
+                crud = Crud.new(@request, @response)
+                crud.id = model.name.to_s.gsub('::', '_').downcase
+                crud.model = model
+                @widgets[:menu].add('Gestione Dati', model.label_plural, crud)
+            end
+            if (Spider::Auth.current_user)
+                if (Spider::Auth.current_user.respond_to?(:username))
+                    @scene.username = Spider::Auth.current_user.username
+                else
+                    @scene.username = _("user")
+                end
+            else
+                @scene.username = _("guest")
+            end
+            super
+        end
+        
+        def run
+            @scene.current = @widgets[:menu].current_label
+            super
         end
         
         def parse_content(doc)
@@ -28,19 +57,6 @@ module Spider; module Components
             @models ||= []
             @models += mods
             return doc
-        end
-
-        def start
-            @models.each do |model|
-                crud = Crud.new(@request, @response)
-                crud.id = model.name.to_s.gsub('::', '_').downcase
-                crud.model = model
-                @widgets[:menu].add(model.label_plural, crud)
-            end
-        end
-        
-        def execute
-            @scene.current = @widgets[:menu].current_label
         end
 
     end

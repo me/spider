@@ -247,7 +247,9 @@ module Spider
             @configuration.include_set(mode)
             case mode
             when 'devel' || 'test'
-                require 'ruby-debug'
+                if (RUBY_VERSION_PARTS[1] == '8')
+                    require 'ruby-debug'
+                end
             end
         end
         

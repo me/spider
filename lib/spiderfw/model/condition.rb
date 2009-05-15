@@ -162,9 +162,10 @@ module Spider; module Model
             end
             str = '(' + str + ')' if str.length > 0
             #str += ' [raw:'+raw.inspect+']' unless raw.empty?
-            @subconditions.each do |sub|
-                str += " "+@conjunction.to_s if (str.length > 0)
-                str += " ("+sub.inspect+')'
+            first = true
+            if @subconditions.length > 0
+                str += ' '+@conjunction.to_s+' ' if str.length > 0
+                str += @subconditions.map{ |sub| sub.inspect }.join(' '+@conjunction.to_s+' ')
             end
             return str
         end
@@ -196,14 +197,28 @@ module Spider; module Model
         alias :& :and
         alias :AND :and
     
+        alias :hash_empty? :empty?
         def empty?
             return super && @subconditions.empty?
+        end
+        
+        alias :hash_replace :replace
+        def replace(other)
+            hash_replace(other)
+            @subconditions = other.subconditions
+            @conjunction = other.conjunction
+            @polymorph = other.polymorph
+            @comparisons = other.comparisons
         end
         
         def ==(other)
             return false unless other.class == self.class
             return false unless super
             return false unless @subconditions == other.subconditions
+            return false unless @comparisons == other.comparisons
+            return false unless @polymorph == other.polymorph
+            return false unless @conjunction == other.conjunction
+            return true
         end
         
         def uniq!
@@ -221,6 +236,15 @@ module Spider; module Model
                 c << sub.clone
             end
             return c
+        end
+        
+        def simplify
+            @subconditions.each{ |sub| sub.simplify }
+            if (hash_empty? && @subconditions.length == 1)
+                self.replace(@subconditions[0])
+            end
+            @subconditions.uniq!
+            return self
         end
     
     end

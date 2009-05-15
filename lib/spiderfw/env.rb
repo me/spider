@@ -1,3 +1,6 @@
+RUBY_VERSION_PARTS = RUBY_VERSION.split('.')
+ENV['LC_CTYPE'] = 'en_US.UTF-8'
+
 $SPIDER_PATH = File.expand_path(File.dirname(__FILE__)+'/../..')
 $SPIDER_LIB = $SPIDER_PATH+'/lib'
 $SPIDER_RUN_PATH ||= Dir.pwd

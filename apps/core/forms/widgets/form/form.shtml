@@ -14,17 +14,33 @@
         </ul>
                 
     </div>
-    <form action="{ @action }" method="POST" { @enctype }>
-        <input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
-        <div class="fields">
-            <div class="row" sp:each="@names |element|">
-                <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>
-                <sp:run obj="@inputs[element]" />
+    <div sp:if="@action == :form">
+        <form action="{ @form_action }" method="POST" { @enctype }>
+            <div class="fields">
+                <div class="row" sp:each="@names |element|">
+                    <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>
+                    <sp:run obj="@inputs[element]" />
+                </div>
             </div>
+            <div class="row buttons">
+                <input sp:each="@submit_buttons |text|" type='submit' name='_w{ @widget[:param] }[submit]' value='{ text }'>
+                <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
+            </div>
+        </form>
+        <div class="sub_links" sp:if="!@sub_links.empty?">
+            <h4>Dati collegati:</h4>
+            <ul>
+                <li sp:each="@sub_links |link, label|">
+                    <a href="{ @widget[:request_path] }/{ link }">{ label }</a>
+                </li>
+            </ul>
         </div>
-        <div class="row buttons">
-            <input sp:each="@submit_buttons |text|" type='submit' name='_w{ @widget[:param] }[submit]' value='{ text }'>
-            <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
-        </div>
-    </form>
+    </div>
+    <div sp:if="@action == :sub" class="sub_element_crud">
+        <h4 class="sub_element_title">Gestione { @sub_element.label.downcase } di 
+            <a href="{ @widget[:request_path] }/{ @pk }">{ @form_desc }</a>
+        </h4>
+        <sp:run obj="@crud" />
+    </div>
+        
 </div>

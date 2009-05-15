@@ -1,14 +1,14 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="crud.css" />
-    <div sp:if="@saved" class="top">
+    <div sp:if="@saved" class="flash">
         Salvataggio effettuato
     </div>
-    <div sp:if="@deleted" class="top">
+    <div sp:if="@deleted" class="flash">
         Cancellazione effettuata
     </div>
     <div sp:if="@action == :form" class="top">
-        <a class="back" href="{ @request[:path] }?_w{ @widget[:param] }[action]=table">
-            Torna all'elenco
+        <a class="back" href="{ @widget[:request_path] }">
+            Torna all'elenco { @model.label_plural.downcase }
         </a>
     </div>
     <core:confirm id="ask_delete" sp:if="@ask_delete">
@@ -23,9 +23,16 @@
     </core:confirm>
     <sp:pass sp:if="!@ask_delete">
         <div sp:if="@action == :table" class="top">
-            <a class="add" href="{ @request[:path] }?_w{ @widget[:param] }[action]=form">
+            <a class="add" href="{ @widget[:request_path] }/new">
                 Crea nuovo
             </a>
+        </div>
+        <div class="table_search" sp:if="@action == :table">
+            <form action="{ @request[:path] }" method="GET">
+                <input type="text" name="_w{ param_name(@widget) }[table_q]" value="{ @table_q }">
+                <input type="submit" name="submit" value="Trova">
+                <input type="submit" name="_w{ param_name(@widget) }[clear_table_q]" value="Pulisci">
+            </form>
         </div>
         <core:table sp:if="@action == :table" id="table" model="@model">
             <tpl:override-content search="table .row td">
@@ -35,7 +42,7 @@
                 <th>Sel.</th>
             </tpl:append>
             <tpl:override search="table">
-                <form action="{ @request[:path] }" method="POST">
+                <form sp:if="@rows && @rows.length > 0" action="{ @request[:path] }" method="POST">
                     <tpl:overridden />
                     <div class="crud_table_actions">
                         <input type='submit' name="_w{ param_name(@crud) }[delete]" value="Cancella selezionati">
@@ -43,16 +50,10 @@
                 </form>
             </tpl:override>
             <tpl:append search="table .row">
-                <td><input type='checkbox' name="_w{ param_name(@crud) }[selected][{ @data[row_i][@key_element] }]"></td>
+                <td align="center"><input type='checkbox' name="_w{ param_name(@crud) }[selected][{ @data[row_i][@key_element] }]"></td>
             </tpl:append>
             <tpl:override-attr search="table .paginator td" name="colspan" value="{ elements.size + 1 }" />
         </core:table>
-        <!-- form -->
         <forms:form sp:if="@action == :form" id="form" model="@model" />
-        <!--
-        <div sp:if="@action == :form && @have_form_tables" class="sub_form_tables">
-            <sp:run obj="@form_tables" />
-        </div>
-        -->
     </sp:pass>
 </div>

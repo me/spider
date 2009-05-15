@@ -7,20 +7,15 @@ module Spider; module Components
         is_attr_accessor :model, :required => true
         is_attribute :action, :type => Symbol, :default => :table
         attribute :table_elements
+        attr_accessor :fixed
+
+        def route_widget
+            [@action, @_action]
+        end
         
-        def prepare
-            # debug("CRUD PARAMS:")
-            # debug(@request.params)
-            # debug(params)
-            debug("SESSION:")
-            debug(@request.session)
-            if params['edit'] || (params['form'] && params['form']['submit'])
-                @action = :form
-            elsif params['action']
-                @action = params['action'].to_sym
-            elsif session['action']
-                @action ||= session['action'].to_sym
-            end
+        def prepare(action='')
+            @action = (@_action_local && (@_action_local =~ /\d+/ || @_action_local == 'new')) ? :form : :table
+            @_pass_action = (@action == :form) ? @_action : nil
             @scene.saved = flash[:saved]
             if (params['delete_cancel'])
                 params.delete('delete')
@@ -29,31 +24,49 @@ module Spider; module Components
             if (params['delete'] && !params['do_delete'] && params['selected'])
                 @scene.ask_delete = true
             end
-
+            super
         end
         
-        def start
+        def prepare_widgets
             if (@action == :table && @widgets[:table])
                 @key_element = @model.primary_keys[0].name
                 @widgets[:table].attributes[:elements] = @attributes[:table_elements]
                 @widgets[:table].scene.key_element = @key_element
                 @widgets[:table].scene.crud_path = @full_path
                 @widgets[:table].scene.crud = widget_to_scene(self)
-            elsif (@action == :form)
-                @widgets[:form].pk = params['edit'] if params['edit']
+                @table_q = params['table_q']
+                @table_q = nil if params['clear_table_q']
+                if (@table_q)
+                    @widgets[:table].add_condition(@model.free_query_condition(@table_q))
+                end
+                if(@condition && @widgets[:table])
+                    @widgets[:table].add_condition(@condition)
+                end
+                @scene.table_q = @table_q
+            end
+            if (@fixed)
+                if (@widgets[:table])
+                    c = Spider::Model::Condition.new(@fixed)
+                    @widgets[:table].add_condition(c)
+                elsif (@widgets[:form])
+                    @widgets[:form].fixed = @fixed
+                end
             end
             if (@widgets[:ask_delete])
                 @widgets[:ask_delete].add_action('_w'+param_name(self)+'[delete_cancel]', 'Annulla')
                 @widgets[:ask_delete].add_action('_w'+param_name(self)+'[do_delete]', 'Ok')
             end
+            super
         end
         
-        def after_execute
+        
+        def run
+            super
             if (@action == :table)
                 if params['do_delete'] && params['selected'] && params['selected'].length > 0
                     delete_rows
                     flash[:deleted] = true
-                    return redirect(@request.path)
+                    return redirect(widget_request_path)
                 elsif params['delete'] && params['selected']
                     @scene.ask_delete = true
                     rows = []
@@ -67,25 +80,14 @@ module Spider; module Components
                     links = {}
                     table_rows = @widgets[:table].scene.data
                     table_rows.each_index do |i|
-                        links[i] = "#{@request_path}?_w"+params_for(self, :edit => table_rows[i][@key_element])
+                        links[i] = "#{widget_request_path}/#{table_rows[i][@key_element]}"
                     end
                     @widgets[:table].scene.links_to_form = links
                 end
             elsif (@action == :form)
-                # tab_els = @model.elements_array.select{ |el| el.multiple? && el.association != :multiple_choice }
-                #                 if (tab_els.length > 0)
-                #                     @scene.have_form_tables = true
-                #                     tabs = Tabs.new(@request, @response)
-                #                     tab_els.each do |el|
-                #                         formTable = Table.new(@request, @response)
-                #                         formTable.queryset = @widgets[:form].obj[el.name]
-                #                         tabs.add(el.label, formTable)
-                #                     end
-                #                     @widgets[:form_tables] = tabs
-                #                 end
                 if (@widgets[:form].saved?)
                     flash[:saved] = true
-                    redirect("#{@request.path}?_w"+params_for(self, :action => :table))
+                    redirect(widget_request_path) # unless @widgets[:form].stay?
                 end
             end
         end

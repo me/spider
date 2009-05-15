@@ -30,12 +30,11 @@ module Spider; module ControllerMixins
         end
         
         
-        def init_template(path, scene=nil)
+        def init_template(path, scene=nil, options={})
             scene ||= @scene
             scene ||= get_scene
             template = load_template(path)
             template.init(scene)
-            template.prepare_sub
             return template
         end
         
@@ -58,10 +57,10 @@ module Spider; module ControllerMixins
             scene = prepare_scene(scene)
             request = options[:request] || @request
             response = options[:response] || @response
-            template = init_template(path, scene)
-            template.prepare_sub
-            template.init_sub
-            template.run_execute
+            template = init_template(path, scene, options)
+            template._action_to = options[:action_to]
+            template._action = @action
+            template.exec
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layout = options[:layout] || @layout
                 if (chosen_layout)

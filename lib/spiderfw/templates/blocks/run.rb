@@ -9,7 +9,7 @@ module Spider; module TemplateBlocks
             init = nil
             obj = 
             if (@el.attributes['obj'])
-                c += "#{var_to_scene(@el.attributes['obj'])}.run\n"
+                c += "#{var_to_scene(@el.attributes['obj'])}.render\n"
             end
             return CompiledBlock.new(init, c)
         end
