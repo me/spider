@@ -1,13 +1,16 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="admin.css" />
     <div class="heading">
-	    <div id="title">
-    	        Amministrazione
+	    <div class="title">
+    	    <h1>{ @title }</h1>
 	    </div>
-	    <div id="section">
-		<span id="label">{ @current }</span>
-		<span id="ribbon"></span>
+	    <div class="tools">
+	        Benvenuto, { @username }.
+	        <a href="{ @logout_link }">Logout</a>
 	    </div>
+    </div>
+    <div class="current_section">
+	    <span id="label">{ @current }</span>
     </div>
     <core:menu id="menu" />
 </div>

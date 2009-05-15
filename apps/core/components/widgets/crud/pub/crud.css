@@ -1,7 +1,16 @@
 .spider.components.crud .top{
     padding: 5px 25px;
     margin-bottom: 10px;
-    background: #1188c1;
+    background: #417690;
+}
+
+.spider.components.crud .flash{
+    background-color: #FFFFCC;
+    color: gray;
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
+    padding-left: 10px;
+    margin-bottom: 10px;
 }
 
 .spider.components.crud .top a {
@@ -9,10 +18,9 @@
     font-size: 85%;
     color: white;
 }
+
 .spider.components.crud .top a:hover {
-    background-color: #fffcb4;
-    color: #1188c1;
-    padding: 4px 40px 4px 2px;
+    background-color: #8EA5B3;
 }
 
 .spider.components.crud .top .add {
@@ -20,8 +28,14 @@
     padding-right: 40px;
 }
 .spider.components.crud .top .back {
-    background: url('img/back.gif') no-repeat 120px 50%;
-    padding-right: 40px;
+    background: url('img/back.gif') no-repeat 0px 50%;
+    padding-left: 30px;
+}
+
+.spider.components.crud .table_search{
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #d1d8e5;
 }
 
 

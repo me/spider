@@ -1,8 +1,9 @@
-<sp:template extend="SPIDER/apps/core/components/table/table.shtml">
-    <sp:prepend search="table">
+<sp:template extend="SPIDER/apps/core/components/widgets/table/table.shtml" resource_widget="Spider::Components::Table">
+    <tpl:prepend search="table">
         <form action="{ @request[:path] }" method="GET">
-            <input type="text" name="_w{ param_name(@widget) }['q']" value="{ @q }">
+            <input type="text" name="_w{ param_name(@widget) }[q]" value="{ @query }">
             <input type="submit" name="submit" value="Trova">
+            <input type="submit" name="_w{ param_name(@widget) }[clear]" value="Pulisci">
         </form>
-    </sp:prepend>
+    </tpl:prepend>
 </sp:template>

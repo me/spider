@@ -11,8 +11,9 @@ module Spider; module Forms
         attribute :save_submit_text, :default => _('Save')
         attribute :insert_submit_text, :default => _('Insert')
         is_attr_accessor :pk
-        attr_to_scene :inputs, :names, :labels, :error, :errors, :save_errors
+        attr_to_scene :inputs, :names, :labels, :error, :errors, :save_errors, :sub_links
         attr_accessor :save_actions
+        attr_accessor :fixed
         
         attr_accessor :pk
         attr_reader :obj
@@ -24,11 +25,19 @@ module Spider; module Forms
             @save_errors = []
             @labels = {}
             @save_actions ||= {}
+            @sub_links = {}
         end
         
-        def prepare
+        def route_widget
+            if (@action == :sub)
+                [:crud, @_action.split('/', 3)[2]]
+            end
+        end
+        
+        def prepare(action='')
             @form_action = @request.path
             @pk = @_action_local
+            @pk = nil if @pk == 'new'
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| debug("EL: #{e.strip.to_sym}"); @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
@@ -52,23 +61,57 @@ module Spider; module Forms
             end
             @disabled ||= []
             @data = params['data'] || {}
+            if @_action_rest
+                el_label, sub_rest = @_action_rest.split('/', 2)
+                sub_rest ||= ''
+                @sub_element = @elements.find{ |el| el.label.downcase.gsub(/\s+/, '_') == el_label}
+            end
+            if (@sub_element)
+                @action = :sub
+                @scene.sub_element = @sub_element
+                @_pass_action = sub_rest
+            else
+                @action = :form
+            end
+            @scene.action = @action
+            super
         end
         
-        def start
-            create_inputs
-            debug("FORM executing")
+        def prepare_widgets
+            if (@action == :sub)
+                @widgets[:crud] = Spider::Components::Crud.new(@request, @response)
+                @widgets[:crud].id = (@model.name.to_s+'_'+@sub_element.name.to_s).gsub('::', '_').downcase
+                @widgets[:crud].model = @sub_element.model
+                @scene.crud = @widgets[:crud]
+                @obj = load
+                cond = {}
+                @model.primary_keys.each do |key|
+                    cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
+                end
+                @widgets[:crud].fixed = cond
+            else
+                create_inputs
+            end
+            super
         end
         
-        def execute
+        def run
+            Spider::Logger.debug("FORM EXECUTING")
             save(params['submit']) if params['submit']
-            @obj = load
+            @obj ||= load
             if (@obj)
-                set_values(@obj)
+                @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
+                @scene.form_desc = @model.label.downcase+' '+ @obj.to_s
+                set_values(@obj) if @action == :form
+                if (@action == :sub)
+                    
+                end
                 @scene.submit_text = @attributes[:save_submit_text]
             else
                 @scene.submit_text = @attributes[:insert_submit_text]
             end
             @scene.submit_buttons = @save_actions.keys
+            super
         end
         
         def create_inputs
@@ -81,6 +124,9 @@ module Spider; module Forms
                 elsif (el.type == String || el.type == Fixnum)
                     widget_type = Text
                     input_attributes = {:size => 5} if (el.type == Fixnum)
+                elsif (el.type == Float || el.type == BigDecimal || el.type == Spider::DataTypes::Decimal)
+                    widget_type = Text
+                    input_attributes = {:size => 10}
                 elsif (el.type == Spider::DataTypes::Text)
                     widget_type = TextArea
                 elsif (el.type == ::DateTime)
@@ -89,9 +135,13 @@ module Spider; module Forms
                     widget_type = Password
                 elsif (el.type == Spider::DataTypes::Bool)
                     widget_type = Checkbox
-                elsif (el.model? && [:choice, :multiple_choice].include?(el.association) && !el.extended?)
-                    widget_type = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
-                        SearchSelect : Select
+                elsif (el.model?)
+                    if ([:choice, :multiple_choice].include?(el.association) && !el.extended?)
+                        widget_type = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
+                            SearchSelect : Select
+                    elsif @pk
+                        @sub_links[@pk+'/'+el.label.downcase.gsub(/\s+/, '_')] = @labels[el.name]
+                    end
                 end
                 input = create_input(widget_type, el) if widget_type
                 input.read_only if read_only?(el.name)
@@ -149,6 +199,8 @@ module Spider; module Forms
             @save_actions[action].call(obj) if (action && @save_actions[action])
             @error = false
             inputs_done = true
+            Spider::Logger.debug("FORM SAVING")
+            Spider::Logger.debug(@elements)
             @elements.each do |el|
                 break unless inputs_done
                 element_name = el.name
@@ -166,15 +218,22 @@ module Spider; module Forms
                 end
                 begin
                     if (input.done?)
+#                        debugger
                         obj.set(element_name, input.value)
                     else
                         inputs_done = false
                     end
 #                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
                 rescue FormatError => exc
+#                    debugger
                     @error = true
                     @errors[element_name] ||= []
-                    @errors[element_name] << exc.message
+                    @errors[element_name] << exc.to_s
+                end
+            end
+            if (@fixed)
+                @fixed.each do |k, v| 
+                    obj.set(k, v)
                 end
             end
             if inputs_done && !@error
