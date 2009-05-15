@@ -22,7 +22,7 @@ module Spider; module Helpers
                 :full_id => w.full_id,
                 :param => param_name(w),
                 :pub_path => w.class.pub_url,
-                :css_class => w.css_class || Inflector.underscore(w.class.name).gsub('_', '-').gsub('/', ' ')
+                :css_class => w.css_class
             }
         end
         

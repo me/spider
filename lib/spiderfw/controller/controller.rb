@@ -51,7 +51,7 @@ module Spider
             
         end
         
-        attr_reader :request, :response
+        attr_reader :request, :response, :executed_method
         attr_accessor :dispatch_action
         
         def initialize(request, response, scene=nil)
@@ -111,6 +111,7 @@ module Spider
                     args = meth.arity == 0 ? [] : (arguments+additional_arguments)[0..meth.arity]
                     args = [nil] if meth.arity == 1 && args.empty?
                     @action = args[0]
+                    @executed_method = method.to_s
                     send(method, *args)
                 else
                     raise NotFound.new(action)

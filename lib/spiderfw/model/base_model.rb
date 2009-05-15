@@ -740,7 +740,7 @@ module Spider; module Model
         def set(element, value)
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
-            return send(first).set(rest) if (rest)
+            return send(first).set(rest, value) if (rest)
             return send("#{element}=", value)
         end
         
