@@ -344,7 +344,7 @@ module Spider; module Model
         end
         
         def instantiate_object(val=nil)
-            if (@append_element && !val.is_a?(@model))
+            if (@append_element && !val.is_a?(@model) && !(val.is_a?(Hash) && val[@append_element]))
                 val = @model.elements[@append_element].type.new(val) unless (val.is_a?(BaseModel))
                 val = {@append_element => val}
             end
