@@ -38,7 +38,7 @@ module Spider; module Model
                attributes[:tree_left] ||= :"#{name}_left"
                attributes[:tree_right] ||= :"#{name}_right"
                attributes[:tree_depth] ||= :"#{name}_depth"
-               element(attributes[:reverse], self, :association => :tree_parent, :read_only => true)
+               choice(attributes[:reverse], self, :association => :tree_parent)
                element(name, self, attributes)
                element(attributes[:tree_left], Fixnum, :hidden => true)
                element(attributes[:tree_right], Fixnum, :hidden => true)
