@@ -40,7 +40,7 @@ module Spider; module Components
             @sections[section] ||= []
             @sections[section] << widget.id
             @labels[widget.id] = label
-            w_action = label.downcase.gsub(/\s+/, '_')
+            w_action = label.downcase.gsub(/\s+/, '_').gsub(/[^a-zA-Z_]/, '')
             @widgets_by_action[w_action] = widget
             @links[widget.id] = w_action
             @all_widgets[widget.id] = widget
