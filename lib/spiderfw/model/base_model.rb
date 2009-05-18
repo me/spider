@@ -649,7 +649,7 @@ module Spider; module Model
             element = self.class.elements[name]
             if (element.model?)
                 if (element.multiple?)
-                    val = QuerySet.new(element.model)
+                    val = QuerySet.static(element.model)
                 else
                     val = element.type.new
                 end
