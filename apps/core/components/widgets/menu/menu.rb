@@ -24,7 +24,7 @@ module Spider; module Components
             if (@_action_local)
                 act = @_action_local
             else
-                redirect(request_path+'/'+@links[@items[0]]) unless @items.empty?
+                redirect(widget_request_path+'/'+@links[@items[0]]) unless @items.empty?
             end
             widget = @widgets_by_action[act]
             raise NotFound.new(request_path) unless widget
