@@ -5,6 +5,7 @@ module Spider; module Forms
         i_attr_accessor :model
         is_attr_accessor :multiple
         is_attr_accessor :blank_option, :type => TrueClass, :default => true
+        attr_accessor :data
         
         def prepare_scene(scene)
             scene = super
@@ -13,7 +14,7 @@ module Spider; module Forms
         end
         
         def run
-            @scene.data = @model.all
+            @scene.data = @data || @model.all
             
             @scene.values = {}
             debug("SELECT VALUE:")
