@@ -489,16 +489,18 @@ module Spider; module Model
             @query.offset = n
             return self
         end
-            
-        
-                    
         
         # def unit_of_work
         #     return Spider::Model.unit_of_work
         # end
         
         def clone
-            self.class.new(self.model, self.query.clone)
+            c = self.class.new(self.model, self.query.clone)
+            c_objects = c.instance_variable_get(:@objects)
+            @objects.each do |o|
+                c_objects << o.clone
+            end
+            return c
         end
 
     end
