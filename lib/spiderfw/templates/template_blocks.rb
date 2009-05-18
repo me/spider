@@ -24,6 +24,8 @@ module Spider
                 block = :Yield
             elsif (el.name == 'sp:pass' || el.name == 'sp:template')
                 block = :Pass
+            elsif (el.name == 'sp:debugger')
+                block = :Debugger
             elsif (Spider::Template.registered?(el.name))
                 klass = Spider::Template.get_registered_class(el.name)
                 if (klass.subclass_of?(::Spider::Widget))
@@ -163,3 +165,4 @@ require 'spiderfw/templates/blocks/yield'
 require 'spiderfw/templates/blocks/pass'
 require 'spiderfw/templates/blocks/widget'
 require 'spiderfw/templates/blocks/run'
+require 'spiderfw/templates/blocks/debugger'
