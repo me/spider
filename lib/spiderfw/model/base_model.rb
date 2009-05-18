@@ -37,6 +37,12 @@ module Spider; module Model
             @app = app
         end
         
+        def self.static(value=nil)
+            obj = self.new(value)
+            obj.autoload = false
+            return obj
+        end
+        
         #######################################
         #   Model definition methods          #
         #######################################
