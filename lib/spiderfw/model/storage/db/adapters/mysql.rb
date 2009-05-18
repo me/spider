@@ -132,7 +132,7 @@ module Spider; module Model; module Storage; module Db
                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                 end
                 @last_executed = [sql, bind_vars]
-                if (Spider.conf.get('db.replace_debug_vars'))
+                if (Spider.conf.get('storage.db.replace_debug_vars'))
                     cnt = -1
                     debug("mysql executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
                 else

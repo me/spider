@@ -30,6 +30,10 @@ module Spider
     
     config_option 'storage.db.pool.size', _("How many connections to open to a db"), :default => 5
     
+    config_option 'storage.db.replace_debug_vars', _("Replace bound variables in debug sql"), {
+        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
+    }
+    
     config_option 'storages', _("A list of named storages"), {:type => Hash}
     
     config_option 'debugger.start', _("Start the debugger")

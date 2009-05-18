@@ -101,10 +101,16 @@ module Spider; module Model; module Storage; module Db
          def execute(sql, *bind_vars)
              begin
                  if (bind_vars && bind_vars.length > 0)
-                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}.join(', ')
+                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                  end
                  @last_executed = [sql, bind_vars]
-                 debug("oci8 executing:\n#{sql}\n[#{debug_vars}]")
+                 if (Spider.conf.get('storage.db.replace_debug_vars'))
+                     cnt = -1
+                     debug("oci8 executing: "+sql.gsub(/:\d+/){ debug_vars[cnt+=1] })
+                 else
+                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
+                     debug("oci8 executing:\n#{sql}\n[#{debug_vars_str}]")
+                 end
                  @cursor = connection.parse(sql)
                  return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
                  bind_vars.each_index do |i|
