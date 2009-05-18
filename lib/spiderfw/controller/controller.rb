@@ -106,11 +106,12 @@ module Spider
                     #run_chain(:execute, action, *arguments)
                     do_dispatch(:execute, action)
 #                        after(action, *arguments)
-                elsif (self.class.method_defined?(method.to_sym))
+                elsif (method && !method.empty? && self.class.method_defined?(method.to_sym))
                     meth = self.method(method.to_sym)
-                    args = meth.arity == 0 ? [] : (arguments+additional_arguments)[0..meth.arity]
-                    args = [nil] if meth.arity == 1 && args.empty?
+                    args = (arguments+additional_arguments)
                     @action = args[0]
+                    args = meth.arity == 0 ? [] : args[0..meth.arity]
+                    args = [nil] if meth.arity == 1 && args.empty?
                     @executed_method = method.to_s
                     send(method, *args)
                 else
