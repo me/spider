@@ -6,7 +6,7 @@ module Spider; module Model
         attr_reader :raw_data, :loaded_elements, :objects
         attr_accessor :query, :last_query, :model, :owner, :total_rows
         attr_accessor :loaded, :fetch_window, :keep_window
-        attr_accessor :append_element
+        attr_accessor :append_element, :loadable
         
         def self.static(model, query_or_val=nil)
             qs = self.new(model, query_or_val)
@@ -38,6 +38,7 @@ module Spider; module Model
             @loaded_elements = {}
             @fixed = {}
             @append_element = nil
+            @loadable = true
             set_data(data) if data
             self
         end
@@ -278,6 +279,7 @@ module Spider; module Model
         end
         
         def load
+            return self unless loadable?
             @objects = []
             @loaded = false
             @loaded_elements = {}
@@ -321,6 +323,10 @@ module Spider; module Model
             return false unless @window_current_start
             return true if index >= @window_current_start-1 && index < @window_current_start+@fetch_window-1
             return false
+        end
+        
+        def loadable?
+            @loadable
         end
         
         def save

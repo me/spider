@@ -626,6 +626,7 @@ module Spider; module Model; module Mappers
                     sub_obj.set_loaded_value(element.attributes[:reverse], obj)
                 end
                 sub_res = sub_res[0] if !element.multiple?
+                sub_res.loadable = false if sub_res.respond_to?(:loadable=)
                 obj.set_loaded_value(element, sub_res)
             end
             return objects
