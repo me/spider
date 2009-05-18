@@ -10,6 +10,10 @@ module Spider; module Forms
         i_attribute :disabled
         attribute :save_submit_text, :default => _('Save')
         attribute :insert_submit_text, :default => _('Insert')
+        is_attribute :show_submit_and_new, :default => true
+        is_attribute :show_submit_and_stay, :default => true
+        attribute :submit_and_new_text, :default => _('%s and insert new')
+        attribute :submit_and_stay_text, :default => _('%s and stay')
         is_attr_accessor :pk
         attr_to_scene :inputs, :names, :labels, :error, :errors, :save_errors, :sub_links
         attr_accessor :save_actions
@@ -97,7 +101,14 @@ module Spider; module Forms
         
         def run
             Spider::Logger.debug("FORM EXECUTING")
-            save(params['submit']) if params['submit']
+            if (params['submit_and_new'])
+                submit_action = 'submit_and_new'
+            elsif (params['submit_and_stay'])
+                submit_action = 'submit_and_stay'
+            else
+                submit_action = params['submit']
+            end
+            save(submit_action) if submit_action
             @obj ||= load
             if (@obj)
                 @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
@@ -110,13 +121,24 @@ module Spider; module Forms
             else
                 @scene.submit_text = @attributes[:insert_submit_text]
             end
+            @scene.submit_and_new_text = @attributes[:submit_and_new_text] % @scene.submit_text
+            @scene.submit_and_stay_text = @attributes[:submit_and_stay_text] % @scene.submit_text
             @scene.submit_buttons = @save_actions.keys
             super
         end
         
         def create_inputs
+            test_fixed = @model.new(@fixed) if @fixed
             @elements.each do |el|
                 next if el.hidden? || el.primary_key? || el.attributes[:local_pk] || @disabled.include?(el.name)
+                if @fixed
+                    if (el.model?)
+                        fixed_sub = test_fixed.get(el)
+                        next if fixed_sub && fixed_sub.is_a?(Spider::Model::BaseModel) && fixed_sub.primary_keys_set?
+                    else
+                        next if test_fixed.element_has_value?(el)
+                    end
+                end
                 input = nil
                 widget_type = nil
                 if (@widget_types[el.name])
@@ -139,14 +161,15 @@ module Spider; module Forms
                     if ([:choice, :multiple_choice].include?(el.association) && !el.extended?)
                         widget_type = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
                             SearchSelect : Select
-                    elsif @pk
+                    elsif @pk && el.multiple?
                         @sub_links[@pk+'/'+el.label.downcase.gsub(/\s+/, '_')] = @labels[el.name]
                     end
                 end
                 input = create_input(widget_type, el) if widget_type
-                input.read_only if read_only?(el.name)
+                
                 debug("Created input for #{el.name}, #{input}")
                 if (input)
+                    input.read_only if read_only?(el.name)
                     input.id_path.insert(input.id_path.length-1, 'data')
                     @names << el.name
                     input.id = el.name
@@ -196,6 +219,7 @@ module Spider; module Forms
         
         def save(action=nil)
             obj = instantiate_obj
+            obj.autoload = false
             @save_actions[action].call(obj) if (action && @save_actions[action])
             @error = false
             inputs_done = true
@@ -218,7 +242,6 @@ module Spider; module Forms
                 end
                 begin
                     if (input.done?)
-#                        debugger
                         obj.set(element_name, input.value)
                     else
                         inputs_done = false
@@ -248,10 +271,23 @@ module Spider; module Forms
                     @save_errors << exc.message
                 end
             end
+            if (action == 'submit_and_new')
+                @saved_and_new = true
+            elsif (action == 'submit_and_stay')
+                @saved_and_stay = true
+            end
         end
         
         def saved?
             @saved
+        end
+        
+        def saved_and_new?
+            @saved_and_new
+        end
+        
+        def saved_and_stay?
+            @saved_and_stay
         end
         
         def error?
