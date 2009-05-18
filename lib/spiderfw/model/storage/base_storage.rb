@@ -48,7 +48,7 @@ module Spider; module Model; module Storage
         end
         
         def create_sequence(name, start=1, increment=1)
-            sequence_next(name, start, increment)
+            sequence_next(name, start-1, increment)
         end
             
         
