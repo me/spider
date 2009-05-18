@@ -40,9 +40,9 @@ module Spider; module Model
                attributes[:tree_depth] ||= :"#{name}_depth"
                element(attributes[:reverse], self, :association => :tree_parent, :read_only => true)
                element(name, self, attributes)
-               element(attributes[:tree_left], Fixnum)
-               element(attributes[:tree_right], Fixnum)
-               element(attributes[:tree_depth], Fixnum, :unmapped => true)
+               element(attributes[:tree_left], Fixnum, :hidden => true)
+               element(attributes[:tree_right], Fixnum, :hidden => true)
+               element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true)
                sequence(name)
                
                (class << self; self; end).instance_eval do
