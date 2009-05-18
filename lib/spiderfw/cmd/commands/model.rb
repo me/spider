@@ -17,6 +17,9 @@ class ModelCommand < CmdParse::Command
             opt.on("--drop-tables [PREFIX]", _("Drop unused tables")){ |dt| 
                 @drop_tables = dt
             }
+            opt.on("--update-sequences", _("Update current sequences to max db value"), "-s"){ |s|
+                @update_sequences = true
+            }
         end
         
         sync_cmd.set_execution_block do |req_models|
@@ -33,7 +36,8 @@ class ModelCommand < CmdParse::Command
                 end
                 models.each do |model|
                     begin
-                        Spider::Model.sync_schema(model, @force, :drop_fields => @drop, :drop_tables => @drop_tables)
+                        Spider::Model.sync_schema(model, @force, 
+                        :drop_fields => @drop, :drop_tables => @drop_tables, :update_sequences => @update_sequences)
                     rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
                         unsafe_fields[model] = exc.fields
                     end 

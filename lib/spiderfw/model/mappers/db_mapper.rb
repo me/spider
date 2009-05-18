@@ -809,12 +809,14 @@ module Spider; module Model; module Mappers
 
         def sync_schema(force=false, options={})
             schema_description = schema.get_schemas
-            sequences = schema.sequences.values
+            sequences = {}
+            sequences[schema.table] = schema.sequences
 
             @model.elements_array.select{ |el| el.attributes[:anonymous_model] }.each do |el|
                 next if el.model.mapper.class != self.class
                 schema_description.merge!(el.model.mapper.schema.get_schemas)
-                sequences += el.model.mapper.schema.sequences.values
+                sequences[el.model.mapper.schema.table] ||= {}
+                sequences[el.model.mapper.schema.table].merge!(el.model.mapper.schema.sequences)
                 # Spider::Logger.debug("MERGING SEQUENCES:")
                 # Spider::Logger.debug(el.model.mapper.schema.sequences)
                 # sequences.merge!(el.model.mapper.schema.sequences)
@@ -834,17 +836,21 @@ module Spider; module Model; module Mappers
                 end
             end
             seen = {}
-            schema.sequences.each do |element_name, db_name|
-                next if seen[db_name]
-                if storage.sequence_exists?(db_name)
-                    sql = "SELECT MAX(#{schema.field(element_name)}) AS M FROM #{schema.table}"
-                    res = @storage.execute(sql)
-                    max = res[0]['M'].to_i
-                    storage.update_sequence(db_name, max)
-                else
-                    storage.create_sequence(db_name)
+            sequences.each do |sequence_table, table_sequences|
+                table_sequences.each do |element_name, db_name|
+                    next if seen[db_name]
+                    if storage.sequence_exists?(db_name)
+                        if (options[:update_sequences])
+                            sql = "SELECT MAX(#{schema.field(element_name)}) AS M FROM #{sequence_table}"
+                            res = @storage.execute(sql)
+                            max = res[0]['M'].to_i
+                            storage.update_sequence(db_name, max+1)
+                        end
+                    else
+                        storage.create_sequence(db_name)
+                    end
+                    seen[db_name] = true
                 end
-                seen[db_name] = true
             end
         end
 
