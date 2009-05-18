@@ -18,12 +18,12 @@ module Spider; module Forms
             if (params['text'] && !params['text'].empty?)
                 @scene.text_query = params['text']
                 cond = @model.free_query_condition(params['text'])
-                @scene.data = @model.find(cond)
-                if (@scene.data.length == 0)
+                @data = @model.find(cond)
+                if (@data.length == 0)
                     @scene.no_result = true
                     @scene.next_step = :text
-                elsif (@scene.data.length == 1)
-                    self.value = @scene.data[0]
+                elsif (@data.length == 1)
+                    self.value = @data[0]
                 else
                     @scene.next_step = :select
                 end
@@ -39,18 +39,18 @@ module Spider; module Forms
             else
                 @scene.next_step ||= :text
             end
-            if (@scene.data)
+            if (@data)
                 @scene.values = {}
                 debug("SELECT VALUE:")
                 debug(@value)
                 if (@value)
                     @scene.value_pks = @model.primary_keys.map{|k| @value.get(k) }.join(',')
                 end
-                @scene.data.each_index do |i|
-                    @scene.values[i] = @model.primary_keys.map{|k| @scene.data[i][k] }.join(',')
+                @data.each_index do |i|
+                    @scene.values[i] = @model.primary_keys.map{|k| @data[i][k] }.join(',')
                 end
+                super
             end
-            super
         end
 
     end
