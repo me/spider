@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-04-01 17:43+0200\n"
+"POT-Creation-Date: 2009-05-18 17:57+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,35 +22,63 @@ msgid ""
 "or realm"
 msgstr ""
 
-#: apps/core/forms/widgets/form/form.rb:7
+#: apps/core/components/widgets/admin/admin.rb:7
+msgid "Administration"
+msgstr ""
+
+#: apps/core/components/widgets/admin/admin.rb:28
+msgid "user"
+msgstr ""
+
+#: apps/core/components/widgets/admin/admin.rb:31
+msgid "guest"
+msgstr ""
+
+#: apps/core/forms/widgets/form/form.rb:11
 msgid "Save"
 msgstr ""
 
-#: apps/core/forms/widgets/form/form.rb:8
+#: apps/core/forms/widgets/form/form.rb:12
 msgid "Insert"
 msgstr ""
 
-#: lib/spiderfw/cmd/cmd.rb:17
-msgid "Global options:"
+#: apps/core/forms/widgets/form/form.rb:15
+msgid "%s and insert new"
 msgstr ""
 
-#: lib/spiderfw/cmd/cmd.rb:18
-msgid "Be verbose when outputting info"
+#: apps/core/forms/widgets/form/form.rb:16
+msgid "%s and stay"
 msgstr ""
 
 #: lib/spiderfw/cmd/cmd.rb:19
+msgid "Global options:"
+msgstr ""
+
+#: lib/spiderfw/cmd/cmd.rb:20
+msgid "Be verbose when outputting info"
+msgstr ""
+
+#: lib/spiderfw/cmd/cmd.rb:21
 msgid "Cd to a directory before running"
+msgstr ""
+
+#: lib/spiderfw/cmd/cmd.rb:22
+msgid "Include configuration sets"
+msgstr ""
+
+#: lib/spiderfw/cmd/cmd.rb:25
+msgid "Set runmode to devel"
 msgstr ""
 
 #: lib/spiderfw/cmd/commands/cert.rb:8
 msgid "Manage certificates"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/cert.rb:14
+#: lib/spiderfw/cmd/commands/cert.rb:13
 msgid "Generate new X.509"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/cert.rb:16
+#: lib/spiderfw/cmd/commands/cert.rb:15
 msgid "Where to generate the certificate"
 msgstr ""
 
@@ -88,14 +116,6 @@ msgstr ""
 msgid "The path where to create the installation (defaults to the path)"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/model.rb:6
-msgid "Manage models"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/model.rb:10
-msgid "Sync models"
-msgstr ""
-
 #: lib/spiderfw/cmd/commands/setup.rb:8
 msgid "Setup an application"
 msgstr ""
@@ -116,19 +136,19 @@ msgstr ""
 msgid "Manage internal webserver"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/webserver.rb:23
+#: lib/spiderfw/cmd/commands/webserver.rb:20
 msgid "The port the webserver should listen on"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/webserver.rb:26
+#: lib/spiderfw/cmd/commands/webserver.rb:23
 msgid "Which webserver to use; the choices are 'webrick' and 'mongrel'"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/webserver.rb:27
+#: lib/spiderfw/cmd/commands/webserver.rb:24
 msgid "The webserver %s is not supported"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/webserver.rb:30
+#: lib/spiderfw/cmd/commands/webserver.rb:27
 msgid "Serve each request spawning a CGI subprocess. Useful in developement."
 msgstr ""
 
@@ -140,98 +160,152 @@ msgstr ""
 msgid "Listening on port %s"
 msgstr ""
 
-#: lib/spiderfw/config/configuration.rb:18
-#: lib/spiderfw/config/configuration.rb:34
-#: lib/spiderfw/config/configuration.rb:53
+#: lib/spiderfw/cmd/commands/model.rb:6
+msgid "Manage models"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:11
+msgid "Sync models"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:13
+msgid "Force syncing"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:16
+msgid "Drop unused columns"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:17
+msgid "Drop unused tables"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:20
+msgid "Update current sequences to max db value"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:47
+msgid "Unable to modify the following fields:"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/model.rb:49
+msgid "(use -f to force)"
+msgstr ""
+
+#: lib/spiderfw/config/configuration.rb:55
 msgid "%s is not a configuration option"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:18
+#: lib/spiderfw/config/options/spider.rb:12
 msgid "The internal server to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:21
+#: lib/spiderfw/config/options/spider.rb:15
 msgid "Whether to show the stack trace on error"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:24
+#: lib/spiderfw/config/options/spider.rb:18
 msgid "Reload application and spider sources on each request"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:28
+#: lib/spiderfw/config/options/spider.rb:21
+msgid "Port to use for the http server"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:23
 msgid "The text editor installed on the client"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:31
+#: lib/spiderfw/config/options/spider.rb:26
 msgid "Refresh template cache every time"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:32
+#: lib/spiderfw/config/options/spider.rb:27
 msgid "Run templates in safe mode"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:36
+#: lib/spiderfw/config/options/spider.rb:31
+msgid "How many connections to open to a db"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:33
+msgid "Replace bound variables in debug sql"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:37
 msgid "A list of named storages"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:38
+#: lib/spiderfw/config/options/spider.rb:39
 msgid "Start the debugger"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:40
+#: lib/spiderfw/config/options/spider.rb:41
 msgid "The locale to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:42
+#: lib/spiderfw/config/options/spider.rb:43
 msgid "Sleep time for the periodic runner"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:44
+#: lib/spiderfw/config/options/spider.rb:45
 msgid "Where to store the session"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:45
+#: lib/spiderfw/config/options/spider.rb:46
 msgid "Lifetime in seconds of the sessions"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:46
+#: lib/spiderfw/config/options/spider.rb:47
 msgid "Number of seconds to wait before session purge check"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:47
+#: lib/spiderfw/config/options/spider.rb:48
 msgid "The folder where to store file sessions"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:49
+#: lib/spiderfw/config/options/spider.rb:50
 msgid "Which shared store to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:51
+#: lib/spiderfw/config/options/spider.rb:52
 msgid "Life in seconds of HTTP Digest Authentication nonces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:53
+#: lib/spiderfw/config/options/spider.rb:54
 msgid "Automatically send headers on first output (breaks the debugger)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:54
+#: lib/spiderfw/config/options/spider.rb:55
 msgid "Redirect standard output to the browser"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:55
+#: lib/spiderfw/config/options/spider.rb:56
 msgid ""
 "If the request is proxyied, the urls used to reach spider, with the "
 "corresponding paths called by the proxy"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:58
+#: lib/spiderfw/config/options/spider.rb:59
 msgid "Level of debug output to console"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:783
-msgid "%s is not in the correct format"
+#: lib/spiderfw/model/base_model.rb:790
+msgid "'%s' is not a valid date"
+msgstr ""
+
+#: lib/spiderfw/model/base_model.rb:832
+msgid "'%s' is not in the correct format"
 msgstr ""
 
 #: lib/spiderfw/model/datatypes/email.rb:7
 msgid "%s is not a valid e-mail address"
+msgstr ""
+
+#: lib/spiderfw/model/mappers/mapper.rb:650
+msgid "Element %s is required"
+msgstr ""
+
+#: lib/spiderfw/model/mappers/mapper.rb:651
+msgid "Element %s is not unique"
 msgstr ""
