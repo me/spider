@@ -87,7 +87,13 @@ module Spider; module Components
             elsif (@action == :form)
                 if (@widgets[:form].saved?)
                     flash[:saved] = true
-                    redirect(widget_request_path) # unless @widgets[:form].stay?
+                    if (@widgets[:form].saved_and_new?)
+                        redirect(widget_request_path+'/new')
+                    elsif (@widgets[:form].saved_and_stay?)
+                        redirect(widget_request_path+'/'+@widgets[:form].pk)
+                    else
+                        redirect(widget_request_path) # unless @widgets[:form].stay?
+                    end
                 end
             end
         end
