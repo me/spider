@@ -163,6 +163,7 @@ module Spider
         
         
         def before(action='')
+            action ||= ''
             @_action = action
             @_action_local, @_action_rest = action.split('/', 2)
             @id ||= @attributes[:id]
