@@ -9,9 +9,9 @@ module Spider
     class Widget < PageController
         include HTTPMixin
         
-        attr_accessor :_action
+        attr_accessor :parent
         attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template
-        attr_reader :attributes, :widget_attributes, :css_class
+        attr_reader :attributes, :widget_attributes
         
         @@common_attributes = {
             :id => {}
@@ -115,7 +115,11 @@ module Spider
             end
             
             def pub_url
-                route_url+'/pub'
+                w = self
+                # FIXME! this is a quick hack to make extended templates work
+                # but what we need is a better method to handle resource ownership
+                w = w.superclass while w.superclass != Spider::Widget && w.superclass.subclass_of?(Spider::Widget)
+                w.route_url+'/pub'
             end
             
         end
@@ -143,32 +147,25 @@ module Spider
             end
         end
         
-        # This method may be defined by subclasses, and is executed right after the template is loaded
-        # and attributes are set. This is the place where the template may be modified before it is
-        # initialized.
+        def route_widget
+            return nil
+        end
+        
+        def widget_request_path
+            p = @request.path
+            p = p[0..p.index(@_action)-2] if @_action && !@_action.empty?
+            p = p.sub(/\/+$/, '')
+            return p
+        end
+
         def prepare
         end
         
         
-        # This method may be defined by subclasses, and is executed after the template is initialized,
-        # and subwidgets defined in the template are instantiated. This is the place where code may be added
-        # to create additional widgets, or modify the existing ones attributes.
-        def start
-        end
-        
-        # This method may be defined by subclasses, and is run after all subwidgets have been initialized
-        # (i.e., instantiated and have prepare and start run), but before execute is called on subwidgets.
-        # This is the place to add the main widget logic.
-        def execute
-        end
-        
-        # This method may be defined by subclasses, and is run after all subwidgets had the execute method
-        # run on them.
-        def after_execute
-        end
-        
-        def do_prepare
-            return if @prepare_done
+        def before(action='')
+            action ||= ''
+            @_action = action
+            @_action_local, @_action_rest = action.split('/', 2)
             @id ||= @attributes[:id]
             unless @template
                 @template = load_template(@use_template)
@@ -185,29 +182,72 @@ module Spider
                     instance_variable_set("@#{k}", v) unless instance_variable_get("@#{k}")
                 end
             end
-            @_action_local, @_action_rest = @_action.split('/', 2) if (@_action)
-            @_pass_action ||= @_action_rest
             prepare
-            @prepare_done = true
+            @before_done = true
         end
         
-        def init_widget
-            do_prepare unless @prepare_done
+        def before_done?
+            @before_done
+        end
+        
+        def prepare(action='')
             if (self.class.scene_attributes)
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end
             end
-#            debug("WIDGET #{full_id} INIT TEMPLATE WITH SCENE #{@scene}")
             template.request = @request
             template.response = @response
             @template.init(@scene)
             @widgets.merge!(@template.widgets)
-            start
-            @widgets.each do |id, w|
-                act = @_pass_action || @_action
-                w._action = act if !@_action_to || @_action_to.to_sym == id
+            @widgets.each{ |id, w| w.parent = self }
+            set_widget_attributes
+            prepare_widgets
+            @template.resources.each do |res|
+                res = res.clone
+                res[:src] = self.class.pub_url+'/'+res[:src]
+                @resources << res
             end
+        end
+        
+        def prepare_widgets
+            r = route_widget
+            @widgets.each do |id, w|
+                if (r && r[0].to_sym == id)
+                    act = r[1]
+                end
+                act ||= ''
+                w.before(act)
+            end
+        end
+        
+        
+        def run(action='')
+            @widgets.each do |wname, w|
+                w.run
+            end
+            @did_run = true
+        end
+        
+        def did_run?
+            @did_run
+        end
+        
+        def init_widget_done?
+            @init_widget_done
+        end
+        
+        # def execute(action='')
+        #     run(action)
+        #     render
+        # end
+        
+        def render
+            prepare_scene(@scene)
+            @template.render(@scene)
+        end
+        
+        def set_widget_attributes
             @widget_attributes.each do |w_id, a|
                 w_id_parts = w_id.to_s.split('.', 2)
                 if (w_id_parts[1])
@@ -215,62 +255,17 @@ module Spider
                     sub_w = w_id_parts[1]
                 end
                 w_id = w_id.to_sym
-                Spider::Logger.debug("WIDGET ATTRIBUTE:")
-                Spider::Logger.debug(a)
                 if (@widgets[w_id])
                     if (sub_w)
                         @widgets[w_id].widget_attributes[sub_w] = a
                     else
                         if (!a[:name])
-                            Spider::Logger.error("No name for attribute #{a.to_s}")
                             next
                         end
                         @widgets[w_id].attributes[a[:name].to_sym] = a[:value]
                     end
                 end
             end
-            @init_widget_done = true
-            @widgets.each do |wname, w|
-                w.init_widget
-            end
-            @template.resources.each do |res|
-                res = res.clone
-                res[:src] = self.class.pub_url+'/'+res[:src]
-                @resources << res
-            end
-            #@resources += @template.resources
-            @template.init_sub_done = true
-        end
-        
-        def run_execute
-            execute
-            @widgets.each do |wname, w|
-                w.run_execute
-            end
-            after_execute
-            @widgets.each do |wname, w|
-                w.after_execute
-            end
-        end
-        
-        def init_widget_done?
-            @init_widget_done
-        end
-        
-        def run
-            init_widget unless init_widget_done?
-            if (self.class.scene_attributes) # Repeat for new instance variables
-                self.class.scene_attributes.each do |name|
-                    @scene[name] = instance_variable_get("@#{name}")
-                end
-            end
-            render
-        end
-        
-        def render
-            prepare_scene(@scene) # FIXME
-            debug("WIDGET #{self}, #{self.object_id} rendering")
-            @template.render(@scene)
         end
                         
         def try_rescue(exc)
@@ -357,10 +352,7 @@ module Spider
             end
             return res
         end
-        
-        def request_path
-            HTTPMixin.reverse_proxy_mapping(@request.env['REQUEST_PATH'])
-        end
+
         
         def owner_controller
             w = self
@@ -373,9 +365,21 @@ module Spider
         
         def prepare_scene(scene)
             scene = super
+            if (self.class.scene_attributes) # Repeat for new instance variables
+                self.class.scene_attributes.each do |name|
+                    @scene[name] = instance_variable_get("@#{name}")
+                end
+            end
             # FIXME: owner_controller should be (almost) always defined
             scene.controller[:request_path] = owner_controller.request_path if owner_controller
+            scene.widget[:request_path] = widget_request_path
             return scene
+        end
+        
+        def css_class
+            return @css_class if @css_class
+            supers = self.class.ancestors.select{ |c| c != Spider::Widget && c.subclass_of?(Spider::Widget)}
+            @css_class = Inflector.underscore(supers.join('/')).gsub('_', '-').gsub('/', ' ').split(' ').uniq.join(' ')
         end
             
         

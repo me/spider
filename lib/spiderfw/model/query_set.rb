@@ -344,7 +344,7 @@ module Spider; module Model
         end
         
         def instantiate_object(val=nil)
-            if (@append_element && !val.is_a?(@model))
+            if (@append_element && !val.is_a?(@model) && !(val.is_a?(Hash) && val[@append_element]))
                 val = @model.elements[@append_element].type.new(val) unless (val.is_a?(BaseModel))
                 val = {@append_element => val}
             end
@@ -489,16 +489,18 @@ module Spider; module Model
             @query.offset = n
             return self
         end
-            
-        
-                    
         
         # def unit_of_work
         #     return Spider::Model.unit_of_work
         # end
         
         def clone
-            self.class.new(self.model, self.query.clone)
+            c = self.class.new(self.model, self.query.clone)
+            c_objects = c.instance_variable_get(:@objects)
+            @objects.each do |o|
+                c_objects << o.clone
+            end
+            return c
         end
 
     end

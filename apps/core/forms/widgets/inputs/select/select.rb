@@ -12,7 +12,7 @@ module Spider; module Forms
             return scene
         end
         
-        def execute
+        def run
             @scene.data = @model.all
             
             @scene.values = {}
@@ -28,7 +28,7 @@ module Spider; module Forms
             @scene.data.each_index do |i|
                 @scene.values[i] = @model.primary_keys.map{|k| @scene.data[i][k] }.join(',')
             end
-            
+            super
         end
 
         

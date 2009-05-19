@@ -1,3 +1,15 @@
+.spider.forms.form .errors{
+    background-color: #FAFAFA ;
+    border: 2px solid #CC0000;
+    margin: 0px 15px;
+    padding: 10px;
+}
+
+.spider.forms.form .errors ul{
+    margin-left: 15px;
+    list-style-position:outside;
+}
+
 .spider.forms.form .fields{
     border:2px solid #D5D5F7;
     background: #ececf6;
@@ -45,3 +57,35 @@
     margin-bottom: 3px;
     font-size: .9em;
 }
+
+.spider.forms.form .sub_links{
+    margin: 20px;
+    border: 2px solid #D5D5F7;
+}
+
+.spider.forms.form .sub_links h4{
+    background-color: #F2F2F2;
+    margin-bottom: 8px;
+    padding: 3px 8px;
+}
+
+
+
+.spider.forms.form .sub_links ul{
+    margin: 10px 15px;
+    list-style-image:none;
+    list-style-position:outside;
+    list-style-type:none;
+}
+
+.spider.forms.form .sub_element_crud{
+    margin: 15px;
+}
+
+.spider.forms.form .sub_element_title{
+    font-weight: normal;
+    margin-bottom: 8px;
+    padding: 8px;
+    background-color: #F2F2F2;
+}
+

@@ -7,7 +7,7 @@ module Spider
     module Model
         
         @base_types = [
-            String, Spider::DataTypes::Text, Fixnum, Float, DateTime, Spider::DataTypes::Bool
+            String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, DateTime, Spider::DataTypes::Bool
         ]
         class <<self; attr_reader :base_types; end
         
@@ -156,19 +156,18 @@ module Spider
         end
         
         class FormatError < ::FormatError
-            attr_reader :element
+            attr_reader :element, :value
             
-            def initialize(element, message)
+            def initialize(element, value, message)
                 @element = element
                 @message = message
+                @value = value
                 super(message)
             end
-            
-
-            
-            # def to_s
-            #     message
-            # end
+                        
+            def to_s
+                @message % @value
+            end
             
         end
         

@@ -1,59 +1,58 @@
 .spider.components.menu {
-   margin-left:64px;
+   margin-left:15px;
 }
 
 .spider.components.menu .menu{
     float: left;
     margin-right: 15px;
-    font-family:Verdana,Arial,Helvetica,sans-serif;
-    width: 205px;
-    font-size: 95%;
+    font-family:"Lucida Grande",Verdana,Arial,sans-serif;
+    font-weight: bold;
+    font-size: .8em;
 }
 
 .spider.components.menu #menu_bottom{
     height:35px;
 }
 
-.spider.components.menu .menu ul{
-    margin-top: 5px;
+.spider.components.menu .section_title{
+    background-color: #F2F2F2;
+    margin-right: 10px;
+    border: 1px solid #CCCCCC;
+    padding: 5px 5px;
+}
+
+.spider.components.menu ul.section_items{
     padding-left: 0px;
     padding-right: 10px;
     list-style-image:none;
     list-style-position:outside;
     list-style-type:none;
+    border-collapse: collapse;
 }
 
-.spider.components.menu li a:link, .spider.components.menu li a:visited {
-    background: url(img/li_bg.png) top left no-repeat;
-    height: 35px;
-    display:block;
-    padding: 4px 0 0 15px;
-    margin-left:15px;
-    color: #4D4D4D;
+.spider.components.menu .section_items li{
+    padding: 5px 10px;
+    border: 1px solid #CCCCCC;
+    
 }
-.spider.components.menu li a:hover {
-    background: url(img/li_bg_hover.png) top left no-repeat;
-    height: 35px;
-    display:block;
-    padding: 4px 0 0 20px;
-    margin-left:15px;
-    color: #4D4D4D;
+
+.spider.components.menu .section_items li a:link, .spider.components.menu .section_items li a:visited {
+    color: #5B80B2;
+
+}
+.spider.components.menu .section_items li a:hover {
+    color: black;
+
 }
 
 .spider.components.menu li a {
     text-decoration: none;
 }
 
-.spider.components.menu .active{
-    font-weight: bold;
-    font-size: 110%;
+.spider.components.menu .active a:link, .spider.components.menu .active a:visited{
+    color: black;
 }
 
 .spider.components.menu .content{
-    float: left;
-    background: #f2f2f2;
-    border: 1px solid #fbfbfb;
-    width: 60%;
-    padding: 10px;
-    font-family:Tahoma,Arial,Helvetica,sans-serif;
+    padding-right: 20px;
 }

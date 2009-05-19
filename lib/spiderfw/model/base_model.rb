@@ -578,6 +578,7 @@ module Spider; module Model
         
         def self.where(&proc)
             qs = QuerySet.new(self)
+            qs.autoload = true
             qs.where(&proc)
             return qs
         end
@@ -739,7 +740,7 @@ module Spider; module Model
         def set(element, value)
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
-            return send(first).set(rest) if (rest)
+            return send(first).set(rest, value) if (rest)
             return send("#{element}=", value)
         end
         
@@ -776,10 +777,17 @@ module Spider; module Model
             else
                 case element.type.name
                 when 'DateTime'
-                    value = DateTime.parse(value) if value.is_a?(String)
+                    return nil if value.is_a?(String) && value.empty?
+                    begin
+                        value = DateTime.parse(value) if value.is_a?(String)
+                    rescue ArgumentError => exc
+                        raise FormatError.new(element, value, _("'%s' is not a valid date"))
+                    end
                 when 'String'
                 when 'Spider::DataTypes::Text'
                     value = value.to_s
+                when 'Fixnum'
+                    value = value.to_i
                 end
             end
             value
@@ -815,7 +823,7 @@ module Spider; module Model
             element = self.class.elements[name]
             element.type.check(val) if (element.type.respond_to?(:check))
             if (checks = element.attributes[:check])
-                checks = {(_("%s is not in the correct format") % element.label) => checks} unless checks.is_a?(Hash)
+                checks = {(_("'%s' is not in the correct format") % element.label) => checks} unless checks.is_a?(Hash)
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
@@ -823,7 +831,7 @@ module Spider; module Model
                     when Proc
                         Proc.call(msg)
                     end
-                    raise FormatError.new(element, msg) unless test
+                    raise FormatError.new(element, val, msg) unless test
                 end
             end
         end

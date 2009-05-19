@@ -7,10 +7,18 @@ module Spider; module Components
         i_attribute :num_elements, :default => 7
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
-        attribute :max_element_length, :type => Fixnum, :default => 15
-        attr_accessor :queryset
+        attribute :max_element_length, :type => Fixnum, :default => 80
+        attr_accessor :queryset, :condition
         
-        def prepare
+        def condition
+            @condition ||= Spider::Model::Condition.new
+        end
+        
+        def add_condition(c)
+            @condition = self.condition.and(c)
+        end
+        
+        def prepare(action='')
             if (@attributes[:paginate])
                 @page = params['page']
                 @page ||= session[:page]
@@ -32,6 +40,7 @@ module Spider; module Components
             @sort = session[:sort] if !@sort && session[:sort]
             session[:sort] = @sort if @sort
             @sort = [@sort] if @sort && !@sort.is_a?(Array)
+            super
         end
         
         def choose_elements
@@ -42,13 +51,14 @@ module Spider; module Components
                 next if el.attributes[:integrated_model]
                 next if el.multiple? && el.association != :multiple_choice
                 next if el.type == Spider::DataTypes::Password
+                next if el.hidden?
                 cnt += 1
                 els << el.name
             end
             return els
         end
         
-        def execute
+        def run
             @elements ||= choose_elements
             @scene.sortable = {}
             @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.mapped?(el) ? true : false }
@@ -56,7 +66,8 @@ module Spider; module Components
             @elements.each do |el|
                 @scene.labels[el] = @model.elements[el].label
             end
-            @rows = @queryset ? @queryset : @model.all
+            @rows = prepare_queryset(@queryset ? @queryset : @model.all)
+            @rows.condition = self.condition
             if (@attributes[:paginate])
                 @rows.limit = @attributes[:row_limit]
                 @rows.offset = @offset
@@ -69,6 +80,11 @@ module Spider; module Components
             @scene.data = @rows
             @scene.has_more = @rows.has_more?
             @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
+            super
+        end
+        
+        def prepare_queryset(qs)
+            return qs
         end
         
         def prepare_rows(rows)
@@ -102,8 +118,6 @@ module Spider; module Components
                         res_row[el] = str
                     end
                 end
-                debug("RES ROW:")
-                debug(res_row)
                 res << res_row
             end
             return res

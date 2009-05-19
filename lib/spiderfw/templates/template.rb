@@ -17,7 +17,7 @@ module Spider
         @@namespaces = {}
         @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
         @@overrides = ['content', 'override', 'override-content', 'override-attr',
-                        'append', 'prepend', 'delete']
+                        'append', 'prepend', 'delete', 'before', 'after']
         
         class << self
             
@@ -130,7 +130,7 @@ module Spider
         end
         
         def get_el(path)
-            doc = open(@path){ |f| Hpricot.XML(f) }
+            doc = open(path){ |f| Hpricot.XML(f) }
             root = doc.root
             overrides = []
             override_tags.each do |tag|
@@ -143,7 +143,7 @@ module Spider
                 ext = real_path(ext)
                 @dependencies << ext
                 tpl = Template.new(ext)
-                root = tpl.get_el
+                root = get_el(ext)
             else
                 root.search('tpl:include').each do |incl|
                     src = real_path(incl.attributes[:src])
@@ -157,7 +157,8 @@ module Spider
         
         def real_path(path)
             # FIXME: security check for allowed paths?
-            path.sub!(/^SPIDER/, Spider.paths[:root])
+            path.sub!(/^ROOT/, Spider.paths[:root])
+            path.sub!(/^SPIDER/, $SPIDER_PATH)
             return path
         end
             
@@ -170,16 +171,22 @@ module Spider
             @init_sub_done = val
         end
         
+        def execute_done
+            @execute_done = true
+        end
+        
         def execute_done?
             @execute_done
         end
         
         def add_widget(id, widget, attributes=nil, content=nil, template=nil)
             @widgets[id.to_sym] ||= widget
+            widget.id = id
             widget.id_path = @id_path + [id]
             widget.attributes = attributes if attributes
             widget.containing_template = self
             widget.template = template if template
+            widget.parent = @owner
             widget.parse_content_xml(content) if content
         end
         
@@ -194,83 +201,57 @@ module Spider
         end
         
         def init_done?
-            @init_done ? true : false
+            @init_done
         end
         
-        def prepare_sub
-            @widgets.each do |id, widget|
-                widget._action = @_action if !@_action_to || @_action_to.to_sym == id
-                widget.do_prepare
+        def do_widgets_before
+            @widgets.each do |id, w|
+                act = (@_action_to == id) ? @_action : ''
+                w.before(act) unless w.before_done?
             end
-            @prepare_sub_done = true
         end
         
-        def prepare_sub_done?
-            @prepare_sub_done
-        end
-        
-        def init_sub
-            @widgets.each do |id, widget|
-                widget.init_widget
+        def run_widgets
+            @widgets.each do |id, w|
+                w.run unless w.did_run?
             end
-            @init_sub_done = true
+            
         end
         
-        def init_sub_done?
-            @init_sub_done ? true : false
+        def exec
+            do_widgets_before
+            run_widgets
         end
         
+  
         
-        def run_execute
-#            execute
-            prepare_sub unless prepare_sub_done?
-            init_sub unless init_sub_done?
-            @widgets.each do |wname, w|
-                w.run_execute
-            end
-#            after_execute
-            @widgets.each do |wname, w|
-                w.after_execute
-            end
-            @execute_done = true
-        end
-        
-        def prepare
-        end
-        
-        def render(scene)
+        def render(scene=nil)
+            scene ||= @scene
             load unless loaded?
-            # debug("Template #{@path} rendering with scene:")
-            # debug(scene)
             init(scene) unless init_done?
-            prepare_sub unless prepare_sub_done?
-            init_sub unless init_sub_done?
-            run_execute unless execute_done?
-            # scene.widgets ||= {}
-            # scene.widgets.merge!(@widgets)
-#            Spider::Logger.debug("Template #{@path} RUN")
+            exec
             @content.merge!(@widgets)
-            if Spider.conf.get('template.safe')
-                debug("RENDERING IN SAFE MODE!")
-                debug(@compiled.run_code)
-                # FIXME: must send header before safe mode
-                current_thread = Thread.current
-                t = Thread.new { 
-                    Thread.current[:stdout] = current_thread[:stdout]
-                    $SAFE = 4
-                    scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb')
-                    scene.__run_template
-                    scene.__run_template do |widget|
-                        @content[widget].run
-                    end
-                }
-                t.join
-            else
-                scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb')
-                scene.__run_template do |widget|
-                    @content[widget].run
-                end
+            # if Spider.conf.get('template.safe')
+            #     debug("RENDERING IN SAFE MODE!")
+            #     debug(@compiled.run_code)
+            #     # FIXME: must send header before safe mode
+            #     current_thread = Thread.current
+            #     t = Thread.new { 
+            #         Thread.current[:stdout] = current_thread[:stdout]
+            #         $SAFE = 4
+            #         scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb')
+            #         scene.__run_template
+            #         scene.__run_template do |widget|
+            #             @content[widget].run
+            #         end
+            #     }
+            #     t.join
+            # else
+            scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb', 0)
+            scene.__run_template do |widget|
+                @content[widget].render
             end
+            # end
         end
         
         def run
@@ -327,6 +308,10 @@ module Spider
                         f.innerHTML += override.innerHTML
                     elsif (override.name == 'tpl:prepend')
                         f.innerHTML = override.innerHTML + f.innerHTML
+                    elsif (override.name == 'tpl:before')
+                        f.parent.innerHTML = override.innerHTML + f.parent.innerHTML
+                    elsif (override.name == 'tpl:after')
+                        f.parent.innerHTML += override.innerHTML
                     end
                 end
             end

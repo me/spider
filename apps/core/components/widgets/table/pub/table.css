@@ -1,3 +1,10 @@
+/* @override http://localhost:8989/spider/components/w/table/pub/table.css */
+
+.spider.components.table .no_result{
+    color: #777777;
+    margin: 12px;
+}
+
 .spider.components.table table{
     border: 2px solid #d5d5f7;
     border-collapse: collapse;
@@ -7,19 +14,24 @@
 }
 
 .spider.components.table td, .spider.components.table th{
-    border: 1px solid white;
-    padding: 2px 6px;
+    border: 1px solid #EFEFEF;
+    padding: 3px 8px;
 }
+
+.spider.components.table td{
+	font-size: .9em;
+}
+
 
 .spider.components.table th{
     text-align: left;
-    background-color: #ececf6;
-    padding-left: 10px;
-    padding-top: 4px;
+    background-color: #f2f2f2;
+    padding-left: 12px;
+    padding-top: 6px;
     padding-bottom: 6px;
 }
 .spider.components.table th a, .spider.components.table th{
-    color: #6172c3;
+    color: #5b80b2;
     text-decoration: none;
 }
 .spider.components.table th a {
@@ -41,15 +53,14 @@
     line-height: 1em;
 }
 
-.spider.components.table tr.odd:hover td, .spider.components.table tr.even:hover td, .spider.components.table td a:hover {
-    background-color: #adc4f0;
-    color: white;
-}
+/*.spider.components.table tr.odd:hover td, .spider.components.table tr.even:hover td, .spider.components.table td a:hover {
+    background-color: #ececf0;
+}*/
 .spider.components.table tr.even{
-    background-color: #ececf6;
+    background-color: #fdfdfd;
 }
 .spider.components.table tr.odd{
-    background-color: #fafafb;
+    background-color: #FFFFFF;
 }
 
 
