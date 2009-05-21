@@ -537,12 +537,19 @@ module Spider; module Model; module Mappers
                         owner_func.mapper_fields[el.name] = el_model.mapper.schema.qualified_field(el.name)
                     end
                     field = storage.function(order_element)
+                    fields << [field, direction]
                 else
                     el_joins, el_model, el = get_deep_join(order_element)
-                    field = el_model.mapper.schema.qualified_field(el.name)
+		    if (el.model?)
+		        el.model.primary_keys.each do |pk|
+			    fields << [el.model.mapper.schema.qualified_field(pk.name), direction]
+			end
+	            else
+                        field = el_model.mapper.schema.qualified_field(el.name)
+                        fields << [field, direction]
+	            end
                     joins += el_joins
                 end
-                fields << [field, direction]
             end
             return [fields, joins]
         end
