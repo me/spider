@@ -105,6 +105,12 @@ module Spider; module Model
         def [](index)
             if (index.is_a?(Range))
                 return index.map{ |i| self[i] }
+            elsif (index.is_a?(String))
+                i, rest = index.split('.', 2)
+                i = i.to_i
+                val = self[i]
+                return '' unless val
+                return val[rest]
             end
             start = start_for_index(index)
             array_index = (index - start) + 1
