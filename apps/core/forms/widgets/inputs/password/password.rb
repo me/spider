@@ -4,9 +4,9 @@ module Spider; module Forms
         tag 'password'
         is_attr_accessor :size, :type => Fixnum, :default => 25
 
-        def start
+        def prepare
             @modified = false
-            if (params['pwd1'] && !params['pwd1'].empty? && params['pwd2'] && !params['pwd2'].empty?)
+            if (params['pwd1'] && !params['pwd1'].empty? && params['pwd2'])
                 if (params['pwd1'] != params['pwd2'])
                     add_error("Le due password non corrispondono")
                 else
