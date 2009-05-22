@@ -16,9 +16,23 @@ module Spider; module DataTypes
         def map(mapper_type)
             @val ||= ''
             salt = attributes[:salt] || Spider.conf.get('password.salt')
-            salt ||= ''
+            # TODO: better salts
+            salt ||= (0..10).inject('') { |r, i| r << rand(89) + 37 }
             hash_type = attributes[:hash] || Spider.conf.get('password.hash')
-            case hash_type
+            return "#{hash_type}$#{salt}$#{self.class.do_hash(hash_type, @val, salt)}"
+        end
+        
+        def self.check_match(stored, pwd)
+            hash_type, salt, hash = stored.split('$')
+            if (!salt)
+                return stored == do_hash(Spider.conf.get('password.hash'), pwd,  Spider.conf.get('password.salt'))
+            end
+            return (hash == do_hash(hash_type, pwd, salt))
+        end
+        
+        def self.do_hash(type, str, salt='')
+            salt ||= ''
+            case type.to_sym
             when :md5
                 hash_obj = Digest::MD5.new
             when :sha1
@@ -26,12 +40,11 @@ module Spider; module DataTypes
             when :sha2
                 hash_obj = Digest::SHA2.new
             else
-                raise ArgumentError, "Hash function #{hash_type} is not supported"
+                raise ArgumentError, "Hash function #{type} is not supported"
             end
-            hash_obj.update(@val+salt)
+            hash_obj.update(str+salt)
             return hash_obj.hexdigest
         end
-        
 
     end
     
