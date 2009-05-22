@@ -127,7 +127,13 @@ module Spider; module ControllerMixins
                 unless respond_to?(:template_path)
                     raise NotImplementedError, "The template_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
-                return [template_path]
+                paths = [template_path]
+                s = self.superclass
+                while (s && s.subclass_of?(Visual) && s.app && s.respond_to?(:template_path))
+                    paths << s.template_path
+                    s = s.superclass
+                end
+                return paths
             end
                 
             
