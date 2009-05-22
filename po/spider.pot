@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-05-18 17:57+0200\n"
+"POT-Creation-Date: 2009-05-22 19:38+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,10 +16,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: apps/core/auth/models/digest_user.rb:14
+#: apps/core/auth/models/digest_user.rb:17
 msgid ""
 "You must always supply the password to a DigestUser when updating username "
 "or realm"
+msgstr ""
+
+#: apps/core/auth/models/mixins/authentication_tracking.rb:6
+msgid "Last login"
+msgstr ""
+
+#: apps/core/auth/models/mixins/authentication_tracking.rb:7
+msgid "Login count"
 msgstr ""
 
 #: apps/core/components/widgets/admin/admin.rb:7
@@ -27,10 +35,6 @@ msgid "Administration"
 msgstr ""
 
 #: apps/core/components/widgets/admin/admin.rb:28
-msgid "user"
-msgstr ""
-
-#: apps/core/components/widgets/admin/admin.rb:31
 msgid "guest"
 msgstr ""
 
@@ -290,11 +294,11 @@ msgstr ""
 msgid "Level of debug output to console"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:790
+#: lib/spiderfw/model/base_model.rb:798
 msgid "'%s' is not a valid date"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:832
+#: lib/spiderfw/model/base_model.rb:840
 msgid "'%s' is not in the correct format"
 msgstr ""
 
@@ -302,10 +306,10 @@ msgstr ""
 msgid "%s is not a valid e-mail address"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:650
+#: lib/spiderfw/model/mappers/mapper.rb:655
 msgid "Element %s is required"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:651
+#: lib/spiderfw/model/mappers/mapper.rb:656
 msgid "Element %s is not unique"
 msgstr ""
