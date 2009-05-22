@@ -1039,6 +1039,12 @@ module Spider; module Model
             return obj
         end
         
+        def get_new
+            obj = self.class.new
+            self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            return obj
+        end
+        
         def keys_to_condition
             c = Condition.and
             self.class.primary_keys.each do |key|
