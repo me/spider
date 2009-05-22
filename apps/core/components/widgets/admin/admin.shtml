@@ -6,7 +6,7 @@
 	    </div>
 	    <div class="tools">
 	        Benvenuto, { @username }.
-	        <a href="{ @logout_link }">Logout</a>
+	        <a href="{ @logout_url }">Logout</a>
 	    </div>
     </div>
     <div class="current_section">

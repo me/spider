@@ -5,6 +5,7 @@ module Spider; module Components
         
         i_attribute :models, :process => lambda{ |models| models.split(/,[\s\n]*/).map{|m| const_get_full(m) } }
         is_attr_accessor :title, :default => _("Administration")
+        is_attr_accessor :logout_url, :default => Spider::Auth.request_url+'/login/logout'
         
         def init
             @items = []
@@ -21,12 +22,8 @@ module Spider; module Components
                 crud.model = model
                 @widgets[:menu].add('Gestione Dati', model.label_plural, crud)
             end
-            if (Spider::Auth.current_user)
-                if (Spider::Auth.current_user.respond_to?(:username))
-                    @scene.username = Spider::Auth.current_user.username
-                else
-                    @scene.username = _("user")
-                end
+            if (@request.user)
+                @scene.username = @request.user.to_s
             else
                 @scene.username = _("guest")
             end
