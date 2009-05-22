@@ -219,20 +219,18 @@ module Spider; module Forms
         
         def save(action=nil)
             obj = instantiate_obj
-            obj.autoload = false
+            obj.save_mode
             @save_actions[action].call(obj) if (action && @save_actions[action])
             @error = false
             inputs_done = true
-            Spider::Logger.debug("FORM SAVING")
-            Spider::Logger.debug(@elements)
             @elements.each do |el|
                 break unless inputs_done
                 element_name = el.name
                 next if read_only?(element_name)
+                
                 input = @inputs[element_name]
                 next unless input
                 next if input.read_only?
-                next unless input.modified?
                 debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
                 if (input.error?)
                     @error = true
@@ -240,6 +238,7 @@ module Spider; module Forms
                     @errors[element_name] += input.errors
                     next
                 end
+                next unless input.modified?
                 begin
                     if (input.done?)
                         obj.set(element_name, input.value)
@@ -255,13 +254,15 @@ module Spider; module Forms
                 end
             end
             if (@fixed)
-                @fixed.each do |k, v| 
-                    obj.set(k, v)
+                obj.no_autoload do
+                    @fixed.each do |k, v| 
+                        obj.set(k, v)
+                    end
                 end
             end
             if inputs_done && !@error
                 begin
-                    obj.save_all
+                    obj.save
                     debug("SAVED")
                     @saved = true
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
