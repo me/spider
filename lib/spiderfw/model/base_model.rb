@@ -506,8 +506,10 @@ module Spider; module Model
         end
         
         def self.with_mapper(*params, &proc)
-            @mapper_procs ||= []
-            @mapper_procs << proc
+            # @mapper_procs ||= []
+            # @mapper_procs << proc
+            mod = Module.new(&proc)
+            mapper_include(mod)
         end
         
         def self.with_mapper_subclasses(*params, &proc)
