@@ -197,7 +197,11 @@ module Spider; module Model
 
 #                Spider.logger.debug("Element not loaded #{name} (i'm #{self.class} #{self.object_id})")
                 if autoload? && primary_keys_set?
-                    mapper.load_element(self, self.class.elements[name])
+                    if (autoload? == :save_mode)
+                        mapper.load_element!(self, element)
+                    else
+                        mapper.load_element(self, element)
+                    end
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
                 elsif (element.model?)
@@ -780,6 +784,8 @@ module Spider; module Model
                 element.type.take_attributes.each do |a|
                     value.attributes[a] = element.attributes[a]
                 end
+            elsif element.model?
+                value.autoload(autoload?, true) if value
             else
                 case element.type.name
                 when 'DateTime'
@@ -861,18 +867,18 @@ module Spider; module Model
             @_autoload
         end
         
-        def autoload=(bool)
-            autoload(bool, false)
+        def autoload=(val)
+            autoload(val, false)
         end
         
-        def autoload(bool, traverse=true)
+        def autoload(a, traverse=true)
             return if @_tmp_autoload_walk
             @_tmp_autoload_walk = true
-            @_autoload = bool
+            @_autoload = a
             if (traverse)
                 self.class.elements_array.select{ |el| el.model? && element_has_value?(el.name)}.each do |el|
                     val = get(el)
-                    val.autoload = bool if val.respond_to?(:autoload=)
+                    val.autoload = a if val.respond_to?(:autoload=)
                 end
             end
             @_tmp_autoload_walk = nil
@@ -881,9 +887,21 @@ module Spider; module Model
         def no_autoload
             prev_autoload = autoload?
             self.autoload = false
-            yield
-            self.autoload = prev_autoload
+            if block_given?
+                yield
+                self.autoload = prev_autoload
+            end
         end
+        
+        def save_mode
+            prev_autoload = autoload?
+            self.autoload = :save_mode
+            if (block_given?)
+                yield
+                self.autoload = prev_autoload
+            end
+        end
+            
         
         ##############################################################
         #   Methods for getting information about element values     #
