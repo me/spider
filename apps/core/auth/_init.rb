@@ -18,9 +18,12 @@ module Spider
     end
 end
 
-require 'apps/core/auth/models/mixins/access_control'
+require 'apps/core/auth/lib/authenticable'
+require 'apps/core/auth/lib/login_authenticator'
+require 'apps/core/auth/lib/digest_authenticator'
+#require 'apps/core/auth/models/mixins/access_control'
+require 'apps/core/auth/models/mixins/authentication_tracking'
 require 'apps/core/auth/models/user'
-require 'apps/core/auth/models/group'
 require 'apps/core/auth/models/login_user'
 require 'apps/core/auth/models/digest_user'
 require 'apps/core/auth/controllers/login_controller'

@@ -1,17 +1,27 @@
-require 'apps/core/auth/lib/authenticator'
+require 'apps/core/auth/lib/authenticable'
 
 module Spider; module Auth
     
-    class LoginAuthenticator < Authenticator
+    module LoginAuthenticator
+        include Authenticable
         
-        def authenticate(login, password)
-            user = LoginUser.find(:username => login, :password => password)
-            if (user.length == 1)
-                return user[0].uid
-            end
-            return nil
+        def self.included(klass)
+            klass.extend(ClassMethods)
+            klass.extend(Authenticable::ClassMethods)
+            klass.register_authentication(:login)
         end
         
+        module ClassMethods
+            
+            def authenticate_login(params)
+                user = self.find(:username => params[:username])[0]
+                return nil unless user
+                return nil unless user.password && Spider::DataTypes::Password.check_match(user.password, params[:password])
+                return user
+            end
+            
+        end
+                
     end
     
 end; end

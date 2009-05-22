@@ -2,8 +2,11 @@
     <div class='error' sp:if='@failed_login'>
         Login errata
     </div>
+    <div class='logout' sp:if='@did_logout'>
+        Logout eseguito
+    </div>
     <form action='do_login' method='POST'>
-        <input type="hidden" name="redirect" value"{ @redirect }">
+        <input type="hidden" name="redirect" value="{ @redirect }">
         <div class='row'>
             <label for='login'>Login:</label>
             <input type='text' name='login' id='login' value='{ @login }'>

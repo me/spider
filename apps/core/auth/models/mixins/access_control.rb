@@ -1,5 +1,3 @@
-require 'apps/core/auth/models/user'
-
 module Spider; module Auth
 
     module AccessControl
@@ -11,8 +9,6 @@ module Spider; module Auth
             model.element(:creation_date, DateTime)
             model.element(:modification_date, DateTime)
             model.mapper_include MapperMethods
-            
-                
         end
         
         module MapperMethods

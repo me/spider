@@ -6,8 +6,12 @@ module Spider; module Auth
         include HTTPMixin
         include Visual
         
-        def self.authenticator
-            LoginAuthenticator.new
+        def self.user
+            LoginUser
+        end
+        
+        def self.default_redirect
+            nil
         end
         
         def before(action='')
@@ -21,16 +25,14 @@ module Spider; module Auth
         end
         
         def do_login
-            authenticator = self.class.authenticator
-            uid = authenticator.authenticate(@request.params['login'], @request.params['password'])
-            if (uid)
-                @request.session['uid'] = uid
-                Spider::Logger.debug("SESSION:")
-                Spider::Logger.debug(@request.session)
-                Spider::Auth.current_user = uid
+            user = self.class.user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
+            if (user)
+                user.save_to_session(@request.session)
                 if (@request.params['redirect'] && !@request.params['redirect'].empty?)
                     redir_to = @request.params['redirect']
                     redirect(redir_to)
+                elsif(self.class.default_redirect)
+                    redirect(self.class.default_redirect)
                 else
                     $out << "Loggato"
                 end
@@ -42,8 +44,9 @@ module Spider; module Auth
         end
         
         def logout
-            @request.session['uid'] = nil
-            Spider::Auth.current_user = nil
+            @request.session[:auth] = nil
+            @scene.did_logout = true
+            render('login')
         end
         
     end

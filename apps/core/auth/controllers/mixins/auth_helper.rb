@@ -7,66 +7,95 @@ module Spider; module Auth
         end
         
         def before(action='', *arguments)
+            @request.extend(RequestMethods)
             return super if action.index(Spider::Auth.route_url) == 0
-            self.class.auth_require_users.each do |params|
+            self.class.auth_require_users.each do |req|
+                klasses, params = req
+                klasses = [klasses] unless klasses.is_a?(Array)
                 @current_require = params
-                if (@request.session['uid'])
-                    Spider::Auth.current_user = @request.session['uid']
-                end
-                good = false
                 unl = params[:unless]
+                action_match = true
                 if (unl)
                     unl = [unl] unless unl.is_a?(Array)
                     unl.each do |p|
-                        if ((p.is_a?(Regexp) && action =~ p) || action == p)
-                            good = true
-                        end
+                        action_match = !check_match(p, action)
+                        break unless action_match
                     end
                 end
                 only = params[:only]
-            
                 if (only)
                     only = [only] unless only.is_a?(Array)
-                    good = true
+                    action_match = false
                     only.each do |p|
-                        if ((p.is_a?(Regexp) && action =~ p) || action == p)
-                            good = false
+                        action_match = check_match(p, action)
+                        break if action_match
+                    end
+                end
+                next unless action_match
+                user = nil
+                klasses.each do |klass|
+                    user = klass.restore_from_session(@request.session)
+                    if user
+                        @request.security[:users] << user
+                        if (params[:authentication])
+                            user = nil unless user.authenticated?(params[:authentication])
+                        elsif (params[:check])
+                            user = nil unless params[:check].call(user)
+                        else
+                            break
                         end
                     end
                 end
-                if (!good)
-                    user = Spider::Auth.current_user
-                    if (user)
-                        good = true
-                        if (params[:groups])
-                            good = false
-                            user.groups.each do |group|
-                                good = true if (params[:groups].include?(group.label) || params[:groups.include?(group.gid)])
-                            end
-                        end
-                    end
-                    raise Unauthorized unless good
-                end
+                raise Unauthorized unless user
+                @request.user = user
             end
             super
         end
         
+        def check_match(cond, action)
+            action ||= ''
+            if (cond.is_a?(Regexp))
+                return action =~ cond
+            elsif cond.is_a?(String)
+                return action == cond
+            elsif (cond.is_a?(Symbol))
+                first, rest = action.split('/', 2)
+                return false unless first
+                return first.to_sym == cond
+            end
+        end
+        
         def try_rescue(exc)
             if (exc.is_a?(Unauthorized))
-                base = @current_require[:redirect] ? @current_require[:redirect] : '/'+Spider::Auth.route_url+'/login/?'
+                base = @current_require[:redirect] ? @current_require[:redirect] : '/'+Spider::Auth.route_url+'/login/'
+                base += '?'
                 redir_url = base + 'redirect='+URI.escape(@request.path)
                 redirect(redir_url, Spider::HTTP::TEMPORARY_REDIRECT)
             else
                 super
             end
         end
+        
+        module RequestMethods
+            def security
+                @security ||= {:users => []}
+            end
+            def user
+                @user
+            end
+            def user=(val)
+                @user = val
+            end
+        end
 
         module ClassMethods
 
-            def require_user(params=nil)
+            def require_user(*args)
+                klass = args.shift if (args[0] && !args[0].is_a?(Hash))
+                params = args[0]
                 params ||= {}
                 @auth_require_users ||= []
-                @auth_require_users << params
+                @auth_require_users << [klass, params]
             end
             
             def auth_require_users

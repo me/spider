@@ -3,34 +3,40 @@ require 'digest/md5'
 
 module Spider; module Auth
     
-    class DigestAuthenticator < Authenticator
+    module DigestAuthenticator
+        include Authenticable
         
-        def authenticate(login, password, realm)
-            ha1 = self.ha1(login, password, realm)
-            user = DigestUser.find(:username => login, :realm => realm, :ha1 => ha1)
-            if (user.length == 1)
-                return user[0].uid
+        def self.included(klass)
+            klass.extend(ClassMethods)
+            klass.extend(Authenticable::ClassMethods)
+            klass.register_authentication(:digest)
+        end
+        
+        module ClassMethods
+        
+            def authenticate_digest(params)
+                login = params[:login]
+                password = params[:password]
+                realm = password[:ha1]
+                ha1 = self.ha1(login, password, realm)
+                user = find(:username => login, :realm => realm, :ha1 => ha1)
+                if (user.length == 1)
+                    return user[0].uid
+                end
+                return nil
             end
-            return nil
-        end
         
-        def find_by_ha1
-            user = DigestUser.find(:ha1 => ha1)
-            return user[0] if (user.length == 1)
-            return nil
-        end
-        
-        def find(login, realm)
-            users = DigestUser.find(:username => login, :realm => realm)
-            users.load
-            if (users.length == 1)
-                return users[0]
+            def find_by_ha1
+                user = DigestUser.find(:ha1 => ha1)
+                return user[0] if (user.length == 1)
+                return nil
             end
-            return nil
-        end
         
-        def ha1(login, password, realm)
-            Digest::MD5::hexdigest("#{login}:#{password}:#{realm}")
+            def ha1(login, password, realm)
+                Digest::MD5::hexdigest("#{login}:#{password}:#{realm}")
+            end
+            
+            
         end
         
     end
