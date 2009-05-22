@@ -100,6 +100,7 @@ module Spider; module Model; module Storage; module Db
         def disconnect
             # The subclass should check if the connection is alive, and if it is not call remove_connection instead
             self.class.release_connection(@conn, @connection_params)
+            return nil
             #@conn = nil
         end
         
