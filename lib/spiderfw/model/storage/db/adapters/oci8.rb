@@ -106,7 +106,10 @@ module Spider; module Model; module Storage; module Db
                  @last_executed = [sql, bind_vars]
                  if (Spider.conf.get('storage.db.replace_debug_vars'))
                      cnt = -1
-                     debug("oci8 executing: "+sql.gsub(/:\d+/){ debug_vars[cnt+=1] })
+                     debug("oci8 executing: "+sql.gsub(/:\d+/){
+                         v = debug_vars[cnt+=1]
+                         v.is_a?(String) ? "'#{v}'" : v
+                     })
                  else
                      debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
                      debug("oci8 executing:\n#{sql}\n[#{debug_vars_str}]")
