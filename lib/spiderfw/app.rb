@@ -23,6 +23,10 @@ module Spider
                         @route_url ||= Inflector.underscore(self.name)
                     end
                     
+                    def request_url
+                        Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
+                    end
+                    
                     def controller
                         #controllers = self.const_get(:Controllers)
                         if (!@controller || !const_defined?(@controller))
