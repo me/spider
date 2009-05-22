@@ -86,10 +86,6 @@ module Spider
                 'run'
             end
             
-            def app
-                @app ||= self.parent_module
-            end
-            
             def template_path_parent(val=nil)
                 # FIXME: damn! find a better way!
                 @template_path_parent = val if val
