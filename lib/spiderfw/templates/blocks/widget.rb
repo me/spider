@@ -7,21 +7,17 @@ module Spider; module TemplateBlocks
         def compile
             klass = Spider::Template.get_registered_class(@el.name)
             init_params = []
-            run_params = []
             id = @el.attributes['id']
             raise TemplateCompileError, "Widget #{@el.name} does not have an id" unless id
             template_attr = @el.attributes['template']
             @el.remove_attribute('template')
             @el.attributes.each do |key, val|
                 if (val[0].chr == '@')
-                    pval = "self[:#{val[1..-1]}]"
                     sval = "scene[:#{val[1..-1]}]"
                 else
-                    pval = '"'+val+'"'
-                    sval = pval
+                    sval = '"'+val+'"'
                 end
                 init_params << ":#{key} => #{sval}"
-                run_params << ":#{key} => #{pval}"                
             end
             # Hpricot fails me when doing a direct search for >tpl:override
             # overrides = @el.search('>tpl:override') + @el.search('>tpl:override-content')
