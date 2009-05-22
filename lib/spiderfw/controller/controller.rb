@@ -26,10 +26,14 @@ module Spider
             end
             
             def app
+                return @app if @app
                 @app ||= self.parent_module
+                @app = nil unless self.parent_module.include?(Spider::App)
+                return @app
             end
             
             def template_path
+                return nil unless self.app
                 return self.app.path+'/templates'
             end
             
