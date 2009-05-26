@@ -270,7 +270,7 @@ module Spider; module Model
             delete(all, true)
         end
         
-        def do_delete(obj)
+        def do_delete(obj, force=false)
             raise MapperError, "Unimplemented"
         end
         
