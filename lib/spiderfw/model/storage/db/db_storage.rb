@@ -243,7 +243,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def value_to_mapper(type, value)
-            if (type.name == 'String')
+            if (type.name == 'String' || type.name == 'Spider::DataTypes::Text')
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
                     value = Iconv.conv('utf-8//IGNORE', enc, value) if value
@@ -254,7 +254,7 @@ module Spider; module Model; module Storage; module Db
         
         def prepare_value(type, value)
             case type.name
-            when 'String'
+            when 'String', 'Spider::DataTypes::Text'
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
                     value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
