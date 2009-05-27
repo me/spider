@@ -369,7 +369,7 @@ module Spider; module Model
             unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
                 # FIXME: check if :id is already defined
                 pk_name = @elements[:id] ? :"id_#{self.short_name.downcase}" : :id
-                element(pk_name, Fixnum, :autoincrement => true, :local_pk => true)
+                element(pk_name, Fixnum, :autoincrement => true, :local_pk => true, :hidden => true)
             end
             if (params[:add_polymorphic])
                 model.polymorphic(self, :through => integrated_name)

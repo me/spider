@@ -27,12 +27,23 @@ module Spider; module Model; module Storage; module Db
             return conn
         end
         
+        def self.connection_alive?(conn)
+            # TODO: move to ping method when ruby-oci8 2.x is stable
+            begin
+                conn.autocommit?
+                return true
+            rescue
+                return false
+            end
+        end
+        
         def disconnect
             begin
                 @conn.autocommit = true if @conn
                 super
             rescue
                 self.class.remove_connection(@conn, @connection_params)
+                @conn = nil
             end
         end
         
@@ -146,8 +157,11 @@ module Spider; module Model; module Storage; module Db
                  else
                      return res
                  end
+             rescue => exc
+                 disconnect
+                 raise exc
              ensure
-                 disconnect unless in_transaction?
+                 disconnect if @conn && !in_transaction?
              end
          end
          

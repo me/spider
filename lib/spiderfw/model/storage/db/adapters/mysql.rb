@@ -84,7 +84,16 @@ module Spider; module Model; module Storage; module Db
                 super
             rescue
                 self.class.remove_connection(@conn, @connection_params)
+                @conn = nil
             end
+        end
+        
+        def self.connection_alive?(conn)
+            begin
+                return conn.ping
+            rescue
+                return false
+            end 
         end
         
         def parse_url(url)
@@ -171,8 +180,11 @@ module Spider; module Model; module Storage; module Db
                 else
                     return res
                 end
+            rescue => exc
+                disconnect
+                raise exc
             ensure
-                disconnect unless in_transaction?
+                disconnect if @conn && !in_transaction?
             end
          end
          

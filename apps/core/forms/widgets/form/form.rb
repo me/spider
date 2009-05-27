@@ -30,6 +30,8 @@ module Spider; module Forms
             @labels = {}
             @save_actions ||= {}
             @sub_links = {}
+            @disabled = []
+            @read_only = []
         end
         
         def route_widget
