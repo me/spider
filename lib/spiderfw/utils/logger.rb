@@ -12,23 +12,23 @@ module Spider
             # end
         
             def open(dest, level= :WARN)
-                @@loggers ||= {}
+                @loggers ||= {}
                 logger = ::Logger.new(dest)
                 logger.level = ::Logger.const_get(level)
-                @@loggers[dest] = logger
+                @loggers[dest] = logger
             end
             
             def reopen(dest, level= :WARN)
-                raise RuntimeError, "No open logger for #{dest}" unless @@loggers && @@loggers[dest]
-                @@loggers.delete(dest)
+                raise RuntimeError, "No open logger for #{dest}" unless @loggers && @loggers[dest]
+                @loggers.delete(dest)
                 self.open(dest, level)
             end
                 
         
             def send_to_loggers(action, *args)
                 return if $SAFE > 1
-                return unless @@loggers
-                @@loggers.each{ |dest, logger| logger.send(action, *args) }
+                return unless @loggers
+                @loggers.each{ |dest, logger| logger.send(action, *args) }
             end
         
             def debug(*args)
