@@ -40,18 +40,25 @@ module Spider
             def layout_path
                 return self.app.path+'/layouts'
             end
+        
             
-            def check_action(action, check)
-                checks = check.is_a?(Array) ? check : [check]
-                action = action.to_s
-                action = default_action if action == ''
-                action = action[0..-1] if action[-1].chr == '/'
-                checks.each do |check|
-                    return true if check.is_a?(String) && action == check || (action[-1].chr == '/' && action[0..-2] == check)
-                    return true if check.is_a?(Regexp) && action =~ check
-                end
-                return false
+            def before(conditions, method, params={})
+                @dispatch_methods ||= {}
+                @dispatch_methods[:before] ||= []
+                @dispatch_methods[:before] << [conditions, method, params]
             end
+            
+            def before_methods
+                @dispatch_methods && @dispatch_methods[:before] ? @dispatch_methods[:before] : []
+            end
+            
+            def before_unless(condition, method, params={})
+                @dispatch_methods ||= {}
+                @dispatch_methods[:before] ||= []
+                params[:unless] = true
+                @dispatch_methods[:before] << [condition, method, params]
+            end
+            
             
         end
         
@@ -153,6 +160,10 @@ module Spider
         def done=(val)
             @done = val
             @dispatch_previous.done = val if @dispatch_previous
+        end
+        
+        def check_action(action, c)
+            self.class.check_action(action, c)
         end
         
         def get_scene(scene=nil)

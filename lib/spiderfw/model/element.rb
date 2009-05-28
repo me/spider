@@ -21,6 +21,10 @@ module Spider; module Model
             return association_type || type
         end
         
+        def junction?
+            @attributes[:junction]
+        end
+        
         def association_type
             @attributes[:association_type]
         end

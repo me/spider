@@ -18,7 +18,7 @@ module Spider; module Auth
                 if (unl)
                     unl = [unl] unless unl.is_a?(Array)
                     unl.each do |p|
-                        action_match = !check_match(p, action)
+                        action_match = !check_action(action, p)
                         break unless action_match
                     end
                 end
@@ -27,7 +27,7 @@ module Spider; module Auth
                     only = [only] unless only.is_a?(Array)
                     action_match = false
                     only.each do |p|
-                        action_match = check_match(p, action)
+                        action_match = check_action(action, p)
                         break if action_match
                     end
                 end
@@ -50,19 +50,6 @@ module Spider; module Auth
                 @request.user = user
             end
             super
-        end
-        
-        def check_match(cond, action)
-            action ||= ''
-            if (cond.is_a?(Regexp))
-                return action =~ cond
-            elsif cond.is_a?(String)
-                return action == cond
-            elsif (cond.is_a?(Symbol))
-                first, rest = action.split('/', 2)
-                return false unless first
-                return first.to_sym == cond
-            end
         end
         
         def try_rescue(exc)

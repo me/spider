@@ -4,6 +4,7 @@ require 'mysql'
 module Spider; module Model; module Storage; module Db
     
     class Mysql < DbStorage
+        attr_reader :last_insert_id
         
         def self.base_types
             super << Spider::DataTypes::Binary
@@ -264,7 +265,7 @@ module Spider; module Model; module Storage; module Db
                      }
                      flags = f.flags
                      self.class.field_flags.each do |flag_name, flag_val|
-                         col[flag_name] = (flags % flag_val == 0) ? true : false
+                         col[flag_name] = (flags & flag_val == 0) ? false : true
                      end
                      columns[f.name] = col
                  end
@@ -350,7 +351,7 @@ module Spider; module Model; module Storage; module Db
              def generate_schema(schema=nil)
                  schema = super
                  autoincrement = schema.columns.select{ |k, v| v[:attributes][:autoincrement] }
-                 keep = autoincrement.select{ |k, v| @model.elements[k].primary_key? }
+                 keep = autoincrement.select{ |k, v| @model.elements[k].primary_key? }.map{ |v| v[0] }
                  keep = [] if keep.length > 1
                  #keep = autoincrement[0] if (keep.length != 1)
                  autoincrement.each do |k, v|

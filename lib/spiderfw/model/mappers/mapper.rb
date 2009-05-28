@@ -546,6 +546,9 @@ module Spider; module Model
                     integrated_from = element.integrated_from
                     integrated_from_element = element.integrated_from_element
                     condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
+                elsif (element.junction?) # conditions on junction id don't make sense
+                    condition.delete(k)
+                    condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
                 end
                 if (element.type.subclass_of?(Spider::DataType) && !v.is_a?(element.type))
                     condition[k] = element.type.new(v)

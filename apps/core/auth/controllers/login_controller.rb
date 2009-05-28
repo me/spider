@@ -14,6 +14,10 @@ module Spider; module Auth
             nil
         end
         
+        def default_redirect
+            self.class.default_redirect
+        end
+        
         def before(action='')
             super
             @response.headers['Content-Type'] = 'text/html'
@@ -31,8 +35,8 @@ module Spider; module Auth
                 if (@request.params['redirect'] && !@request.params['redirect'].empty?)
                     redir_to = @request.params['redirect']
                     redirect(redir_to)
-                elsif(self.class.default_redirect)
-                    redirect(self.class.default_redirect)
+                elsif(self.default_redirect)
+                    redirect(self.default_redirect)
                 else
                     $out << "Loggato"
                 end

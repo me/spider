@@ -705,14 +705,12 @@ module Spider; module Model; module Mappers
         end
         
         def get_schema
-            return @model.superclass.mapper.get_schema() if (@model.attributes[:inherit_storage])
+            schema = @model.superclass.mapper.get_schema() if (@model.attributes[:inherit_storage])
             if (@schema_define_proc)
                 schema =  Spider::Model::Storage::Db::DbSchema.new
                 schema.instance_eval(&@schema_define_proc)
-                schema = generate_schema(schema)
-            else
-                schema = generate_schema
             end
+            schema = generate_schema(schema)
             if (@schema_proc)
                 schema.instance_eval(&@schema_proc)
             end
@@ -745,7 +743,7 @@ module Spider; module Model; module Mappers
                         storage_type = Model.simplify_type(storage_type)
                     end
                     db_attributes = current_column[:attributes]
-                    if (!db_attributes)
+                    if (!db_attributes || db_attributes.empty?)
                         db_attributes = @storage.column_attributes(storage_type, element.attributes)
                         db_attributes.merge(element.attributes[:db]) if (element.attributes[:db]) 
                         if (element.attributes[:autoincrement] && !db_attributes[:autoincrement])
@@ -781,7 +779,13 @@ module Spider; module Model; module Mappers
                                 :precision => key_attributes[:precision]
                             }
                             current = current_schema[key.name] || {}
-                            column_name = current[:name] || @storage.column_name("#{element.name}_#{key.name}")
+                            # if (element.attributes[:integrated_model] && element.model == @model.superclass && 
+                            #                                 @model.elements[key.name].integrated_from.name == element.name)
+                            #                                 c_name = @storage.column_name(key.name)
+                            #                             else
+                                c_name = @storage.column_name("#{element.name}_#{key.name}")
+                            # end
+                            column_name = current[:name] || c_name
                             column_type = current[:type] || @storage.column_type(key_type, key_attributes)
                             column_attributes = current[:attributes] || @storage.column_attributes(key_type, key_attributes)
                             schema.set_foreign_key(element.name, key.name, 

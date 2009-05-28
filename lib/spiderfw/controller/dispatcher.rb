@@ -43,6 +43,14 @@ module Spider
             return nil unless obj
             meth_action = route_action.length > 0 ? route_action : obj.class.default_action
             begin
+                if (obj.class.dispatch_methods && obj.class.dispatch_methods[method])
+                    obj.class.dispatch_methods[method].each do |dm|
+                        conditions, d_method, params = dm
+                        test = check_action(route_action, conditions)
+                        test = !test if params[:unless]
+                        obj.send(d_method, route_action, *new_arguments) if (test)
+                    end
+                end
                 res = obj.send(method, route_action, *(new_arguments))
                 unless meth_action.empty?
                     meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
@@ -185,7 +193,28 @@ module Spider
                 return [] unless @dispatch_chains && @dispatch_chains[method]
                 @dispatch_chains[method]
             end
-                
+            
+            def dispatch_methods
+                @dispatch_methods
+            end
+            
+            def check_action(action, check)
+                checks = check.is_a?(Array) ? check : [check]
+                action = action.to_s
+                action = default_action if action == ''
+                action = action[0..-1] if action[-1].chr == '/'
+                checks.each do |check|
+                    if check.is_a?(String)
+                        return true if (action == check || (action[-1].chr == '/' && action[0..-2] == check))
+                    elsif check.is_a?(Regexp)
+                        return true if action =~ check
+                    elsif (check.is_a?(Symbol))
+                        first, rest = action.split('/', 2)
+                        return true if first && first.to_sym == check
+                    end
+                end
+                return false
+            end
             
         end
         

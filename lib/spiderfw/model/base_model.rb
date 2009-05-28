@@ -350,7 +350,7 @@ module Spider; module Model
                 @elements = {}
                 @elements_order = []
             end
-            primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks]) 
+            primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks])
             integrated_name = params[:name]
             if (!integrated_name)
                 integrated_name = (self.parent_module == model.parent_module) ? model.short_name : model.name
@@ -364,6 +364,8 @@ module Spider; module Model
             attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
             integrate(integrated_name, :keep_pks => true)
+            model.elements_array.select{ |el| el.attributes[:local_pk] }.each{ |el| remove_element(el.name) }
+
             unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
                 # FIXME: check if :id is already defined
                 pk_name = @elements[:id] ? :"id_#{self.short_name.downcase}" : :id
