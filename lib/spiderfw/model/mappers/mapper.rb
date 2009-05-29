@@ -551,8 +551,13 @@ module Spider; module Model
                     condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
                 end
                 if (element.type.subclass_of?(Spider::DataType) && !v.is_a?(element.type))
+                    condition.delete(k)
                     condition[k] = element.type.new(v)
+                elsif element.type == DateTime && !v.is_a?(Date)
+                    condition.delete(k)
+                    condition[k] = DateTime.parse(v)
                 end
+                    
             end
             condition.subconditions.each do |sub|
                 prepare_query_condition(sub)
