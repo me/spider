@@ -131,7 +131,7 @@ module Hippo
     
         module Mapper
         
-            def generate_schema
+            def generate_schema(schema=nil)
                 return super unless @model.binding
                 schema = Spider::Model::Storage::Db::DbSchema.new
                 schema.table = @model.binding[:table]
