@@ -4,6 +4,7 @@ module Spider
         #autoload :Thin,     'spiderfw/http/servers/thin'
         autoload :WEBrick,  'spiderfw/http/adapters/webrick'
         autoload :Mongrel,  'spiderfw/http/adapters/mongrel'
+        autoload :Thin,     'spiderfw/http/adapters/thin'
         #autoload :Rack,     'spiderfw/http/adapters/rack/rack'
         
         @multipart_regexp = /\Amultipart\/form-data.*boundary=\"?([^\";,]+)/n.freeze

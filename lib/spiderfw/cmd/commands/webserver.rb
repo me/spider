@@ -10,7 +10,8 @@ class WebServerCommand < CmdParse::Command
         
         servers = {
             'webrick' => :WEBrick,
-            'mongrel' => :Mongrel
+            'mongrel' => :Mongrel,
+            'thin' => :Thin
         }
 
         # start
@@ -20,7 +21,7 @@ class WebServerCommand < CmdParse::Command
             opt.on("--port N", _("The port the webserver should listen on"), "-p") { |port|
                 @port = port
             }
-            opt.on("--server name", _("Which webserver to use; the choices are 'webrick' and 'mongrel'"), "-s"){ |server_name|
+            opt.on("--server name", _("Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"), "-s"){ |server_name|
                 raise CmdParse::InvalidArgumentError, _("The webserver %s is not supported") % server_name unless servers[server_name]
                 @server_name = server_name
             }
