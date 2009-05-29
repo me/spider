@@ -4,6 +4,10 @@ module Spider; module Model; module Storage
         include Spider::Logger
         attr_reader :url
         
+        def self.sequence_sync
+            @sequence_sync ||= Sync.new
+        end
+        
         def self.base_types
             Model.base_types
         end
@@ -61,6 +65,7 @@ module Spider; module Model; module Storage
         def sequence_next(name, newval=nil, increment=1)
             path = sequence_file_path(name)
             FileUtils.mkpath(File.dirname(path))
+            @sync.lock(Sync::EX)
             if newval
                 seq = newval
             else
@@ -86,6 +91,7 @@ module Spider; module Model; module Storage
                 f.flock File::LOCK_UN
                 f.close
             end
+            @sync.lock(Sync::UN)
             return seq
         end
             
