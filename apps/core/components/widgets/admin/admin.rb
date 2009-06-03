@@ -1,3 +1,5 @@
+require 'apps/core/auth/_init.rb'
+
 module Spider; module Components
     
     class Admin < Spider::Widget
