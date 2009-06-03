@@ -319,11 +319,12 @@ module Spider; module Model; module Storage; module Db
                 join, join_values = sql_joins(query[:joins][table][to_table])
                 str += " "+join
                 values += join_values
-                # if (query[:joins][to_table])
-                #     sub_str, sub_values = sql_tables_join(query, to_table)
-                #     str += " "+sub_str
-                #     values += sub_values
-                # end
+                if (query[:joins][to_table])
+                    query[:joins][to_table].delete(table) # avoid endless loop
+                    sub_str, sub_values = sql_tables_join(query, to_table)
+                    str += " "+sub_str
+                    values += sub_values
+                end
             end
             return str, values
         end
