@@ -29,29 +29,48 @@ module Spider; module Model; module Storage; module Db
                 max_connections = Spider.conf.get('storage.db.pool.size')
                 
                 conn = nil
+                connect_exception = nil
                 @connection_semaphore.synchronize{
                     @free_connections[args] ||= []
                     @connections[args] ||= []
-                    if (@free_connections[args].empty?)
-                        #Spider::Logger.debug("NO FREE CONNECTION")
-                        if @connections[args].length <= max_connections
-                            conn = new_connection(*args)
-                            #Spider::Logger.debug("CREATED NEW CONNECTION #{conn}")
-                            @connections[args] << conn
-                        else
-                            sleep_cnt = 0
-                            while @free_connections[args].empty? && sleep_cnt < 10000
-                                sleep(0.001)
-                                sleep_cnt += 1
+                    keep_trying = true
+                    while (!conn && keep_trying)
+                        if (@free_connections[args].empty?)
+                            #Spider::Logger.debug("NO FREE CONNECTION")
+                            if @connections[args].length <= max_connections
+                                begin
+                                    conn = new_connection(*args)
+                                    @connections[args] << conn
+                                rescue => exc
+                                    connect_exception = exc
+                                    keep_trying = false
+                                end
+                                #Spider::Logger.debug("CREATED NEW CONNECTION #{conn}")
+                            else
+                                sleep_cnt = 0
+                                while @free_connections[args].empty? && sleep_cnt < 10000
+                                    sleep(0.001)
+                                    sleep_cnt += 1
+                                end
+                                keep_trying = false if sleep_cnt == 10000
+                                #Spider::Logger.debug("WAITED FOR FREE CONNECTION, GOT #{@free_connections[args].last}")
                             end
-                            raise StorageException, "Unable to get a connection" if sleep_cnt == 10000
-                            #Spider::Logger.debug("WAITED FOR FREE CONNECTION, GOT #{@free_connections[args].last}")
+                        end
+                        unless conn
+                            while (!conn && !@free_connections[args].empty?)
+                                conn = @free_connections[args].pop
+                                unless connection_alive?(conn)
+                                    remove_connection_nosync(conn, args)
+                                    conn = nil
+                                end
+                            end
                         end
                     end
-                    conn ||= @free_connections[args].pop
                     #Spider::Logger.debug("GOT CONNECTION #{args}")
                     
                 }
+                raise connect_exception if connect_exception
+                raise StorageException, "Unable to get a connection" unless conn
                 return conn
             end
             
@@ -63,9 +82,13 @@ module Spider; module Model; module Storage; module Db
             
             def remove_connection(conn, conn_params)
                 @connection_semaphore.synchronize{
-                    @free_connections[conn_params].delete(conn)
-                    @connections[conn_params].delete(conn)
+                    remove_connection_nosync(conn, conn_params)
                 }
+            end
+            
+            def remove_connection_nosync(conn, conn_params)
+                @free_connections[conn_params].delete(conn)
+                @connections[conn_params].delete(conn)
             end
                 
             
@@ -99,7 +122,11 @@ module Spider; module Model; module Storage; module Db
         
         def disconnect
             # The subclass should check if the connection is alive, and if it is not call remove_connection instead
-            self.class.release_connection(@conn, @connection_params)
+            begin
+                self.class.release_connection(@conn, @connection_params)
+            ensure
+                @conn = nil
+            end
             return nil
             #@conn = nil
         end
