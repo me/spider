@@ -7,7 +7,7 @@ class ConsoleCommand < CmdParse::Command
 #        @description = _("")
         @opts = {:irb => 'irb'}
         
-        options = CmdParse::OptionParserWrapper.new do |opt|
+        self.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--irb", 
                    _("Irb executable to use"),
                    "-i"){ |irb|
