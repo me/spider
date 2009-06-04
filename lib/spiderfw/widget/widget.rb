@@ -149,7 +149,8 @@ module Spider
         
         def widget_request_path
             p = @request.path
-            p = p[0..p.index(@_action)-2] if @_action && !@_action.empty?
+            i = p.index(@_action) if @_action && !@_action.empty?
+            p = p[0..i-2] if i
             p = p.sub(/\/+$/, '')
             return p
         end
