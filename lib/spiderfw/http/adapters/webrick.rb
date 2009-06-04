@@ -75,7 +75,7 @@ module Spider; module HTTP
                 end
             end
             @headers_sent = true
-            @webrick_thread.run
+            @webrick_thread.run if Spider.conf.get('webserver.force_threads')
         end
 
         def headers_sent?
@@ -103,7 +103,7 @@ module Spider; module HTTP
             controller_request.server = WEBrick
             controller_request.webrick_request = request
             path = request.path.chomp('/')
-            controller_request.action = path
+            controller_request.action = path || ''
             controller_request.request_time = request.request_time
             controller_request.body = request.body
 
@@ -116,7 +116,7 @@ module Spider; module HTTP
 
             controller_done = false
 
-            controllerThread = Thread.start do
+            run_block = lambda do
                 begin
                     controller = ::Spider::HTTPController.new(controller_request, controller_response)
                     controller.extend(Spider::FirstResponder)
@@ -135,9 +135,15 @@ module Spider; module HTTP
                 end
             end
 
-            while (!controller_done && !controller_response.server_output.headers_sent?)
-                Thread.stop
+            if (Spider.conf.get('webserver.force_threads'))
+                controllerThread = Thread.start &run_block
+                while (!controller_done && !controller_response.server_output.headers_sent?)
+                    Thread.stop
+                end
+            else
+                run_block.call
             end
+
             Spider.logger.debug("Webrick responding")
         end
 
@@ -146,6 +152,9 @@ module Spider; module HTTP
             # Spider.logger.debug("METAVARS: #{request.meta_vars}")
             env = request.meta_vars.clone
             env['HTTP_CONTENT_TYPE'] = env['CONTENT_TYPE']
+            env["HTTP_VERSION"] ||= env["SERVER_PROTOCOL"]
+            env["QUERY_STRING"] ||= ""
+            env["REQUEST_PATH"] ||= env['PATH_INFO']
             return env
         end
 
