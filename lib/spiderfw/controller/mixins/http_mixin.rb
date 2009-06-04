@@ -21,7 +21,7 @@ module Spider; module ControllerMixins
         end
         
         def self.reverse_proxy_mapping(url)
-            return url unless url
+            return '' unless url
             if (maps = Spider.conf.get('http.proxy_mapping'))
                 maps.each do |proxy, spider|
                     return proxy + url[spider.length..-1] if (spider == "" || url[0..spider.length-1] == spider)
