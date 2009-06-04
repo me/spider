@@ -59,7 +59,7 @@ module Spider
                     res = obj.send(try_meth, *new_arguments) if obj.respond_to?(try_meth)
                 end
                 return res
-            rescue => exc
+            rescue StandardError, SecurityError => exc
                 if (obj.respond_to?(:try_rescue))
                     obj.send(:try_rescue, exc)
                 else
