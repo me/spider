@@ -89,7 +89,7 @@ module Spider
                 prev = @dispatch_previous.call_path 
                 act = prev+'/'+act unless prev.empty?
             end
-            return ('/'+act).gsub(/\/+/, '/')
+            return ('/'+act).gsub(/\/+/, '/').sub(/\/$/, '')
         end
         
         def request_path
