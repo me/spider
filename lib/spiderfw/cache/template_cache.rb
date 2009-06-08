@@ -65,6 +65,7 @@ module Spider
             Dir.new(path).each do |entry|
                 next if entry[0].chr == '.'
                 sub_path = "#{path}/#{entry}"
+                next if entry == '__info'
                 next unless File.directory?(sub_path)
                 compiled.subtemplates[entry] = get_compiled_template(sub_path)
             end
