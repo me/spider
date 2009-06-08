@@ -96,7 +96,7 @@ module Spider
                 case try
                 when true
                     action = path
-                    matched = path
+                    matched = ''
                 when String
                     test_path = path
                     if (options[:ignore_case])
