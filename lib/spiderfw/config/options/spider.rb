@@ -58,6 +58,11 @@ module Spider
     config_option 'http.proxy_mapping', _("If the request is proxyied, the urls used to reach spider, with the corresponding paths called by the proxy"),
         :type => Hash
     
-    config_option 'debug.console.level', _("Level of debug output to console"), :type => Symbol, :default => :INFO #,
+    config_option 'debug.console.level', _("Level of debug output to console"), :default => :INFO,
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.upcase.to_sym : false }
+    config_option 'log.errors', _("Log errors to file"), :default => true
+    config_option 'log.debug.level', _("Log level to use for debug file (false for no debug)"), :default => false,
+        :choices => [false, :DEBUG, :INFO],
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.upcase.to_sym : false }
 #                    :process => lambda{ |v| v.upcase }
 end

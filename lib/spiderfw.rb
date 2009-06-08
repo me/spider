@@ -22,12 +22,7 @@ module Spider
             @app_paths = []
             @root = $SPIDER_RUN_PATH
             setup_paths(@root)
-            @logger = Spider::Logger
-            @logger.open(STDERR, :DEBUG)
-            if (File.exist?(@paths[:log]))
-                @logger.open(@paths[:log]+'/error.log', :ERROR)
-#                @logger.open(@paths[:log]+'/debug.log', :DEBUG)
-            end
+            start_loggers
 #            @controller = Controller
             @server = {}
             @paths[:spider] = $SPIDER_PATH
@@ -39,7 +34,8 @@ module Spider
             end
             
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
-            @logger.reopen(STDERR, Spider.conf.get('debug.console.level'))
+            @logger.close(STDERR)
+            @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
             
             @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
@@ -51,6 +47,18 @@ module Spider
             #         @controller.route('/'+app.name.gsub('::', '/'), app.controller, :ignore_case => true)
             #     end
             # end
+        end
+        
+        def start_loggers
+            @logger = Spider::Logger
+            @logger.close_all
+            @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
+            if (File.exist?(@paths[:log]))
+                @logger.open(@paths[:log]+'/error.log', :ERROR) if Spider.conf.get('log.errors')
+                if (Spider.conf.get('log.debug.level'))
+                    @logger.open(@paths[:log]+'/debug.log', Spider.conf.get('log.debug.level'))
+                end
+            end
         end
         
     
