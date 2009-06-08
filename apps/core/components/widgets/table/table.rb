@@ -107,7 +107,7 @@ module Spider; module Components
                         list += "</ul>"
                         res_row[el] = list
                     else
-                        str = row[el].to_s
+                        str = row[el] ? row[el].to_s : ''
                         str = str.split("\n").map{ |str_row|
                             if str_row.length > @attributes[:max_element_length]
                                 str_row[0..@attributes[:max_element_length]]+'...' 
