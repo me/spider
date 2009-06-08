@@ -39,9 +39,9 @@ module Spider; module ControllerMixins
         
         def before(action='', *arguments)
             # Redirect to url + slash if controller is called without action
-            if (action == '' && @request.env['PATH_INFO'][-1].chr != '/')
-                dest = @request.env['PATH_INFO']+'/'
-                dest = HTTPMixin.reverse_proxy_mapping(dest)
+            dest = HTTPMixin.reverse_proxy_mapping(@request.env['PATH_INFO'])
+            if (action == '' && dest[-1].chr != '/')
+                dest = dest += '/'
                 if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
                     dest += '?'+@request.env['QUERY_STRING']
                 end
