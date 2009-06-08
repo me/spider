@@ -83,7 +83,7 @@ module Spider
         module HTTPRequest
             
             def path
-                Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['REQUEST_PATH'])
+                Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['PATH_INFO'])
             end
             
         end
