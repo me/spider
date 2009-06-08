@@ -18,6 +18,15 @@ module Spider
                 @loggers[dest] = logger
             end
             
+            def close(dest)
+                #raise RuntimeError, "No open logger for #{dest}" unless @loggers && @loggers[dest]
+                @loggers.delete(dest)
+            end
+            
+            def close_all
+                @loggers = {}
+            end
+            
             def reopen(dest, level= :WARN)
                 raise RuntimeError, "No open logger for #{dest}" unless @loggers && @loggers[dest]
                 @loggers.delete(dest)
@@ -28,7 +37,12 @@ module Spider
             def send_to_loggers(action, *args)
                 return if $SAFE > 1
                 return unless @loggers
-                @loggers.each{ |dest, logger| logger.send(action, *args) }
+                @loggers.each do |dest, logger| 
+                    begin
+                        logger.send(action, *args) 
+                    rescue => exc
+                    end
+                end
             end
         
             def debug(*args)
