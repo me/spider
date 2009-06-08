@@ -273,7 +273,11 @@ module Spider; module Model; module Storage; module Db
             if (type.name == 'String' || type.name == 'Spider::DataTypes::Text')
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv('utf-8//IGNORE', enc, value) if value
+                    begin
+                        value = Iconv.conv('utf-8//IGNORE', enc, value) if value
+                    rescue Iconv::InvalidCharacter
+                        value = ''
+                    end
                 end
             end
             return value
@@ -284,7 +288,11 @@ module Spider; module Model; module Storage; module Db
             when 'String', 'Spider::DataTypes::Text'
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
-                    value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
+                    begin
+                        value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
+                    rescue Iconv::InvalidCharacter
+                        value = ''
+                    end
                 end
             when 'BigDecimal'
                 value = value.to_f
