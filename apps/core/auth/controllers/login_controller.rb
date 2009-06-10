@@ -20,11 +20,12 @@ module Spider; module Auth
         
         def before(action='')
             super
-            @response.headers['Content-Type'] = 'text/html'
+            @response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         end
         
         def index
             @scene.redirect = @request.params['redirect'] if (@request.params['redirect'])
+            @scene.unauthorized_msg = @request.session.flash[:unauthorized_exception].message if @request.session.flash[:unauthorized_exception]
             render('login')
         end
         

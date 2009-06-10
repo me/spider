@@ -33,6 +33,7 @@ module Spider; module Auth
                 end
                 next unless action_match
                 user = nil
+                unauthorized_exception = nil
                 klasses.each do |klass|
                     user = klass.restore_from_session(@request.session)
                     if user
@@ -40,13 +41,22 @@ module Spider; module Auth
                         if (params[:authentication])
                             user = nil unless user.authenticated?(params[:authentication])
                         elsif (params[:check])
-                            user = nil unless params[:check].call(user)
+                            begin
+                                c = params[:check].call(user)
+                                user = nil unless c == true
+                                raise Unauthorized.new(c) if c.is_a?(String)
+                            rescue => exc
+                                user = nil
+                                unauthorized_exception = exc
+                            end
                         else
                             break
                         end
                     end
                 end
-                raise Unauthorized unless user
+                unless user
+                    raise unauthorized_exception ? unauthorized_exception : Unauthorized
+                end
                 @request.user = user
             end
             super
@@ -55,8 +65,10 @@ module Spider; module Auth
         def try_rescue(exc)
             if (exc.is_a?(Unauthorized))
                 base = @current_require[:redirect] ? @current_require[:redirect] : '/'+Spider::Auth.route_url+'/login/'
+                base = request_path+'/'+base unless base[0].chr == '/'
                 base += '?'
                 redir_url = base + 'redirect='+URI.escape(@request.path)
+                @request.session.flash[:unauthorized_exception] = exc
                 redirect(redir_url, Spider::HTTP::TEMPORARY_REDIRECT)
             else
                 super

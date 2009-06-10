@@ -2,6 +2,9 @@
     <div class='error' sp:if='@failed_login'>
         Login errata
     </div>
+    <div class='error' sp:if='@unauthorized_msg'>
+        { @unauthorized_msg }
+    </div>
     <div class='logout' sp:if='@did_logout'>
         Logout eseguito
     </div>
