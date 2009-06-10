@@ -25,7 +25,7 @@ module Spider; module Auth
         
         def index
             @scene.redirect = @request.params['redirect'] if (@request.params['redirect'])
-            @scene.unauthorized_msg = @request.session.flash[:unauthorized_exception].message if @request.session.flash[:unauthorized_exception]
+            @scene.unauthorized_msg = @request.session.flash[:unauthorized_exception].message if @request.session.flash[:unauthorized_exception] && @request.session.flash[:unauthorized_exception].message != 'Spider::Auth::Unauthorized'
             render('login')
         end
         
