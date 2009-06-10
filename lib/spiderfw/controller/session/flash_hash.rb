@@ -13,7 +13,13 @@ module Spider
         
         def reset
             @active = {}
+            @accessed = {}
             @sub_flashes.each{ |k, f| f.reset }
+        end
+        
+        def [](key)
+            @accessed[key] = true
+            super
         end
         
         def []=(key, val)
@@ -39,7 +45,7 @@ module Spider
         end
         
         def purge
-            self.delete_if{ |k, v| !@active[k] }
+            self.delete_if{ |k, v| @accessed[k] && !@active[k] }
             @sub_flashes.each{ |k, f| f.purge }
         end
         
