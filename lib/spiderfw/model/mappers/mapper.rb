@@ -107,11 +107,11 @@ module Spider; module Model
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
                     obj.instantiate_element(el) unless obj.get(el)
-                    obj.get(el).save if obj.element_modified?(el) || !obj.primary_keys_set?
+                    obj.get(el).save if (obj.element_modified?(el) || !obj.primary_keys_set?) && obj.get(el).mapper.class.write?
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-                obj.get(el).save if obj.element_modified?(el)
+                obj.get(el).save if obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
 
         end
