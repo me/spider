@@ -26,7 +26,7 @@ module Spider; module TemplateBlocks
                 repeated = $1.strip
                 arguments = $2.strip
             end
-            c = "#{var_to_scene(repeated)}.#{rep_type} do |#{arguments}|\n"
+            c = "#{vars_to_scene(repeated)}.#{rep_type} do |#{arguments}|\n"
             content = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile
             content.run_code.each_line do |line|
                 c += '  '+line
