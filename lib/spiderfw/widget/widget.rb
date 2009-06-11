@@ -295,6 +295,10 @@ module Spider
             return s
         end
         
+        def transient_session
+            return session(@request.session.transient, Spider::TransientHash)
+        end
+        
         def create_widget(klass, id,  *params)
             obj = klass.new(*params)
             obj.id = id

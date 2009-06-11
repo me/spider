@@ -1,5 +1,6 @@
 require 'uuid'
 require 'spiderfw/controller/session/flash_hash'
+require 'spiderfw/controller/session/transient_hash'
 
 module Spider
     
@@ -62,10 +63,11 @@ module Spider
         end
         
         def persist
-            # Spider::Logger.debug("PERSISTING SESSION:")
-            # Spider::Logger.debug(@data)
             clear_empty_hashes!(@data)
             @data[:_flash].purge if @data[:_flash]
+            @data[:_transient].purge if @data[:_transient]
+            # Spider::Logger.debug("PERSISTING SESSION:")
+            # Spider::Logger.debug(@data)
             self.class[@sid] = @data
         end
         
@@ -75,6 +77,10 @@ module Spider
         
         def flash
             @data[:_flash] ||= FlashHash.new
+        end
+        
+        def transient
+            @data[:_transient] ||= TransientHash.new
         end
         
         def clear_empty_hashes!(h)
