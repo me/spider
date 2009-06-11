@@ -20,7 +20,7 @@
             <td colspan="{ @elements.size }" >
                 <a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
                 <sp:pass sp:if="@paginate_first > 1">
-                    <a href="{ @request[:path] }?_w{ @widget[:param] }[page]=1">1</a> ... 
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }[page]=1" class="page">1</a> ... 
                 </sp:pass>
                 <sp:pass sp:each="(@paginate_first..@paginate_last) |i|" >
                     <a sp:if="i != @page" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ i }" class="page">
@@ -29,7 +29,7 @@
                     <span sp:if="i == @page" class="current">{ i }</span>
                 </sp:pass>
                 <sp:pass sp:if="@paginate_last < @pages-1">
-                    ... <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @pages }">{ @pages }</a> 
+                    ... <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @pages }" class="page">{ @pages }</a> 
                 </sp:pass>
                 <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>
             </td>
