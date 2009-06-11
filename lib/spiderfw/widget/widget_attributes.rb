@@ -2,9 +2,12 @@ module Spider
     
     class WidgetAttributes < Hash
         
-        def initialize(widget_klass)
-            @widget_klass = widget_klass
-            @attributes = widget_klass.attributes
+        def initialize(widget)
+            @widget = widget
+            @attributes = widget.class.attributes
+            @attributes.each do |k, params|
+                self[k] = params[:default] if params[:default]
+            end
         end
         
         def []=(k, v)
@@ -22,7 +25,19 @@ module Spider
                 end
             end
             v = params[:process].call(v) if params[:process] && v
+            @widget.instance_variable_set("@#{k}", v) if params[:set_var]
             super(k, v)
+        end
+        
+        def [](k)
+            return nil unless @attributes[k]
+            params = @attributes[k]
+            v = super
+            if (!v)
+                return @widget.instance_variable_get("@#{k}") if params[:instance_attr]
+                return nil
+            end
+            return v
         end
         
         
