@@ -98,14 +98,16 @@ module Spider; module Components
                     end
                     if (@model.elements[el].multiple?)
                         list = "<ul>"
-                        row[el][0..2].each{ |sub|
-                            sub_desc = sub.nil? ? '' : sub.to_s
-                            sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
-                            list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
-                        }
-                        list += "<li>...</li>" if (row[el].length > 3)
-                        list += "</ul>"
-                        res_row[el] = list
+                        if(row[el])
+                            row[el][0..2].each{ |sub|
+                                sub_desc = sub.nil? ? '' : sub.to_s
+                                sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
+                                list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
+                            }
+                            list += "<li>...</li>" if (row[el].length > 3)
+                            list += "</ul>"
+                            res_row[el] = list
+                        end
                     else
                         str = row[el] ? row[el].to_s : ''
                         str = str.split("\n").map{ |str_row|
