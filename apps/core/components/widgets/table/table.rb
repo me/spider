@@ -8,7 +8,7 @@ module Spider; module Components
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
         attribute :max_element_length, :type => Fixnum, :default => 80
-        attr_accessor :queryset, :condition
+        attr_accessor :queryset, :condition, :page
         
         def condition
             @condition ||= Spider::Model::Condition.new
@@ -19,16 +19,15 @@ module Spider; module Components
         end
         
         def prepare(action='')
-            if (@attributes[:paginate])
-                @page = params['page']
-                @page ||= session[:page]
-                @page ||= 1
-                @page = @page.to_i
-                @offset = ((@page - 1) * @attributes[:row_limit])
-            end
             if params['sort']
                 @sort = params['sort'].to_sym 
                 @page = 1
+            end
+            if (@attributes[:paginate])
+                @page = params['page'] if params['page']
+                @page ||= 1
+                @page = @page.to_i
+                @offset = ((@page - 1) * @attributes[:row_limit])
             end
             if (@sort)
                 if (@model.elements[@sort].model?)
@@ -72,6 +71,7 @@ module Spider; module Components
                 @rows.limit = @attributes[:row_limit]
                 @rows.offset = @offset
                 @scene.page = @page
+                @scene.paginate_first = [@page-5, 1].max
                 @scene.paginate = true
             end
             @rows.order_by(*@sort) if @sort
@@ -80,6 +80,7 @@ module Spider; module Components
             @scene.data = @rows
             @scene.has_more = @rows.has_more?
             @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
+            @scene.paginate_last = [@scene.paginate_first + 9, @scene.pages].min
             super
         end
         

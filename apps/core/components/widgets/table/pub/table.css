@@ -82,3 +82,18 @@
     margin-left: 10px;
     margin-right: 10px;
 }
+
+.spider.components.table .paginator a.page{
+    margin-left: 3px;
+    margin-right: 3px;
+    font-size: 1.1em;
+    color: black;
+}
+
+.spider.components.table .paginator .current{
+    margin-left: 3px;
+    margin-right: 3px;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #CC0000;
+}
