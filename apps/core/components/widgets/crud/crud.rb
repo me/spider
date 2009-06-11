@@ -25,20 +25,29 @@ module Spider; module Components
                 @scene.ask_delete = true
             end
             super
+            transient_session[:table_params] = @widgets[:table].params if (@widgets[:table])
         end
         
         def prepare_widgets
             if (@action == :table && @widgets[:table])
                 @key_element = @model.primary_keys[0].name
+                table_page = nil
+                if (transient_session[:table_params])
+                    table_page = transient_session[:table_params]['page'] if transient_session[:table_params]['page']
+                end
+                table_page = 1 if params['table_q'] || params['clear_table_q']
+                @widgets[:table].page = table_page
                 @widgets[:table].attributes[:elements] = @attributes[:table_elements]
                 @widgets[:table].scene.key_element = @key_element
                 @widgets[:table].scene.crud_path = @full_path
                 @widgets[:table].scene.crud = widget_to_scene(self)
                 @table_q = params['table_q']
+                @table_q ||= transient_session[:table_q]
                 @table_q = nil if params['clear_table_q']
                 if (@table_q)
                     @widgets[:table].add_condition(@model.free_query_condition(@table_q))
                 end
+                transient_session[:table_q] = @table_q
                 if(@condition && @widgets[:table])
                     @widgets[:table].add_condition(@condition)
                 end
@@ -92,7 +101,7 @@ module Spider; module Components
                     elsif (@widgets[:form].saved_and_stay?)
                         redirect(widget_request_path+'/'+@widgets[:form].pk)
                     else
-                        redirect(widget_request_path) # unless @widgets[:form].stay?
+                        redirect(widget_request_path)
                     end
                 end
             end

@@ -2,6 +2,7 @@ module Spider
     
     class FlashHash < Hash
         attr_accessor :parent_flash, :parent_flash_key
+        attr_reader :accessed, :active
         
         def initialize
             super

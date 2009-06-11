@@ -183,7 +183,9 @@ module Spider
             @widgets[id.to_sym] ||= widget
             widget.id = id
             widget.id_path = @id_path + [id]
-            widget.attributes = attributes if attributes
+            if (attributes) # don't use merge to trigger custom []=(k, v) method
+                attributes.each{ |k, v| widget.attributes[k] = v }
+            end
             widget.containing_template = self
             widget.template = template if template
             widget.parent = @owner

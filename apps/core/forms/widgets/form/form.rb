@@ -32,6 +32,7 @@ module Spider; module Forms
             @sub_links = {}
             @disabled = []
             @read_only = []
+
         end
         
         def route_widget
@@ -42,7 +43,7 @@ module Spider; module Forms
         
         def prepare(action='')
             @form_action = @request.path
-            @pk = @_action_local
+            @pk ||= @_action_local
             @pk = nil if @pk == 'new'
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))

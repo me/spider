@@ -125,7 +125,7 @@ module Spider
         def initialize(request, response, scene=nil)
             super
             @widgets = {}
-            @attributes = WidgetAttributes.new(self.class)
+            @attributes = WidgetAttributes.new(self)
             @id_path = []
             @widget_attributes = {}
             @resources = []
@@ -154,30 +154,18 @@ module Spider
             p = p.sub(/\/+$/, '')
             return p
         end
-
-        def prepare
-        end
-        
         
         def before(action='')
             action ||= ''
             @_action = action
             @_action_local, @_action_rest = action.split('/', 2)
-            @id ||= @attributes[:id]
             unless @template
                 @template = load_template(@use_template)
             end
+            @id ||= @attributes[:id]
             @template.id_path = @id_path
             self.class.attributes.each do |k, params|
-                @attributes[k] = params[:default] if (params[:default] && !@attributes[k])
-                if (params[:required] && !@attributes[k] && !(params[:instance_attr] && instance_variable_defined?("@#{k}")))
-                    raise ArgumentError, "Attribute #{k} is required by widget #{self}" 
-                end
-            end
-            @attributes.each do |k, v|
-                if (self.class.attributes[k][:set_var])
-                    instance_variable_set("@#{k}", v) unless instance_variable_get("@#{k}")
-                end
+                raise ArgumentError, "Attribute #{k} is required by widget #{self}" if (params[:required] && !@attributes[k])
             end
             prepare
             @before_done = true
@@ -188,6 +176,12 @@ module Spider
         end
         
         def prepare(action='')
+            init_widgets
+            set_widget_attributes
+            prepare_widgets
+        end
+        
+        def init_widgets
             if (self.class.scene_attributes)
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
@@ -198,12 +192,26 @@ module Spider
             @template.init(@scene)
             @widgets.merge!(@template.widgets)
             @widgets.each{ |id, w| w.parent = self }
-            set_widget_attributes
-            prepare_widgets
-            @template.resources.each do |res|
-                res = res.clone
-                res[:src] = self.class.pub_url+'/'+res[:src]
-                @resources << res
+        end
+        
+        def set_widget_attributes
+            @widget_attributes.each do |w_id, a|
+                w_id_parts = w_id.to_s.split('.', 2)
+                if (w_id_parts[1])
+                    w_id = w_id_parts[0]
+                    sub_w = w_id_parts[1]
+                end
+                w_id = w_id.to_sym
+                if (@widgets[w_id])
+                    if (sub_w)
+                        @widgets[w_id].widget_attributes[sub_w] = a
+                    else
+                        if (!a[:name])
+                            next
+                        end
+                        @widgets[w_id].attributes[a[:name].to_sym] = a[:value]
+                    end
+                end
             end
         end
         
@@ -215,6 +223,11 @@ module Spider
                 end
                 act ||= ''
                 w.before(act)
+            end
+            @template.resources.each do |res|
+                res = res.clone
+                res[:src] = self.class.pub_url+'/'+res[:src]
+                @resources << res
             end
         end
         
@@ -242,27 +255,6 @@ module Spider
         def render
             prepare_scene(@scene)
             @template.render(@scene)
-        end
-        
-        def set_widget_attributes
-            @widget_attributes.each do |w_id, a|
-                w_id_parts = w_id.to_s.split('.', 2)
-                if (w_id_parts[1])
-                    w_id = w_id_parts[0]
-                    sub_w = w_id_parts[1]
-                end
-                w_id = w_id.to_sym
-                if (@widgets[w_id])
-                    if (sub_w)
-                        @widgets[w_id].widget_attributes[sub_w] = a
-                    else
-                        if (!a[:name])
-                            next
-                        end
-                        @widgets[w_id].attributes[a[:name].to_sym] = a[:value]
-                    end
-                end
-            end
         end
                         
         def try_rescue(exc)
@@ -293,6 +285,10 @@ module Spider
         def flash
             s = session(@request.session.flash, Spider::FlashHash)
             return s
+        end
+        
+        def transient_session
+            return session(@request.session.transient, Spider::TransientHash)
         end
         
         def create_widget(klass, id,  *params)
