@@ -845,7 +845,7 @@ module Spider; module Model
                     when Regexp
                         val == nil || val.empty? ? true : check.match(val)
                     when Proc
-                        Proc.call(msg)
+                        check.call(val)
                     end
                     raise FormatError.new(element, val, msg) unless test
                 end
