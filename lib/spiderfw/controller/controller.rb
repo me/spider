@@ -20,6 +20,14 @@ module Spider
         include Helpers
         
         class << self
+            
+            def options
+                @options ||= {}
+            end
+            
+            def option(k, v)
+                self.option[k] = v
+            end
 
             def default_action
                 'index'
