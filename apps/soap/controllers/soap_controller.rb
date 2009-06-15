@@ -221,8 +221,7 @@ module Spider
                 qname.namespace == XsdNs ? 'xsd:'+qname.name : 'typens:'+qname.name
             end
 
-            xml = ''
-            xm = Builder::XmlMarkup.new(:target => xml, :indent => 2)
+            xm = Builder::XmlMarkup.new(:target => $out, :indent => 2)
             xm.instruct!
             xm.definitions('name' => self.class.soap_service_name,
             'targetNamespace' => self.class.soap_namespace,
@@ -324,7 +323,6 @@ module Spider
                 end
             end
 
-            $out << xml
         end
 
     end
