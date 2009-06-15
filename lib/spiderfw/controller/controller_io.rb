@@ -12,8 +12,12 @@ module Spider
         end
         
         def set_body_io(io)
-            while (buf = io.read(BUFSIZE))
-                write(buf)
+            if (io.is_a?(String))
+                write(io)
+            else
+                while (buf = io.read(BUFSIZE))
+                    write(buf)
+                end
             end
         end
         
