@@ -15,16 +15,35 @@ class CertCommand < CmdParse::Command
             opt.on("--path path", _("Where to generate the certificate"), "-p") { |path|
                 @path = path
             }
+            opt.on("--org label", _("Name of the organization to generate the certificate for"), "-o"){ |org|
+                @org = org
+            }
         end
         generate.set_execution_block do |args|
+            require 'spiderfw'
             @path ||= Spider.paths[:certs]
-            FileUtils.mkpath(@path+'/private')
+            @org ||= 'default'
+            path = @path+'/'+@org
+            orgs = Spider.conf.get('orgs')
+            o = orgs[@org] if orgs
+            raise _("You have to configure the organization '#{@org}' to generate a certificate") unless o
+            raise _("You have to set the organization name for '#{@org}' in configuration") unless o['name']
+            raise _("You have to set the organization country code for '#{@org}' in configuration") unless o['country_code']
+            raise _("You have to set the organization state for '#{@org}' in configuration") unless o['state']
+            raise _("You have to set the organization city for '#{@org}' in configuration") unless o['city']
+            raise _("You have to set the organization common name for '#{@org}' in configuration") unless o['common_name']
+            raise _("You have to set the organization email address for '#{@org}' in configuration") unless o['email']
+            id = "/C=#{o['country_code']}/ST=#{o['state']}/L=#{o['city']}"
+            id += "/OU=#{o['organizational_unit']}" if o['organizational_unit']
+            id += "/CN=#{o['common_name']}/emailAddress=#{o['email']}"
+            FileUtils.mkpath(path+'/private')
             key = OpenSSL::PKey::RSA.generate(4096)
             pub = key.public_key
             # O => organization (Example company)
             # OU => organizational unit (Test department)
             # CN => common name (my company name)
-            ca = OpenSSL::X509::Name.parse("/C=US/ST=Florida/L=Miami/O=Waitingf/OU=Poopstat/CN=waitingf.org/emailAddress=bkerley@brycekerley.net")
+            # /C=US/ST=Florida/L=Miami/O=Waitingf/OU=Poopstat/CN=waitingf.org/emailAddress=bkerley@brycekerley.net
+            ca = OpenSSL::X509::Name.parse(id)
             cert = OpenSSL::X509::Certificate.new
             cert.version = 2
             cert.serial = 1
@@ -32,9 +51,11 @@ class CertCommand < CmdParse::Command
             cert.issuer = ca
             cert.public_key = pub
             cert.not_before = Time.now
-            cert.not_after = Time.now + 3600
-            File.open(@path+"/private/key.pem", "w") { |f| f.write key.to_pem }
-            File.open(@path+"/cert.pem", "w") { |f| f.write cert.to_pem }
+            cert.not_after = Time.now + (60*60*24*356*3)
+            cert.sign(key, OpenSSL::Digest::SHA1.new)
+            File.open(path+"/public.pem", "w"){ |f| f.write pub.to_pem }
+            File.open(path+"/private/key.pem", "w") { |f| f.write key.to_pem }
+            File.open(path+"/cert.pem", "w") { |f| f.write cert.to_pem }
         end
         self.add_command( generate )
 
