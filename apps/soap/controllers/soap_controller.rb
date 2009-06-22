@@ -264,7 +264,7 @@ module Spider
                 xm.service('name' => self.class.soap_service_name) do
                     xm.port('name' => self.class.soap_port_name, 'binding' => 'typens:'+self.class.soap_binding_name) do
                         xm.soap(:address, 
-                        'location' => 'http://'+@request.env['HTTP_HOST']+request_path)
+                        'location' => request_url)
                     end
                 end
 

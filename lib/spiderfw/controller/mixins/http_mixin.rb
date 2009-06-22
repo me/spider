@@ -34,6 +34,10 @@ module Spider; module ControllerMixins
             HTTPMixin.reverse_proxy_mapping(super)
         end
         
+        def request_url
+            'http://'+@request.env['HTTP_HOST']+request_path
+        end
+        
         # for widgets
 
         
