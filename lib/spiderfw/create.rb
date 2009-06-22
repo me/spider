@@ -1,5 +1,7 @@
 require 'fileutils'
+require 'find'
 require 'erb'
+require 'spiderfw/utils/inflector'
 
 module Spider
     
@@ -10,7 +12,7 @@ module Spider
             name_parts = name.split('/')
             app_name = name_parts[-1]
             app_path = name
-            module_full_name ||= Inflector.camelize(name)
+            module_full_name ||= Spider::Inflector.camelize(name)
             modules = module_full_name.split('::')
             module_name = modules[-1]
             erb_binding = binding
@@ -39,6 +41,8 @@ module Spider
             erb_binding ||= binding
             Find.find(source_path) do |sp|
                 next if sp == source_path
+                sp =~ /\/([^\/]+)$/
+                file_name = $1
                 rel_path = sp[source_path.length+1..-1]
                 dp = rel_path
                 replacements.each do |search, replace|
