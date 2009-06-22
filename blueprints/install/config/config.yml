@@ -11,3 +11,4 @@ storages:
     
 set devel:
     debugger.start: true
+    debug.console.level: DEBUG
