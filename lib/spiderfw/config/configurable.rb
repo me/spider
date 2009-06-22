@@ -17,6 +17,10 @@ module Spider
                  def self.config_option(name, description, params={})
                      Spider.configuration.config_option(name, description, params)
                  end
+                 
+                 def self.conf_alias(name, aliases=nil)
+                     Spider.configuration.conf_alias(name, aliases)
+                 end
         
                  def self.config_include_set(name)
                      @configuration.include_set(name)

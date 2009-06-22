@@ -4,8 +4,9 @@ require 'yaml'
 module Spider
     
     class Configuration
-        attr_accessor :options, :current_set
+        attr_accessor :options, :current_set, :hash_key
         @@options = {}
+        @@lang_aliases = {}
         
         def initialize(prefix='')
             prefix = prefix[1..prefix.length-1] if (prefix[0..0] == '.')
@@ -24,14 +25,32 @@ module Spider
             @current_set = 'default'
             @sets['default'] = self
             @values = {}
+            @hash_key = nil
         end
         
         def global_options
             @@options
         end
+        
+        def conf_alias(name, aliases=nil)
+            if (aliases)
+                aliases.each do |locale, translated|
+                    @@lang_aliases[locale] ||= {}
+                    @@lang_aliases[locale][translated] = name
+                end
+            elsif (name.is_a?(Hash))
+                name.each do |locale, aliases|
+                    @@lang_aliases[locale] ||= {}
+                    aliases.each do |name, translated|
+                        @@lang_aliases[locale][translated] = name
+                    end
+                end
+            end
+        end
 
         
         def []=(key, val)
+            key = translate_key(key)
             config_option(key, "__auto__") unless @options[key]
             #raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key unless @options && @options[key]
             process = @options[key][:params][:process]
@@ -46,20 +65,42 @@ module Spider
             @values[name] ||= Configuration.new(@prefix+".#{name}")
         end
         
+        def translate_key(key)
+            require 'ruby-debug'
+            if (!@options[key])
+                locale = Spider.locale
+                locale = $1 if locale =~ /^([^@\.]+)[@\.].+/
+                a = @@lang_aliases[locale][key] if @@lang_aliases[locale]
+                return a.to_s if a
+            end
+            return key.to_s
+        end
+        
         def set(key, val)
             first, rest = key.split('.', 2)
             if rest
+                first = translate_key(first)
                 begin
                     sub_conf(first).configure(rest, val)
                 rescue ConfigurationException # raise only top level exception
                     raise ConfigurationException.new(:invalid_option), _("%s is not a configuration option") % key
                 end
             else
-                if (val.is_a?(Hash) && @options[key] && @options[key][:params][:type] != Hash)
+                key = translate_key(key)
+                config_option(key, '__auto__') unless @options[key]
+                if val.is_a?(Hash)
                     @values[key] ||= Configuration.new(@prefix+".#{key}")
-                    val.each { |k, v| self[key][k.to_s] = v }
+                    if (@options[key][:params][:type] == :conf)
+                        self[key] = {}
+                        val.each do |h_key, h_val|
+                            self[key][h_key] = Configuration.new(@prefix+"#{key}.x")
+                            self[key][h_key].hash_key = h_key
+                            h_val.each { |k, v| self[key][h_key].set(k, v) }
+                        end
+                    elsif (@options[key][:params][:type] != Hash) # sub conf
+                        val.each { |k, v| self[key][k.to_s] = v }
+                    end     
                 else
-                    config_option(key, '__auto__') unless @options[key]
                     val = convert_val(@options[key][:params][:type], val) if (@options[key][:params][:type])
                     self[key] = val
                 end
@@ -83,11 +124,15 @@ module Spider
         
         
         def [](key)
+            key = translate_key(key)
             val = @values[key]
             
             if (val.nil? && @options[key] && @options[key][:params][:default])
                 default = @options[key][:params][:default]
-                val = (default.class == Proc) ? default.call() : default
+                val = default
+                if (default.class == Proc)
+                    val = @hash_key ? default.call(@hash_key) : default.call
+                end
             end
             return val
         end
@@ -109,10 +154,11 @@ module Spider
         # -:default     the default value for the option; if it is a proc, it will be called
         # -:choiches    an array of allowed values
         # -:type        parameter type; can be one of int, string, bool
-        def config_option(name, description, params={})
+        def config_option(name, description, params={}, &proc)
             #debugger
             name = name.to_s
             o = @options
+            params[:action] ||= proc if proc
             first, rest = name.split('.', 2)
             while (rest)
                 o = (o[first] ||= {})
@@ -128,9 +174,15 @@ module Spider
             key = key.to_s
             first, rest = key.split('.', 2)
             if rest
+                first = translate_key(first)
                 v = sub_conf(first)
-                @values[first].config(rest)
+                if (@values[first].is_a?(Configuration))
+                    return @values[first].config(rest)
+                elsif (@values[first].is_a?(Hash) || @values[first].is_a?(Array))
+                    return @values[first][rest]
+                end
             else
+                key = translate_key(key)
                 self[key]
             end
         end
@@ -201,6 +253,9 @@ module Spider
     end
     def self.config_option(*params)
         @configuration.config_option(*params)
+    end
+    def self.conf_alias(name, al=nil)
+        @configuration.conf_alias(name, al)
     end
     
     
