@@ -13,6 +13,7 @@ module Spider
     class << self
         # Everything here must be thread safe!!!
         attr_reader :logger, :controller, :apps, :server, :runmode
+        attr_accessor :locale
         
         def init(force=false)
             return if @init_done && !force
@@ -27,6 +28,7 @@ module Spider
             @server = {}
             @paths[:spider] = $SPIDER_PATH
             @runmode = nil
+            @locale = ENV['LANG']
             
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
             if ($SPIDER_CONFIG_SETS)
@@ -90,9 +92,11 @@ module Spider
             require (@paths[:config]+'/options') if File.exist?(@paths[:config]+'/options.rb')
             load_apps_options
             
-            GetText.locale = config.get('locale')
+            GetText.locale = @locale
 
             init_apps
+            
+            GetText.locale = @locale
         end
         
         def load_all_apps
