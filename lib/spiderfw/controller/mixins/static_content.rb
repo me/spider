@@ -8,8 +8,10 @@ module Spider; module ControllerMixins
         def self.included(klass)
             klass.route('pub/', :serve_static)
             klass.route('w/', :serve_widget_static)
-            klass.no_layout('pub')
-            klass.no_layout('serve_static')
+            if (klass < Visual)
+                klass.no_layout('pub')
+                klass.no_layout('serve_static')
+            end
         end
         
         def sanitize_path(path)
