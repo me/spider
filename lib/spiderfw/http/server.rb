@@ -22,6 +22,7 @@ module Spider; module HTTP
         end
         
         def start(opts={})
+            Spider.startup # TODO: if we decide to manage clusters, this will have to be moved outside
             trap('TERM') { shutdown }
             trap('INT') { shutdown }
             start_server(opts)
@@ -30,6 +31,7 @@ module Spider; module HTTP
         def shutdown
             Spider.logger.info("Webserver shutdown");
             shutdown_server
+            Spider.shutdown # TODO: if we decide to manage clusters, this will have to be moved outside
         end
         
         def request_received

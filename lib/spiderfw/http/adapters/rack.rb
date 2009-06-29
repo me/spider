@@ -136,6 +136,14 @@ module Spider; module HTTP
             return env
         end
         
+        def initialize_server
+            Spider.startup
+        end
+        
+        def finalize_server
+            Spider.shutdown
+        end
+        
     end
     
 end; end
