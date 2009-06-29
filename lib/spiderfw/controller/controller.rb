@@ -190,6 +190,7 @@ module Spider
             scene.controller = {
                 :request_path => request_path
             }
+            scene.content = {}
             return scene
         end
 
@@ -200,6 +201,9 @@ module Spider
             return klass if klass.class != Class
             obj = klass.new(@request, @response, @scene)
             obj.dispatch_action = route.matched || ''
+            if (route.options[:do])
+                obj.instance_eval &route.options[:do]
+            end
 #            obj.dispatch_path = @dispatch_path + route.path
             return obj
         end
