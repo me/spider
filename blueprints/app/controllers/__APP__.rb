@@ -3,7 +3,7 @@
     class <%= module_name %>Controller < Spider::PageController
         include HTTPMixin, StaticContent
         
-        layout '<%= app_name %>'
+        layout '<%= app_name %>.layout'
     
         def index
             @scene.msg = 'Hello!'
