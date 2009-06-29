@@ -42,11 +42,12 @@ module Spider
             
             def template_path
                 return nil unless self.app
-                return self.app.path+'/templates'
+                return self.app.path+'/views'
             end
             
             def layout_path
-                return self.app.path+'/layouts'
+                return nil unless self.app
+                return self.app.path+'/views'
             end
         
             
