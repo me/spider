@@ -157,6 +157,10 @@ module Spider
         def config_option(name, description, params={}, &proc)
             #debugger
             name = name.to_s
+            if (params.empty? && description.is_a?(Hash))
+                params = description
+                description = ''
+            end
             o = @options
             params[:action] ||= proc if proc
             first, rest = name.split('.', 2)
@@ -230,6 +234,10 @@ module Spider
                     configure(key, val)
                 end
             end
+        end
+        
+        def to_hash
+            return @values.clone
         end
         
     end
