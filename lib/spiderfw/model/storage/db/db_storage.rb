@@ -579,7 +579,8 @@ module Spider; module Model; module Storage; module Db
         
         def schema_field_equal?(current, field)
             attributes = field[:attributes]
-            return false unless current[:type] == field[:type] || (self.class.type_synonyms[current[:type]] && self.class.type_synonyms[current[:type]].include?(field[:type]))
+            return false unless current[:type] == field[:type] || 
+                (self.class.type_synonyms && self.class.type_synonyms[current[:type]] && self.class.type_synonyms[current[:type]].include?(field[:type]))
             try_method = :"schema_field_#{field[:type].downcase}_equal?"
             return send(try_method, current, field) if (respond_to?(try_method))
             current[:length] ||= 0; attributes[:length] ||= 0; current[:precision] ||= 0; attributes[:precision] ||= 0
