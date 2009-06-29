@@ -12,7 +12,7 @@ module Spider
     
     class << self
         # Everything here must be thread safe!!!
-        attr_reader :logger, :controller, :apps, :server, :runmode
+        attr_reader :logger, :controller, :apps, :server, :runmode, :apps_by_path, :apps_by_short_name
         attr_accessor :locale
         
         def init(force=false)
@@ -20,6 +20,8 @@ module Spider
             @paths = {}
             @apps_to_load = []
             @apps ||= {}
+            @apps_by_path ||= {}
+            @apps_by_short_name ||= {}
             @app_paths = []
             @root = $SPIDER_RUN_PATH
             setup_paths(@root)
@@ -71,6 +73,7 @@ module Spider
         def setup_paths_full(root)
             @paths[:root] = root
             @paths[:apps] = root+'/apps'
+            @paths[:core_apps] = $SPIDER_PATH+'/apps'
             @paths[:config] = root+'/config'
             @paths[:layouts] = root+'/layouts'
             @paths[:var] = root+'/var'
@@ -100,7 +103,7 @@ module Spider
         end
         
         def load_all_apps
-            Find.find($SPIDER_PATH+'/apps', @paths[:apps]) do |path|
+            Find.find(@paths[:core_apps], @paths[:apps]) do |path|
                 if (File.basename(path) == '_init.rb')
                     @app_paths << File.dirname(path)
                     Find.prune
@@ -116,7 +119,9 @@ module Spider
             load_configuration($SPIDER_PATH+'/config')
             load_configuration(@root+'/config')
             @app_paths.each do |path|
-                require path+'/_init.rb'
+                last_name = path.split('/')[-1]
+                app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
+                app_files.each{ |f| require path+'/'+f if File.exist?(path+'/'+f)}
             end
         end
         
@@ -172,6 +177,8 @@ module Spider
         
         def add_app(mod)
             @apps[mod.name] = mod
+            @apps_by_path[mod.relative_path] = mod
+            @apps_by_short_name[mod.short_name] = mod
         end
         
         def load_configuration(path)
