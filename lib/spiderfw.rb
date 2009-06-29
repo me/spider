@@ -40,6 +40,9 @@ module Spider
             load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
             @logger.close(STDERR)
             @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
+            @apps.each do |name, mod|
+                mod.app_init if mod.respond_to?(:app_init)
+            end
             
             @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
@@ -51,6 +54,24 @@ module Spider
             #         @controller.route('/'+app.name.gsub('::', '/'), app.controller, :ignore_case => true)
             #     end
             # end
+        end
+        
+        def stop
+            @apps.each do |name, mod|
+                mod.app_stop if mod.respond_to?(:app_stop)
+            end
+        end
+        
+        def startup
+            @apps.each do |name, mod|
+                mod.app_startup if mod.respond_to?(:app_startup)
+            end
+        end
+        
+        def shutdown
+            @apps.each do |name, mod|
+                mod.app_shutdown if mod.respond_to?(:app_shutdown)
+            end
         end
         
         def start_loggers
