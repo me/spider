@@ -36,7 +36,7 @@ Gem::Specification.new do |s|
   s.add_dependency("builder", ["> 2.1"])
   s.add_development_dependency("rake", ["> 0.7.3"])
   s.add_development_dependency("ruby-debug", ["> 0.9.3"])
-  s.requirements << "Optional dependencies: openssl, sqlite3, webrick, mongrel, ruby-oci8 =1.0.3"
+  s.requirements << "Optional dependencies: openssl, sqlite3, webrick, mongrel, ruby-oci8 =1.0.3, mysql"
   # optional dependencies
   # 
 end
