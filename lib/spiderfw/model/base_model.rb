@@ -1326,9 +1326,14 @@ module Spider; module Model
                         val = where[name].call(self, name)
                     else
                         el = self.class.elements[name]
-                        raise ModelException, "Element #{name} does not exist" unless el
-                        val = get(el)
-                        val = val.cut(where[name], &proc) if el.model? && val
+                        if el
+                            val = get(el)
+                            val = val.cut(where[name], &proc) if el.model? && val
+                        else
+                            raise ModelException, "Element #{name} does not exist" unless self.respond_to?(name)
+                            val = self.send(name)
+                            val = val.cut(where[name], &proc) if val.is_a?(BaseModel)
+                        end
                     end
                     h[name] = val
                 end
