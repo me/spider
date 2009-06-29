@@ -83,6 +83,11 @@ module Spider; module Model
         
         def before_save(obj, mode)
             normalize(obj)
+            if (mode == :insert)
+                before_insert(obj)
+            elsif (mode == :update)
+                before_update(obj)
+            end
             @model.elements_array.each do |el|
                 if (el.attributes[:set_before_save])
                     set_data = el.attributes[:set_before_save]
@@ -114,6 +119,12 @@ module Spider; module Model
                 obj.get(el).save if obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
 
+        end
+        
+        def before_insert(obj)
+        end
+        
+        def before_update(obj)
         end
         
         def after_save(obj, mode)
