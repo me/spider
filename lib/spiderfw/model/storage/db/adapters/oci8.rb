@@ -9,7 +9,7 @@ module Spider; module Model; module Storage; module Db
             :sequences => true,
             :transactions => true
         }
-        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid']
+        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid', 'to']
         @safe_conversions = {
             'CHAR' => ['VARCHAR', 'CLOB'],
             'VARCHAR' => ['CLOB'],
@@ -118,8 +118,9 @@ module Spider; module Model; module Storage; module Db
                  if (Spider.conf.get('storage.db.replace_debug_vars'))
                      cnt = -1
                      debug("oci8 executing: "+sql.gsub(/:\d+/){
-                         v = debug_vars[cnt+=1]
-                         v.is_a?(String) ? "'#{v}'" : v
+                         v = bind_vars[cnt]
+                         dv = debug_vars[cnt+=1]
+                         v.is_a?(String) ? "'#{dv}'" : dv
                      })
                  else
                      debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
