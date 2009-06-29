@@ -9,6 +9,8 @@ module Spider; module Model
             :read_only => true, 
             :element_position => 0
         }
+        element :obj_created, DateTime, :hidden => true
+        element :obj_modified, DateTime, :hidden => true
         
         # def id=(val)
         #     raise ModelException, "You can't assign a value to the 'id' element"
@@ -20,6 +22,14 @@ module Spider; module Model
         
         def self.managed?
             true
+        end
+        
+        with_mapper do
+            def before_save(obj, mode)
+                obj.obj_created = DateTime.now
+                obj.obj_modified = DateTime.now if mode == :insert
+                super
+            end
         end
         
     end
