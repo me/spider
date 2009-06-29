@@ -19,7 +19,7 @@ module Spider; module Model; module Storage
         end
         
         def configure(conf)
-            @configuration.merge!(conf)
+            @configuration.merge!(conf.to_hash)
         end
         
         def parse_url(url)
