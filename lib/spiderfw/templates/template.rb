@@ -129,7 +129,8 @@ module Spider
             return compiled
         end
         
-        def get_el(path)
+        def get_el(path=nil)
+            path ||= @path
             doc = open(path){ |f| Hpricot.XML(f) }
             root = doc.root
             overrides = []
@@ -146,10 +147,9 @@ module Spider
                 root = get_el(ext)
             else
                 root.search('tpl:include').each do |incl|
-                    src = real_path(incl.attributes[:src])
+                    src = real_path(incl.attributes['src'])
                     @dependencies << src
-                    tpl = Template.new(src)
-                    incl.swap(tpl.get_el.to_html)
+                    incl.swap(self.get_el(src).to_html)
                 end
             end
             return root
@@ -157,8 +157,38 @@ module Spider
         
         def real_path(path)
             # FIXME: security check for allowed paths?
-            path.sub!(/^ROOT/, Spider.paths[:root])
-            path.sub!(/^SPIDER/, $SPIDER_PATH)
+            path.strip!
+            if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
+                path.sub!(/^ROOT/, Spider.paths[:root])
+                path.sub!(/^SPIDER/, $SPIDER_PATH)
+                return path
+            elsif (path[0..1] == './')
+                return File.dirname(@path)+path[1..-1]
+            elsif (path[0..1] == '../')
+                return File.dirname(File.dirname(@path))+path[2..-1]
+            end
+            app = nil
+            if (path[0].chr == '/')
+                Spider.apps_by_path.each do |p, a|
+                    if (path.index(p) == 0)
+                        app = a
+                    end
+                end
+            else
+                app = @owner.class.app if (@owner && @owner.class.app)
+            end
+            return File.dirname(@path)+'/'+path unless app
+            search_paths = [
+                Spider.paths[:root]+'/views/'+app.relative_path,
+                app.views_path
+            ]
+            extensions = ['shtml']
+            search_paths.each do |p|
+                extensions.each do |ext|
+                    full = p+'/'+path+'.'+ext
+                    return full if (File.exist?(full))
+                end
+            end
             return path
         end
             
