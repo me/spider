@@ -11,15 +11,18 @@ module Spider
                 
                 #@controller ||= :"Spider::AppController"
                 class << self
-                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path
-                    attr_reader :route_url
+                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path
+                    attr_reader :short_name, :route_url
                     attr_reader :short_prefix
+                    attr_reader :command
                     
                     def init
+                        @short_name ||= Inflector.underscore(self.name).gsub('/', '_')
                         @pub_path ||= @path+'/pub'
                         @test_path ||= @path+'/test'
                         @setup_path ||= @path+'/setup'
                         @widgets_path ||= @path+'/widgets'
+                        @views_path ||= @path+'/views'
                         @route_url ||= Inflector.underscore(self.name)
                     end
                     
@@ -75,6 +78,14 @@ module Spider
                     
                     def route(path, dest=nil, options=nil)
                         self.controller.route(path, dest, options)
+                    end
+                    
+                    def relative_path
+                        if (@path.index(Spider.paths[:apps]) == 0)
+                            return @path[Spider.paths[:apps].length+1..-1]
+                        else
+                            return @path[Spider.paths[:core_apps].length+1..-1]
+                        end
                     end
                 end
                 
