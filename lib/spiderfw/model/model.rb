@@ -7,7 +7,7 @@ module Spider
     module Model
         
         @base_types = [
-            String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, DateTime, Spider::DataTypes::Bool
+            String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool
         ]
         class <<self; attr_reader :base_types; end
         

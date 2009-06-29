@@ -609,8 +609,8 @@ module Spider; module Model; module Mappers
             end
             return nil unless value
             case type.name
-            when 'DateTime'
-                return DateTime.parse(value) unless value.is_a?(Date)
+            when 'Date', 'DateTime'
+                return type.parse(value) unless value.is_a?(Date)
             end
             return value
         end

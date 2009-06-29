@@ -99,7 +99,7 @@ module Spider; module Model; module Storage; module Db
         
         def value_to_mapper(type, value)
             case type.name
-            when 'DateTime'
+            when 'Date', 'DateTime'
                 return nil unless value
                 return value.to_datetime if value.is_a?(Time)
                 return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
@@ -371,7 +371,7 @@ module Spider; module Model; module Storage; module Db
                  'NUMBER'
              when 'Float'
                  'FLOAT'
-             when 'DateTime'
+             when 'Date', 'DateTime'
                  'DATE'
              when 'Spider::DataTypes::Binary'
                  'BLOB'

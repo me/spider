@@ -796,10 +796,10 @@ module Spider; module Model
                 value.autoload(autoload?, true) if value
             else
                 case element.type.name
-                when 'DateTime'
+                when 'Date', 'DateTime'
                     return nil if value.is_a?(String) && value.empty?
                     begin
-                        value = DateTime.parse(value) if value.is_a?(String)
+                        value = element.type.parse(value) if value.is_a?(String)
                     rescue ArgumentError => exc
                         raise FormatError.new(element, value, _("'%s' is not a valid date"))
                     end

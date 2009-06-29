@@ -210,7 +210,7 @@ module Spider; module Model; module Storage; module Db
                 'REAL'
             when 'BigDecimal', 'Spider::DataTypes::Decimal'
                 'DECIMAL'
-            when 'DateTime'
+            when 'Date', 'DateTime'
                 'DATE'
             when 'Spider::DataTypes::Binary'
                 'BLOB'

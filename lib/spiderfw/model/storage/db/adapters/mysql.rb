@@ -205,7 +205,7 @@ module Spider; module Model; module Storage; module Db
              value = super(type, value)
              return value unless value
              case type.name
-             when 'DateTime'
+             when 'Date', 'DateTime'
                  return value.strftime("%Y-%m-%dT%H:%M:%S")
              when 'Fixnum'
                  return value.to_i
@@ -216,8 +216,8 @@ module Spider; module Model; module Storage; module Db
          def value_to_mapper(type, value)
              return unless value
              case type.name
-             when 'DateTime'
-                 return DateTime.civil(value.year, value.month, value.day, value.hour, value.minute, value.second)
+             when 'Date', 'DateTime'
+                 return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second)
              end
              return super(type, value)
          end
@@ -313,7 +313,7 @@ module Spider; module Model; module Storage; module Db
                  'INT'
              when 'Float'
                  'FLOAT'
-             when 'DateTime'
+             when 'Date', 'DateTime'
                  'DATETIME'
              when 'Spider::DataTypes::Binary'
                  'BLOB'
@@ -336,6 +336,11 @@ module Spider; module Model; module Storage; module Db
          end
          
          def schema_field_text_equal?(current, field)
+             # FIXME
+             return true
+         end
+         
+         def schema_field_date_equal?(current, field)
              # FIXME
              return true
          end
