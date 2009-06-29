@@ -41,6 +41,17 @@ module Spider; module CommandLine
         end
 
         def parse
+            cmd_name = ARGV[0]
+            cmd_name = ARGV[1] if (cmd_name == 'help')
+            require 'ruby-debug'
+            if !@cmd.main_command.commands[cmd_name]
+                require 'spiderfw'
+                if Spider.apps_by_short_name[cmd_name] && Spider.apps_by_short_name[cmd_name].const_defined?(:Cmd)
+                    app_cmd = Spider.apps_by_short_name[cmd_name].const_get(:Cmd).new
+                    @cmd.add_command(app_cmd)
+#                    app_cmd.add_command(CmdParse::HelpCommand.new, true)
+                end
+            end
             @cmd.parse
         end
 
