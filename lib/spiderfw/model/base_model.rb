@@ -376,6 +376,10 @@ module Spider; module Model
             end
         end
         
+        def self.class_table_inheritance(params={})
+            self.extend_model(superclass, params)
+        end
+        
         def self.inherit_storage
             self.attributes[:inherit_storage] = true
             (class << self; self; end).instance_eval do
