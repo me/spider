@@ -15,6 +15,7 @@ class ModelCommand < CmdParse::Command
             }
             opt.on("--drop-columns", _("Drop unused columns"), "-d"){ |d| @drop = true}
             opt.on("--drop-tables [PREFIX]", _("Drop unused tables")){ |dt| 
+                dt = true if dt == '*'
                 @drop_tables = dt
             }
             opt.on("--update-sequences", _("Update current sequences to max db value"), "-s"){ |s|
@@ -26,9 +27,10 @@ class ModelCommand < CmdParse::Command
             require 'spiderfw'
             req_models || []
             unsafe_fields = {}
+            req_models = Spider.apps.values if (req_models.empty?)
             req_models.each do |model_or_app|
                 models = []
-                mod = const_get_full(model_or_app)
+                mod = model_or_app.is_a?(Module) ? model_or_app : const_get_full(model_or_app)
                 if (mod.is_a?(Module) && mod.include?(Spider::App))
                     mod.models.each { |m| models << m }
                 elsif (mod.subclass_of?(Spider::Model::BaseModel))
@@ -37,10 +39,27 @@ class ModelCommand < CmdParse::Command
                 models.each do |model|
                     begin
                         Spider::Model.sync_schema(model, @force, 
-                        :drop_fields => @drop, :drop_tables => @drop_tables, :update_sequences => @update_sequences)
+                        :drop_fields => @drop, :update_sequences => @update_sequences)
                     rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
                         unsafe_fields[model] = exc.fields
                     end 
+                end
+                if (@drop_tables)
+                    begin
+                        Spider::Model.sync_schema(mod, false, :no_sync => true, :drop_tables => @drop_tables)
+                    rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
+                        puts _("The following tables are about to be dropped: \n%s") % exc.fields.join(', ')
+                        puts _("Continue? yes/NO: ")
+                        r = STDIN.gets.chomp.downcase
+                        yes_chr = _("yes")[0].chr
+                        no_chr = _("no")[0].chr
+                        debugger
+                        if (r == _("yes") || (yes_chr != no_chr && r == yes_chr)) 
+                            Spider::Model.sync_schema(mod, true, :no_sync => true, :drop_tables => @drop_tables)
+                        end
+                    end
+                        
+                        
                 end
             end
             unless unsafe_fields.empty?

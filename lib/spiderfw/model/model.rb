@@ -103,8 +103,10 @@ module Spider
             storages = []
             tables = []
             models.each do |m|
-                Spider::Logger.debug("SYNCING #{m}")
-                m.mapper.sync_schema(force, options) if m.mapper.respond_to?(:sync_schema)
+                unless (options[:no_sync])
+                    Spider::Logger.debug("SYNCING #{m}")
+                    m.mapper.sync_schema(force, options) if m.mapper.respond_to?(:sync_schema)
+                end
                 if (options[:drop_tables] && m.mapper.respond_to?(:schema))
                     storages << m.mapper.storage unless storages.include?(m.mapper.storage)
                     tables += m.mapper.schema.get_schemas.keys
@@ -119,11 +121,14 @@ module Spider
                         storage_tables[t] = s
                     end
                 end
+                tables_to_drop = []
                 storage_tables.each do |table_name, storage|
-                    if !tables.include?(table_name) && (dt == true || table_name[0..dt.length] == dt)
-                        storage.drop_table(table_name) 
+                    if !tables.include?(table_name) && (dt == true || table_name.index(dt) == 0)
+                        tables_to_drop << table_name
                     end
                 end
+                raise Spider::Model::Mappers::SchemaSyncUnsafeConversion.new(tables_to_drop) unless tables_to_drop.empty?
+                tables_to_drop.each{ |t| storage.drop_table(t) }
             end
         end
         
