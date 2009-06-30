@@ -21,6 +21,18 @@ module Spider; module Messenger
             end
         end
         
+        def self.sent
+            self.where{ sent != nil }
+        end
+        
+        def self.queued
+            self.where{ (sent == nil) && (next_try != nil) }
+        end
+        
+        def self.failed
+            self.where{ (sent == nil) && (next_try != nil) }
+        end
+        
         with_mapper do
             def before_save(obj, mode)
                 obj.ticket = UUID.generate if mode == :insert
