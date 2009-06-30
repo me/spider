@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-06-30 17:09+0200\n"
+"POT-Creation-Date: 2009-07-01 00:39+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,52 +90,6 @@ msgid "The path where to create the installation (defaults to the path)"
 msgstr ""
 "Il percorso dove creare l'installazione (di default il percorso corrente)"
 
-#: lib/spiderfw/cmd/commands/setup.rb:8
-msgid "Setup an application"
-msgstr "Esegui il setup di un'applicazione"
-
-#: lib/spiderfw/cmd/commands/setup.rb:15
-msgid "Setup to a specific version"
-msgstr "Esegui il setup fino a una versione specifica"
-
-#: lib/spiderfw/cmd/commands/test.rb:6
-msgid "Manage tests"
-msgstr "Gestisci i test"
-
-#: lib/spiderfw/cmd/commands/test.rb:11
-msgid "Run tests"
-msgstr "Esegui i test"
-
-#: lib/spiderfw/cmd/commands/webserver.rb:8
-msgid "Manage internal webserver"
-msgstr "Gestisci il webserver interno"
-
-#: lib/spiderfw/cmd/commands/webserver.rb:21
-msgid "The port the webserver should listen on"
-msgstr "La porta su cui deve stare in ascolto il webserver"
-
-#: lib/spiderfw/cmd/commands/webserver.rb:24
-msgid "Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"
-msgstr "Che webserver usare; le possibilità sono 'webrick', 'mongrel' e 'thin'"
-
-#: lib/spiderfw/cmd/commands/webserver.rb:25
-msgid "The webserver %s is not supported"
-msgstr "Il webserver %s non è supportato"
-
-#: lib/spiderfw/cmd/commands/webserver.rb:28
-msgid "Serve each request spawning a CGI subprocess. Useful in developement."
-msgstr ""
-"Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo "
-"sviluppo."
-
-#: lib/spiderfw/cmd/commands/webserver.rb:36
-msgid "Using webserver %s"
-msgstr "Utilizzo il webserver %s"
-
-#: lib/spiderfw/cmd/commands/webserver.rb:37
-msgid "Listening on port %s"
-msgstr "In ascolto sulla porta %s"
-
 #: lib/spiderfw/cmd/commands/model.rb:6
 msgid "Manage models"
 msgstr "Gestisci i modelli"
@@ -187,6 +141,52 @@ msgstr "Impossibile modificare i seguenti campi:"
 #: lib/spiderfw/cmd/commands/model.rb:68
 msgid "(use -f to force)"
 msgstr "(usa -f per forzare)"
+
+#: lib/spiderfw/cmd/commands/setup.rb:8
+msgid "Setup an application"
+msgstr "Esegui il setup di un'applicazione"
+
+#: lib/spiderfw/cmd/commands/setup.rb:15
+msgid "Setup to a specific version"
+msgstr "Esegui il setup fino a una versione specifica"
+
+#: lib/spiderfw/cmd/commands/test.rb:6
+msgid "Manage tests"
+msgstr "Gestisci i test"
+
+#: lib/spiderfw/cmd/commands/test.rb:11
+msgid "Run tests"
+msgstr "Esegui i test"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:8
+msgid "Manage internal webserver"
+msgstr "Gestisci il webserver interno"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:21
+msgid "The port the webserver should listen on"
+msgstr "La porta su cui deve stare in ascolto il webserver"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:24
+msgid "Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"
+msgstr "Che webserver usare; le possibilità sono 'webrick', 'mongrel' e 'thin'"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:25
+msgid "The webserver %s is not supported"
+msgstr "Il webserver %s non è supportato"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:28
+msgid "Serve each request spawning a CGI subprocess. Useful in developement."
+msgstr ""
+"Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo "
+"sviluppo."
+
+#: lib/spiderfw/cmd/commands/webserver.rb:36
+msgid "Using webserver %s"
+msgstr "Utilizzo il webserver %s"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:37
+msgid "Listening on port %s"
+msgstr "In ascolto sulla porta %s"
 
 #: lib/spiderfw/config/configuration.rb:86
 msgid "%s is not a configuration option"
@@ -364,7 +364,8 @@ msgstr "Percorso del certificato (di default config/certs/nome_org/cert.pem)"
 msgid ""
 "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
 msgstr ""
-"Percorso della chiave privata (di default config/certs/nome_org/private/key.pem)"
+"Percorso della chiave privata (di default config/certs/nome_org/private/key."
+"pem)"
 
 #: lib/spiderfw/model/base_model.rb:804
 msgid "'%s' is not a valid date"
@@ -382,4 +383,6 @@ msgstr "%s non è un indirizzo e-mail valido"
 msgid "Element %s is required"
 msgstr "L'elemento %s è obbligatorio"
 
-#: lib/spider
+#: lib/spiderfw/model/mappers/mapper.rb:675
+msgid "Another item with the same %s is already present"
+msgstr "È già presente un'altro oggetto con lo stesso elemento %s"

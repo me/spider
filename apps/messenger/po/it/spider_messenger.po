@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Messenger 0.1\n"
-"POT-Creation-Date: 2009-06-30 17:10+0200\n"
+"POT-Creation-Date: 2009-07-01 00:40+0200\n"
 "PO-Revision-Date: 2009-06-30 16:44+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,3 +59,19 @@ msgstr "Ultimo errore"
 #: models/message.rb:12
 msgid "Sent at"
 msgstr "Inviato il"
+
+#: views/index.shtml:2
+msgid "Queues"
+msgstr "Code"
+
+#: views/index.shtml:7
+msgid "Sent messages"
+msgstr "Messaggi inviati"
+
+#: views/index.shtml:8
+msgid "Queued messages"
+msgstr "Messaggi in coda"
+
+#: views/index.shtml:9
+msgid "Failed messages"
+msgstr "Messaggi falliti"

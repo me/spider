@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-06-30 17:09+0200\n"
+"POT-Creation-Date: 2009-07-01 00:39+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,50 +86,6 @@ msgstr ""
 msgid "The path where to create the installation (defaults to the path)"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/setup.rb:8
-msgid "Setup an application"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/setup.rb:15
-msgid "Setup to a specific version"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/test.rb:6
-msgid "Manage tests"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/test.rb:11
-msgid "Run tests"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:8
-msgid "Manage internal webserver"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:21
-msgid "The port the webserver should listen on"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:24
-msgid "Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:25
-msgid "The webserver %s is not supported"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:28
-msgid "Serve each request spawning a CGI subprocess. Useful in developement."
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:36
-msgid "Using webserver %s"
-msgstr ""
-
-#: lib/spiderfw/cmd/commands/webserver.rb:37
-msgid "Listening on port %s"
-msgstr ""
-
 #: lib/spiderfw/cmd/commands/model.rb:6
 msgid "Manage models"
 msgstr ""
@@ -178,6 +134,50 @@ msgstr ""
 
 #: lib/spiderfw/cmd/commands/model.rb:68
 msgid "(use -f to force)"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/setup.rb:8
+msgid "Setup an application"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/setup.rb:15
+msgid "Setup to a specific version"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/test.rb:6
+msgid "Manage tests"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/test.rb:11
+msgid "Run tests"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:8
+msgid "Manage internal webserver"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:21
+msgid "The port the webserver should listen on"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:24
+msgid "Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:25
+msgid "The webserver %s is not supported"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:28
+msgid "Serve each request spawning a CGI subprocess. Useful in developement."
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:36
+msgid "Using webserver %s"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/webserver.rb:37
+msgid "Listening on port %s"
 msgstr ""
 
 #: lib/spiderfw/config/configuration.rb:86
@@ -368,5 +368,5 @@ msgid "Element %s is required"
 msgstr ""
 
 #: lib/spiderfw/model/mappers/mapper.rb:675
-msgid "Element %s is not unique"
+msgid "Another item with the same %s is already present"
 msgstr ""
