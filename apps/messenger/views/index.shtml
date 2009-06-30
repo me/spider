@@ -1,0 +1,13 @@
+<div>
+    _(Queues):
+    <ul>
+        <li sp:each="@queues |name|">
+            <a href="{ @widget[:request_path] }/{ name }">{ name }</a>:
+            <ul>
+                <li>_(Sent messages): { @queue_info[name][:sent] }</li>
+                <li>_(Queued messages): { @queue_info[name][:queued] }</li>
+                <li>_(Failed messages): { @queue_info[name][:failed] }</li>
+            </ul>
+        </li>
+    </ul>
+</div>

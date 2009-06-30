@@ -8,7 +8,6 @@ module Spider; module Messenger
         end
 
         def before(action='', *params)
-            return super unless @queue
             q = Messenger.queues[@queue.to_sym]
             raise NotFound(action) unless q
             @queue_model = q[:model]
@@ -25,7 +24,18 @@ module Spider; module Messenger
         end
 
         def index
-            list
+            return list if (@queue)
+            @scene.queues = []
+            @scene.queue_info = {}
+            Messenger.queues.each do |name, details|
+                model = details[:model]
+                @scene.queue_info[name] = {
+                    :sent => model.sent.total_rows,
+                    :queued => model.queued.total_rows,
+                    :failed => model.failed.total_rows
+                }
+            end
+            render 'index'
         end
 
         def queue
