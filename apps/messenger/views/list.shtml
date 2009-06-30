@@ -1,0 +1,5 @@
+<div class='messenger'>
+    <h3>{ @title }</h3>
+    <core:table id='message_list' model='@queue_model' />
+</div>
+    
