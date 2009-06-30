@@ -1,26 +1,13 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="menu.css" />
-    <div id="menu_top"></div>
-    <table width="100%">
-        <tr>
-            <td valign="top" width="15%">
-                <div id="menu" class="menu">
-                    <sp:pass sp:each="@sections |section_name, items|">
-                        <div class="section_title">{ section_name }</div>
-                        <ul class="section_items">
-                            <li sp:each="items |item|" class="{ item == @current ? 'active' : 'inactive' }">
-                                <a href="{ @widget[:request_path] }/{ @links[item] }">{ @labels[item] }</a>
-                            </li>
-                        </ul>
-                    </sp:pass>
-                    <div id="menu_bottom"></div>
-                </div>
-            </td>
-            <td valign="top">
-                <div id="content" class="content">
-                    <sp:run obj="@current_widget" />
-                </div>
-            </td>
-        </tr>
-    </table>
+    <sp:pass sp:each="@sections |section_name, items|">
+        <div class="section_title">{ section_name }</div>
+        <ul class="section_items">
+            <li sp:each="items |label, target|" class="{ label == @current ? 'active' : 'inactive' }">
+                <a href="{ target }">{ label }</a>
+            </li>
+        </ul>
+    </sp:pass>
+    <div id="menu_bottom"></div>
 </div>
+    

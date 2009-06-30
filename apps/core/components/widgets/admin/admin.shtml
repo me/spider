@@ -12,5 +12,5 @@
     <div class="current_section">
 	    <span id="label">{ @current }</span>
     </div>
-    <core:menu id="menu" />
+    <core:switcher id="switcher" />
 </div>

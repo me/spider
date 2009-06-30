@@ -1,14 +1,7 @@
 .spider.components.menu {
-   margin-left:15px;
+    margin-left:15px;
 }
 
-.spider.components.menu .menu{
-    float: left;
-    margin-right: 15px;
-    font-family:"Lucida Grande",Verdana,Arial,sans-serif;
-    font-weight: bold;
-    font-size: .8em;
-}
 
 .spider.components.menu #menu_bottom{
     height:35px;
@@ -51,8 +44,4 @@
 
 .spider.components.menu .active a:link, .spider.components.menu .active a:visited{
     color: black;
-}
-
-.spider.components.menu .content{
-    padding-right: 20px;
 }

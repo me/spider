@@ -14,7 +14,7 @@ module Spider; module Components
         end
         
         def route_widget
-            [:menu, @_action]
+            [:switcher, @_action]
         end
         
         def prepare_widgets
@@ -22,7 +22,7 @@ module Spider; module Components
                 crud = Crud.new(@request, @response)
                 crud.id = model.name.to_s.gsub('::', '_').downcase
                 crud.model = model
-                @widgets[:menu].add('Gestione Dati', model.label_plural, crud)
+                @widgets[:switcher].add('Gestione Dati', model.label_plural, crud)
             end
             if (@request.user)
                 @scene.username = @request.user.to_s
@@ -33,7 +33,7 @@ module Spider; module Components
         end
         
         def run
-            @scene.current = @widgets[:menu].current_label
+            @scene.current = @widgets[:switcher].current_label
             super
         end
         
