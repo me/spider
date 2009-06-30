@@ -4,6 +4,7 @@ require 'rake/testtask'
 desc "Update pot/po files."
 task :updatepo do
     require 'spiderfw'
+    require 'spiderfw/i18n/shtml_parser'
     require 'gettext/utils'
     GetText.update_pofiles("spider", Dir.glob("{lib,bin}/**/*.{rb,rhtml}"), "Spider #{Spider::VERSION}")
     apps = Spider.find_all_apps
