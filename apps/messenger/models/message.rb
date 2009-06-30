@@ -21,16 +21,16 @@ module Spider; module Messenger
             end
         end
         
-        def self.sent
-            self.where{ sent != nil }
+        def self.sent_messages
+            self.where{ q.sent .not nil }
         end
         
-        def self.queued
-            self.where{ (sent == nil) && (next_try != nil) }
+        def self.queued_messages
+            self.where{ (q.sent == nil) & (q.next_try .not nil) }
         end
         
-        def self.failed
-            self.where{ (sent == nil) && (next_try != nil) }
+        def self.failed_messages
+            self.where{ (q.sent == nil) & (q.next_try .not nil) }
         end
         
         with_mapper do

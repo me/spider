@@ -8,10 +8,12 @@ module Spider; module Messenger
         end
 
         def before(action='', *params)
-            q = Messenger.queues[@queue.to_sym]
-            raise NotFound(action) unless q
-            @queue_model = q[:model]
-            @scene.queue_model = @queue_model
+            if (@queue)
+                q = Messenger.queues[@queue.to_sym]
+                raise NotFound(action) unless q
+                @queue_model = q[:model]
+                @scene.queue_model = @queue_model
+            end
             super
             @response.headers['Content-Type'] = 'text/html'
         end
@@ -28,11 +30,12 @@ module Spider; module Messenger
             @scene.queues = []
             @scene.queue_info = {}
             Messenger.queues.each do |name, details|
+                @scene.queues << name
                 model = details[:model]
                 @scene.queue_info[name] = {
-                    :sent => model.sent.total_rows,
-                    :queued => model.queued.total_rows,
-                    :failed => model.failed.total_rows
+                    :sent => model.sent_messages.total_rows,
+                    :queued => model.queued_messages.total_rows,
+                    :failed => model.failed_messages.total_rows
                 }
             end
             render 'index'
