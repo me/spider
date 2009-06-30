@@ -253,6 +253,9 @@ module Spider; module Model
         
         
         def method_missing(meth, *arguments)
+            if (meth == :q)
+                return ConditionElementCreator.new
+            end
             if (meth.to_s =~ /element_(.+)/) # alternative syntax to avoid clashes
                 meth = $1.to_sym
             end
@@ -280,6 +283,10 @@ module Spider; module Model
             end
             @condition_context = nil
             return c
+        end
+        
+        class ConditionElementCreator
+            include ConditionMixin
         end
         
         class ConditionElement
