@@ -65,8 +65,7 @@ module Spider
             end
             
             def tag(name)
-                # FIXME: look for app in parent modules, might not be the first
-                self.parent_module.register_tag(name, self)
+                self.app.register_tag(name, self)
             end
             
             def register_tag(name)
