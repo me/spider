@@ -12,7 +12,7 @@ module Spider
                 #@controller ||= :"Spider::AppController"
                 class << self
                     attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path
-                    attr_reader :short_name, :route_url
+                    attr_reader :short_name, :route_url, :label, :version
                     attr_reader :short_prefix
                     attr_reader :command
                     
@@ -24,6 +24,7 @@ module Spider
                         @widgets_path ||= @path+'/widgets'
                         @views_path ||= @path+'/views'
                         @route_url ||= Inflector.underscore(self.name)
+                        @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
                     end
                     
                     def request_url
@@ -73,6 +74,7 @@ module Spider
                     end
                     
                     def has_tag?(tag)
+                        return false unless @tags
                         @tags[tag] ? true : false
                     end
                     
