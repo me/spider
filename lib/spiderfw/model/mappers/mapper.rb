@@ -672,7 +672,7 @@ module Spider; module Model
         end
     end
     RequiredError = MapperElementError.create_subclass(_("Element %s is required"))
-    NotUniqueError = MapperElementError.create_subclass(_("Element %s is not unique"))
+    NotUniqueError = MapperElementError.create_subclass(_("Another item with the same %s is already present"))
 
         
     
