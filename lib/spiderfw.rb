@@ -13,6 +13,7 @@ module Spider
     class << self
         # Everything here must be thread safe!!!
         attr_reader :logger, :controller, :apps, :server, :runmode, :apps_by_path, :apps_by_short_name
+        attr_reader :paths
         attr_accessor :locale
         
         def init(force=false)
@@ -22,9 +23,11 @@ module Spider
             @apps ||= {}
             @apps_by_path ||= {}
             @apps_by_short_name ||= {}
-            @app_paths = []
+            @loaded_apps = {}
             @root = $SPIDER_RUN_PATH
             setup_paths(@root)
+            load_configuration($SPIDER_PATH+'/config')
+            load_configuration(@root+'/config')
             start_loggers
 #            @controller = Controller
             @server = {}
@@ -41,6 +44,7 @@ module Spider
             @logger.close(STDERR)
             @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
             @apps.each do |name, mod|
+                GetText.bindtextdomain(mod.short_name) if File.directory?(mod.path+'/po')
                 mod.app_init if mod.respond_to?(:app_init)
             end
             
@@ -88,10 +92,6 @@ module Spider
         
     
         def setup_paths(root)
-            setup_paths_full(root)
-        end
-    
-        def setup_paths_full(root)
             @paths[:root] = root
             @paths[:apps] = root+'/apps'
             @paths[:core_apps] = $SPIDER_PATH+'/apps'
@@ -104,93 +104,79 @@ module Spider
             @paths[:log] = @paths[:var]+'/log'
         end
         
-        def paths
-            @paths
+        def find_app(name)
+            path = nil
+            [@paths[:apps], @paths[:core_apps]].each do |base|
+                test = base+'/'+name
+                if (File.exist?(test+'/_init.rb'))
+                    path = test
+                    break
+                end
+            end
+            return path
+        end
+        
+        def find_apps(name)
+            [@paths[:apps], @paths[:core_apps]].each do |base|
+                test = base+'/'+name
+                if (File.exist?(test))
+                    return find_apps_in_folder(test)
+                end
+            end
+        end
+        
+        def load_app(name)
+            paths = find_apps(name)
+            paths.each do |path|
+                load_app_at_path(path)
+            end
+        end
+        
+        def load_app_at_path(path)
+            return if @loaded_apps[path]
+            @loaded_apps[path] = true
+            last_name = path.split('/')[-1]
+            app_files = ['_init.rb', last_name+'.rb', 'config/options.rb', 'cmd.rb']
+            app_files.each{ |f| require path+'/'+f if File.exist?(path+'/'+f)}
         end
         
         def load_apps(*l)
             l.each do |app|
-                @apps_to_load << app 
+                load_app(app)
             end
-            find_apps
-            require (@paths[:config]+'/options') if File.exist?(@paths[:config]+'/options.rb')
-            load_apps_options
-            
-            GetText.locale = @locale
-
-            init_apps
-            
-            GetText.locale = @locale
         end
         
         def load_all_apps
+            find_all_apps.each do |path|
+                load_app_at_path(path)
+            end
+        end
+        
+        def find_all_apps
+            app_paths = []
             Find.find(@paths[:core_apps], @paths[:apps]) do |path|
                 if (File.basename(path) == '_init.rb')
-                    @app_paths << File.dirname(path)
+                    app_paths << File.dirname(path)
                     Find.prune
                 elsif (File.exist?("#{path}/_init.rb"))
-                    @app_paths << path
+                    app_paths << path
                     Find.prune
                 end
             end
-            init_apps
-        end
-        
-        def init_apps
-            load_configuration($SPIDER_PATH+'/config')
-            load_configuration(@root+'/config')
-            @app_paths.each do |path|
-                last_name = path.split('/')[-1]
-                app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
-                app_files.each{ |f| require path+'/'+f if File.exist?(path+'/'+f)}
-            end
-        end
-        
-        def load_apps_options
-            @app_paths.each do |path|
-                options_path = path+'/config/options.rb'
-                require options_path if (File.exist?(options_path))
-            end
-        end
-        
-        # FIXME: cleanup
-        def find_apps
-            Logger.debug("Loading apps "+@apps_to_load.join(', '))
-            found = false
-            @apps_to_load.uniq.each do |app|
-                if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app))
-                    if (File.exist?($SPIDER_RUN_PATH+'/apps/'+app+'/_init.rb'))
-                        @app_paths << $SPIDER_RUN_PATH+'/apps/'+app
-                        found = true
-                    else
-                        found = find_apps_in_folder($SPIDER_RUN_PATH+'/apps/'+app)
-                    end
-                elsif (File.exist?($SPIDER_PATH+'/apps/'+app))
-                    if (File.exist?($SPIDER_PATH+'/apps/'+app+'/_init.rb'))
-                        @app_paths << $SPIDER_PATH+'/apps/'+app
-                        found = true
-                    else
-                        found = find_apps_in_folder($SPIDER_PATH+'/apps/'+app)
-                    end
-                end
-                if (!found)
-                    Logger.error("App #{app} not found")
-                end
-            end
+            return app_paths
         end
         
         def find_apps_in_folder(path)
             path += '/' unless path[-1].chr == '/'
             return unless File.directory?(path)
-            found = false
+            return [path] if File.exist?(path+'/_init.rb')
+            found = []
             Dir.new(path).each do |f|
                 next if f[0].chr == '.'
                 if (File.exist?(path+f+'/_init.rb'))
-                    @app_paths << path+f
-                    found = true
+                    found << path+f
                 else
-                    f = find_apps_in_folder(path+f)
-                    found ||= f
+                    found += find_apps_in_folder(path+f)
                 end
             end
             return found
