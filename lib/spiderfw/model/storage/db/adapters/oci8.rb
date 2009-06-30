@@ -9,7 +9,7 @@ module Spider; module Model; module Storage; module Db
             :sequences => true,
             :transactions => true
         }
-        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid', 'to']
+        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid']
         @safe_conversions = {
             'CHAR' => ['VARCHAR', 'CLOB'],
             'VARCHAR' => ['CLOB'],

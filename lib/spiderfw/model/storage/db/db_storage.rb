@@ -5,7 +5,7 @@ require 'iconv'
 module Spider; module Model; module Storage; module Db
     
     class DbStorage < Storage::BaseStorage
-        @reserved_keywords = ['from', 'order', 'where']
+        @reserved_keywords = ['from', 'order', 'where', 'to']
         @type_synonyms = {}
         @safe_conversions = {
             'TEXT' => ['LONGTEXT'],
