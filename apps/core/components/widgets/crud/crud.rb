@@ -62,8 +62,8 @@ module Spider; module Components
                 end
             end
             if (@widgets[:ask_delete])
-                @widgets[:ask_delete].add_action('_w'+param_name(self)+'[delete_cancel]', 'Annulla')
-                @widgets[:ask_delete].add_action('_w'+param_name(self)+'[do_delete]', 'Ok')
+                @widgets[:ask_delete].add_action('_w'+param_name(self)+'[delete_cancel]', _("Cancel"))
+                @widgets[:ask_delete].add_action('_w'+param_name(self)+'[do_delete]', _('Ok'))
             end
             super
         end
