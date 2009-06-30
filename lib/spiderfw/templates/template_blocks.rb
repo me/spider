@@ -85,7 +85,9 @@ module Spider
             end
             
             def escape_text(text)
-                res = text.gsub("'", "\\\\'")
+                res = text.gsub("'", "\\'") \
+                    .gsub(/_(\\*)\\\((.+?)\)/, '_\1\1(\2)') \
+                    .gsub('\\', '\\\\')
                 return res
             end
             
