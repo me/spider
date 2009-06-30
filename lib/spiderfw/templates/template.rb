@@ -74,6 +74,48 @@ module Spider
                 return klass
             end
             
+            def real_path(path, cur_path=nil, owner_class=nil)
+                # FIXME: security check for allowed paths?
+                path.strip!
+                if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
+                    path.sub!(/^ROOT/, Spider.paths[:root])
+                    path.sub!(/^SPIDER/, $SPIDER_PATH)
+                    return path
+                elsif (cur_path)
+                    if (path[0..1] == './')
+                        return cur_path+path[1..-1]
+                    elsif (path[0..1] == '../')
+                        return File.dirname(cur_path)+path[2..-1]
+                    end
+                end
+                app = nil
+                if (path[0].chr == '/')
+                    Spider.apps_by_path.each do |p, a|
+                        if (path.index(p) == 1)
+                            app = a
+                            path = path[p.length+2..-1]
+                            break
+                        end
+                    end
+                else
+                    app = owner_class.app if (owner_class && owner_class.app)
+                end
+                return cur_path+'/'+path if cur_path && !app
+                search_paths = [
+                    Spider.paths[:root]+'/views/'+app.relative_path,
+                    app.views_path,
+                    $SPIDER_PATH+'/views'
+                ]
+                extensions = ['shtml']
+                search_paths.each do |p|
+                    extensions.each do |ext|
+                        full = p+'/'+path+'.'+ext
+                        return full if (File.exist?(full))
+                    end
+                end
+                return path
+            end
+            
         end
         
         def override_tags
@@ -98,7 +140,7 @@ module Spider
         
         
         def load(path=nil)
-            @path = path if path
+            @path = real_path(path) if path
 #            debug("TEMPLATE LOADING #{@path}")
             cache_path = @path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
             @compiled = self.class.cache.fetch(cache_path) do
@@ -156,40 +198,7 @@ module Spider
         end
         
         def real_path(path)
-            # FIXME: security check for allowed paths?
-            path.strip!
-            if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
-                path.sub!(/^ROOT/, Spider.paths[:root])
-                path.sub!(/^SPIDER/, $SPIDER_PATH)
-                return path
-            elsif (path[0..1] == './')
-                return File.dirname(@path)+path[1..-1]
-            elsif (path[0..1] == '../')
-                return File.dirname(File.dirname(@path))+path[2..-1]
-            end
-            app = nil
-            if (path[0].chr == '/')
-                Spider.apps_by_path.each do |p, a|
-                    if (path.index(p) == 0)
-                        app = a
-                    end
-                end
-            else
-                app = @owner.class.app if (@owner && @owner.class.app)
-            end
-            return File.dirname(@path)+'/'+path unless app
-            search_paths = [
-                Spider.paths[:root]+'/views/'+app.relative_path,
-                app.views_path
-            ]
-            extensions = ['shtml']
-            search_paths.each do |p|
-                extensions.each do |ext|
-                    full = p+'/'+path+'.'+ext
-                    return full if (File.exist?(full))
-                end
-            end
-            return path
+            self.class.real_path(path, File.dirname(@path), @owner.class)
         end
             
         
