@@ -93,11 +93,12 @@ module Spider; module Components
             rows.each do |row|
                 res_row = {}
                 @elements.each do |el|
-                    if (!row[el] && [String, Spider::DataTypes::Text].include?(@model.elements[el].type))
+                    element = @model.elements[el]
+                    if (!row[el] && [String, Spider::DataTypes::Text].include?(element.type))
                         row[el] = ''
                         next
                     end
-                    if (@model.elements[el].multiple?)
+                    if (element.multiple?)
                         list = "<ul>"
                         if(row[el])
                             row[el][0..2].each{ |sub|
@@ -110,15 +111,21 @@ module Spider; module Components
                             res_row[el] = list
                         end
                     else
-                        str = row[el] ? row[el].to_s : ''
-                        str = str.split("\n").map{ |str_row|
-                            if str_row.length > @attributes[:max_element_length]
-                                str_row[0..@attributes[:max_element_length]]+'...' 
-                            else
-                                str_row
-                            end
-                        }.join("\n")
-                        res_row[el] = str
+                        if (!row[el])
+                            res_row[el] = '' 
+                        elsif (element.type < Date || element.type < Time)
+                            res_row[el] = Spider::I18n.localize(@request.locale, row[el])
+                        else                            
+                            str = row[el] ? row[el].to_s : ''
+                            str = str.split("\n").map{ |str_row|
+                                if str_row.length > @attributes[:max_element_length]
+                                    str_row[0..@attributes[:max_element_length]]+'...' 
+                                else
+                                    str_row
+                                end
+                            }.join("\n")
+                            res_row[el] = str
+                        end
                     end
                 end
                 res << res_row
