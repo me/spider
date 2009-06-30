@@ -787,8 +787,8 @@ module Spider; module Model
         
         def prepare_value(element, value)
             element = self.class.elements[element] unless element.is_a?(Element)
-            if (element.type.subclass_of?(Spider::DataType))
-                value = element.type.new(value) unless value.is_a?(element.type)
+            if (element.type < Spider::DataType)
+                value = element.type.from_value(value) unless value.is_a?(element.type)
                 element.type.take_attributes.each do |a|
                     value.attributes[a] = element.attributes[a]
                 end

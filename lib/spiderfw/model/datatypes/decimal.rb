@@ -2,8 +2,11 @@ require "bigdecimal"
 
 module Spider; module DataTypes
 
-    class Decimal < DataType
-        maps_to BigDecimal
+    class Decimal < BigDecimal
+        include DataType
+
+        maps_back_to superclass
+        
         take_attributes :scale
         
         def set(value)

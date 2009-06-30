@@ -1,43 +1,40 @@
 module Spider
 
-    class DataType
+    module DataType
         @maps_to = nil
-    
-        def initialize(val=nil)
-            set(val) if val
+        
+        def self.included(klass)
+            klass.extend(ClassMethods)
         end
+        
+        module ClassMethods
+            
+            def from_value(value)
+                return self.new(value)
+            end
     
-        def self.maps_to(val=nil)
-            if (val)
-                @maps_to = val
-            else
+            def maps_to(val=nil)
+                @maps_to = val if val
                 @maps_to
             end
-        end
-    
-        def self.take_attributes(*list)
-            if (list)
-                @take_attributes = list
-            else
-                @take_attributes || []
+            
+            def maps_back_to(val=nil)
+                @maps_back_to = val if val
+                @maps_back_to
             end
+    
+            def take_attributes(*list)
+                if (list)
+                    @take_attributes = list
+                else
+                    @take_attributes || []
+                end
+            end
+            
         end
     
         def attributes
             @attributes ||= {}
-        end
-            
-    
-        def set(val)
-            @val = val
-        end
-        
-        def get
-            return @val
-        end
-        
-        def inspect
-            @val
         end
         
         def map(mapper_type)
@@ -47,14 +44,10 @@ module Spider
         def map_back(mapper_type, val)
             @val
         end
-    
-        # def serialize(val)
-        #     val
-        # end
-        #     
-        # def unserialize(val)
-        #     val
-        # end
+        
+        def format(format)
+            self.to_s
+        end
         
     end
     

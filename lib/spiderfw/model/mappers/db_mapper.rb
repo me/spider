@@ -565,8 +565,8 @@ module Spider; module Model; module Mappers
         end
         
         def map_value(type, value, mode=nil)
-             if (type.subclass_of?(Spider::DataType) && value)
-                 value = type.new(value) unless value.is_a?(type)
+             if (type < Spider::DataType && value)
+                 value = type.from_value(value) unless value.is_a?(type)
                  value = value.map(self.type)
              elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
                  value = type.primary_keys.map{ |key| value.send(key.name) }
@@ -599,6 +599,9 @@ module Spider; module Model; module Mappers
         def map_back_value(type, value)
             value = value[0] if value.class == Array
             value = storage.value_to_mapper(Model.simplify_type(type), value)
+            if (type < Spider::DataType && type.maps_back_to)
+                type = type.maps_back_to
+            end
             case type.name
             when 'Fixnum'
                 return value ? value.to_i : nil
@@ -611,6 +614,9 @@ module Spider; module Model; module Mappers
             case type.name
             when 'Date', 'DateTime'
                 return type.parse(value) unless value.is_a?(Date)
+            end
+            if (type < Spider::DataType)
+                value = type.from_value(value)
             end
             return value
         end
@@ -736,12 +742,8 @@ module Spider; module Model; module Mappers
                 next if had_schema && schema.pass[element.name]
                 next if element.attributes[:added_reverse] && element.has_single_reverse?
                 if (!element.model?)
-                    type = element.custom_type? ? element.type.class.maps_to : element.type
                     current_column = schema.columns[element.name] || {}
-                    storage_type = type
-                    while (!@storage.class.base_types.include?(storage_type))
-                        storage_type = Model.simplify_type(storage_type)
-                    end
+                    storage_type = Spider::Model.base_type(element.type)
                     db_attributes = current_column[:attributes]
                     if (!db_attributes || db_attributes.empty?)
                         db_attributes = @storage.column_attributes(storage_type, element.attributes)

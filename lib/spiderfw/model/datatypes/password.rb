@@ -9,8 +9,9 @@ module Spider; module DataTypes
         :type => Symbol, :choices => [:md5, :sha1, :sha2]
     )
 
-    class Password < DataType
-        maps_to String
+    class Password < String
+        include DataType
+        
         take_attributes :hash, :salt
         
         def map(mapper_type)

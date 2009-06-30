@@ -561,9 +561,9 @@ module Spider; module Model
                     condition.delete(k)
                     condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
                 end
-                if (element.type.subclass_of?(Spider::DataType) && !v.is_a?(element.type))
+                if (element.type < Spider::DataType && !v.is_a?(element.type))
                     condition.delete(k)
-                    condition[k] = element.type.new(v)
+                    condition[k] = element.type.from_value(v)
                 elsif element.type == DateTime && v && !v.is_a?(Date)
                     condition.delete(k)
                     condition[k] = DateTime.parse(v)
