@@ -115,6 +115,8 @@ module Spider; module Components
                             res_row[el] = '' 
                         elsif (element.type < Date || element.type < Time)
                             res_row[el] = Spider::I18n.localize(@request.locale, row[el])
+                        elsif (row[el].respond_to?(:format))
+                            res_row[el] = row[el].format(:short)
                         else                            
                             str = row[el] ? row[el].to_s : ''
                             str = str.split("\n").map{ |str_row|
