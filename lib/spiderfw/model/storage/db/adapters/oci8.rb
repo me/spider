@@ -101,7 +101,7 @@ module Spider; module Model; module Storage; module Db
             case type.name
             when 'Date', 'DateTime'
                 return nil unless value
-                return value.to_datetime if value.is_a?(Time)
+                return value.to_datetime if type == DateTime
                 return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
             when 'Spider::DataTypes::Text'
                 value =  value ? value.read : ''
