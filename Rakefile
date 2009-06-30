@@ -13,7 +13,7 @@ task :updatepo do
     Spider.apps.each do |name, mod|
         next unless File.directory?(mod.path+'/po')
         Dir.chdir(mod.path)
-        GetText.update_pofiles(mod.short_name, Dir.glob("{lib,bin,controllers,models,views,widgets}/**/*.{rb,rhtml}"), "#{mod.name} #{mod.version}")
+        GetText.update_pofiles(mod.short_name, Dir.glob("{lib,bin,controllers,models,views,widgets}/**/*.{rb,rhtml,shtml}"), "#{mod.name} #{mod.version}")
         print "\n"
     end
 
