@@ -16,6 +16,20 @@ module Spider
             @content[:yield_to] = @template
             scene.resources = @template_resources
         end
+        
+        @@named_layouts = {}
+        
+        class << self
+            
+            def register_layout(name, file)
+                @@named_layouts[name] = file
+            end
+            
+            def named_layouts
+                @@named_layouts
+            end
+            
+        end
 
         
     end

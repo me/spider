@@ -175,7 +175,11 @@ module Spider; module ControllerMixins
                 unless respond_to?(:layout_path)
                     raise NotImplementedError, "The layout_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
-                return Spider::Layout.new(layout_path+'/'+path+'.shtml')
+                if (path.is_a?(Symbol))
+                    path = Spider::Layout.named_layouts[path]
+                end
+                path = Spider::Template.real_path(path, layout_path, self)
+                return Spider::Layout.new(path)
             end
             
             
