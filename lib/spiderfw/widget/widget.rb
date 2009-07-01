@@ -163,8 +163,24 @@ module Spider
             end
             @id ||= @attributes[:id]
             @template.id_path = @id_path
+            required_groups = {}
             self.class.attributes.each do |k, params|
-                raise ArgumentError, "Attribute #{k} is required by widget #{self}" if (params[:required] && !@attributes[k])
+                if (params[:required])
+                    if (params[:required] == true && !@attributes[k])
+                        raise ArgumentError, "Attribute #{k} is required by widget #{self}"
+                    else
+                        if (!@attributes[k] && required_groups[params[:required]] != false)
+                            required_groups[params[:required]] ||= []
+                            required_groups[params[:required]] << k
+                        else
+                            required_groups[params[:required]] = false
+                        end
+                    end 
+                end
+            end
+            required_groups.each do |group_name, attributes|
+                next if attributes == false
+                raise ArgumentError, "Widget #{self} requires attribute #{attributes.join(' or ')} to be set"
             end
             prepare
             @before_done = true
