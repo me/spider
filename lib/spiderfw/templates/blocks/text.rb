@@ -15,10 +15,8 @@ module Spider; module TemplateBlocks
             pos = 0
             c = ""
             while scanner.scan_until(Regexp.union(ExpressionOutputRegexp, GettextRegexp, ERBRegexp))
-                #debugger
                 text = scanner.pre_match[pos..-1]
                 pos = scanner.pos
-                #$out << escape_text(text) if (text && text.length > 0)
                 c += "$out << '#{escape_text(text)}'\n" if (text && text.length > 0)
                 case scanner.matched
                 when ExpressionOutputRegexp
