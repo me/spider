@@ -22,6 +22,8 @@ module Spider
                     v = v.to_sym
                 when 'TrueClass', 'FalseClass'
                     v = v.to_s == 'false' ? false : true
+                when 'Fixnum'
+                    v = v.to_i
                 end
             end
             v = params[:process].call(v) if params[:process] && v
