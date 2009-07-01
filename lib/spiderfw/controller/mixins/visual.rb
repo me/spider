@@ -62,10 +62,16 @@ module Spider; module ControllerMixins
             template._action = @action
             template.exec
             unless (@_partial_render) # TODO: implement or remove
-                chosen_layout = options[:layout] || @layout
-                if (chosen_layout)
-                    l = init_layout(chosen_layout)
-                    l.template = template
+                chosen_layouts = options[:layout] || @layout
+                chosen_layouts = [chosen_layouts] unless chosen_layouts.is_a?(Array)
+                if (chosen_layouts)
+                    t = template
+                    l = nil
+                    (chosen_layouts.length-1).downto(0) do |i|
+                        l = init_layout(chosen_layouts[i])
+                        l.template = t
+                        t = l
+                    end
                     l.render(scene)
                 else
                     template.render(scene)
@@ -79,7 +85,11 @@ module Spider; module ControllerMixins
             obj = super
             if (obj.is_a?(Visual))
                 set_layout = @layout || @dispatcher_layout
-                obj.dispatcher_layout = self.class.load_layout(set_layout) if set_layout
+                if set_layout
+                    set_layout = [set_layout] unless set_layout.is_a?(Array)
+                    set_layout.map{ |l| self.class.load_layout(l) }
+                    obj.dispatcher_layout = set_layout
+                end
             end
             return obj
         end

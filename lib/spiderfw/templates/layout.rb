@@ -30,6 +30,10 @@ module Spider
             end
             
         end
+        
+        def all_resources
+            return @template.all_resources
+        end
 
         
     end
