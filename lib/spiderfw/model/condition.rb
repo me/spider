@@ -83,10 +83,12 @@ module Spider; module Model
         end
         
         def +(condition)
+            res = self.clone
             @subconditions += condition.subconditions
             condition.each_with_comparison do |k, v, c|
-                set(k, v, c)
+                res.set(k, v, c)
             end
+            return res
         end
         
         def <<(condition)
