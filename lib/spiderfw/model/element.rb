@@ -110,7 +110,7 @@ module Spider; module Model
         end
         
         def label
-            return _(@attributes[:label]) || Inflector.underscore_to_upcasefirst(@name.to_s)
+            return @attributes[:label] ? _(@attributes[:label]) : Inflector.underscore_to_upcasefirst(@name.to_s)
         end
         
         def to_s
