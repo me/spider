@@ -10,6 +10,7 @@ module Spider
         module ClassMethods
             
             def from_value(value)
+                return nil if value.nil?
                 return self.new(value)
             end
     
