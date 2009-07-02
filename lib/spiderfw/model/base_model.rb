@@ -696,17 +696,14 @@ module Spider; module Model
                     end
                 end
                 obj.identity_mapper = self.identity_mapper
-                # FIXME: cleanup the single reverse thing, doesn't have much sense now with junctions
-                # if (element.has_single_reverse? && (!element.attributes[:junction] || element.attributes[:keep_junction]))
-                #                     obj.no_autoload do
-                #                         obj.set(element.attributes[:reverse], self) unless obj.get(element.attributes[:reverse]) == self
-                #                     end
-                #                 end
                 if (element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
                 end
                 if (element.attributes[:set] && element.attributes[:set].is_a?(Hash))
                     element.attributes[:set].each{ |k, v| obj.set(k, v) }
+                    obj.reset_modified_elements(*element.attributes[:set].keys)
+                    # FIXME: is it always ok to not set the element as modified? But otherwise sub objects
+                    # are always saved (and that's definitely no good)
                 end
             else
                 obj = prepare_value(element, obj)
@@ -1003,8 +1000,12 @@ module Spider; module Model
             end
         end
         
-        def reset_modified_elements
-            @modified_elements = {}
+        def reset_modified_elements(*elements)
+            if (elements.length > 0)
+                elements.each{ |el_name| @modified_elements.delete(el_name) }
+            else
+                @modified_elements = {}
+            end
         end
         
         # Returns true if all primary keys have a value; false if some primary key
