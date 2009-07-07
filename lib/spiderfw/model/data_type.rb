@@ -39,11 +39,11 @@ module Spider
         end
         
         def map(mapper_type)
-            @val
+            self
         end
         
         def map_back(mapper_type, val)
-            @val
+            val.is_a?(self.class) ? val : self.class.new(val)
         end
         
         def format(format)
