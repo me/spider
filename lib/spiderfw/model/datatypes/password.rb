@@ -15,12 +15,11 @@ module Spider; module DataTypes
         take_attributes :hash, :salt
         
         def map(mapper_type)
-            @val ||= ''
             salt = attributes[:salt] || Spider.conf.get('password.salt')
             # TODO: better salts
             salt ||= (0..10).inject('') { |r, i| r << rand(89) + 37 }
             hash_type = attributes[:hash] || Spider.conf.get('password.hash')
-            return "#{hash_type}$#{salt}$#{self.class.do_hash(hash_type, @val, salt)}"
+            return "#{hash_type}$#{salt}$#{self.class.do_hash(hash_type, self.to_s, salt)}"
         end
         
         def self.check_match(stored, pwd)
