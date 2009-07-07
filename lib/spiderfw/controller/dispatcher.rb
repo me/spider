@@ -31,7 +31,13 @@ module Spider
         
         def dispatch(method, action='', *arguments)
             return nil unless can_dispatch?(method, action)
-            obj, route = @dispatch_next[action]
+            route = @dispatch_next[action]
+            if (!route.obj)
+                obj = dispatched_object(route)
+                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=)
+                route.obj = obj
+            end
+            obj = route.obj
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
             return [obj, route.action, new_arguments]
@@ -71,16 +77,19 @@ module Spider
         
         def can_dispatch?(method, action)
             d_next = dispatch_next(action)
-            return false unless d_next && d_next[0].respond_to?(method)
+            return false unless d_next
+            if (d_next.dest.is_a?(Class))
+                return false unless d_next.dest.method_defined?(method)
+            else
+                return false unless d_next.dest.respond_to?(method)
+            end
             return true
         end
                 
         def do_route(path)
             next_route = get_route(path)
             return false unless next_route
-            obj = dispatched_object(next_route)
-            obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=)
-            return [obj, next_route]
+            return next_route
         end
         
         def dispatch_next(path)
@@ -219,7 +228,7 @@ module Spider
         end
         
         class Route
-            attr_accessor :path, :dest, :action, :params, :options, :matched
+            attr_accessor :path, :dest, :action, :params, :options, :matched, :obj
             
             def initialize(args)
                 @path = args[:path]
@@ -228,6 +237,7 @@ module Spider
                 @params = args[:params] || []
                 @options = args[:options] || {}
                 @matched = args[:matched]
+                @obj = nil
             end
             
         end

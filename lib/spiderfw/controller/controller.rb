@@ -105,6 +105,23 @@ module Spider
             call_path
         end
         
+        def get_action_method(action)
+            method = nil
+            additional_arguments = nil
+            # method = action.empty? ? self.class.default_action : action
+            # method = method.split('/', 2)[0]
+            if (action =~ /^([^:]+)(:.+)$/)
+                method = $1
+            elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
+                method = $1
+                additional_arguments = [$2]
+            else
+                method = action
+            end
+            method = self.class.default_action if !method || method.empty?
+            return [method.to_sym, additional_arguments]
+        end
+        
         
         def execute(action='', *arguments)
             return if @done
@@ -113,31 +130,21 @@ module Spider
             # before(action, *arguments)
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
-                method = action.empty? ? self.class.default_action : action
-                method = method.split('/', 2)[0]
-                additional_arguments = []
-                if (action =~ /^([^:]+)(:.+)$/)
-                    method = $1
-                elsif (action =~ /^([^\/]+)\/(.+)$/) # methods followed by a slash
-                    method = $1
-                    additional_arguments = [$2]
-                end
                 if (can_dispatch?(:execute, action))
                     #run_chain(:execute, action, *arguments)
                     do_dispatch(:execute, action)
 #                        after(action, *arguments)
-                elsif (method && !method.empty? && self.class.method_defined?(method.to_sym))
-                    meth = self.method(method.to_sym)
-                    args = (arguments+additional_arguments)
+                elsif (@executed_method)
+                    meth = self.method(@executed_method)
+                    args = arguments + @executed_method_arguments
                     @action = args[0]
                     args = meth.arity == 0 ? [] : args[0..meth.arity]
                     args = [nil] if meth.arity == 1 && args.empty?
-                    @executed_method = method.to_s
-                    send(method, *args)
+                    send(@executed_method, *args)
                 else
                     raise NotFound.new(action)
                 end
-            end   
+            end
         end
         
         def before(action='', *arguments)
@@ -198,9 +205,26 @@ module Spider
 
         def dispatched_object(route)
             klass = route.dest
-            return klass if klass.class != Class
+            if klass.class != Class
+                if (klass == self) # route to self
+                    @executed_method = route.action
+                    @executed_method_arguments = []
+                end
+                return klass
+            end
             obj = klass.new(@request, @response, @scene)
             obj.dispatch_action = route.matched || ''
+            obj.instance_eval do
+                @executed_method = nil
+                @executed_method_arguments = nil
+                if (!can_dispatch?(:execute, route.action))
+                    method, additional_arguments = get_action_method(route.action)
+                    if (self.class.controller_action?(method)) # or class.method_defined? ?
+                        @executed_method = method.to_sym
+                        @executed_method_arguments = additional_arguments || []
+                    end
+                end
+            end
             if (route.options[:do])
                 obj.instance_eval &route.options[:do]
             end
