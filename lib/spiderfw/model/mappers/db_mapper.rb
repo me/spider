@@ -378,9 +378,16 @@ module Spider; module Model; module Mappers
                         element.model.primary_keys.each do |primary_key|
                             condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
                         end
-                    elsif (element.model.primary_keys.length == 1)
-                        v = Condition.new({element.model.primary_keys[0].name => v})
-                        condition.set(element.name, '=', v)
+                    elsif (element.model.primary_keys.length == 1 )
+                        new_v = Condition.new
+                        if (have_references?(element.name))
+                            new_v.set(element.model.primary_keys[0].name, comp, v)
+                        else
+                            new_v.set(element.reverse, comp, v)
+                        end
+                        condition.set(element.name, comp, new_v)
+                    else
+                        raise MapperError, "Value condition passed on #{k}, but #{element.model} has more then one primary key"
                     end
                 end
             end 
@@ -394,7 +401,7 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (!element.multiple? && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
@@ -406,7 +413,7 @@ module Spider; module Model; module Mappers
                         cond[:values] << element_cond
                     else
                         if (element.storage == model.mapper.storage)
-                            element.mapper.prepare_query_condition(v)
+                            element.model.mapper.prepare_query_condition(v)
                             element_condition, element_joins = element.mapper.prepare_condition(v)
                             joins += element_joins
                             joins << model.mapper.get_join(element)
