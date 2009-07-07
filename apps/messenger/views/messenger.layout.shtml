@@ -1,0 +1,4 @@
+<div class='messenger'>
+    <h3>{ @title }</h3>
+    <sp:yield />
+</div>

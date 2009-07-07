@@ -1,0 +1,8 @@
+<div class="queue">
+    _(Sent messages):<br>
+    <core:table id='sent' queryset='@sent' row_limit="5" elements="id,from,to,ticket,sent,subject"/><br>
+    _(Queued messages):<br>
+    <core:table id='queued' queryset='@queued' row_limit="5" elements="id,from,to,ticket,last_try,next_try,attempts,backend_response"/><br>
+    _(Failed messages):<br>
+    <core:table id='failed' queryset='@failed' row_limit="5" elements="id,from,to,ticket,last_try,backend_response"/><br>
+</div>

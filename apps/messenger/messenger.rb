@@ -6,7 +6,10 @@ module Spider
         
         def self.queues
             {
-                :email => {:model => Email}
+                :email => {
+                    :label => _("Email"),
+                    :model => Email
+                }
             }
         end
                 
@@ -17,11 +20,7 @@ module Spider
             model = self.queues[queue][:model]
             @mutex.synchronize do
                 now = DateTime.now
-                list = model.where{ 
-                    (sent == nil) &
-                    ((send_from == nil) | (send_from <= now ) ) &
-                    (next_try <= now)
-                }
+                list = model.where{ (sent == nil) & (next_try <= now) }
                 list.each do |msg|
                     res = false
                     exc = nil
@@ -32,15 +31,16 @@ module Spider
                     if (res)
                         msg.sent = now
                         msg.next_try = nil
+                        msg.backend_response = res
                         msg.save
                     else
                         msg.last_try = now
                         msg.failed ||= 0
                         msg.failed += 1
                         if (exc)
-                            msg.last_error = exc.to_s
+                            msg.backend_response = exc.to_s
                         else
-                            msg.last_error = res
+                            msg.backend_response = res
                         end
                         if (msg.failed >= Spider.conf.get("messenger.#{queue}.retries"))
                             msg.next_try = nil
@@ -85,7 +85,7 @@ module Spider
                 msg_str = msg.headers+"\n"+msg.body
                 res = smtp.send_message msg_str, msg.from, msg.to
             end
-            return res
+            return res.string
         end
         
     end

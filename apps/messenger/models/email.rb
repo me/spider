@@ -7,6 +7,7 @@ module Spider; module Messenger
         element :from, String, :label => _("From")
         element :to, String, :label => _("To")
         element :headers, Text, :label => _("Headers")
+        element :subject, String, :label => _("Subject"), :computed_from => [:headers]
         element :body, Text, :label => _("Body")
         
         def subject

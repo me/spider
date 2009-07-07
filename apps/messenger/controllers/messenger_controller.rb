@@ -1,7 +1,7 @@
 module Spider; module Messenger
 
     class MessengerController < Spider::PageController
-        layout :spider_admin
+        layout [:spider_admin, 'messenger.layout']
         
         Messenger.queues.keys.each do |queue|
             route queue.to_s, self, :do => lambda{ |action| @queue = @dispatch_action }
@@ -26,13 +26,14 @@ module Spider; module Messenger
         end
 
         def index
-            return list if (@queue)
+            return queue if (@queue)
             @scene.queues = []
             @scene.queue_info = {}
             Messenger.queues.each do |name, details|
                 @scene.queues << name
                 model = details[:model]
                 @scene.queue_info[name] = {
+                    :label => details[:label],
                     :sent => model.sent_messages.total_rows,
                     :queued => model.queued_messages.total_rows,
                     :failed => model.failed_messages.total_rows
@@ -42,6 +43,12 @@ module Spider; module Messenger
         end
 
         def queue
+            q = Messenger.queues[@queue.to_sym]
+            @scene.title = q[:label]
+            @scene.queued = q[:model].queued_messages
+            @scene.sent = q[:model].sent_messages
+            @scene.failed = q[:model].failed_messages
+            render 'queue'
         end
 
         def failed
@@ -52,7 +59,7 @@ module Spider; module Messenger
 
         private
 
-        def list(condition=nil)
+        def list(queryset=nil)
             render 'list'
             # 
             # tmpl = init_template('list')

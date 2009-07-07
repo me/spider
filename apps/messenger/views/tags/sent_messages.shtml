@@ -1,0 +1,1 @@
+<core:table id='sent' queryset='@sent' row_limit="5" elements="id,from,to,ticket,sent,attempts"/>
