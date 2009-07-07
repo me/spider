@@ -14,13 +14,14 @@ class ModelCommand < CmdParse::Command
                 @force = true
             }
             opt.on("--drop-columns", _("Drop unused columns"), "-d"){ |d| @drop = true}
-            opt.on("--drop-tables [PREFIX]", _("Drop unused tables")){ |dt| 
+            opt.on("--drop-tables [PREFIX]", _("Drop unused tables")){ |dt|
                 dt = true if dt == '*'
                 @drop_tables = dt
             }
             opt.on("--update-sequences", _("Update current sequences to max db value"), "-s"){ |s|
                 @update_sequences = true
             }
+            opt.on("--non-managed", _("Process also non managed models"), "-m"){ |m| @non_managed = true}
         end
         
         sync_cmd.set_execution_block do |req_models|
@@ -32,9 +33,12 @@ class ModelCommand < CmdParse::Command
                 models = []
                 mod = model_or_app.is_a?(Module) ? model_or_app : const_get_full(model_or_app)
                 if (mod.is_a?(Module) && mod.include?(Spider::App))
-                    mod.models.each { |m| models << m }
+                    mod.models.each do |m|
+                        next unless @non_managed || m < Spider::Model::Managed
+                        models << m
+                    end
                 elsif (mod.subclass_of?(Spider::Model::BaseModel))
-                    models << mod
+                    models << mod if @non_managed || mod < Spider::Model::Managed
                 end
                 models.each do |model|
                     begin
