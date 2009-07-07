@@ -11,6 +11,8 @@ require 'spiderfw/controller/mixins/static_content'
 
 require 'spiderfw/controller/helpers/widget_helper'
 
+require 'spiderfw/utils/annotations'
+
 module Spider
     
     class Controller
@@ -18,6 +20,7 @@ module Spider
         include Logger
         include ControllerMixins
         include Helpers
+        include Annotations
         
         class << self
             
@@ -68,8 +71,31 @@ module Spider
                 @dispatch_methods[:before] << [condition, method, params]
             end
             
+            def controller_actions(*methods)
+                if (methods.length > 0)
+                    @controller_actions ||= []
+                    @controller_actions += methods
+                end
+                @controller_actions
+            end
+            
+            def controller_action?(method)
+                return false unless self.method_defined?(method)
+                if @controller_actions
+                    res = @controller_actions.include?(method)
+                    if (!res)
+                        Spider.logger.info("Method #{method} is not a controller action for #{self}")
+                    end
+                    return res
+                else
+                    return true
+                end
+            end
+            
             
         end
+        
+        define_annotation(:action) { |k, m| k.controller_actions(m) }
         
         attr_reader :request, :response, :executed_method
         attr_accessor :dispatch_action

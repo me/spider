@@ -5,15 +5,32 @@ module Spider; module ControllerMixins
     
     # Mixin for objects using templates
     module Visual
+        
         attr_accessor :layout, :dispatcher_layout
         
         def self.included(klass)
            klass.extend(ClassMethods)
+           klass.define_annotation(:html) { |k, m| k.output_format(m, :html) }
+           klass.define_annotation(:xml) { |k, m| k.output_format(m, :xml) }
+           klass.define_annotation(:json) { |k, m| k.output_format(m, :json) }
         end
         
         def before(action, *params)
             @layout ||= self.class.get_layout(action)
             @layout ||= @dispatcher_layout
+            format = self.class.output_format(@executed_method)
+            case format
+            when :json
+                if (Spider.runmode == 'devel' && @request.params['_text'])
+                    content_type('text/plain')
+                else
+                    content_type('application/json')
+                end
+            when :html
+                content_type('text/html')
+            when :xml
+                content_type('text/xml')
+            end
             super
         end
         
@@ -63,7 +80,7 @@ module Spider; module ControllerMixins
             template.exec
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layouts = options[:layout] || @layout
-                chosen_layouts = [chosen_layouts] unless chosen_layouts.is_a?(Array)
+                chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
                 if (chosen_layouts)
                     t = template
                     l = nil
@@ -96,6 +113,21 @@ module Spider; module ControllerMixins
         
         
         module ClassMethods
+            
+            def output_format(method, format=nil)
+                Spider.logger.debug("Method #{method} has output format #{format}") if format
+                @output_formats ||= {}
+                if format
+                    @output_formats[method] = format
+                    controller_actions(method)
+                end
+                return @output_formats[method] || @default_output_format
+            end
+            
+            def default_output_format(format)
+                @default_output_format = format if format
+                @default_output_format
+            end
 
             
             def layouts

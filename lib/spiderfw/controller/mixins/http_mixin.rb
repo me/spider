@@ -38,6 +38,15 @@ module Spider; module ControllerMixins
             'http://'+@request.env['HTTP_HOST']+request_path
         end
         
+        def self.output_charset(val)
+            @output_charset = val if val
+            @output_charset || Spider.conf.get('http.charset')
+        end
+        
+        def content_type(ct)
+            @response.headers["Content-Type"] = "#{ct};charset=#{output_charset}"
+        end
+        
         # for widgets
 
         
