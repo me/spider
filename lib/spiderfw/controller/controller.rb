@@ -145,6 +145,7 @@ module Spider
                 method = action
             end
             method = self.class.default_action if !method || method.empty?
+            return nil if method.empty?
             return [method.to_sym, additional_arguments]
         end
         
@@ -245,7 +246,7 @@ module Spider
                 @executed_method_arguments = nil
                 if (!can_dispatch?(:execute, route.action))
                     method, additional_arguments = get_action_method(route.action)
-                    if (self.class.controller_action?(method)) # or class.method_defined? ?
+                    if (method && self.class.controller_action?(method)) # or class.method_defined? ?
                         @executed_method = method.to_sym
                         @executed_method_arguments = additional_arguments || []
                     end
