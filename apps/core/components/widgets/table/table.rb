@@ -2,7 +2,8 @@ module Spider; module Components
     
     class Table < Spider::Widget
         tag 'table'
-        i_attribute :model, :required => true
+        i_attribute :model, :required => :datasource
+        i_attribute :queryset, :required => :datasource
         is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
         i_attribute :num_elements, :default => 7
         attribute :row_limit, :type => Fixnum, :default => 15
@@ -19,6 +20,7 @@ module Spider; module Components
         end
         
         def prepare(action='')
+            @model ||= @queryset.model
             if params['sort']
                 @sort = params['sort'].to_sym 
                 @page = 1
@@ -66,7 +68,7 @@ module Spider; module Components
                 @scene.labels[el] = @model.elements[el].label
             end
             @rows = prepare_queryset(@queryset ? @queryset : @model.all)
-            @rows.condition = self.condition
+            @rows.condition.and(self.condition) if self.condition && !self.condition.empty?
             if (@attributes[:paginate])
                 @rows.limit = @attributes[:row_limit]
                 @rows.offset = @offset
