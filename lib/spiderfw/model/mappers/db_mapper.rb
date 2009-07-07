@@ -215,7 +215,7 @@ module Spider; module Model; module Mappers
                 obj = Spider::Model.get(model, data)
             rescue IdentityMapperException => exc
                 # This should not happen
-                Spider::Logger.warn("Row in DB without primary keys, won't be mapped:")
+                Spider::Logger.warn("Row in DB without primary keys for model #{model}; won't be mapped:")
                 Spider::Logger.warn(data)
                 return nil
             end
