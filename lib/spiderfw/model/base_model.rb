@@ -589,31 +589,35 @@ module Spider; module Model
 
         # Finds objects according to query. Returns a QuerySet.
         # Accepts a Query, or a Condition and a Request (optional)
-        def self.find(*params)
-            if (params[0] && params[0].is_a?(Query))
-                query = params[0]
-            else
-                condition = Condition.and(params[0])
-                request = Request.new(params[1])
-                query = Query.new(condition, request)
-            end
-            return QuerySet.new(self, query)
+        def self.find(*params, &proc)
+            qs = self.where(*params, &proc)
+            return qs[0] ? qs : nil
         end
+        
+        def self.load(*params, &proc)
+            return self.where(*params, &proc)[0]
+        end
+        alias :find1 :load
         
         def self.all
             return self.find
         end
         
-        def self.where(&proc)
-            qs = QuerySet.new(self)
-            qs.autoload = true
-            qs.where(&proc)
+        def self.where(*params, &proc)
+            if (params[0] && params[0].is_a?(Query))
+                query = params[0]
+                qs = QuerySet.new(self, query)
+            elsif(proc)
+                qs = QuerySet.new(self)
+                qs.autoload = true
+                qs.where(&proc)
+            else
+                condition = Condition.and(params[0])
+                request = Request.new(params[1])
+                query = Query.new(condition, request)
+                qs = QuerySet.new(self, query)
+            end
             return qs
-        end
-        
-        def self.load(*params)
-            res = find(*params)
-            return res[0]
         end
         
         def self.free_query_condition(q)
