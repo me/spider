@@ -2,17 +2,17 @@
 "http://www.w3.org/TR/html4/strict.dtd">
 <html>
     <head>
-        <title>Spider - Administration</title>
+        <title>Spider - _(Administration)</title>
         <script sp:each='@resources[:js] |script|' type="text/javascript" src="{ script }"></script>
         <link sp:each='@resources[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
     </head>
     <body>
         <table>
             <tr>
-                <td width="15%">
+                <td width="18%" valign="top">
                     <spider-admin:menu id="menu"/>
                 </td>
-                <td>
+                <td valign="top">
                     <div id="content">
                         <sp:yield />
                     </div>
