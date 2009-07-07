@@ -87,63 +87,73 @@ module Spider; module Model
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
                 (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?)))
+                attributes[:anonymous_model] = true
+                attributes[:owned] = true unless attributes[:owned] != nil
+                first_model = self.first_definer(name)
+                assoc_type_name = Spider::Inflector.camelize(name)
+                create_junction = true
                 if (attributes[:through])
                     assoc_type = attributes[:through]
-                else
-                    attributes[:anonymous_model] = true
-                    attributes[:owned] = true unless attributes[:owned] != nil
-                    first_model = self.first_definer(name)
-                    assoc_type_name = Spider::Inflector.camelize(name)
-                    create_junction = true
-                    if (first_model.const_defined?(assoc_type_name) )
-                        assoc_type = first_model.const_get(assoc_type_name)
-                        if (!assoc_type.attributes[:sub_model]) # other kind of inline model
-                            assoc_type_name += 'Junction'
-                            create_junction = false if (first_model.const_defined?(assoc_type_name))
-                        else
-                            create_junction = false
-                        end
+                    create_junction = false
+                elsif (first_model.const_defined?(assoc_type_name) )
+                    assoc_type = first_model.const_get(assoc_type_name)
+                    if (!assoc_type.attributes[:sub_model]) # other kind of inline model
+                        assoc_type_name += 'Junction'
+                        create_junction = false if (first_model.const_defined?(assoc_type_name))
+                    else
+                        create_junction = false
                     end
-                    attributes[:junction] = true
-                    attributes[:junction_id] ||= :id
-                    self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
-                    attributes[:reverse] = self_name
-                    other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
-                    other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
-                    attributes[:junction_their_element] = other_name
-                    if (create_junction)
-                        assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel)) # FIXME: maybe should extend self, not the type
-                        assoc_type.attributes[:sub_model] = self
-                        assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
-                        assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
-                        # FIXME! fix in case of clashes with existent elements
-                        assoc_type.element(other_name, orig_type)
-                        assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
-                        if (proc)                                   #        to be hidden, but the integrated el instead
-                            attributes[:extended] = true
-                            attributes[:keep_junction] = true
-                            assoc_type.class_eval(&proc)
-                        end
-                    end
-                    attributes[:association_type] = assoc_type
                 end
-                through_model = type
+                attributes[:junction] = true
+                attributes[:junction_id] ||= :id
+                self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
+                attributes[:reverse] = self_name
+                other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
+                other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
+                attributes[:junction_their_element] = other_name
+                if (create_junction)
+                    assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel))
+                    assoc_type.attributes[:sub_model] = self
+                    assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
+                    assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
+                    # FIXME! fix in case of clashes with existent elements
+                    assoc_type.element(other_name, orig_type)
+                    assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
+                    if (proc)                                   #        to be hidden, but the integrated el instead
+                        attributes[:extended] = true
+                        attributes[:keep_junction] = true
+                        assoc_type.class_eval(&proc)
+                    end
+                end
+                attributes[:association_type] = assoc_type
             end
-            rev_model = assoc_type ? assoc_type : self
             
             @elements[name] = Element.new(name, type, attributes)
             
+            if (attributes[:add_reverse] && attributes[:add_reverse].is_a?(Symbol))
+                attributes[:add_reverse] = {:name => attributes[:add_reverse]}
+            end
+            if (attributes[:add_multiple_reverse] && attributes[:add_multiple_reverse].is_a?(Symbol))
+                attributes[:add_multiple_reverse] = {:name => attributes[:add_multiple_reverse]}
+            end
+            
             if (attributes[:add_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
-                    attributes[:reverse] ||= attributes[:add_reverse]
-                    orig_type.element(attributes[:add_reverse], rev_model, :reverse => name, :added_reverse => true, 
+                    attributes[:reverse] ||= attributes[:add_reverse][:name]
+                    rev = attributes[:add_reverse].merge(:reverse => name, :added_reverse => true, 
                         :delete_cascade => attributes[:reverse_delete_cascade])
+                    rev[:through] = assoc_type if assoc_type
+                    rev_name = rev.delete(:name)
+                    orig_type.element(rev_name, self, rev)
                 end
             elsif (attributes[:add_multiple_reverse])
                 unless (orig_type.elements[attributes[:add_reverse]])
-                    attributes[:reverse] ||= attributes[:add_multiple_reverse]
-                    orig_type.element(attributes[:add_multiple_reverse], rev_model, :reverse => name, :multiple => true, 
+                    attributes[:reverse] ||= attributes[:add_multiple_reverse][:name]
+                    rev = attributes[:add_multiple_reverse].merge(:reverse => name, :multiple => true, 
                         :added_reverse => true, :delete_cascade => attributes[:reverse_delete_cascade])
+                    rev[:through] = assoc_type if assoc_type
+                    rev_name = rev.delete(:name)
+                    orig_type.element(rev_name, self, rev)
                 end
             end
             if (attributes[:lazy] == nil)
