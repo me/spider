@@ -60,7 +60,7 @@ module Spider; module Forms
                 @widget_types[key.to_sym] = value
             end
             if (@read_only.is_a?(String))
-                @read_only = @read_only.split(',').map{ |el| e.strip.to_sym }
+                @read_only = @read_only.split(',').map{ |el| el.strip.to_sym }
             end
             @read_only ||= []
             if (@disabled.is_a?(String))
