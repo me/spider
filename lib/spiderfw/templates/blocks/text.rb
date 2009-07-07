@@ -2,7 +2,7 @@ require 'spiderfw/templates/template_blocks'
 require 'strscan'
 
 module Spider; module TemplateBlocks
-    ExpressionOutputRegexp = /\{\s([^\s].+?)\s\}/
+    ExpressionOutputRegexp = /\{\s([^\s].*?)\s\}/
     GettextRegexp = /_\((.+)?\)/
     ERBRegexp = /(<%(.+)?%>)/
     
