@@ -22,7 +22,10 @@ module Spider; module CommandLine
                 opt.on("--sets SETS", Array, _("Include configuration sets"), "-s"){ |sets|
                     $SPIDER_CONFIG_SETS = sets
                 }
-                opt.on("--devel", _("Set runmode to devel"), "-d"){ $SPIDER_RUNMODE = 'devel' }
+                opt.on("--devel", _("Set runmode to devel"), "-d") do 
+                    $SPIDER_RUNMODE = 'devel'
+                    Spider.runmode = 'devel' if Spider
+                end
             end
 
             @cmd.add_command(CmdParse::HelpCommand.new, true)
