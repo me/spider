@@ -103,7 +103,7 @@ module Spider; module Model
                 end
                 raise RequiredError.new(el) if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
                 if (el.unique? && !el.integrated? && obj.element_modified?(el))
-                    existent = @model.find(el.name => obj.get(el))
+                    existent = @model.where(el.name => obj.get(el))
                     if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
                         raise NotUniqueError.new(el)
                     end
@@ -557,7 +557,7 @@ module Spider; module Model
                     integrated_from = element.integrated_from
                     integrated_from_element = element.integrated_from_element
                     condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
-                elsif (element.junction?) # conditions on junction id don't make sense
+                elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash)) # conditions on junction id don't make sense
                     condition.delete(k)
                     condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
                 end
