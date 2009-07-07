@@ -37,6 +37,10 @@ module Spider
             if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
                 @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
             end
+            if (@request.env['HTTP_ACCEPT_LANGUAGE'])
+                lang = @request.env['HTTP_ACCEPT_LANGUAGE'].split(';')[0].split(',')[0]
+                GetText.locale = lang
+            end
             # @extensions = {
             #     'js' => {:format => :js, :content_type => 'application/javascript'},
             #     'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
