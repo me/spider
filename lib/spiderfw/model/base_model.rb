@@ -451,7 +451,7 @@ module Spider; module Model
         #####################################################
         
         def self.short_name
-            return self.name.match(/([^:]+)$/)[1]
+            return Inflector.underscore(self.name.match(/([^:]+)$/)[1])
         end
         
         def self.managed?
