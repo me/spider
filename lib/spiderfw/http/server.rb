@@ -5,7 +5,8 @@ module Spider; module HTTP
     class Server
         
         @supports = {
-            :chunked_request => false
+            :chunked_request => false,
+            :ssl => false
         }
 
         def self.supports?(capability)
