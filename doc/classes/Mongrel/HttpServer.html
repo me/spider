@@ -46,35 +46,35 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M001145">process_client</a></li>
-              <li><a href="#M001146">spider_orig_process_client</a></li>
+              <li><a href="#M001116">process_client</a></li>
+              <li><a href="#M001117">spider_orig_process_client</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M001145'>
-                <a name='M001145'>      </a>
+              <div class='public-instance method' id='method-M001116'>
+                <a name='M001116'>      </a>
                 <div class='synopsis'>
                   <span class='name'>process_client</span>
                   <span class='arguments'>(client)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001145-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001116-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001145-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 45</span>&#x000A;    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">process_client</span>(<span class="ruby-identifier">client</span>)&#x000A;      <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Fork</span>.<span class="ruby-identifier">resources_to_close</span>(<span class="ruby-identifier">client</span>, <span class="ruby-ivar">@socket</span>)&#x000A;      <span class="ruby-identifier">spider_orig_process_client</span>(<span class="ruby-identifier">client</span>)&#x000A;    <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001116-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 50</span>&#x000A;    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">process_client</span>(<span class="ruby-identifier">client</span>)&#x000A;      <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Fork</span>.<span class="ruby-identifier">resources_to_close</span>(<span class="ruby-identifier">client</span>, <span class="ruby-ivar">@socket</span>)&#x000A;      <span class="ruby-identifier">spider_orig_process_client</span>(<span class="ruby-identifier">client</span>)&#x000A;    <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M001146'>
-                <a name='M001146'>      </a>
+              <div class='public-instance method' id='method-M001117'>
+                <a name='M001117'>      </a>
                 <div class='synopsis'>
                   <span class='name'>spider_orig_process_client</span>
                   <span class='arguments'>(client)</span>
                 </div>
                 <div class='description'>
                   <p>
-                  Alias for <a href="HttpServer.html#M001145">process_client</a>
+                  Alias for <a href="HttpServer.html#M001116">process_client</a>
                   </p>
                 </div>
               </div>

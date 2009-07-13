@@ -42,17 +42,17 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000780">from_value</a></li>
-              <li><a href="#M000782">maps_back_to</a></li>
-              <li><a href="#M000781">maps_to</a></li>
-              <li><a href="#M000783">take_attributes</a></li>
+              <li><a href="#M000762">from_value</a></li>
+              <li><a href="#M000764">maps_back_to</a></li>
+              <li><a href="#M000763">maps_to</a></li>
+              <li><a href="#M000765">take_attributes</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000780'>
-                <a name='M000780'>      </a>
+              <div class='public-instance method' id='method-M000762'>
+                <a name='M000762'>      </a>
                 <div class='synopsis'>
                   <span class='name'>from_value</span>
                   <span class='arguments'>(value)</span>
@@ -66,14 +66,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000780-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000762-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000780-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 19</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">from_value</span>(<span class="ruby-identifier">value</span>)&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">nil?</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">value</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000762-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 21</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">from_value</span>(<span class="ruby-identifier">value</span>)&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">nil?</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">value</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000782'>
-                <a name='M000782'>      </a>
+              <div class='public-instance method' id='method-M000764'>
+                <a name='M000764'>      </a>
                 <div class='synopsis'>
                   <span class='name'>maps_back_to</span>
                   <span class='arguments'>(val=nil)</span>
@@ -85,14 +85,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000782-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000764-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000782-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 31</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">maps_back_to</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;                <span class="ruby-ivar">@maps_back_to</span> = <span class="ruby-identifier">val</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">val</span>&#x000A;                <span class="ruby-ivar">@maps_back_to</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000764-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 33</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">maps_back_to</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;                <span class="ruby-ivar">@maps_back_to</span> = <span class="ruby-identifier">val</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">val</span>&#x000A;                <span class="ruby-ivar">@maps_back_to</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000781'>
-                <a name='M000781'>      </a>
+              <div class='public-instance method' id='method-M000763'>
+                <a name='M000763'>      </a>
                 <div class='synopsis'>
                   <span class='name'>maps_to</span>
                   <span class='arguments'>(val=nil)</span>
@@ -105,14 +105,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000781-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000763-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000781-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 25</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">maps_to</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;                <span class="ruby-ivar">@maps_to</span> = <span class="ruby-identifier">val</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">val</span>&#x000A;                <span class="ruby-ivar">@maps_to</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000763-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 27</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">maps_to</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;                <span class="ruby-ivar">@maps_to</span> = <span class="ruby-identifier">val</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">val</span>&#x000A;                <span class="ruby-ivar">@maps_to</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000783'>
-                <a name='M000783'>      </a>
+              <div class='public-instance method' id='method-M000765'>
+                <a name='M000765'>      </a>
                 <div class='synopsis'>
                   <span class='name'>take_attributes</span>
                   <span class='arguments'>(*list)</span>
@@ -125,10 +125,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000783-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000765-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000783-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 38</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">take_attributes</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">list</span>)&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">list</span>)&#x000A;                    <span class="ruby-ivar">@take_attributes</span> = <span class="ruby-identifier">list</span>&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-ivar">@take_attributes</span> <span class="ruby-operator">||</span> []&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000765-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 40</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">take_attributes</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">list</span>)&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">list</span>)&#x000A;                    <span class="ruby-ivar">@take_attributes</span> = <span class="ruby-identifier">list</span>&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-ivar">@take_attributes</span> <span class="ruby-operator">||</span> []&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

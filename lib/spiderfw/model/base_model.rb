@@ -113,36 +113,60 @@ module Spider; module Model
         
         # Defines an element.
         # Arguments are element name (a Symbol), element type, and a Hash of attributes.
-        # Type may be a Class: a base type (see #Model.base_types), a DataType subclass, 
+        #
+        # Type may be a Class: a base type (see Spider::Model.base_types), a DataType subclass, 
         # or a BaseModel subclass; or an Array or a Hash, in which case an InlineModel will be created.
-        # An Element instance will be available in #BaseModel.elements; getter and setter methods will be defined on
+        #
+        # An Element instance will be available in Model::BaseModel.elements; getter and setter methods will be defined on
         # the class.
         #
-        # Some attributes interpreted by BaseModel and by Mapper are:
-        # * :primary_key              (bool) The element is a primary key
-        # * :length                   (number) Maximum length of the element (if meaningful)
-        # * :required                 (bool) The element must always have a value
-        # * :multiple                 (bool) defines a 1|n -> n relationship
-        # * :association              (symbol) A named association (such as :choice, :multiple_choice)
-        # * :lazy                     (bool, array or symbol) If true, the element will be placed in the :default lazy group;
+        # If a block is passed to this method, type will be 'extended': a custom junction association will be created,
+        # effectively adding elements to the type only in this model's context.
+        # Example:
+        #   class Animal < BaseModel
+        #     element :name, String
+        #     element :friends, Animal, :multiple => true do
+        #       element :how_much, String
+        #     end
+        #   end
+        #   cat = Animal.new(:name => 'Cat')
+        #   dog = Animal.new(:name => 'Dog')
+        #   cat.friends << dog
+        #   cat.friend[0].how_much = 'Not very much'
+        #
+        # Returns the created Element.
+        #
+        # Some used attributes:
+        # :primary_key::              (bool) The element is a primary key
+        # :length::                   (number) Maximum length of the element (if meaningful)
+        # :required::                 (bool) The element must always have a value
+        # :multiple::                 (bool) defines a 1|n -> n relationship
+        # :label::                    (string) a short description, used by the UI
+        # :association::              (symbol) A named association (such as :choice, :multiple_choice, etc.)
+        # :lazy::                     (bool, array or symbol) If true, the element will be placed in the :default lazy group;
         #                             if a symbol or an array of symbols is passed, the element will be placed in those groups.
-        #                             (see #Element.lazy_groups)
-        # * :reverse                  (symbol) The reverse element in the relationship to the other model
-        # * :add_reverse              (symbol) Adds an element on the other model, and sets it as the association reverse.
-        # * :add_multiple_reverse     (symbol) Adds a multiple element on the other model, and sets it as the association reverse.
-        # * :element_position         (number) inserts the element at the specified position in the elements order
-        # * :auto                     (bool) Informative: the value is set automatically through some mechanism
-        # * :autoincrement            (bool) The value (which must be a Fixnum) will be autoincremented by the mapper 
-        # * :integrate                (bool or symbol) type's elements will be available to this class
+        #                             (see Element#lazy_groups)
+        # :reverse::                  (symbol) The reverse element in the relationship to the other model
+        # :add_reverse::              (symbol) Adds an element on the other model, and sets it as the association reverse.
+        # :add_multiple_reverse::     (symbol) Adds a multiple element on the other model, and sets it as the association reverse.
+        # :element_position::         (number) inserts the element at the specified position in the elements order
+        # :auto::                     (bool) Informative: the value is set automatically through some mechanism
+        # :autoincrement::            (bool) The value (which must be a Fixnum) will be autoincremented by the mapper 
+        # :integrate::                (bool or symbol) type's elements will be available to this class
         #                             as if they were defined here (see #integrate)
-        # * :integrated_from          (symbol) the name of the element from which this element is integrated
-        # * :integrated_from_element  (symbol) the name of the element of the child object from which this element is integrated
-        # * :hidden                   (bool) a hint that the element shouldn't be shown by the UI
-        # * :computed_from            (array of symbols) the element is not mapped; its value is computed
+        # :integrated_from::          (symbol) the name of the element from which this element is integrated
+        # :integrated_from_element::  (symbol) the name of the element of the child object from which this element is integrated
+        # :hidden::                   (bool) a hint that the element shouldn't be shown by the UI
+        # :computed_from::            (array of symbols) the element is not mapped; its value is computed
         #                             by the class from the given elements.
+        # :check::                    (a Proc, or a Regexp, or a Hash of messages => Regexp|Proc). See #check
+        # :through::                  (a BaseModel subclass) model representing the many to many relationship.
+        # :read_only::                (bool) hint to the UI that the element should not be user modifiable.
+        # :owned::                    (bool) only this model holds references to type
+        # :condition::                (hash or Condition) Restricts an association always adding the condition.
         # 
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
-        #
+        # See also Element.
         def self.element(name, type, attributes={}, &proc)
             @elements ||= {}
             @elements_order ||= []
@@ -420,14 +444,15 @@ module Spider; module Model
         end
         
         # Sets additional attributes on the element
-        # Warning: for attributes which are parsed by the BaseModel during element definition,
+        #
+        # _Warning:_ for attributes which are parsed by the BaseModel during element definition,
         # this will not have the desired effect; remove and redefine the element instead.
         def self.element_attributes(element_name, attributes)
             elements[element_name].attributes.merge!(attributes)
         end
         
         # Defines a multiple element. Equivalent to calling
-        # element(name, type, :multiple => true, :association => :many, ...)
+        #   element(name, type, :multiple => true, :association => :many, ...)
         def self.many(name, type, attributes={}, &proc)
             attributes[:multiple] = true
             attributes[:association] ||= :many
@@ -435,14 +460,14 @@ module Spider; module Model
         end
         
         # Defines an element with choice association. Shorthand for
-        # element(name, type, :association => :choice, ...)     
+        #   element(name, type, :association => :choice, ...)     
         def self.choice(name, type, attributes={}, &proc)
             attributes[:association] = :choice
             element(name, type, attributes, &proc)
         end
         
         # Defines a multiple element with :multiple_choice association. Shorthand for
-        # many(name, type, :association => :multiple_choice, ...)
+        #   many(name, type, :association => :multiple_choice, ...)
         def self.multiple_choice(name, type, attributes={}, &proc)
             attributes[:association] = :multiple_choice
             many(name, type, attributes, &proc)
@@ -597,7 +622,7 @@ module Spider; module Model
             return Inflector.underscore(self.name.match(/([^:]+)$/)[1])
         end
         
-        # False for BaseModel (true for Spider::Model::Managed)
+        # False for BaseModel (true for Spider::Model::Managed).
         def self.managed?
             return false
         end
@@ -625,35 +650,35 @@ module Spider; module Model
         #   Methods returning information about the elements   #
         ########################################################
         
-        # An Hash of Elements, indexed by name
+        # An Hash of Elements, indexed by name.
         def self.elements
             @elements
         end
         
-        # An array of the model's Elements
+        # An array of the model's Elements.
         def self.elements_array
             @elements_order.map{ |key| @elements[key] }
         end
 
-        # Yields each element in order
+        # Yields each element in order.
         def self.each_element
             @elements_order.each do |name|
                 yield elements[name]
             end
         end
         
-        # Returns true if the model has given element name
+        # Returns true if the model has given element name.
         def self.has_element?(name)
             return elements[name] ? true : false
         end
         
-        # An array of elements with primary_key attribute set
+        # An array of elements with primary_key attribute set.
         def self.primary_keys
             elements.values.select{|el| el.attributes[:primary_key]}
         end
         
         # Returns the model actually defining element_name; that could be the model
-        # itself, a superclass, or an integrated model
+        # itself, a superclass, or an integrated model.
         def self.first_definer(element_name)
             if (self.superclass.elements && self.superclass.elements[element_name])
                 return self.superclass.first_definer(element_name)
@@ -670,7 +695,7 @@ module Spider; module Model
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
         
-        # The given module will be mixed in any mapper used by the class
+        # The given module will be mixed in any mapper used by the class.
         def self.mapper_include(mod)
             @mapper_modules ||= []
             @mapper_modules << mod
@@ -678,7 +703,7 @@ module Spider; module Model
         
         # The given proc will be mixed in the mapper used by this class
         # Note that the proc will be converted to a Module, so any overridden methods will still have 
-        # access to the super method
+        # access to the super method.
         def self.with_mapper(*params, &proc)
             # @mapper_procs ||= []
             # @mapper_procs << proc
@@ -686,11 +711,15 @@ module Spider; module Model
             mapper_include(mod)
         end
         
-        def self.with_mapper_subclasses(*params, &proc)
+        # FIXME: remove
+        def self.with_mapper_subclasses(*params, &proc) #:nodoc:
             @mapper_procs_subclass ||= []
             @mapper_procs_subclass << proc
         end
         
+        # Like #with_mapper, but will mixin the block only if the mapper matches params.
+        #--
+        # FIXME:
         def self.with_mapper_for(*params, &proc)
             @mapper_procs ||= []
             @mapper_procs << proc
@@ -763,8 +792,8 @@ module Spider; module Model
             return qs.empty? ? qs : nil
         end
         
-        # Executes #self.where, returning the first result
-        # See #self.where for parameter syntax
+        # Executes #self.where, returning the first result.
+        # See #self.where for parameter syntax.
         def self.load(*params, &proc)
             return self.where(*params, &proc)[0]
         end
@@ -778,11 +807,12 @@ module Spider; module Model
         # Allowed parameters are:
         # * a Query object
         # * a Condition and an (optional) Request, or anything that can be parsed by Condition.new and Request.new
-        # If a block is provided, it is passed to Condition.parse_block
+        # If a block is provided, it is passed to Condition.parse_block.
         # Examples:
         #   felines = Animals.where({:family => 'felines'})
         #   felines = Animals.where({:family => 'felines'}, [:name, :description])
         #   cool_animals = Animals.where{ (has_fangs == true) | (has_claws == true)}
+        # See also Condition#parse_block
         def self.where(*params, &proc)
             if (params[0] && params[0].is_a?(Query))
                 query = params[0]
@@ -823,7 +853,11 @@ module Spider; module Model
         #################################################
         #   Instance methods                            #
         #################################################
-
+        
+        # The constructor may take:
+        # * an Hash of values, that will be set on the new instance; or
+        # * a BaseModel instance; its values will be set on the new instance; or
+        # * a single value; it will be set on the first primary key.
         def initialize(values=nil)
             @_autoload = true
             @_has_values = false
@@ -853,15 +887,18 @@ module Spider; module Model
             end
         end
         
+        # Returns the instance's IdentityMapper
         def identity_mapper
             return Spider::Model.identity_mapper if Spider::Model.identity_mapper
             @identity_mapper ||= IdentityMapper.new
         end
         
+        # Sets the instance's IdentityMapper.
         def identity_mapper=(im)
             @identity_mapper = im
         end
         
+        # Returns a new instance for given element name.
         def instantiate_element(name)
             element = self.class.elements[name]
             if (element.model?)
@@ -875,6 +912,7 @@ module Spider; module Model
             return prepare_child(name, val)
         end
         
+        # Prepares an object that is being set as a child.
         def prepare_child(name, obj)
             return obj if obj.nil?
             element = self.class.elements[name]
@@ -910,6 +948,8 @@ module Spider; module Model
             return obj
         end
         
+        # Returns all children that can be reached from the current path. 
+        # Path is expressed as a dotted String.
         def all_children(path)
             children = []
             no_autoload do
@@ -923,6 +963,7 @@ module Spider; module Model
             return children
         end
         
+        # Sets the object currently containing this one (BaseModel or QuerySet)
         def set_parent(obj, element)
             @_parent = obj
             @_parent_element = element
@@ -933,6 +974,10 @@ module Spider; module Model
         #   Get and set                                 #
         #################################################
         
+        # Returns an element.
+        # The element may be a symbol, or a dotted path String.
+        # Will call the associated getter.
+        #   cat.get('favorite_food.name')
         def get(element)
             element = element.name if (element.class == Spider::Model::Element)
             first, rest = element.to_s.split('.', 2)
@@ -943,6 +988,7 @@ module Spider; module Model
             return send(element)
         end
         
+        # Returns an element without autoloading it.
         def get_no_load(element)
             res = nil
             no_autoload do
@@ -951,6 +997,10 @@ module Spider; module Model
             return res
         end
 
+        # Sets an element.
+        # The element can be a symbol, or a dotted path String.
+        # Will call the associated setter.
+        #   cat.set('favorite_food.name', 'Salmon')
         def set(element, value)
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
@@ -958,6 +1008,8 @@ module Spider; module Model
             return send("#{element}=", value)
         end
         
+        # Calls #get on element; whenever no getter responds, returns the extra data.
+        # See #[]=
         def [](element)
             element = element.name if element.is_a?(Element)
             begin
@@ -967,6 +1019,8 @@ module Spider; module Model
             end
         end
         
+        # If element is a model's element, calls #set.
+        # Otherwise, stores the value in an "extra" hash, where it will be accessible by #[]
         def []=(element, value)
             element = element.name if element.is_a?(Element)
             if (self.class.elements[element])
@@ -976,11 +1030,13 @@ module Spider; module Model
             end
         end
             
-        
+        # Sets each value of a Hash.
         def set_hash(hash)
             hash.each { |key, val| set(key, val) }
         end
         
+        # Prepares a value going to be set on the object. Will convert the value to the
+        # appropriate type.
         def prepare_value(element, value)
             element = self.class.elements[element] unless element.is_a?(Element)
             if (element.type < Spider::DataType)
@@ -1009,7 +1065,7 @@ module Spider; module Model
             value
         end
         
-        # Sets a value without calling the associated setter; used by the mapper
+        # Sets a value without calling the associated setter; used by the mapper.
         def set_loaded_value(element, value)
             element_name = element.is_a?(Element) ? element.name : element
             element = self.class.elements[element_name]
@@ -1024,17 +1080,25 @@ module Spider; module Model
             @modified_elements[element_name] = false
         end
         
+        # Records that the element has been loaded.
         def element_loaded(element_name)
             element_name = element_name.name if (element_name.class == Element)
             @loaded_elements[element_name] = true
         end
         
+        # Returns true if the element has been loaded by the mapper.
         def element_loaded?(element)
             element = element.name if (element.class == Element)
             return @loaded_elements[element]
         end        
 
-        
+        # Apply element checks for given element name and value. (See also #element, :check attribute).
+        # Checks may be defined by the DataType, or be given as an element attribute.
+        # The check can be a Regexp, that will be checked against the value, or a Proc, which is expected to
+        # return true if the check is succesful, and false otherwise.
+        # Will raise a Model::FormatError when a check is not succesful.
+        # If the :check attribute is an Hash, the Hash keys will be used as messages, which will be passed
+        # to the FormatError.
         def check(name, val)
             element = self.class.elements[name]
             element.type.check(val) if (element.type.respond_to?(:check))
@@ -1052,6 +1116,7 @@ module Spider; module Model
             end
         end
         
+        # Converts the object to the instance of a subclass for which this model is polymorphic.
         def polymorphic_become(model)
             raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
             obj = model.new
@@ -1059,6 +1124,10 @@ module Spider; module Model
             return obj
         end
         
+        # Converts the object to the instance of a subclass. This will instantiate the model
+        # passed as an argument, and set each value of the current object on the new one.
+        # No checks are made that this makes sense, so the method will fail if the "subclass" does
+        # not contain all of the current model's elements.
         def subclass(model)
             obj = model.new
             elements_array.each do |el|
@@ -1316,13 +1385,13 @@ module Spider; module Model
         #   Storage, mapper and schema loading (instance methods)    #
         ##############################################################
         
-        # Returns the current @storage, or instantiates the default calling #BaseModel.storage
+        # Returns the current @storage, or instantiates the default calling Spider::BaseModel.storage
         def storage
             return @storage || self.class.storage
         end
         
-        # Instantiates the storage for the instance
-        # Accepts a string (url or named storage) which will be passed to #BaseModel.get_storage
+        # Instantiates the storage for the instance.
+        # Accepts a string (url or named storage) which will be passed to Spider::BaseModel.get_storage
         # Example:
         #    obj.use_storage('my_named_db')
         #    obj.use_storage('db:oracle://username:password@XE')
@@ -1366,7 +1435,7 @@ module Spider; module Model
         # Inserts the object in the storage
         # Note: if the object is already present in the storage and unique indexes are enforced,
         # this will raise an error.
-        # (see Mapper#insert)
+        # (See Mapper#insert).
         def insert
             mapper.insert(self)
             reset_modified_elements
@@ -1374,14 +1443,14 @@ module Spider; module Model
         
         # Updates the object in the storage
         # Note: the update will silently fail if the object is not present in the storage
-        # (see Mapper#update)
+        # (see Mapper#update).
         def update
             mapper.update(self)
             reset_modified_elements
         end
         
         # Deletes the object from the storage
-        # (see Mapper#delete)
+        # (see Mapper#delete).
         def delete
             mapper.delete(self)
         end
@@ -1392,7 +1461,7 @@ module Spider; module Model
         # * a Request object, or a Hash, which will be converted to a Request, or
         # * a list of elements to request
         # It will then construct a Condition with current primary keys, and call Mapper#load
-        # Note that an error will be raised by the Mapper if not all primary keys are set
+        # Note that an error will be raised by the Mapper if not all primary keys are set.
         def load(*params)
             if (params[0].is_a? Query)
                 query = params[0]
@@ -1484,11 +1553,13 @@ module Spider; module Model
                 .map{ |el| ":#{el.name} => #{get(el.name).to_s}"}.join(',') + '}'
         end
         
-        # Returns a JSON representation of the object
+        # Returns a JSON representation of the object.
+        #
         # The tree will be traversed outputting all encountered objects; when an already seen object
         # is met, the primary keys will be output (as a single value if one, as an array if many) and traversing
         # will stop.
-        # For more fine-grained control of the output, it is better to use the #cut method and call to_json on it
+        #
+        # For more fine-grained control of the output, it is better to use the #cut method and call to_json on it.
         def to_json(state=nil, &proc)
             ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
             if (@tmp_json_seen && !block_given?)
@@ -1543,12 +1614,10 @@ module Spider; module Model
         #   object's element values converted to string, and so on
         # or
         # * a Hash, whith element names as keys, and depths, or Hashes, or Procs as values; each element
-        # will be traversed up to the depth given, or recursively according to the has; or, if a Proc is given,
-        # it will be called with the current object and element name as arguments
+        #   will be traversed up to the depth given, or recursively according to the has; or, if a Proc is given,
+        #   it will be called with the current object and element name as arguments
         # or
-        # * a list of elements; this is equivalent to passing a hash of the elements with depth 0
-        #
-        # Depth 0 means that the object will be converted to a string; depth 1
+        # * a list of elements; this is equivalent to passing a hash of the elements with depth 0.
         #
         # Examples:
         #   obj.inspect

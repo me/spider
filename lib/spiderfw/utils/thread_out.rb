@@ -2,7 +2,8 @@
 # Allows $stdout to be set via Thread.current[:stdout] per thread.
 # By Eric Hodel, taken from http://blog.segment7.net/articles/2006/08/16/setting-stdout-per-thread
 
-module ThreadOut
+# Thread local $stdout.
+module ThreadOut #:nodoc:
 
   ##
   # Writes to Thread.current[:stdout] instead of STDOUT if the thread local is

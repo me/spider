@@ -46,22 +46,22 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000360">base_types</a></li>
-              <li><a href="#M000361">new</a></li>
-              <li><a href="#M000359">sequence_sync</a></li>
+              <li><a href="#M000345">base_types</a></li>
+              <li><a href="#M000346">new</a></li>
+              <li><a href="#M000344">sequence_sync</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000366">==</a></li>
-              <li><a href="#M000362">configure</a></li>
-              <li><a href="#M000369">create_sequence</a></li>
-              <li><a href="#M000364">get_mapper</a></li>
-              <li><a href="#M000363">parse_url</a></li>
-              <li><a href="#M000365">prepare_value</a></li>
-              <li><a href="#M000368">sequence_exists?</a></li>
-              <li><a href="#M000367">sequence_file_path</a></li>
-              <li><a href="#M000371">sequence_next</a></li>
-              <li><a href="#M000370">update_sequence</a></li>
+              <li><a href="#M000351">==</a></li>
+              <li><a href="#M000347">configure</a></li>
+              <li><a href="#M000354">create_sequence</a></li>
+              <li><a href="#M000349">get_mapper</a></li>
+              <li><a href="#M000348">parse_url</a></li>
+              <li><a href="#M000350">prepare_value</a></li>
+              <li><a href="#M000353">sequence_exists?</a></li>
+              <li><a href="#M000352">sequence_file_path</a></li>
+              <li><a href="#M000356">sequence_next</a></li>
+              <li><a href="#M000355">update_sequence</a></li>
             </ol>
           </div>
           <div id='context'>
@@ -87,139 +87,139 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000360'>
-                <a name='M000360'>      </a>
+              <div class='public-class method' id='method-M000345'>
+                <a name='M000345'>      </a>
                 <div class='synopsis'>
                   <span class='name'>base_types</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000360-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000345-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000360-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">base_types</span>&#x000A;            <span class="ruby-constant">Model</span>.<span class="ruby-identifier">base_types</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000345-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">base_types</span>&#x000A;            <span class="ruby-constant">Model</span>.<span class="ruby-identifier">base_types</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000361'>
-                <a name='M000361'>      </a>
+              <div class='public-class method' id='method-M000346'>
+                <a name='M000346'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(url)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000361-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000346-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000361-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">url</span>)&#x000A;            <span class="ruby-ivar">@url</span> = <span class="ruby-identifier">url</span>&#x000A;            <span class="ruby-ivar">@configuration</span> = {}&#x000A;            <span class="ruby-identifier">parse_url</span>(<span class="ruby-identifier">url</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000346-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">url</span>)&#x000A;            <span class="ruby-ivar">@url</span> = <span class="ruby-identifier">url</span>&#x000A;            <span class="ruby-ivar">@configuration</span> = {}&#x000A;            <span class="ruby-identifier">parse_url</span>(<span class="ruby-identifier">url</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000359'>
-                <a name='M000359'>      </a>
+              <div class='public-class method' id='method-M000344'>
+                <a name='M000344'>      </a>
                 <div class='synopsis'>
                   <span class='name'>sequence_sync</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000359-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000344-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000359-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">sequence_sync</span>&#x000A;            <span class="ruby-ivar">@sequence_sync</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Sync</span>.<span class="ruby-identifier">new</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000344-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">sequence_sync</span>&#x000A;            <span class="ruby-ivar">@sequence_sync</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Sync</span>.<span class="ruby-identifier">new</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000366'>
-                <a name='M000366'>      </a>
+              <div class='public-instance method' id='method-M000351'>
+                <a name='M000351'>      </a>
                 <div class='synopsis'>
                   <span class='name'>==</span>
                   <span class='arguments'>(storage)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000366-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000351-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000366-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 37</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">==</span>(<span class="ruby-identifier">storage</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">storage</span>.<span class="ruby-identifier">class</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">url</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">storage</span>.<span class="ruby-identifier">url</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000351-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 37</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">==</span>(<span class="ruby-identifier">storage</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">storage</span>.<span class="ruby-identifier">class</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">url</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">storage</span>.<span class="ruby-identifier">url</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000362'>
-                <a name='M000362'>      </a>
+              <div class='public-instance method' id='method-M000347'>
+                <a name='M000347'>      </a>
                 <div class='synopsis'>
                   <span class='name'>configure</span>
                   <span class='arguments'>(conf)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000362-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000347-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000362-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">configure</span>(<span class="ruby-identifier">conf</span>)&#x000A;            <span class="ruby-ivar">@configuration</span>.<span class="ruby-identifier">merge!</span>(<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">to_hash</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000347-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">configure</span>(<span class="ruby-identifier">conf</span>)&#x000A;            <span class="ruby-ivar">@configuration</span>.<span class="ruby-identifier">merge!</span>(<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">to_hash</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000369'>
-                <a name='M000369'>      </a>
+              <div class='public-instance method' id='method-M000354'>
+                <a name='M000354'>      </a>
                 <div class='synopsis'>
                   <span class='name'>create_sequence</span>
                   <span class='arguments'>(name, start=1, increment=1)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000369-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000354-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000369-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 54</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">create_sequence</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">start</span>=<span class="ruby-value">1</span>, <span class="ruby-identifier">increment</span>=<span class="ruby-value">1</span>)&#x000A;            <span class="ruby-identifier">sequence_next</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">start</span><span class="ruby-operator">-</span><span class="ruby-value">1</span>, <span class="ruby-identifier">increment</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000354-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 54</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">create_sequence</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">start</span>=<span class="ruby-value">1</span>, <span class="ruby-identifier">increment</span>=<span class="ruby-value">1</span>)&#x000A;            <span class="ruby-identifier">sequence_next</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">start</span><span class="ruby-operator">-</span><span class="ruby-value">1</span>, <span class="ruby-identifier">increment</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000364'>
-                <a name='M000364'>      </a>
+              <div class='public-instance method' id='method-M000349'>
+                <a name='M000349'>      </a>
                 <div class='synopsis'>
                   <span class='name'>get_mapper</span>
                   <span class='arguments'>(model)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000364-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000349-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000364-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 29</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_mapper</span>(<span class="ruby-identifier">model</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">StorageException</span>, <span class="ruby-value str">&quot;Unimplemented&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000349-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 29</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_mapper</span>(<span class="ruby-identifier">model</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">StorageException</span>, <span class="ruby-value str">&quot;Unimplemented&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000363'>
-                <a name='M000363'>      </a>
+              <div class='public-instance method' id='method-M000348'>
+                <a name='M000348'>      </a>
                 <div class='synopsis'>
                   <span class='name'>parse_url</span>
                   <span class='arguments'>(url)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000363-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000348-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000363-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">parse_url</span>(<span class="ruby-identifier">url</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">StorageException</span>, <span class="ruby-value str">&quot;Unimplemented&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000348-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">parse_url</span>(<span class="ruby-identifier">url</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">StorageException</span>, <span class="ruby-value str">&quot;Unimplemented&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000365'>
-                <a name='M000365'>      </a>
+              <div class='public-instance method' id='method-M000350'>
+                <a name='M000350'>      </a>
                 <div class='synopsis'>
                   <span class='name'>prepare_value</span>
                   <span class='arguments'>(type, value)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000365-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000350-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000365-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 33</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">prepare_value</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">value</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">value</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000350-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 33</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">prepare_value</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">value</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">value</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000368'>
-                <a name='M000368'>      </a>
+              <div class='public-instance method' id='method-M000353'>
+                <a name='M000353'>      </a>
                 <div class='synopsis'>
                   <span class='name'>sequence_exists?</span>
                   <span class='arguments'>(name)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000368-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000353-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000368-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 50</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sequence_exists?</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">exist?</span>(<span class="ruby-identifier">sequence_file_path</span>(<span class="ruby-identifier">name</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000353-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 50</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sequence_exists?</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">exist?</span>(<span class="ruby-identifier">sequence_file_path</span>(<span class="ruby-identifier">name</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000367'>
-                <a name='M000367'>      </a>
+              <div class='public-instance method' id='method-M000352'>
+                <a name='M000352'>      </a>
                 <div class='synopsis'>
                   <span class='name'>sequence_file_path</span>
                   <span class='arguments'>(name)</span>
@@ -230,14 +230,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000367-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000352-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000367-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 45</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sequence_file_path</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-value str">'var/sequences/'</span><span class="ruby-operator">+</span><span class="ruby-identifier">name</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">path</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000352-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 45</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sequence_file_path</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-value str">'var/sequences/'</span><span class="ruby-operator">+</span><span class="ruby-identifier">name</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">path</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000371'>
-                <a name='M000371'>      </a>
+              <div class='public-instance method' id='method-M000356'>
+                <a name='M000356'>      </a>
                 <div class='synopsis'>
                   <span class='name'>sequence_next</span>
                   <span class='arguments'>(name, newval=nil, increment=1)</span>
@@ -248,23 +248,23 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000371-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000356-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000371-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 65</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sequence_next</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">newval</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">increment</span>=<span class="ruby-value">1</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-identifier">sequence_file_path</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-constant">FileUtils</span>.<span class="ruby-identifier">mkpath</span>(<span class="ruby-constant">File</span>.<span class="ruby-identifier">dirname</span>(<span class="ruby-identifier">path</span>))&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">sequence_sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">EX</span>)&#x000A;            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">newval</span>&#x000A;                <span class="ruby-identifier">seq</span> = <span class="ruby-identifier">newval</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-identifier">seq</span> = <span class="ruby-value">0</span>&#x000A;                <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'a+'</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">rewind</span>&#x000A;                    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span> <span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_EX</span>&#x000A;                    <span class="ruby-identifier">cur</span> = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">gets</span>&#x000A;                    <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">cur</span>)&#x000A;                        <span class="ruby-identifier">seq</span>, <span class="ruby-identifier">increment_str</span> = <span class="ruby-identifier">cur</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'|'</span>)&#x000A;                    <span class="ruby-keyword kw">else</span>&#x000A;                        <span class="ruby-identifier">seq</span>, <span class="ruby-identifier">increment_str</span> = <span class="ruby-value">0</span>, <span class="ruby-value">1</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                    <span class="ruby-identifier">seq</span> = <span class="ruby-identifier">seq</span>.<span class="ruby-identifier">to_i</span>&#x000A;                    <span class="ruby-identifier">increment</span> = <span class="ruby-identifier">increment_str</span>.<span class="ruby-identifier">to_i</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">increment_str</span>&#x000A;                    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-identifier">seq</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">increment</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'w+'</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">print</span>(<span class="ruby-identifier">seq</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">print</span>(<span class="ruby-node">&quot;|#{increment}&quot;</span>) <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">increment</span> <span class="ruby-operator">!=</span> <span class="ruby-value">1</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span> <span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_UN</span>&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">sequence_sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">UN</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">seq</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000356-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 65</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sequence_next</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">newval</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">increment</span>=<span class="ruby-value">1</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-identifier">sequence_file_path</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-constant">FileUtils</span>.<span class="ruby-identifier">mkpath</span>(<span class="ruby-constant">File</span>.<span class="ruby-identifier">dirname</span>(<span class="ruby-identifier">path</span>))&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">sequence_sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">EX</span>)&#x000A;            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">newval</span>&#x000A;                <span class="ruby-identifier">seq</span> = <span class="ruby-identifier">newval</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-identifier">seq</span> = <span class="ruby-value">0</span>&#x000A;                <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'a+'</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">rewind</span>&#x000A;                    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span> <span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_EX</span>&#x000A;                    <span class="ruby-identifier">cur</span> = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">gets</span>&#x000A;                    <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">cur</span>)&#x000A;                        <span class="ruby-identifier">seq</span>, <span class="ruby-identifier">increment_str</span> = <span class="ruby-identifier">cur</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'|'</span>)&#x000A;                    <span class="ruby-keyword kw">else</span>&#x000A;                        <span class="ruby-identifier">seq</span>, <span class="ruby-identifier">increment_str</span> = <span class="ruby-value">0</span>, <span class="ruby-value">1</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                    <span class="ruby-identifier">seq</span> = <span class="ruby-identifier">seq</span>.<span class="ruby-identifier">to_i</span>&#x000A;                    <span class="ruby-identifier">increment</span> = <span class="ruby-identifier">increment_str</span>.<span class="ruby-identifier">to_i</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">increment_str</span>&#x000A;                    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-identifier">seq</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">increment</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'w+'</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">print</span>(<span class="ruby-identifier">seq</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">print</span>(<span class="ruby-node">&quot;|#{increment}&quot;</span>) <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">increment</span> <span class="ruby-operator">!=</span> <span class="ruby-value">1</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span> <span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_UN</span>&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">sequence_sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">UN</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">seq</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000370'>
-                <a name='M000370'>      </a>
+              <div class='public-instance method' id='method-M000355'>
+                <a name='M000355'>      </a>
                 <div class='synopsis'>
                   <span class='name'>update_sequence</span>
                   <span class='arguments'>(name, val)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000370-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000355-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000370-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">update_sequence</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-comment cmt"># not an alias because the set value behaviour of next_sequence isn't expected in subclasses</span>&#x000A;            <span class="ruby-identifier">sequence_next</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">val</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000355-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage/base_storage.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">update_sequence</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-comment cmt"># not an alias because the set value behaviour of next_sequence isn't expected in subclasses</span>&#x000A;            <span class="ruby-identifier">sequence_next</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">val</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

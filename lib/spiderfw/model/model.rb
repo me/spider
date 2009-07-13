@@ -10,7 +10,10 @@ module Spider
             String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool
         ]
         
-        # Base types are String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool
+        # Base types are:
+        #
+        # String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool.
+        #
         # These types must be handled by all mappers.
         def self.base_types
             @base_types
@@ -70,7 +73,7 @@ module Spider
             end
         end
         
-        # Puts an object into tje IdentityMapper
+        # Puts an object into the IdentityMapper
         def self.put(obj, check=false)
             if (identity_mapper)
                 return identity_mapper.put(obj, check)
@@ -186,6 +189,9 @@ module Spider
             attr_reader :element, :value
             
             # Takes an Element, the value, and a message.
+            # The message should be a format specification; it will be %'d with the value.
+            #   error = FormatError.new(my_element, 3, "Element value %s is wrong.")
+            #   error.to_s  => "Element value 3 is wrong."
             def initialize(element, value, message)
                 @element = element
                 @message = message

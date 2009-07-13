@@ -46,51 +46,51 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000912">options</a></li>
-              <li><a href="#M000914">shutdown_server</a></li>
-              <li><a href="#M000913">start_server</a></li>
+              <li><a href="#M000896">options</a></li>
+              <li><a href="#M000898">shutdown_server</a></li>
+              <li><a href="#M000897">start_server</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000912'>
-                <a name='M000912'>      </a>
+              <div class='public-instance method' id='method-M000896'>
+                <a name='M000896'>      </a>
                 <div class='synopsis'>
                   <span class='name'>options</span>
                   <span class='arguments'>(opts)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000912-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000896-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000912-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/webrick.rb, line 13</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">defaults</span> = {&#x000A;                <span class="ruby-identifier">:host</span>   =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'localhost'</span>,&#x000A;                <span class="ruby-identifier">:app</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'spider'</span>&#x000A;            }&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">defaults</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000896-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/webrick.rb, line 13</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">defaults</span> = {&#x000A;                <span class="ruby-identifier">:host</span>   =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'localhost'</span>,&#x000A;                <span class="ruby-identifier">:app</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'spider'</span>&#x000A;            }&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">defaults</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000914'>
-                <a name='M000914'>      </a>
+              <div class='public-instance method' id='method-M000898'>
+                <a name='M000898'>      </a>
                 <div class='synopsis'>
                   <span class='name'>shutdown_server</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000914-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000898-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000914-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/webrick.rb, line 40</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">shutdown</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000898-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/webrick.rb, line 40</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">shutdown</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000913'>
-                <a name='M000913'>      </a>
+              <div class='public-instance method' id='method-M000897'>
+                <a name='M000897'>      </a>
                 <div class='synopsis'>
                   <span class='name'>start_server</span>
                   <span class='arguments'>(opts={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000913-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000897-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000913-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/webrick.rb, line 23</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">options</span> = {&#x000A;                <span class="ruby-identifier">:Port</span>           =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>],&#x000A;                <span class="ruby-identifier">:BindAddress</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>]&#x000A;            }&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ssl</span>])&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLEnable</span>] = <span class="ruby-keyword kw">true</span>&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLVerifyClient</span>] = <span class="ruby-operator">::</span><span class="ruby-constant">OpenSSL</span><span class="ruby-operator">::</span><span class="ruby-constant">SSL</span><span class="ruby-operator">::</span><span class="ruby-constant">VERIFY_NONE</span>&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLCertificate</span>] = <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ssl_cert</span>]&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLPrivateKey</span>] = <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ssl_private_key</span>]&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@server</span> = <span class="ruby-operator">::</span><span class="ruby-constant">WEBrick</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTPServer</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">options</span>)&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">mount</span>(<span class="ruby-value str">&quot;/&quot;</span>, <span class="ruby-constant">WEBrickServlet</span>)&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">start</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000897-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/webrick.rb, line 23</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">options</span> = {&#x000A;                <span class="ruby-identifier">:Port</span>           =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>],&#x000A;                <span class="ruby-identifier">:BindAddress</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>]&#x000A;            }&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ssl</span>])&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLEnable</span>] = <span class="ruby-keyword kw">true</span>&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLVerifyClient</span>] = <span class="ruby-operator">::</span><span class="ruby-constant">OpenSSL</span><span class="ruby-operator">::</span><span class="ruby-constant">SSL</span><span class="ruby-operator">::</span><span class="ruby-constant">VERIFY_NONE</span>&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLCertificate</span>] = <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ssl_cert</span>]&#x000A;                <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:SSLPrivateKey</span>] = <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ssl_private_key</span>]&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@server</span> = <span class="ruby-operator">::</span><span class="ruby-constant">WEBrick</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTPServer</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">options</span>)&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">mount</span>(<span class="ruby-value str">&quot;/&quot;</span>, <span class="ruby-constant">WEBrickServlet</span>)&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">start</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

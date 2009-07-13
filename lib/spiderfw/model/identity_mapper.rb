@@ -2,8 +2,14 @@ require 'spiderfw/utils/hash_comparison'
 
 module Spider; module Model
     
+    # The IdentityMapper, when in use, will hold a reference to each object; the mapper will coordinate
+    # with it to ensure that each object of the same model with the same primary keys will point to the same
+    # Ruby object.
+    # This may or may not be what you need: the IdentityMapper can be set globally by assigning an instance
+    # to #Spider::Model.identity_mapper=, or for a block of code by passing a block to the initializer.
     class IdentityMapper
         
+        # If passed a block, will activate the IdentityMapper, yield, and then deactivate it.
         def initialize(&proc)
             @objects = {}
             if (proc)
@@ -13,9 +19,11 @@ module Spider; module Model
             end
         end
         
+        # Get an instance of model with given values. Values must contain all of model's primary keys.
+        # If an object with the same primary keys is found, it will be used; otherwise, a new instance will be
+        # created.
+        # In any case, the given values will be set on the object, before it is returned.
         def get(model, values)
-            # Spider::Logger.debug("IM GETTING #{model}")
-            # Spider::Logger.debug("IM GETTING #{values}")
             @objects[model] ||= {}
             pks = {}
             model.primary_keys.each do |k| 
@@ -35,6 +43,9 @@ module Spider; module Model
             return obj
         end
         
+        # Puts an object into the identity mapper.
+        # If check is true, it will first check if the object exists, and if found merge it with the given obj;
+        # if check is false, if a object with the same primary keys exists it will be overwritten.
         def put(obj, check=false)
             return nil unless obj
             if (obj.is_a?(QuerySet))

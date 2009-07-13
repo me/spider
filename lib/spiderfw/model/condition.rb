@@ -10,10 +10,10 @@ module Spider; module Model
     # Finally, it contains subconditions, which can be added with
     #   conditions << subcondition
     # Subconditions will be created automatically when using #set twice on the same element.
-    # If you want to change the condition, access the Condition as a Hash, and change #comparisons accordingly.
+    # If you want to change the condition, use #delete and set it again.
     # 
     # The Condition object, like the Request, doesn't hold a reference to a model; so no check will be made
-    # that the conditions set are meaningful.
+    # that the conditions elements are meaningful.
     
     class Condition < ModelHash
         # The top level conjunction for the Condition (:or or :and; new Conditions are initialized with :or)
@@ -25,7 +25,7 @@ module Spider; module Model
         # An Array of subconditions
         attr_reader :subconditions
         attr_accessor :conjunct # :nodoc: a hack to keep track of which is the last condition in blocks
-        alias :hash_set :[]=
+        alias :hash_set :[]= # :nodoc:
         
         # See #ModelHash.get_deep_obj
         def get_deep_obj # :nodoc:
@@ -53,8 +53,8 @@ module Spider; module Model
             c << b
         end
         
-        # Instantiates a Condition with :and conjunction
-        # See #initialize for arguments.
+        # Instantiates a Condition with :and conjunction.
+        # See #new for arguments.
         def self.and(*params, &proc)
             c = self.new(*params, &proc)
             c.conjunction = :and
@@ -62,14 +62,14 @@ module Spider; module Model
         end
         
         # Instantiates a Condition with :or conjunction. 
-        # See #initialize for arguments.
+        # See #new for arguments.
         def self.or(*params, &proc)
             c = self.new(*params, &proc)
             c.conjunction = :or
             return c
         end
         
-        # Instantiates a Condition with no conjunction
+        # Instantiates a Condition with no conjunction.
         def self.no_conjunction(*params, &proc) # :nodoc:
             c = self.new(*params, &proc)
             c.conjunction = nil
@@ -98,11 +98,15 @@ module Spider; module Model
         end
         
         # Parses a condition block. Inside the block, an SQL-like language can be used.
+        #
         # Example:
         #   condition.parse_block{ (element1 == val1) & ( (element2 > 'some string') | (element3 .not nil) ) }
         # All comparisons must be parenthesized; and/or conjunctions are expressed with a single &/|.
-        # Available comparisions are: ==, >, <, >=, <=, .like, .ilike (case insensitive like), .not
-        # For .like and .ilike comparisons, the SQL '%' syntax must be used.
+        #
+        # Available comparisions are: ==, >, <, >=, <=, .not, .like, .ilike (case insensitive like).
+        #
+        # _Note:_ for .like and .ilike comparisons, the SQL '%' syntax must be used.
+        #
         def parse_block(&proc)
             context = eval "self", proc.binding
             res = context.dup.extend(ConditionMixin).instance_eval(&proc)
@@ -113,7 +117,7 @@ module Spider; module Model
             @polymorph = res.polymorph
         end
         
-        # Yields each key, value and comparison
+        # Yields each key, value and comparison.
         def each_with_comparison
             self.each do |k, v|
                 yield k, v, @comparisons[k.to_sym] || '='
@@ -250,14 +254,16 @@ module Spider; module Model
         alias :& :and
         alias :AND :and
     
+        alias :hash_empty? :empty? # :nodoc:
+        
         # True if there are no comparisons and no subconditions.
-        alias :hash_empty? :empty?
         def empty?
             return super && @subconditions.empty?
         end
         
+        alias :hash_replace :replace  # :nodoc:
+        
         # Replace the content of this Condition with another one.
-        alias :hash_replace :replace
         def replace(other)
             hash_replace(other)
             @subconditions = other.subconditions

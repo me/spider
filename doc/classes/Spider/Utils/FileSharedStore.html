@@ -42,20 +42,27 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            Implementation of the <a href="SharedStore.html">SharedStore</a> in the
+            filesystem. This is a persistent store, accessible by different threads and
+            processes at once.
+            </p>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000830">new</a></li>
+              <li><a href="#M000812">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000831">[]</a></li>
-              <li><a href="#M000832">[]=</a></li>
-              <li><a href="#M000833">delete</a></li>
-              <li><a href="#M000836">each_key</a></li>
-              <li><a href="#M000834">include?</a></li>
-              <li><a href="#M000835">map_path</a></li>
+              <li><a href="#M000813">[]</a></li>
+              <li><a href="#M000814">[]=</a></li>
+              <li><a href="#M000815">delete</a></li>
+              <li><a href="#M000818">each_key</a></li>
+              <li><a href="#M000816">include?</a></li>
+              <li><a href="#M000817">map_path</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -73,96 +80,96 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000830'>
-                <a name='M000830'>      </a>
+              <div class='public-class method' id='method-M000812'>
+                <a name='M000812'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(config={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000830-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000812-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000830-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 9</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">config</span>={})&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@path</span> = <span class="ruby-identifier">config</span>[<span class="ruby-identifier">:path</span>]&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-ivar">@path</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">config</span>[<span class="ruby-identifier">:name</span>])&#x000A;                <span class="ruby-ivar">@path</span> = <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'shared_store.file.base_path'</span>)<span class="ruby-operator">+</span><span class="ruby-value str">'/'</span><span class="ruby-operator">+</span><span class="ruby-identifier">config</span>[<span class="ruby-identifier">:name</span>]&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-ivar">@path</span>)&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;You must supply the FileSharedStore with a path, or a name a configured base path&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-constant">FileUtils</span>.<span class="ruby-identifier">mkpath</span>(<span class="ruby-ivar">@path</span>)     &#x000A;            <span class="ruby-ivar">@sync</span> = <span class="ruby-constant">Sync</span>.<span class="ruby-identifier">new</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000812-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">config</span>={})&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@path</span> = <span class="ruby-identifier">config</span>[<span class="ruby-identifier">:path</span>]&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-ivar">@path</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">config</span>[<span class="ruby-identifier">:name</span>])&#x000A;                <span class="ruby-ivar">@path</span> = <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'shared_store.file.base_path'</span>)<span class="ruby-operator">+</span><span class="ruby-value str">'/'</span><span class="ruby-operator">+</span><span class="ruby-identifier">config</span>[<span class="ruby-identifier">:name</span>]&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-ivar">@path</span>)&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;You must supply the FileSharedStore with a path, or a name a configured base path&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-constant">FileUtils</span>.<span class="ruby-identifier">mkpath</span>(<span class="ruby-ivar">@path</span>)     &#x000A;            <span class="ruby-ivar">@sync</span> = <span class="ruby-constant">Sync</span>.<span class="ruby-identifier">new</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000831'>
-                <a name='M000831'>      </a>
+              <div class='public-instance method' id='method-M000813'>
+                <a name='M000813'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000831-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000813-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000831-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 22</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-constant">File</span>.<span class="ruby-identifier">exist?</span>(<span class="ruby-identifier">path</span>))&#x000A;                <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">SH</span>)&#x000A;                <span class="ruby-identifier">f</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'r'</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_SH</span>)&#x000A;                <span class="ruby-identifier">data</span> = <span class="ruby-constant">Marshal</span>.<span class="ruby-identifier">restore</span>(<span class="ruby-identifier">f</span>.<span class="ruby-identifier">read</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_UN</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;                <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">UN</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">data</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000813-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-constant">File</span>.<span class="ruby-identifier">exist?</span>(<span class="ruby-identifier">path</span>))&#x000A;                <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">SH</span>)&#x000A;                <span class="ruby-identifier">f</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'r'</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_SH</span>)&#x000A;                <span class="ruby-identifier">data</span> = <span class="ruby-constant">Marshal</span>.<span class="ruby-identifier">restore</span>(<span class="ruby-identifier">f</span>.<span class="ruby-identifier">read</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_UN</span>)&#x000A;                <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;                <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">UN</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">data</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000832'>
-                <a name='M000832'>      </a>
+              <div class='public-instance method' id='method-M000814'>
+                <a name='M000814'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]=</span>
                   <span class='arguments'>(key, value)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000832-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000814-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000832-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 36</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">EX</span>)&#x000A;            <span class="ruby-identifier">f</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'w'</span>)&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_EX</span>)&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">puts</span>(<span class="ruby-constant">Marshal</span>.<span class="ruby-identifier">dump</span>(<span class="ruby-identifier">value</span>))&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flush</span>&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_UN</span>)&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;            <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">UN</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000814-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 38</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;            <span class="ruby-identifier">path</span> = <span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">EX</span>)&#x000A;            <span class="ruby-identifier">f</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">path</span>, <span class="ruby-value str">'w'</span>)&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_EX</span>)&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">puts</span>(<span class="ruby-constant">Marshal</span>.<span class="ruby-identifier">dump</span>(<span class="ruby-identifier">value</span>))&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flush</span>&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">flock</span>(<span class="ruby-constant">File</span><span class="ruby-operator">::</span><span class="ruby-constant">LOCK_UN</span>)&#x000A;            <span class="ruby-identifier">f</span>.<span class="ruby-identifier">close</span>&#x000A;            <span class="ruby-ivar">@sync</span>.<span class="ruby-identifier">lock</span>(<span class="ruby-constant">Sync</span><span class="ruby-operator">::</span><span class="ruby-constant">UN</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000833'>
-                <a name='M000833'>      </a>
+              <div class='public-instance method' id='method-M000815'>
+                <a name='M000815'>      </a>
                 <div class='synopsis'>
                   <span class='name'>delete</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000833-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000815-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000833-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 49</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">delete</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">unlink</span>(<span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000815-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 51</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">delete</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">unlink</span>(<span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000836'>
-                <a name='M000836'>      </a>
+              <div class='public-instance method' id='method-M000818'>
+                <a name='M000818'>      </a>
                 <div class='synopsis'>
                   <span class='name'>each_key</span>
                   <span class='arguments'>() {|key| ...}</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000836-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000818-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000836-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 61</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">each_key</span>&#x000A;            <span class="ruby-constant">Dir</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@path</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-keyword kw">next</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">file?</span>(<span class="ruby-ivar">@path</span><span class="ruby-operator">+</span><span class="ruby-value str">'/'</span><span class="ruby-operator">+</span><span class="ruby-identifier">key</span>)&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">key</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000818-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 63</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">each_key</span>&#x000A;            <span class="ruby-constant">Dir</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@path</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-keyword kw">next</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">file?</span>(<span class="ruby-ivar">@path</span><span class="ruby-operator">+</span><span class="ruby-value str">'/'</span><span class="ruby-operator">+</span><span class="ruby-identifier">key</span>)&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">key</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000834'>
-                <a name='M000834'>      </a>
+              <div class='public-instance method' id='method-M000816'>
+                <a name='M000816'>      </a>
                 <div class='synopsis'>
                   <span class='name'>include?</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000834-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000816-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000834-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 53</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">include?</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">exist?</span>(<span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000816-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 55</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">include?</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-constant">File</span>.<span class="ruby-identifier">exist?</span>(<span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000835'>
-                <a name='M000835'>      </a>
+              <div class='public-instance method' id='method-M000817'>
+                <a name='M000817'>      </a>
                 <div class='synopsis'>
                   <span class='name'>map_path</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000835-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000817-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000835-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 57</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-node">&quot;#{@path}/key&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000817-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store/file_shared_store.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">map_path</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-node">&quot;#{@path}/key&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

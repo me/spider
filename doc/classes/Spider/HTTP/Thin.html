@@ -46,51 +46,51 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000878">options</a></li>
-              <li><a href="#M000880">shutdown_server</a></li>
-              <li><a href="#M000879">start_server</a></li>
+              <li><a href="#M000860">options</a></li>
+              <li><a href="#M000862">shutdown_server</a></li>
+              <li><a href="#M000861">start_server</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000878'>
-                <a name='M000878'>      </a>
+              <div class='public-instance method' id='method-M000860'>
+                <a name='M000860'>      </a>
                 <div class='synopsis'>
                   <span class='name'>options</span>
                   <span class='arguments'>(opts)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000878-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000860-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000878-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/thin.rb, line 12</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">defaults</span> = {&#x000A;                <span class="ruby-identifier">:host</span>   =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'localhost'</span>,&#x000A;                <span class="ruby-identifier">:app</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'spider'</span>&#x000A;            }&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">defaults</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000860-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/thin.rb, line 12</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">defaults</span> = {&#x000A;                <span class="ruby-identifier">:host</span>   =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'localhost'</span>,&#x000A;                <span class="ruby-identifier">:app</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'spider'</span>&#x000A;            }&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">defaults</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000880'>
-                <a name='M000880'>      </a>
+              <div class='public-instance method' id='method-M000862'>
+                <a name='M000862'>      </a>
                 <div class='synopsis'>
                   <span class='name'>shutdown_server</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000880-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000862-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000880-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/thin.rb, line 31</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">stop</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000862-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/thin.rb, line 31</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">stop</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000879'>
-                <a name='M000879'>      </a>
+              <div class='public-instance method' id='method-M000861'>
+                <a name='M000861'>      </a>
                 <div class='synopsis'>
                   <span class='name'>start_server</span>
                   <span class='arguments'>(opts={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000879-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000861-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000879-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/thin.rb, line 22</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">options</span> = {&#x000A;                <span class="ruby-identifier">:Port</span>           =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>],&#x000A;                <span class="ruby-identifier">:BindAddress</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>]&#x000A;            }&#x000A;            <span class="ruby-ivar">@server</span> = <span class="ruby-operator">::</span><span class="ruby-constant">Thin</span><span class="ruby-operator">::</span><span class="ruby-constant">Server</span>.<span class="ruby-identifier">start</span>(<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>], <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>].<span class="ruby-identifier">to_i</span>, <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span><span class="ruby-operator">::</span><span class="ruby-constant">RackApplication</span>.<span class="ruby-identifier">new</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000861-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/thin.rb, line 22</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-identifier">options</span> = {&#x000A;                <span class="ruby-identifier">:Port</span>           =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>],&#x000A;                <span class="ruby-identifier">:BindAddress</span>    =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>]&#x000A;            }&#x000A;            <span class="ruby-ivar">@server</span> = <span class="ruby-operator">::</span><span class="ruby-constant">Thin</span><span class="ruby-operator">::</span><span class="ruby-constant">Server</span>.<span class="ruby-identifier">start</span>(<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>], <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>].<span class="ruby-identifier">to_i</span>, <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span><span class="ruby-operator">::</span><span class="ruby-constant">RackApplication</span>.<span class="ruby-identifier">new</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

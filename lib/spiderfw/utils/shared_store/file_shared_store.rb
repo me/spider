@@ -3,6 +3,8 @@ require 'fileutils'
 
 module Spider; module Utils
     
+    # Implementation of the SharedStore in the filesystem.
+    # This is a persistent store, accessible by different threads and processes at once.
     class FileSharedStore < SharedStore
         attr_reader :path
         

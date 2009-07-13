@@ -3,6 +3,7 @@ require 'fileutils'
 
 module Spider; module Model; module Mappers
 
+    # Simple mapper for an array of hash data. Used by the InlineModel.
     class HashMapper < Spider::Model::Mapper
         
         def initialize(model, storage)
@@ -10,10 +11,13 @@ module Spider; module Model; module Mappers
             @type = :hash
         end
         
+        # False. This mapper is read-only.
         def self.write?
             false
         end
         
+        # Fetch implementation.
+        #--
         # TODO: This is only for one-element hashes; make this a subclass of
         # a generic hashmapper
         def fetch(query)
@@ -35,6 +39,7 @@ module Spider; module Model; module Mappers
             return res
         end
         
+        # Checks if a row (hash) matches a Condition.
         def check_condition(condition, row)
             return true if condition.empty?
             condition.each_with_comparison do |key, value, comp|
@@ -71,7 +76,7 @@ module Spider; module Model; module Mappers
             return true
         end
         
-        def prepare_query(query, obj=nil)
+        def prepare_query(query, obj=nil) #:nodoc:
             query = super
             @model.elements.select{ |name, element| !element.model? }.each do |name, element|
                 query.request[element] = true
@@ -79,7 +84,7 @@ module Spider; module Model; module Mappers
             return query
         end
         
-        def map(request, result, obj_or_model)
+        def map(request, result, obj_or_model) #:nodoc:
             obj = obj_or_model.is_a?(Class) ? obj_or_model.new : obj_or_model
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
@@ -90,7 +95,7 @@ module Spider; module Model; module Mappers
             return obj
         end
         
-        def prepare_map_value(type, value)
+        def prepare_map_value(type, value) #:nodoc:
             return value
         end
         

@@ -1,7 +1,7 @@
 module Spider
 
-    
-    class PeriodicRunner
+    # TODO: remove
+    class PeriodicRunner #:nodoc:
         attr_reader :runner_thread
         
         def initialize(sleep_time=nil)

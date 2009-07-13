@@ -95,6 +95,10 @@
             (<a href="http://github.com/me/spider/tree/master/lib/spiderfw/model/mixins/converted.rb">view online</a>)
           </li>
           <li class='other'>
+            <a href="../../files/lib/spiderfw/model/mixins/version_number_rb.html">lib/spiderfw/model/mixins/version_number.rb</a>
+            (<a href="http://github.com/me/spider/tree/master/lib/spiderfw/model/mixins/version_number.rb">view online</a>)
+          </li>
+          <li class='other'>
             <a href="../../files/lib/spiderfw/model/model_rb.html">lib/spiderfw/model/model.rb</a>
             (<a href="http://github.com/me/spider/tree/master/lib/spiderfw/model/model.rb">view online</a>)
           </li>
@@ -193,12 +197,12 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000122">base_type</a></li>
-              <li><a href="#M000121">base_types</a></li>
-              <li><a href="#M000123">get</a></li>
-              <li><a href="#M000126">load_fixtures</a></li>
-              <li><a href="#M000124">put</a></li>
-              <li><a href="#M000125">with_identity_mapper</a></li>
+              <li><a href="#M000114">base_type</a></li>
+              <li><a href="#M000113">base_types</a></li>
+              <li><a href="#M000115">get</a></li>
+              <li><a href="#M000118">load_fixtures</a></li>
+              <li><a href="#M000116">put</a></li>
+              <li><a href="#M000117">with_identity_mapper</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -263,8 +267,8 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000122'>
-                <a name='M000122'>      </a>
+              <div class='public-class method' id='method-M000114'>
+                <a name='M000114'>      </a>
                 <div class='synopsis'>
                   <span class='name'>base_type</span>
                   <span class='arguments'>(klass)</span>
@@ -276,36 +280,40 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000122-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000114-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000122-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">base_type</span>(<span class="ruby-identifier">klass</span>)&#x000A;            <span class="ruby-identifier">k</span> = <span class="ruby-identifier">klass</span>&#x000A;            <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">k</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">base_types</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">k</span>))&#x000A;                <span class="ruby-identifier">k</span> = <span class="ruby-identifier">simplify_type</span>(<span class="ruby-identifier">k</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">k</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000114-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">base_type</span>(<span class="ruby-identifier">klass</span>)&#x000A;            <span class="ruby-identifier">k</span> = <span class="ruby-identifier">klass</span>&#x000A;            <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">k</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">base_types</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">k</span>))&#x000A;                <span class="ruby-identifier">k</span> = <span class="ruby-identifier">simplify_type</span>(<span class="ruby-identifier">k</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">k</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000121'>
-                <a name='M000121'>      </a>
+              <div class='public-class method' id='method-M000113'>
+                <a name='M000113'>      </a>
                 <div class='synopsis'>
                   <span class='name'>base_types</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='description'>
                   <p>
-                  Base types are String, <a
-                  href="DataTypes/Text.html">Spider::DataTypes::Text</a>, Fixnum, Float,
-                  BigDecimal, <a href="../Date.html">Date</a>, DateTime, <a
-                  href="DataTypes/Bool.html">Spider::DataTypes::Bool</a> These types must be
-                  handled by all mappers.
+                  Base types are:
+                  </p>
+                  <p>
+                  String, <a href="DataTypes/Text.html">Spider::DataTypes::Text</a>, Fixnum,
+                  Float, BigDecimal, <a href="../Date.html">Date</a>, DateTime, <a
+                  href="DataTypes/Bool.html">Spider::DataTypes::Bool</a>.
+                  </p>
+                  <p>
+                  These types must be handled by all mappers.
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000121-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000113-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000121-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">base_types</span>&#x000A;            <span class="ruby-ivar">@base_types</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000113-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 18</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">base_types</span>&#x000A;            <span class="ruby-ivar">@base_types</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000123'>
-                <a name='M000123'>      </a>
+              <div class='public-class method' id='method-M000115'>
+                <a name='M000115'>      </a>
                 <div class='synopsis'>
                   <span class='name'>get</span>
                   <span class='arguments'>(model, val)</span>
@@ -316,14 +324,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000123-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000115-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000123-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 58</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">model</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">model</span>.<span class="ruby-identifier">primary_keys</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">1</span>)&#x000A;                    <span class="ruby-identifier">val</span> = {<span class="ruby-identifier">model</span>.<span class="ruby-identifier">primary_keys</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">val</span>}&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-identifier">raise</span> <span class="ruby-constant">ModelException</span>, <span class="ruby-value str">&quot;Can't get without primary keys&quot;</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">identity_mapper</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">identity_mapper</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">model</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000115-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 61</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">model</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">model</span>.<span class="ruby-identifier">primary_keys</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">1</span>)&#x000A;                    <span class="ruby-identifier">val</span> = {<span class="ruby-identifier">model</span>.<span class="ruby-identifier">primary_keys</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">val</span>}&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-identifier">raise</span> <span class="ruby-constant">ModelException</span>, <span class="ruby-value str">&quot;Can't get without primary keys&quot;</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">identity_mapper</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">identity_mapper</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">model</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000126'>
-                <a name='M000126'>      </a>
+              <div class='public-class method' id='method-M000118'>
+                <a name='M000118'>      </a>
                 <div class='synopsis'>
                   <span class='name'>load_fixtures</span>
                   <span class='arguments'>(file)</span>
@@ -334,33 +342,33 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000126-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000118-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000126-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 153</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">load_fixtures</span>(<span class="ruby-identifier">file</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">file</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp re">/\.([^\.]+)$/</span>)&#x000A;                <span class="ruby-identifier">extension</span> = <span class="ruby-identifier">$1</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-node">&quot;Can't determine type of fixtures file #{file}&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">data</span> = {}&#x000A;            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">extension</span>&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'yml'</span>&#x000A;                <span class="ruby-identifier">require</span> <span class="ruby-value str">'yaml'</span>&#x000A;                <span class="ruby-identifier">data</span> = <span class="ruby-constant">YAML</span>.<span class="ruby-identifier">load_file</span>(<span class="ruby-identifier">file</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;             <span class="ruby-comment cmt"># Ruby 1.9: steps are not needed with ordered hashes</span>&#x000A;            <span class="ruby-identifier">data</span> = [<span class="ruby-identifier">data</span>] <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">data</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)&#x000A;            <span class="ruby-identifier">data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">step</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">step</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">mod_name</span>, <span class="ruby-identifier">mod_data</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">mod</span> = <span class="ruby-identifier">const_get_full</span>(<span class="ruby-identifier">mod_name</span>)&#x000A;                    <span class="ruby-identifier">mod_data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">row</span><span class="ruby-operator">|</span>&#x000A;                        <span class="ruby-identifier">obj</span> = <span class="ruby-identifier">mod</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">row</span>)&#x000A;                        <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">insert</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000118-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 156</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">load_fixtures</span>(<span class="ruby-identifier">file</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">file</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp re">/\.([^\.]+)$/</span>)&#x000A;                <span class="ruby-identifier">extension</span> = <span class="ruby-identifier">$1</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-node">&quot;Can't determine type of fixtures file #{file}&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">data</span> = {}&#x000A;            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">extension</span>&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'yml'</span>&#x000A;                <span class="ruby-identifier">require</span> <span class="ruby-value str">'yaml'</span>&#x000A;                <span class="ruby-identifier">data</span> = <span class="ruby-constant">YAML</span>.<span class="ruby-identifier">load_file</span>(<span class="ruby-identifier">file</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;             <span class="ruby-comment cmt"># Ruby 1.9: steps are not needed with ordered hashes</span>&#x000A;            <span class="ruby-identifier">data</span> = [<span class="ruby-identifier">data</span>] <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">data</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)&#x000A;            <span class="ruby-identifier">data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">step</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">step</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">mod_name</span>, <span class="ruby-identifier">mod_data</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">mod</span> = <span class="ruby-identifier">const_get_full</span>(<span class="ruby-identifier">mod_name</span>)&#x000A;                    <span class="ruby-identifier">mod_data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">row</span><span class="ruby-operator">|</span>&#x000A;                        <span class="ruby-identifier">obj</span> = <span class="ruby-identifier">mod</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">row</span>)&#x000A;                        <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">insert</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000124'>
-                <a name='M000124'>      </a>
+              <div class='public-class method' id='method-M000116'>
+                <a name='M000116'>      </a>
                 <div class='synopsis'>
                   <span class='name'>put</span>
                   <span class='arguments'>(obj, check=false)</span>
                 </div>
                 <div class='description'>
                   <p>
-                  Puts an object into tje <a
+                  Puts an object into the <a
                   href="Model/IdentityMapper.html">IdentityMapper</a>
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000124-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000116-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000124-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 74</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">put</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">check</span>=<span class="ruby-keyword kw">false</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">identity_mapper</span>)&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">identity_mapper</span>.<span class="ruby-identifier">put</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">check</span>)&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">obj</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000116-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 77</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">put</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">check</span>=<span class="ruby-keyword kw">false</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">identity_mapper</span>)&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">identity_mapper</span>.<span class="ruby-identifier">put</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">check</span>)&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">obj</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000125'>
-                <a name='M000125'>      </a>
+              <div class='public-class method' id='method-M000117'>
+                <a name='M000117'>      </a>
                 <div class='synopsis'>
                   <span class='name'>with_identity_mapper</span>
                   <span class='arguments'>() {|identity_mapper| ...}</span>
@@ -372,10 +380,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000125-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000117-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000125-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 99</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">with_identity_mapper</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">identity_mapper</span>&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">identity_mapper</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-constant">IdentityMapper</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">im</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">im</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000117-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 102</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">with_identity_mapper</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">identity_mapper</span>&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">identity_mapper</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-constant">IdentityMapper</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">im</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">im</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

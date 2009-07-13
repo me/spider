@@ -1,3 +1,41 @@
+# Module to allow annotations on methods. When included into a Class or Module,
+# will make the Annotations::ClassMethods.__ and Annotations::ClassMethods.\___ methods available. 
+# These can be used before a method to add annotations.
+# The including class can also use Annotations::ClassMethods.define_annotation to define code
+# that will be executed when an annotation is encountered.
+#
+# Example:
+#   class A
+#     include Annotations
+#
+#     def self.cool_methods; @cool_methods ||= []; end
+#     
+#     define_annotation :method_rating do |klass, method, args|
+#       klass.cool_methods << method if args[0] == :cool
+#     end
+#     
+#     __.is_first_method
+#     def method1
+#     end
+#
+#   ___.is_other_method
+#     def method2
+#     end
+#     
+#     __.method_rating :cool
+#     def method3
+#     end
+#
+#   end
+#   
+#   p A.annotations[:method1] => {:is_first_method => true} 
+#   p A.annotations[:method3] => {:is_other_method => true, :method_rating => :cool}
+#   p A.cool_methods => [:method3]
+#
+# *Warning*: annotations are *not* thread safe; if more than one file is being loaded at the same time for
+# the same Module, annotations may end up wrong.
+# You should ensure that all code using annotations is loaded in a single thread (this is usually a good idea anyway).
+
 module Annotations
 
     def self.included(klass)
@@ -22,7 +60,7 @@ module Annotations
         super
     end
 
-    class Annotator
+    class Annotator #:nodoc:
 
         def initialize(owner) 
             @owner = owner
@@ -59,24 +97,28 @@ module Annotations
             @pending = @m_pending_annotations
             return self
         end
-        
-
-
 
     end
 
 
     module ClassMethods
+        
+        # Returns the @annotations Hash.
+        def annotations
+            @annotations
+        end
 
-        def __(m_name=nil, &proc)
+        # Annotates the next method.
+        def __()
             @annotator ||= Annotator.new(self).single
         end
         
+        # Annotates all the following methods, until the end of the Class/Module.
         def ___()
             @annotator ||= Annotator.new(self).multiple
         end
 
-        def method_added(name)
+        def method_added(name) # :nodoc:
             return super unless @annotator
             @annotations ||= {}
             @annotations[name] ||= {}
@@ -89,6 +131,7 @@ module Annotations
             super
         end
         
+        # Explicitly annotates a method
         def annotate(method, name, *args)
             @annotations ||= {}
             @annotations[method] ||= {}
@@ -104,7 +147,9 @@ module Annotations
                 ann.call(self, method, *args)
             end
         end
-
+        
+        # Defines an annotation. The given block will be called whenever the name annotation
+        # is encountered; it will be passed the current Class, the annotated Method, and the annotation arguments.
         def define_annotation(name, &proc)
             @defined_annotations ||= {}
             @defined_annotations[name] = proc
@@ -115,10 +160,12 @@ module Annotations
             end
         end
         
+        # Returns the Hash of defined annotations.
         def defined_annotations
             @defined_annotations
         end
 
+        # Searches for a defined annotation in class and ancestors.
         def find_defined_annotation(name)
             return nil if self.class == Module
             k = self

@@ -43,22 +43,27 @@
             The <a href="DataType.html">DataType</a> module, if included by a <a
             href="../Class.html">Class</a>, allows to use it as an element type in a <a
             href="Model.html">Model</a>. The <a href="../Class.html">Class</a> must be
-            a subclass of a base type (see <a href="Model.html">Model</a>.base_types),
-            and allow to be initialized passing the superclass instance as the only
-            parameter; or, it must define maps_to, and override the from_value method.
+            a subclass of a base type (see <a
+            href="Model.html#M000113">Spider::Model.base_types</a>), and allow to be
+            initialized passing the superclass instance as the only parameter; or, it
+            must define maps_to, and override the from_value method.
+            </p>
+            <p>
+            Extends the including class with <a
+            href="DataType/ClassMethods.html">ClassMethods</a>.
             </p>
           </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000776">included</a></li>
+              <li><a href="#M000758">included</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000777">attributes</a></li>
-              <li><a href="#M000779">format</a></li>
-              <li><a href="#M000778">map</a></li>
+              <li><a href="#M000759">attributes</a></li>
+              <li><a href="#M000761">format</a></li>
+              <li><a href="#M000760">map</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -68,22 +73,22 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000776'>
-                <a name='M000776'>      </a>
+              <div class='public-class method' id='method-M000758'>
+                <a name='M000758'>      </a>
                 <div class='synopsis'>
                   <span class='name'>included</span>
                   <span class='arguments'>(klass)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000776-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000758-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000776-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">included</span>(<span class="ruby-identifier">klass</span>)&#x000A;            <span class="ruby-identifier">klass</span>.<span class="ruby-identifier">extend</span>(<span class="ruby-constant">ClassMethods</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000758-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 13</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">included</span>(<span class="ruby-identifier">klass</span>)&#x000A;            <span class="ruby-identifier">klass</span>.<span class="ruby-identifier">extend</span>(<span class="ruby-constant">ClassMethods</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000777'>
-                <a name='M000777'>      </a>
+              <div class='public-instance method' id='method-M000759'>
+                <a name='M000759'>      </a>
                 <div class='synopsis'>
                   <span class='name'>attributes</span>
                   <span class='arguments'>()</span>
@@ -91,18 +96,19 @@
                 <div class='description'>
                   <p>
                   Returns the <a href="DataType.html">DataType</a> attributes, as set in the
-                  <a href="Model.html">Model</a> Element.
+                  <a href="Model.html">Model</a> Element. (See <a
+                  href="DataType/ClassMethods.html#M000765">ClassMethods.take_attributes</a>).
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000777-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000759-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000777-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 49</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">attributes</span>&#x000A;            <span class="ruby-ivar">@attributes</span> <span class="ruby-operator">||=</span> {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000759-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 52</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">attributes</span>&#x000A;            <span class="ruby-ivar">@attributes</span> <span class="ruby-operator">||=</span> {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000779'>
-                <a name='M000779'>      </a>
+              <div class='public-instance method' id='method-M000761'>
+                <a name='M000761'>      </a>
                 <div class='synopsis'>
                   <span class='name'>format</span>
                   <span class='arguments'>(format)</span>
@@ -116,14 +122,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000779-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000761-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000779-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 66</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">format</span>(<span class="ruby-identifier">format</span>)&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">to_s</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000761-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 69</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">format</span>(<span class="ruby-identifier">format</span>)&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">to_s</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000778'>
-                <a name='M000778'>      </a>
+              <div class='public-instance method' id='method-M000760'>
+                <a name='M000760'>      </a>
                 <div class='synopsis'>
                   <span class='name'>map</span>
                   <span class='arguments'>(mapper_type)</span>
@@ -135,10 +141,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000778-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000760-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000778-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 54</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">map</span>(<span class="ruby-identifier">mapper_type</span>)&#x000A;            <span class="ruby-keyword kw">self</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000760-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/data_type.rb, line 57</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">map</span>(<span class="ruby-identifier">mapper_type</span>)&#x000A;            <span class="ruby-keyword kw">self</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

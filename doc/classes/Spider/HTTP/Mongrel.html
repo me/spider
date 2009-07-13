@@ -46,37 +46,37 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000916">shutdown_server</a></li>
-              <li><a href="#M000915">start_server</a></li>
+              <li><a href="#M000895">shutdown_server</a></li>
+              <li><a href="#M000894">start_server</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000916'>
-                <a name='M000916'>      </a>
+              <div class='public-instance method' id='method-M000895'>
+                <a name='M000895'>      </a>
                 <div class='synopsis'>
                   <span class='name'>shutdown_server</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000916-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000895-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000916-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/mongrel.rb, line 26</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">stop</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000895-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/mongrel.rb, line 26</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">stop</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000915'>
-                <a name='M000915'>      </a>
+              <div class='public-instance method' id='method-M000894'>
+                <a name='M000894'>      </a>
                 <div class='synopsis'>
                   <span class='name'>start_server</span>
                   <span class='arguments'>(opts={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000915-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000894-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000915-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/mongrel.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-ivar">@server</span> = <span class="ruby-operator">::</span><span class="ruby-constant">Mongrel</span><span class="ruby-operator">::</span><span class="ruby-constant">HttpServer</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>], <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>])&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:cgi</span>]) &#x000A;                <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">register</span>(<span class="ruby-value str">&quot;/&quot;</span>, <span class="ruby-constant">MongrelCGIServlet</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>))&#x000A;            <span class="ruby-keyword kw">else</span> &#x000A;                <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">register</span>(<span class="ruby-value str">&quot;/&quot;</span>, <span class="ruby-constant">MongrelServlet</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>))&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">info_string</span> = <span class="ruby-node">&quot;Starting Mongrel on #{opts[:host]}:#{opts[:port]}&quot;</span>&#x000A;            <span class="ruby-identifier">info_string</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot; (CGI mode)&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:cgi</span>]&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span>(<span class="ruby-identifier">info_string</span>)&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">run</span>.<span class="ruby-identifier">join</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000894-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/mongrel.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">opts</span> = <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>)&#x000A;            <span class="ruby-ivar">@server</span> = <span class="ruby-operator">::</span><span class="ruby-constant">Mongrel</span><span class="ruby-operator">::</span><span class="ruby-constant">HttpServer</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:host</span>], <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:port</span>])&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:cgi</span>]) &#x000A;                <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">register</span>(<span class="ruby-value str">&quot;/&quot;</span>, <span class="ruby-constant">MongrelCGIServlet</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>))&#x000A;            <span class="ruby-keyword kw">else</span> &#x000A;                <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">register</span>(<span class="ruby-value str">&quot;/&quot;</span>, <span class="ruby-constant">MongrelServlet</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>))&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">info_string</span> = <span class="ruby-node">&quot;Starting Mongrel on #{opts[:host]}:#{opts[:port]}&quot;</span>&#x000A;            <span class="ruby-identifier">info_string</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot; (CGI mode)&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:cgi</span>]&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span>(<span class="ruby-identifier">info_string</span>)&#x000A;            <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">run</span>.<span class="ruby-identifier">join</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

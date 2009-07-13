@@ -38,55 +38,75 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            A safe fork keeping track of resources needing to be closed.
+            </p>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000772">close_resources</a></li>
-              <li><a href="#M000773">fork</a></li>
-              <li><a href="#M000771">resources_to_close</a></li>
+              <li><a href="#M000754">close_resources</a></li>
+              <li><a href="#M000755">fork</a></li>
+              <li><a href="#M000753">resources_to_close</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000772'>
-                <a name='M000772'>      </a>
+              <div class='public-class method' id='method-M000754'>
+                <a name='M000754'>      </a>
                 <div class='synopsis'>
                   <span class='name'>close_resources</span>
                   <span class='arguments'>()</span>
                 </div>
+                <div class='description'>
+                  <p>
+                  Closes all resources.
+                  </p>
+                </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000772-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000754-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000772-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 10</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">close_resources</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@resources</span>&#x000A;            <span class="ruby-ivar">@mutex</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Mutex</span>.<span class="ruby-identifier">new</span>&#x000A;            <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span> <span class="ruby-keyword kw">do</span>&#x000A;                <span class="ruby-ivar">@resources</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">res</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-ivar">@resource</span>.<span class="ruby-identifier">close</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">resource</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">resource</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-identifier">:close</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">resource</span>.<span class="ruby-identifier">closed?</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-ivar">@resources</span>.<span class="ruby-identifier">clear</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000754-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 13</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">close_resources</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@resources</span>&#x000A;            <span class="ruby-ivar">@mutex</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Mutex</span>.<span class="ruby-identifier">new</span>&#x000A;            <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span> <span class="ruby-keyword kw">do</span>&#x000A;                <span class="ruby-ivar">@resources</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">res</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-ivar">@resource</span>.<span class="ruby-identifier">close</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">resource</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">resource</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-identifier">:close</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">resource</span>.<span class="ruby-identifier">closed?</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-ivar">@resources</span>.<span class="ruby-identifier">clear</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000773'>
-                <a name='M000773'>      </a>
+              <div class='public-class method' id='method-M000755'>
+                <a name='M000755'>      </a>
                 <div class='synopsis'>
                   <span class='name'>fork</span>
                   <span class='arguments'>() {|| ...}</span>
                 </div>
+                <div class='description'>
+                  <p>
+                  Closes resources, than forks.
+                  </p>
+                </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000773-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000755-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000773-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">fork</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">child</span> = <span class="ruby-constant">Kernel</span>.<span class="ruby-identifier">fork</span> <span class="ruby-keyword kw">do</span>&#x000A;                <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Fork</span>.<span class="ruby-identifier">close_resources</span>&#x000A;                <span class="ruby-keyword kw">yield</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">child</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000755-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">fork</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">child</span> = <span class="ruby-constant">Kernel</span>.<span class="ruby-identifier">fork</span> <span class="ruby-keyword kw">do</span>&#x000A;                <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Fork</span>.<span class="ruby-identifier">close_resources</span>&#x000A;                <span class="ruby-keyword kw">yield</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">child</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000771'>
-                <a name='M000771'>      </a>
+              <div class='public-class method' id='method-M000753'>
+                <a name='M000753'>      </a>
                 <div class='synopsis'>
                   <span class='name'>resources_to_close</span>
                   <span class='arguments'>(*list)</span>
                 </div>
+                <div class='description'>
+                  <p>
+                  Adds a list of resources. Resources must respond to :close.
+                  </p>
+                </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000771-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000753-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000771-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 5</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">resources_to_close</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">list</span>)&#x000A;            <span class="ruby-ivar">@resources</span> <span class="ruby-operator">||=</span> []&#x000A;            <span class="ruby-ivar">@resources</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">list</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000753-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/fork.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">resources_to_close</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">list</span>)&#x000A;            <span class="ruby-ivar">@resources</span> <span class="ruby-operator">||=</span> []&#x000A;            <span class="ruby-ivar">@resources</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">list</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

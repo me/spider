@@ -46,9 +46,9 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M001003">flush</a></li>
-              <li><a href="#M001004">set_body_io</a></li>
-              <li><a href="#M001002">write</a></li>
+              <li><a href="#M000976">flush</a></li>
+              <li><a href="#M000977">set_body_io</a></li>
+              <li><a href="#M000975">write</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -66,43 +66,43 @@
             </div>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M001003'>
-                <a name='M001003'>      </a>
+              <div class='public-instance method' id='method-M000976'>
+                <a name='M000976'>      </a>
                 <div class='synopsis'>
                   <span class='name'>flush</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001003-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000976-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001003-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/controller_io.rb, line 10</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">flush</span>&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000976-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/controller_io.rb, line 10</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">flush</span>&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M001004'>
-                <a name='M001004'>      </a>
+              <div class='public-instance method' id='method-M000977'>
+                <a name='M000977'>      </a>
                 <div class='synopsis'>
                   <span class='name'>set_body_io</span>
                   <span class='arguments'>(io)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001004-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000977-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001004-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/controller_io.rb, line 14</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set_body_io</span>(<span class="ruby-identifier">io</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">io</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>))&#x000A;                <span class="ruby-identifier">write</span>(<span class="ruby-identifier">io</span>)&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">buf</span> = <span class="ruby-identifier">io</span>.<span class="ruby-identifier">read</span>(<span class="ruby-constant">BUFSIZE</span>))&#x000A;                    <span class="ruby-identifier">write</span>(<span class="ruby-identifier">buf</span>)&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000977-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/controller_io.rb, line 14</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set_body_io</span>(<span class="ruby-identifier">io</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">io</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>))&#x000A;                <span class="ruby-identifier">write</span>(<span class="ruby-identifier">io</span>)&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">buf</span> = <span class="ruby-identifier">io</span>.<span class="ruby-identifier">read</span>(<span class="ruby-constant">BUFSIZE</span>))&#x000A;                    <span class="ruby-identifier">write</span>(<span class="ruby-identifier">buf</span>)&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M001002'>
-                <a name='M001002'>      </a>
+              <div class='public-instance method' id='method-M000975'>
+                <a name='M000975'>      </a>
                 <div class='synopsis'>
                   <span class='name'>write</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001002-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000975-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001002-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/controller_io.rb, line 6</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write</span>&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000975-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/controller_io.rb, line 6</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write</span>&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

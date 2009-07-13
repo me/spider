@@ -1,12 +1,15 @@
 module Spider
     
+    # A safe fork keeping track of resources needing to be closed.
     module Fork
         
+        # Adds a list of resources. Resources must respond to :close.
         def self.resources_to_close(*list)
             @resources ||= []
             @resources += list
         end
         
+        # Closes all resources.
         def self.close_resources
             return unless @resources
             @mutex ||= Mutex.new
@@ -18,6 +21,7 @@ module Spider
             end
         end
         
+        # Closes resources, than forks.
         def self.fork(&proc)
             child = Kernel.fork do
                 Spider::Fork.close_resources
@@ -28,6 +32,7 @@ module Spider
         
     end
     
+    # Calls Spider::Fork.fork
     def self.fork(&proc)
         Spider::Fork.fork(&proc)
     end

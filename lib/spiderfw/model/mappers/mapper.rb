@@ -6,7 +6,9 @@ module Spider; module Model
     # Its methods may be overridden with BaseModel#with_mapper, though.
     
     class Mapper
+        attr_reader :model
         attr_accessor :storage
+        # Mapper type (:db, :hash, etc.)
         attr_reader :type
 
         # Returns whether this Mapper can write to the storage.
@@ -135,7 +137,6 @@ module Spider; module Model
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                 obj.get(el).save if obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
-
         end
         
         # Hook to provide custom preprocessing. The default implementation does nothing.

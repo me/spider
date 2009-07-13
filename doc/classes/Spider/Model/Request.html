@@ -52,16 +52,16 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000622">new</a></li>
+              <li><a href="#M000607">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000623">load_all_simple</a></li>
-              <li><a href="#M000624">load_all_simple?</a></li>
-              <li><a href="#M000627">only_polymorphs</a></li>
-              <li><a href="#M000628">only_polymorphs?</a></li>
-              <li><a href="#M000626">polymorphs?</a></li>
-              <li><a href="#M000625">with_polymorphs</a></li>
+              <li><a href="#M000608">load_all_simple</a></li>
+              <li><a href="#M000609">load_all_simple?</a></li>
+              <li><a href="#M000612">only_polymorphs</a></li>
+              <li><a href="#M000613">only_polymorphs?</a></li>
+              <li><a href="#M000611">polymorphs?</a></li>
+              <li><a href="#M000610">with_polymorphs</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -91,22 +91,22 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000622'>
-                <a name='M000622'>      </a>
+              <div class='public-class method' id='method-M000607'>
+                <a name='M000607'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(val=nil, params={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000622-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000607-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000622-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 14</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">params</span>={})&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>))&#x000A;                <span class="ruby-keyword kw">super</span>()&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">request</span>(<span class="ruby-identifier">v</span>) }&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@total_rows</span> = <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:total_rows</span>]&#x000A;            <span class="ruby-ivar">@polymorphs</span> = {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000607-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 14</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">params</span>={})&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>))&#x000A;                <span class="ruby-keyword kw">super</span>()&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">request</span>(<span class="ruby-identifier">v</span>) }&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@total_rows</span> = <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:total_rows</span>]&#x000A;            <span class="ruby-ivar">@polymorphs</span> = {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000623'>
-                <a name='M000623'>      </a>
+              <div class='public-instance method' id='method-M000608'>
+                <a name='M000608'>      </a>
                 <div class='synopsis'>
                   <span class='name'>load_all_simple</span>
                   <span class='arguments'>()</span>
@@ -117,27 +117,27 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000623-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000608-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000623-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 37</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">load_all_simple</span>&#x000A;            <span class="ruby-ivar">@load_all_simple</span> = <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000608-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 37</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">load_all_simple</span>&#x000A;            <span class="ruby-ivar">@load_all_simple</span> = <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000624'>
-                <a name='M000624'>      </a>
+              <div class='public-instance method' id='method-M000609'>
+                <a name='M000609'>      </a>
                 <div class='synopsis'>
                   <span class='name'>load_all_simple?</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000624-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000609-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000624-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 41</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">load_all_simple?</span>&#x000A;            <span class="ruby-ivar">@load_all_simple</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000609-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 41</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">load_all_simple?</span>&#x000A;            <span class="ruby-ivar">@load_all_simple</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000627'>
-                <a name='M000627'>      </a>
+              <div class='public-instance method' id='method-M000612'>
+                <a name='M000612'>      </a>
                 <div class='synopsis'>
                   <span class='name'>only_polymorphs</span>
                   <span class='arguments'>()</span>
@@ -148,40 +148,40 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000627-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000612-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000627-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 55</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">only_polymorphs</span>&#x000A;            <span class="ruby-ivar">@only_polymorphs</span> = <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000612-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 55</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">only_polymorphs</span>&#x000A;            <span class="ruby-ivar">@only_polymorphs</span> = <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000628'>
-                <a name='M000628'>      </a>
+              <div class='public-instance method' id='method-M000613'>
+                <a name='M000613'>      </a>
                 <div class='synopsis'>
                   <span class='name'>only_polymorphs?</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000628-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000613-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000628-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">only_polymorphs?</span>&#x000A;            <span class="ruby-ivar">@only_polymorphs</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000613-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">only_polymorphs?</span>&#x000A;            <span class="ruby-ivar">@only_polymorphs</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000626'>
-                <a name='M000626'>      </a>
+              <div class='public-instance method' id='method-M000611'>
+                <a name='M000611'>      </a>
                 <div class='synopsis'>
                   <span class='name'>polymorphs?</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000626-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000611-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000626-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 50</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">polymorphs?</span>&#x000A;            <span class="ruby-ivar">@polymorphs</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">false</span> <span class="ruby-operator">:</span> <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000611-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 50</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">polymorphs?</span>&#x000A;            <span class="ruby-ivar">@polymorphs</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">false</span> <span class="ruby-operator">:</span> <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000625'>
-                <a name='M000625'>      </a>
+              <div class='public-instance method' id='method-M000610'>
+                <a name='M000610'>      </a>
                 <div class='synopsis'>
                   <span class='name'>with_polymorphs</span>
                   <span class='arguments'>(type, request)</span>
@@ -192,10 +192,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000625-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000610-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000625-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 46</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">with_polymorphs</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">request</span>)&#x000A;            <span class="ruby-ivar">@polymorphs</span>[<span class="ruby-identifier">type</span>] = <span class="ruby-identifier">request</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000610-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/request.rb, line 46</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">with_polymorphs</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">request</span>)&#x000A;            <span class="ruby-ivar">@polymorphs</span>[<span class="ruby-identifier">type</span>] = <span class="ruby-identifier">request</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

@@ -20,7 +20,7 @@ module Spider; module Model
         # The Request instance
         attr_reader :request
         
-        # Instantiates a new query, calling where on the condition.
+        # Instantiates a new query, calling Condition#where on the condition.
         def self.where(*params)
             return self.class.new.condition.where(*params)
         end
@@ -88,6 +88,7 @@ module Spider; module Model
            return self
        end
        
+       # Takes an argument or a block.
        # If given an argument, will use it as a Condition. If given a block, will use it on the Condition.
        def where(condition=nil, &proc)
            condition = Condition.new(&proc) unless (condition)
@@ -99,7 +100,7 @@ module Spider; module Model
            return self
        end
        
-       # Requests a polymorph
+       # Requests a polymorph.
        def with_polymorph(type, request=nil)
            query = self.class.new(query) unless query.is_a?(self.class)
            @polymorphs << type
@@ -107,7 +108,7 @@ module Spider; module Model
            return self
        end
        
-       # Requests only polymorphs. (see Request#only_polymorphs)
+       # Requests only polymorphs. (see Request#only_polymorphs).
        def only_polymorphs
            @request.only_polymorphs
        end

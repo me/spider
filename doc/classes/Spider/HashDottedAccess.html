@@ -38,41 +38,49 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            Utility that makes the including Hash accept a dotted syntax for keys. The
+            dotted syntax can be used to access and create on the fly sub-hashes.
+            Example:
+            </p>
+            <pre>h = MultiLevelHash.new&#x000A;h['one.two.three'] = 'some val'&#x000A;p h =&gt; {'one' =&gt; {'two' =&gt; {'three' =&gt; 'some val'}}}&#x000A;p h['one.two.three'] =&gt; 'some val'&#x000A;p h['four.five'] =&gt; nil</pre>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000775">[]</a></li>
-              <li><a href="#M000774">[]=</a></li>
+              <li><a href="#M000757">[]</a></li>
+              <li><a href="#M000756">[]=</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000775'>
-                <a name='M000775'>      </a>
+              <div class='public-instance method' id='method-M000757'>
+                <a name='M000757'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000775-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000757-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000775-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/multi_level_hash.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'.'</span>, <span class="ruby-value">2</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]][<span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]]&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000757-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/multi_level_hash.rb, line 19</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'.'</span>, <span class="ruby-value">2</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]][<span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]]&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000774'>
-                <a name='M000774'>      </a>
+              <div class='public-instance method' id='method-M000756'>
+                <a name='M000756'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]=</span>
                   <span class='arguments'>(key, val)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000774-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000756-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000774-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/multi_level_hash.rb, line 4</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'.'</span>, <span class="ruby-value">2</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]] <span class="ruby-operator">||=</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]][<span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]] = <span class="ruby-identifier">val</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000756-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/multi_level_hash.rb, line 12</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'.'</span>, <span class="ruby-value">2</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]] <span class="ruby-operator">||=</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]][<span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]] = <span class="ruby-identifier">val</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

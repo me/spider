@@ -2,7 +2,8 @@ require 'spiderfw/model/mappers/mapper'
 
 module Spider; module Model; module Mappers
 
-    class ProxyMapper
+    # TODO: remove?
+    class ProxyMapper #:nodoc:
         
         def initialize(model, proxied_model)
             @model = model

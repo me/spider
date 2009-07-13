@@ -42,87 +42,100 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            Abstract class for a shared store. A Shared Store is a Hash which may be
+            accessed by different threads or processes. The various implementations
+            will offer different persistency/availability.
+            </p>
+            <p>
+            <b>Note:</b> thread safety is guaranteed only for setting and getting store
+            values. It doesn&#8217;t know about the data contained in the store: if you
+            modify an object hold by the store, you should ensure thread safety
+            yourself.
+            </p>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000843">get</a></li>
-              <li><a href="#M000844">new</a></li>
+              <li><a href="#M000825">get</a></li>
+              <li><a href="#M000826">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000845">[]</a></li>
-              <li><a href="#M000846">[]=</a></li>
-              <li><a href="#M000847">lock_all</a></li>
+              <li><a href="#M000827">[]</a></li>
+              <li><a href="#M000828">[]=</a></li>
+              <li><a href="#M000829">lock_all</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000843'>
-                <a name='M000843'>      </a>
+              <div class='public-class method' id='method-M000825'>
+                <a name='M000825'>      </a>
                 <div class='synopsis'>
                   <span class='name'>get</span>
                   <span class='arguments'>(type=nil, config=nil)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000843-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000825-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000843-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 5</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">type</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">config</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;            <span class="ruby-identifier">type</span> = <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'shared_store.type'</span>).<span class="ruby-identifier">to_sym</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-identifier">type</span> = <span class="ruby-identifier">:memory</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-identifier">:memory</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-constant">MemorySharedStore</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">config</span>)&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-identifier">:file</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-constant">FileSharedStore</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">config</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000825-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 12</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">type</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">config</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;            <span class="ruby-identifier">type</span> = <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'shared_store.type'</span>).<span class="ruby-identifier">to_sym</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-identifier">type</span> = <span class="ruby-identifier">:memory</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-identifier">:memory</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-constant">MemorySharedStore</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">config</span>)&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-identifier">:file</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-constant">FileSharedStore</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">config</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000844'>
-                <a name='M000844'>      </a>
+              <div class='public-class method' id='method-M000826'>
+                <a name='M000826'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(config={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000844-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000826-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000844-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 16</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">config</span>={})&#x000A;            <span class="ruby-ivar">@config</span> = <span class="ruby-identifier">config</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000826-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 23</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">config</span>={})&#x000A;            <span class="ruby-ivar">@config</span> = <span class="ruby-identifier">config</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000845'>
-                <a name='M000845'>      </a>
+              <div class='public-instance method' id='method-M000827'>
+                <a name='M000827'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]</span>
                   <span class='arguments'>(key, &amp;proc)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000845-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000827-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000845-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 20</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000827-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 27</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000846'>
-                <a name='M000846'>      </a>
+              <div class='public-instance method' id='method-M000828'>
+                <a name='M000828'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]=</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000846-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000828-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000846-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000828-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 31</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000847'>
-                <a name='M000847'>      </a>
+              <div class='public-instance method' id='method-M000829'>
+                <a name='M000829'>      </a>
                 <div class='synopsis'>
                   <span class='name'>lock_all</span>
                   <span class='arguments'>(&amp;proc)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000847-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000829-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000847-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 28</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">lock_all</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000829-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/shared_store.rb, line 35</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">lock_all</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-constant">NotImplementedError</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

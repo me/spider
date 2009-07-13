@@ -46,23 +46,23 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000992">purge</a></li>
+              <li><a href="#M000965">purge</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000992'>
-                <a name='M000992'>      </a>
+              <div class='public-instance method' id='method-M000965'>
+                <a name='M000965'>      </a>
                 <div class='synopsis'>
                   <span class='name'>purge</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000992-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000965-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000992-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/transient_hash.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">purge</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@parent_flash</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@parent_flash_key</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@parent_flash</span>.<span class="ruby-identifier">accessed</span>[<span class="ruby-ivar">@parent_flash_key</span>])&#x000A;                <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">delete_if</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@accessed</span>[<span class="ruby-identifier">k</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@active</span>[<span class="ruby-identifier">k</span>] }&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">purge</span> }&#x000A;            <span class="ruby-ivar">@accessed</span> = {}&#x000A;            <span class="ruby-ivar">@active</span> = {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000965-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/transient_hash.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">purge</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@parent_flash</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@parent_flash_key</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@parent_flash</span>.<span class="ruby-identifier">accessed</span>[<span class="ruby-ivar">@parent_flash_key</span>])&#x000A;                <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">delete_if</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@accessed</span>[<span class="ruby-identifier">k</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@active</span>[<span class="ruby-identifier">k</span>] }&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">purge</span> }&#x000A;            <span class="ruby-ivar">@accessed</span> = {}&#x000A;            <span class="ruby-ivar">@active</span> = {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

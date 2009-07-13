@@ -42,9 +42,9 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000761">get_scene</a></li>
-              <li><a href="#M000759">prepare_scene</a></li>
-              <li><a href="#M000760">widget_to_scene</a></li>
+              <li><a href="#M000743">get_scene</a></li>
+              <li><a href="#M000741">prepare_scene</a></li>
+              <li><a href="#M000742">widget_to_scene</a></li>
             </ol>
           </div>
           <div id='context'>
@@ -62,43 +62,43 @@
             </div>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000761'>
-                <a name='M000761'>      </a>
+              <div class='public-instance method' id='method-M000743'>
+                <a name='M000743'>      </a>
                 <div class='synopsis'>
                   <span class='name'>get_scene</span>
                   <span class='arguments'>(scene=nil)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000761-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000743-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000761-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 29</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_scene</span>(<span class="ruby-identifier">scene</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;            <span class="ruby-identifier">scene</span> = <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">scene</span>)&#x000A;            <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">extend</span>(<span class="ruby-constant">SceneMethods</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">scene</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000743-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 29</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_scene</span>(<span class="ruby-identifier">scene</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;            <span class="ruby-identifier">scene</span> = <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">scene</span>)&#x000A;            <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">extend</span>(<span class="ruby-constant">SceneMethods</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">scene</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000759'>
-                <a name='M000759'>      </a>
+              <div class='public-instance method' id='method-M000741'>
+                <a name='M000741'>      </a>
                 <div class='synopsis'>
                   <span class='name'>prepare_scene</span>
                   <span class='arguments'>(scene)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000759-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000741-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000759-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 5</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">prepare_scene</span>(<span class="ruby-identifier">scene</span>)&#x000A;            <span class="ruby-identifier">scene</span> = <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Widget</span>))&#x000A;                <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">widget</span> = <span class="ruby-identifier">widget_to_scene</span>(<span class="ruby-keyword kw">self</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">widgets</span> = {}&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@widgets</span>)&#x000A;                <span class="ruby-ivar">@widgets</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">id</span>, <span class="ruby-identifier">w</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">widgets</span>[<span class="ruby-identifier">id</span>] = <span class="ruby-identifier">widget_to_scene</span>(<span class="ruby-identifier">w</span>)&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">scene</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000741-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 5</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">prepare_scene</span>(<span class="ruby-identifier">scene</span>)&#x000A;            <span class="ruby-identifier">scene</span> = <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Widget</span>))&#x000A;                <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">widget</span> = <span class="ruby-identifier">widget_to_scene</span>(<span class="ruby-keyword kw">self</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">widgets</span> = {}&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@widgets</span>)&#x000A;                <span class="ruby-ivar">@widgets</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">id</span>, <span class="ruby-identifier">w</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">widgets</span>[<span class="ruby-identifier">id</span>] = <span class="ruby-identifier">widget_to_scene</span>(<span class="ruby-identifier">w</span>)&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">scene</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000760'>
-                <a name='M000760'>      </a>
+              <div class='public-instance method' id='method-M000742'>
+                <a name='M000742'>      </a>
                 <div class='synopsis'>
                   <span class='name'>widget_to_scene</span>
                   <span class='arguments'>(w)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000760-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000742-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000760-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 19</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">widget_to_scene</span>(<span class="ruby-identifier">w</span>)&#x000A;            {&#x000A;                <span class="ruby-identifier">:id_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">id_path</span>,&#x000A;                <span class="ruby-identifier">:full_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">full_id</span>,&#x000A;                <span class="ruby-identifier">:param</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">param_name</span>(<span class="ruby-identifier">w</span>),&#x000A;                <span class="ruby-identifier">:pub_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">pub_url</span>,&#x000A;                <span class="ruby-identifier">:css_class</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">css_class</span>&#x000A;            }&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000742-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 19</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">widget_to_scene</span>(<span class="ruby-identifier">w</span>)&#x000A;            {&#x000A;                <span class="ruby-identifier">:id_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">id_path</span>,&#x000A;                <span class="ruby-identifier">:full_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">full_id</span>,&#x000A;                <span class="ruby-identifier">:param</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">param_name</span>(<span class="ruby-identifier">w</span>),&#x000A;                <span class="ruby-identifier">:pub_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">pub_url</span>,&#x000A;                <span class="ruby-identifier">:css_class</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">w</span>.<span class="ruby-identifier">css_class</span>&#x000A;            }&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

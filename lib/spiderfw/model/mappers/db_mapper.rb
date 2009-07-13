@@ -132,7 +132,7 @@ module Spider; module Model; module Mappers
             return @storage.sql_update(save)
         end
         
-        # Updates according to a condition, saving the values passed as a Hash.
+        # Updates according to a condition, storing the values, which must passed as a Hash.
         def bulk_update(values, condition)
             db_values = {}
             values.each do |key, val|
@@ -173,7 +173,7 @@ module Spider; module Model; module Mappers
             return @storage.query(storage_query)
         end
         
-        # Implements the Mapper#fetch method
+        # Implements the Mapper#fetch method.
         def fetch(query)
 #            Spider.logger.debug("Fetching model #{@model} query:")
 #            Spider.logger.debug(query)
@@ -384,10 +384,11 @@ module Spider; module Model; module Mappers
         
         # Generates a storage description for the condition
         # Returns a list of three elements, composed of
-        # * conditions: an hash {
-        #     :conj => 'and'|'or',
-        #     :values => an array of [field, comparison, value] triplets
-        #   }
+        # * conditions: an hash 
+        #     {
+        #       :conj => 'and'|'or',
+        #       :values => an array of [field, comparison, value] triplets
+        #     }
         # * joins: an array of structures as returned by #get_join
         # * remaining_condition: part of the condition which can't be passed to the storage
         #--
@@ -569,9 +570,8 @@ module Spider; module Model; module Mappers
             return [joins, current_model, el]
         end
         
-        # Returns a couple of
-        # * fields, an array of [field, direction] couples
-        # and
+        # Returns a pair composed of
+        # * fields, an array of [field, direction] couples; and
         # * joins, joins needed for the order, if any
         def prepare_order(query)
             joins = []
@@ -755,11 +755,13 @@ module Spider; module Model; module Mappers
         ##############################################################
 
         # Extend schema. Given block will be instance_eval'd after schema auto generation.
+        # See also #define_schema.
         def with_schema(*params, &proc)
             @schema_proc = proc
         end
         
         # Define schema. Given block will be instance_eval'd before schema auto generation.
+        # See also #with_schema.
         def define_schema(*params, &proc)
             @schema_define_proc = proc
         end

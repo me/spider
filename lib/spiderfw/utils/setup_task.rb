@@ -1,6 +1,7 @@
 module Spider
     
-    class SetupTask
+    # TODO: remove?
+    class SetupTask #:nodoc:
         
         # FIXME: concurrency?
         def self.current_task=(task)

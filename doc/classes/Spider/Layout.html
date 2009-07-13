@@ -46,13 +46,13 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000921">named_layouts</a></li>
-              <li><a href="#M000920">register_layout</a></li>
+              <li><a href="#M000903">named_layouts</a></li>
+              <li><a href="#M000902">register_layout</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000922">all_resources</a></li>
-              <li><a href="#M000919">init</a></li>
+              <li><a href="#M000904">all_resources</a></li>
+              <li><a href="#M000901">init</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -74,57 +74,57 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000921'>
-                <a name='M000921'>      </a>
+              <div class='public-class method' id='method-M000903'>
+                <a name='M000903'>      </a>
                 <div class='synopsis'>
                   <span class='name'>named_layouts</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000921-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000903-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000921-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 28</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">named_layouts</span>&#x000A;                <span class="ruby-ivar">@@named_layouts</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000903-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 28</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">named_layouts</span>&#x000A;                <span class="ruby-ivar">@@named_layouts</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000920'>
-                <a name='M000920'>      </a>
+              <div class='public-class method' id='method-M000902'>
+                <a name='M000902'>      </a>
                 <div class='synopsis'>
                   <span class='name'>register_layout</span>
                   <span class='arguments'>(name, file)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000920-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000902-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000920-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 24</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">register_layout</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">file</span>)&#x000A;                <span class="ruby-ivar">@@named_layouts</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">file</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000902-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 24</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">register_layout</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">file</span>)&#x000A;                <span class="ruby-ivar">@@named_layouts</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">file</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000922'>
-                <a name='M000922'>      </a>
+              <div class='public-instance method' id='method-M000904'>
+                <a name='M000904'>      </a>
                 <div class='synopsis'>
                   <span class='name'>all_resources</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000922-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000904-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000922-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 34</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">all_resources</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">all_resources</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000904-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 34</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">all_resources</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">all_resources</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000919'>
-                <a name='M000919'>      </a>
+              <div class='public-instance method' id='method-M000901'>
+                <a name='M000901'>      </a>
                 <div class='synopsis'>
                   <span class='name'>init</span>
                   <span class='arguments'>(scene)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000919-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000901-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000919-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">init</span>(<span class="ruby-identifier">scene</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@template</span> = <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Template</span>) <span class="ruby-operator">?</span> <span class="ruby-ivar">@template</span> <span class="ruby-operator">:</span> <span class="ruby-constant">Template</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@template</span>)&#x000A;            <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">init</span>(<span class="ruby-identifier">scene</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">init_done?</span>&#x000A;            <span class="ruby-ivar">@template_resources</span> = {<span class="ruby-identifier">:css</span> =<span class="ruby-operator">&gt;</span> [], <span class="ruby-identifier">:js</span> =<span class="ruby-operator">&gt;</span> []}&#x000A;            <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">all_resources</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">res</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-ivar">@template_resources</span>[<span class="ruby-identifier">res</span>[<span class="ruby-identifier">:type</span>].<span class="ruby-identifier">to_sym</span>] <span class="ruby-operator">||=</span> []&#x000A;                <span class="ruby-ivar">@template_resources</span>[<span class="ruby-identifier">res</span>[<span class="ruby-identifier">:type</span>].<span class="ruby-identifier">to_sym</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">res</span>[<span class="ruby-identifier">:src</span>]&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@content</span>[<span class="ruby-identifier">:yield_to</span>] = <span class="ruby-ivar">@template</span>&#x000A;            <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">resources</span> = <span class="ruby-ivar">@template_resources</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000901-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/layout.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">init</span>(<span class="ruby-identifier">scene</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@template</span> = <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Template</span>) <span class="ruby-operator">?</span> <span class="ruby-ivar">@template</span> <span class="ruby-operator">:</span> <span class="ruby-constant">Template</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@template</span>)&#x000A;            <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">init</span>(<span class="ruby-identifier">scene</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">init_done?</span>&#x000A;            <span class="ruby-ivar">@template_resources</span> = {<span class="ruby-identifier">:css</span> =<span class="ruby-operator">&gt;</span> [], <span class="ruby-identifier">:js</span> =<span class="ruby-operator">&gt;</span> []}&#x000A;            <span class="ruby-ivar">@template</span>.<span class="ruby-identifier">all_resources</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">res</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-ivar">@template_resources</span>[<span class="ruby-identifier">res</span>[<span class="ruby-identifier">:type</span>].<span class="ruby-identifier">to_sym</span>] <span class="ruby-operator">||=</span> []&#x000A;                <span class="ruby-ivar">@template_resources</span>[<span class="ruby-identifier">res</span>[<span class="ruby-identifier">:type</span>].<span class="ruby-identifier">to_sym</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">res</span>[<span class="ruby-identifier">:src</span>]&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@content</span>[<span class="ruby-identifier">:yield_to</span>] = <span class="ruby-ivar">@template</span>&#x000A;            <span class="ruby-identifier">scene</span>.<span class="ruby-identifier">resources</span> = <span class="ruby-ivar">@template_resources</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

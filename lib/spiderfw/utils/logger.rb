@@ -2,6 +2,9 @@ require 'logger'
 
 module Spider
     
+    # Utility to consolidate many loggers into one. Can be used as a simple Logger,
+    # and will pass log messages to each of its child.
+    
     module Logger
         
         class << self
@@ -11,6 +14,7 @@ module Spider
             #     @@loggers[dest]
             # end
         
+            # Open a new logger.
             def open(dest, level= :WARN)
                 @loggers ||= {}
                 logger = ::Logger.new(dest)
@@ -18,22 +22,25 @@ module Spider
                 @loggers[dest] = logger
             end
             
+            # Close the given logger
             def close(dest)
                 #raise RuntimeError, "No open logger for #{dest}" unless @loggers && @loggers[dest]
                 @loggers.delete(dest)
             end
             
+            # Closes all loggers.
             def close_all
                 @loggers = {}
             end
             
+            # Closes and reopens a logger.
             def reopen(dest, level= :WARN)
                 raise RuntimeError, "No open logger for #{dest}" unless @loggers && @loggers[dest]
                 @loggers.delete(dest)
                 self.open(dest, level)
             end
                 
-        
+            # Sends a method to all loggers.
             def send_to_loggers(action, *args)
                 return if $SAFE > 1
                 return unless @loggers
@@ -44,7 +51,7 @@ module Spider
                     end
                 end
             end
-        
+            
             def debug(*args)
                 send_to_loggers(:debug, *args)
             end

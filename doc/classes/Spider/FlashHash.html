@@ -46,16 +46,16 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000993">new</a></li>
+              <li><a href="#M000966">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000995">[]</a></li>
-              <li><a href="#M000996">[]=</a></li>
-              <li><a href="#M000997">active</a></li>
-              <li><a href="#M000998">delete</a></li>
-              <li><a href="#M000999">purge</a></li>
-              <li><a href="#M000994">reset</a></li>
+              <li><a href="#M000968">[]</a></li>
+              <li><a href="#M000969">[]=</a></li>
+              <li><a href="#M000970">active</a></li>
+              <li><a href="#M000971">delete</a></li>
+              <li><a href="#M000972">purge</a></li>
+              <li><a href="#M000967">reset</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -88,96 +88,96 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000993'>
-                <a name='M000993'>      </a>
+              <div class='public-class method' id='method-M000966'>
+                <a name='M000966'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000993-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000966-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000993-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@sub_flashes</span> = {}&#x000A;            <span class="ruby-ivar">@parent_flash</span> = <span class="ruby-keyword kw">nil</span>&#x000A;            <span class="ruby-ivar">@parent_flash_key</span> = <span class="ruby-keyword kw">nil</span>&#x000A;            <span class="ruby-identifier">reset</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000966-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@sub_flashes</span> = {}&#x000A;            <span class="ruby-ivar">@parent_flash</span> = <span class="ruby-keyword kw">nil</span>&#x000A;            <span class="ruby-ivar">@parent_flash_key</span> = <span class="ruby-keyword kw">nil</span>&#x000A;            <span class="ruby-identifier">reset</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000995'>
-                <a name='M000995'>      </a>
+              <div class='public-instance method' id='method-M000968'>
+                <a name='M000968'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000995-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000968-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000995-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-ivar">@accessed</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000968-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-ivar">@accessed</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000996'>
-                <a name='M000996'>      </a>
+              <div class='public-instance method' id='method-M000969'>
+                <a name='M000969'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]=</span>
                   <span class='arguments'>(key, val)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000996-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000969-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000996-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 26</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-identifier">active</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">FlashHash</span>))&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">parent_flash</span> = <span class="ruby-keyword kw">self</span>&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">parent_flash_key</span> = <span class="ruby-identifier">key</span>&#x000A;                <span class="ruby-ivar">@sub_flashes</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">val</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000969-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 26</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-identifier">active</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">FlashHash</span>))&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">parent_flash</span> = <span class="ruby-keyword kw">self</span>&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">parent_flash_key</span> = <span class="ruby-identifier">key</span>&#x000A;                <span class="ruby-ivar">@sub_flashes</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">val</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000997'>
-                <a name='M000997'>      </a>
+              <div class='public-instance method' id='method-M000970'>
+                <a name='M000970'>      </a>
                 <div class='synopsis'>
                   <span class='name'>active</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000997-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000970-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000997-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 36</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">active</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-ivar">@active</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@parent_flash</span>)&#x000A;                <span class="ruby-ivar">@parent_flash</span>.<span class="ruby-identifier">active</span>(<span class="ruby-ivar">@parent_flash_key</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000970-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 36</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">active</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-ivar">@active</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@parent_flash</span>)&#x000A;                <span class="ruby-ivar">@parent_flash</span>.<span class="ruby-identifier">active</span>(<span class="ruby-ivar">@parent_flash_key</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000998'>
-                <a name='M000998'>      </a>
+              <div class='public-instance method' id='method-M000971'>
+                <a name='M000971'>      </a>
                 <div class='synopsis'>
                   <span class='name'>delete</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000998-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000971-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000998-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 43</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">delete</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">key</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000971-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 43</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">delete</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">key</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000999'>
-                <a name='M000999'>      </a>
+              <div class='public-instance method' id='method-M000972'>
+                <a name='M000972'>      </a>
                 <div class='synopsis'>
                   <span class='name'>purge</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000999-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000972-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000999-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 48</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">purge</span>&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">delete_if</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-ivar">@accessed</span>[<span class="ruby-identifier">k</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@active</span>[<span class="ruby-identifier">k</span>] }&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">purge</span> }&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000972-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 48</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">purge</span>&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">delete_if</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-ivar">@accessed</span>[<span class="ruby-identifier">k</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@active</span>[<span class="ruby-identifier">k</span>] }&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">purge</span> }&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000994'>
-                <a name='M000994'>      </a>
+              <div class='public-instance method' id='method-M000967'>
+                <a name='M000967'>      </a>
                 <div class='synopsis'>
                   <span class='name'>reset</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000994-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000967-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000994-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">reset</span>&#x000A;            <span class="ruby-ivar">@active</span> = {}&#x000A;            <span class="ruby-ivar">@accessed</span> = {}&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">reset</span> }&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000967-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/flash_hash.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">reset</span>&#x000A;            <span class="ruby-ivar">@active</span> = {}&#x000A;            <span class="ruby-ivar">@accessed</span> = {}&#x000A;            <span class="ruby-ivar">@sub_flashes</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">reset</span> }&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

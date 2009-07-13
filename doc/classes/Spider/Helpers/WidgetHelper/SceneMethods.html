@@ -42,37 +42,37 @@
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000762">param_name</a></li>
-              <li><a href="#M000763">params_for</a></li>
+              <li><a href="#M000744">param_name</a></li>
+              <li><a href="#M000745">params_for</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000762'>
-                <a name='M000762'>      </a>
+              <div class='public-instance method' id='method-M000744'>
+                <a name='M000744'>      </a>
                 <div class='synopsis'>
                   <span class='name'>param_name</span>
                   <span class='arguments'>(widget_desc)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000762-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000744-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000762-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 38</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">param_name</span>(<span class="ruby-identifier">widget_desc</span>)&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">widget_desc</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Widget</span>))&#x000A;                    <span class="ruby-identifier">id_path</span> = <span class="ruby-identifier">widget_desc</span>.<span class="ruby-identifier">id_path</span>&#x000A;                <span class="ruby-keyword kw">elsif</span> (<span class="ruby-identifier">widget_desc</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;                    <span class="ruby-identifier">id_path</span> = <span class="ruby-identifier">widget_desc</span>[<span class="ruby-identifier">:id_path</span>]&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-identifier">id_path</span> = <span class="ruby-identifier">widget_desc</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-identifier">pre</span> = <span class="ruby-identifier">id_path</span>.<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">part</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;[#{part}]&quot;</span>}.<span class="ruby-identifier">join</span>(<span class="ruby-value str">''</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000744-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 38</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">param_name</span>(<span class="ruby-identifier">widget_desc</span>)&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">widget_desc</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Widget</span>))&#x000A;                    <span class="ruby-identifier">id_path</span> = <span class="ruby-identifier">widget_desc</span>.<span class="ruby-identifier">id_path</span>&#x000A;                <span class="ruby-keyword kw">elsif</span> (<span class="ruby-identifier">widget_desc</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;                    <span class="ruby-identifier">id_path</span> = <span class="ruby-identifier">widget_desc</span>[<span class="ruby-identifier">:id_path</span>]&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-identifier">id_path</span> = <span class="ruby-identifier">widget_desc</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-identifier">pre</span> = <span class="ruby-identifier">id_path</span>.<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">part</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;[#{part}]&quot;</span>}.<span class="ruby-identifier">join</span>(<span class="ruby-value str">''</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000763'>
-                <a name='M000763'>      </a>
+              <div class='public-instance method' id='method-M000745'>
+                <a name='M000745'>      </a>
                 <div class='synopsis'>
                   <span class='name'>params_for</span>
                   <span class='arguments'>(widget_or_id_path, params)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000763-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000745-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000763-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 49</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">params_for</span>(<span class="ruby-identifier">widget_or_id_path</span>, <span class="ruby-identifier">params</span>)&#x000A;                <span class="ruby-identifier">pre</span> = <span class="ruby-identifier">param_name</span>(<span class="ruby-identifier">widget_or_id_path</span>)&#x000A;                <span class="ruby-identifier">params</span>.<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;#{pre}[#{k}]=#{v}&quot;</span>}.<span class="ruby-identifier">join</span>(<span class="ruby-value str">'&amp;'</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000745-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/helpers/widget_helper.rb, line 49</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">params_for</span>(<span class="ruby-identifier">widget_or_id_path</span>, <span class="ruby-identifier">params</span>)&#x000A;                <span class="ruby-identifier">pre</span> = <span class="ruby-identifier">param_name</span>(<span class="ruby-identifier">widget_or_id_path</span>)&#x000A;                <span class="ruby-identifier">params</span>.<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;#{pre}[#{k}]=#{v}&quot;</span>}.<span class="ruby-identifier">join</span>(<span class="ruby-value str">'&amp;'</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

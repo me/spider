@@ -4,6 +4,10 @@ require 'iconv'
 
 module Spider; module Model; module Storage; module Db
     
+    # Represents a DB connection, and provides methods to execute structured queries on it.
+    # This is the class that generates the actual SQL; vendor specific extensions may override the 
+    # generic SQL methods.
+    
     class DbStorage < Storage::BaseStorage
         @reserved_keywords = ['from', 'order', 'where', 'to']
         @type_synonyms = {}
@@ -19,9 +23,24 @@ module Spider; module Model; module Storage; module Db
         }
 
         class << self
-            attr_reader :reserved_keywords, :type_synonyms, :safe_conversions, :capabilities
+            # An Array of keywords that can not be used in schema names.
+            attr_reader :reserved_keywords
+            # An Hash of DB type equivalents.
+            attr_reader :type_synonyms
+            # Type conversions which do not lose data. See also #safe_schema_conversion?
+            attr_reader :safe_conversions
+            # An Hash of DB capabilities. The default is 
+            # {:autoincrement => false, :sequences => true, :transactions => true}
+            # (The BaseStorage class provides file sequences in case the subclass does not support them.)
+            attr_reader :capabilities
 
+            # Returns a new connection. Must be implemented by the subclasses; args are implementation specific.
+            def new_connection(*args)
+            end
             
+            # Returns a connection, drawing from the pool or instantiating a new one.
+            # Arguments are passed to the #new_connection method.
+            # Pool size is configured with 'storage.db.pool.size'.
             def get_connection(*args)
                 @connection_semaphore ||= Mutex.new
                 @connections ||= {}
@@ -74,42 +93,48 @@ module Spider; module Model; module Storage; module Db
                 return conn
             end
             
-            
+            # Frees a connection, relasing it to the pool
             def release_connection(conn, conn_params)
                 return unless conn
                 @free_connections[conn_params] << conn
             end
             
+            # Removes a connection from the pool.
             def remove_connection(conn, conn_params)
                 @connection_semaphore.synchronize{
                     remove_connection_nosync(conn, conn_params)
                 }
             end
             
-            def remove_connection_nosync(conn, conn_params)
+            def remove_connection_nosync(conn, conn_params) #:nodoc:
                 @free_connections[conn_params].delete(conn)
                 @connections[conn_params].delete(conn)
             end
                 
-            
-            def connection_alive?
+            # Checks whether a connection is still alive. Must be implemented by subclasses.
+            def connection_alive?(conn)
                 raise "Virtual"
             end
             
         end
         
+        # The constructor takes the connection URL, which will be parsed into connection params.
         def initialize(url)
             super
         end
         
+        # Instantiates a new connection with current connection params.
         def connect()
             @conn = self.class.get_connection(*@connection_params)
         end
         
+        # True if currently connected.
         def connected?
             @conn != nil
         end
         
+        # Returns the current connection, or creates a new one.
+        # If a block is given, will disconnect after yielding.
         def connection
             is_connected = connected?
             connect unless is_connected
@@ -120,6 +145,7 @@ module Spider; module Model; module Storage; module Db
             return @conn
         end
         
+        # Releases the current connection to the pool.
         def disconnect
             # The subclass should check if the connection is alive, and if it is not call remove_connection instead
             begin
@@ -131,6 +157,8 @@ module Spider; module Model; module Storage; module Db
             #@conn = nil
         end
         
+        # Returns the default mapper for the storage.
+        # If the storage subclass contains a MapperExtension module, it will be mixed-in with the mapper.
         def get_mapper(model)
             mapper = Spider::Model::Mappers::DbMapper.new(model, self)
             if (self.class.const_defined?(:MapperExtension))
@@ -139,6 +167,7 @@ module Spider; module Model; module Storage; module Db
             return mapper
         end
         
+        # True if given named capability is supported by the DB.
         def supports?(capability)
             self.class.capabilities[capability]
         end
@@ -147,6 +176,7 @@ module Spider; module Model; module Storage; module Db
             return self.class.capabilities[:transactions]
         end
         
+        # May be implemented by subclasses.
         def start_transaction
            raise StorageException, "The current storage does not support transactions" 
         end
@@ -173,31 +203,29 @@ module Spider; module Model; module Storage; module Db
             end
             execute("LOCK TABLE #{table} IN #{lockmode} MODE")
         end
-        
-        def assigned_key(name)
-        end
-        
+                
         ##############################################################
         #   Methods used to generate a schema                        #
         ##############################################################
         
-        # Fixes a string to be used as a table name
+        # Fixes a string to be used as a table name.
         def table_name(name)
             return name.to_s.gsub(':', '_')
         end
         
+        # Fixes a string to be used as a sequence name.
         def sequence_name(name)
             return name.to_s.gsub(':', '_')
         end
         
-        # Fixes a string to be used as a column name
+        # Fixes a string to be used as a column name.
         def column_name(name)
             name = name.to_s
             name += '_field' if (self.class.reserved_keywords.include?(name.downcase)) 
             return name
         end
         
-        # Returns the db type corresponding to an element type
+        # Returns the db type corresponding to an element type.
         def column_type(type, attributes)
             case type.name
             when 'String'
@@ -240,6 +268,7 @@ module Spider; module Model; module Storage; module Db
             return db_attributes
         end
         
+        # Returns the SQL for a QueryFuncs::Function
         def function(func)
             fields = func.elements.map{ |func_el|
                 if (func_el.is_a?(Spider::QueryFuncs::Function))
@@ -261,14 +290,17 @@ module Spider; module Model; module Storage; module Db
         #   Preparing values                                             #
         ##################################################################
         
+        # Prepares a value for saving.
         def value_for_save(type, value, save_mode)
             return prepare_value(type, value)
         end
         
+        # Prepares a value that will be used in a condition.
         def value_for_condition(type, value)
             return prepare_value(type, value)
         end
         
+        # Converts a value loaded from the DB to return it to the mapper.
         def value_to_mapper(type, value)
             if (type.name == 'String' || type.name == 'Spider::DataTypes::Text')
                 enc = @configuration['encoding']
@@ -283,6 +315,7 @@ module Spider; module Model; module Storage; module Db
             return value
         end
         
+        # Prepares a value that will be used on the DB.
         def prepare_value(type, value)
             case type.name
             when 'String', 'Spider::DataTypes::Text'
@@ -300,6 +333,7 @@ module Spider; module Model; module Storage; module Db
             return value
         end
         
+        # Executes a select query (given in struct form).
         def query(query)
             @last_query = query
             case query[:query_type]
@@ -313,6 +347,7 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
+        # Returns a two element array, containing the SQL for given select query, and the variables to bind.
         def sql_select(query)
             @last_query_type = :select
             bind_vars = query[:bind_vars] || []
@@ -329,10 +364,13 @@ module Spider; module Model; module Storage; module Db
             return sql, bind_vars
         end
         
+        # Returns the SQL for select keys.
         def sql_keys(query)
             query[:keys].join(',')
         end
         
+        # Returns an array containing the 'FROM' part of an SQL query (including joins),
+        # and the bound variables, if any.
         def sql_tables(query)
             values = []
             sql = query[:tables].map{ |table|
@@ -347,6 +385,7 @@ module Spider; module Model; module Storage; module Db
             return [sql, values]
         end
         
+        # Returns SQL and bound variables for joins.
         def sql_tables_join(query, table)
             str = ""
             values = []
@@ -364,7 +403,7 @@ module Spider; module Model; module Storage; module Db
             return str, values
         end
         
-        
+        # Returns SQL and bound variables for a condition.
         def sql_condition(query)
             condition = query[:condition]
             return ['', []] unless (condition && condition[:values])
@@ -389,6 +428,7 @@ module Spider; module Model; module Storage; module Db
             return mapped.select{ |p| p != nil}.join(' '+condition[:conj]+' '), bind_vars
         end
         
+        # Returns the SQL for a condition comparison.
         def sql_condition_value(key, comp, value)
             if (comp.to_s.downcase == 'ilike')
                 comp = 'like'
@@ -417,6 +457,7 @@ module Spider; module Model; module Storage; module Db
         #     return sql
         # end
         
+        # Returns SQL and values for DB joins.
         def sql_joins(joins)
             types = {
                 :inner => 'INNER', :outer => 'OUTER', :left_outer => 'LEFT OUTER', :right_outer => 'RIGHT OUTER'
@@ -434,11 +475,13 @@ module Spider; module Model; module Storage; module Db
             return [sql, values]
         end
         
+        # Returns SQL for the ORDER part.
         def sql_order(query)
             return '' unless query[:order]
             return query[:order].map{|o| "#{o[0]} #{o[1]}"}.join(' ,')
         end
         
+        # Returns the LIMIT and OFFSET SQL.
         def sql_limit(query)
             sql = ""
             sql += "LIMIT #{query[:limit]} " if query[:limit]
@@ -446,6 +489,7 @@ module Spider; module Model; module Storage; module Db
             return sql
         end
         
+        # Returns SQL and values for an insert statement.
         def sql_insert(insert)
             @last_query_type = :insert
             sql = "INSERT INTO #{insert[:table]} (#{insert[:values].keys.join(', ')}) " +
@@ -453,7 +497,7 @@ module Spider; module Model; module Storage; module Db
             return [sql, insert[:values].values]
         end
         
-            
+        # Returns SQL and values for an update statement.
         def sql_update(update)
             @last_query_type = :update
             values = update[:values].values
@@ -465,12 +509,14 @@ module Spider; module Model; module Storage; module Db
             return [sql, values]
         end
         
+        # Returns the COLUMN = val, ... part of an update statement.
         def sql_update_values(update)
             update[:values].map{ |k, v| 
                 "#{k} = ?"
             }.join(', ')
         end
         
+        # Returns SQL and bound values for a DELETE statement.
         def sql_delete(delete, force=false)
             @last_query_type = :delete
             where, bind_vars = sql_condition(delete)
@@ -480,6 +526,7 @@ module Spider; module Model; module Storage; module Db
             return [sql, bind_vars]
         end
         
+        # Returns an array of SQL statements for a create structured description.
         def sql_create_table(create)
             name = create[:table]
             fields = create[:fields]
@@ -498,6 +545,7 @@ module Spider; module Model; module Storage; module Db
             ["CREATE TABLE #{name} (#{sql_fields})"]
         end
         
+        # Returns an array of SQL statements for an alter structured description.
         def sql_alter_table(alter)
             current = alter[:current]
             table_name = alter[:table]
@@ -521,6 +569,7 @@ module Spider; module Model; module Storage; module Db
             return sqls
         end
         
+        # Executes a create table structured description.
         def create_table(create)
             sqls = sql_create_table(create)
             sqls.each do |sql|
@@ -528,6 +577,7 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
+        # Executes an alter table structured description.
         def alter_table(alter)
             sqls = sql_alter_table(alter)
             sqls.each do |sql|
@@ -535,16 +585,19 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
+        # Drops a field from the DB.
         def drop_field(table_name, field_name)
             sqls = sql_drop_field(table_name, field_name)
             sqls.each{ |sql| execute(sql) }
         end
         
+        # Drops a table from the DB.
         def drop_table(table_name)
             sqls = sql_drop_table(table_name)
             sqls.each{ |sql| execute(sql) }
         end
         
+        # Returns the SQL for a field definition (used in create and alter table)
         def sql_table_field(name, type, attributes)
             f = "#{name} #{type}"
             if (type == 'DECIMAL')
@@ -561,22 +614,27 @@ module Spider; module Model; module Storage; module Db
             return f
         end
         
+        # Returns an array of SQL statements to add a field.
         def sql_add_field(table_name, name, type, attributes)
             ["ALTER TABLE #{table_name} ADD #{sql_table_field(name, type, attributes)}"]
         end
         
+        # Returns an array of SQL statements to alter a field.
         def sql_alter_field(table_name, name, type, attributes)
             ["ALTER TABLE #{table_name} MODIFY #{sql_table_field(name, type, attributes)}"]
         end
         
+        # Returns an array of SQL statements to drop a field.
         def sql_drop_field(table_name, field_name)
             ["ALTER TABLE #{table_name} DROP COLUMN #{field_name}"]
         end
         
+        # Returns an array of SQL statements needed to drop a table.
         def sql_drop_table(table_name)
             ["DROP TABLE #{table_name}"]
         end
         
+        # Checks if a DB field is equal to a schema field.
         def schema_field_equal?(current, field)
             attributes = field[:attributes]
             return false unless current[:type] == field[:type] || 
@@ -590,6 +648,8 @@ module Spider; module Model; module Storage; module Db
         end
 
         
+        # Checks if the conversion from a current DB field to a schema field is safe, i.e. can 
+        # be done without loss of data.
         def safe_schema_conversion?(current, field)
             attributes = field[:attributes]
             safe = self.class.safe_conversions
@@ -607,6 +667,7 @@ module Spider; module Model; module Storage; module Db
             return false
         end
         
+        # Shortens a DB name up to length.
         def shorten_identifier(name, length)
             while (name.length > length)
                 parts = name.split('_')
@@ -625,10 +686,12 @@ module Spider; module Model; module Storage; module Db
             return name
         end
         
+        # Returns an array of the table names currently in the DB.
         def list_tables
             raise "Unimplemented"
         end
-
+        
+        # Returns a description of the table as currently present in the DB.
         def describe_table(table)
             raise "Unimplemented"
         end

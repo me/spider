@@ -66,60 +66,60 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000402">new</a></li>
+              <li><a href="#M000388">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000405">[]</a></li>
-              <li><a href="#M000404">[]=</a></li>
-              <li><a href="#M000403">get_deep_obj</a></li>
+              <li><a href="#M000391">[]</a></li>
+              <li><a href="#M000390">[]=</a></li>
+              <li><a href="#M000389">get_deep_obj</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000402'>
-                <a name='M000402'>      </a>
+              <div class='public-class method' id='method-M000388'>
+                <a name='M000388'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(hash=nil)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000402-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000388-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000402-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">hash</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;            <span class="ruby-keyword kw">super</span>()&#x000A;            <span class="ruby-identifier">merge!</span>(<span class="ruby-identifier">hash</span>) <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">hash</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">hash</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000388-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 15</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">hash</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;            <span class="ruby-keyword kw">super</span>()&#x000A;            <span class="ruby-identifier">merge!</span>(<span class="ruby-identifier">hash</span>) <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">hash</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">hash</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000405'>
-                <a name='M000405'>      </a>
+              <div class='public-instance method' id='method-M000391'>
+                <a name='M000391'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]</span>
                   <span class='arguments'>(key)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000405-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000391-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000405-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 41</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-comment cmt"># TODO: deep</span>&#x000A;            <span class="ruby-identifier">key</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">name</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Element</span>&#x000A;            <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_sym</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000391-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 41</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)&#x000A;            <span class="ruby-comment cmt"># TODO: deep</span>&#x000A;            <span class="ruby-identifier">key</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">name</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Element</span>&#x000A;            <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_sym</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000404'>
-                <a name='M000404'>      </a>
+              <div class='public-instance method' id='method-M000390'>
+                <a name='M000390'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]=</span>
                   <span class='arguments'>(key, val)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000404-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000390-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000404-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">BaseModel</span>))&#x000A;                <span class="ruby-identifier">n</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">each_val</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">el</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">n</span>[<span class="ruby-identifier">el</span>] = <span class="ruby-identifier">v</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-identifier">val</span> = <span class="ruby-identifier">n</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">key</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">name</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Element</span>&#x000A;            <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'.'</span>, <span class="ruby-value">2</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_sym</span>, <span class="ruby-identifier">val</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;            <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>] = <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">to_sym</span>&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]] = <span class="ruby-identifier">get_deep_obj</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]].<span class="ruby-identifier">is_a?</span>(<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>)&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]][<span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]] = <span class="ruby-identifier">val</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000390-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">BaseModel</span>))&#x000A;                <span class="ruby-identifier">n</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>&#x000A;                <span class="ruby-identifier">val</span>.<span class="ruby-identifier">each_val</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">el</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">n</span>[<span class="ruby-identifier">el</span>] = <span class="ruby-identifier">v</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-identifier">val</span> = <span class="ruby-identifier">n</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">key</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">name</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Element</span>&#x000A;            <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">'.'</span>, <span class="ruby-value">2</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">key</span>.<span class="ruby-identifier">to_sym</span>, <span class="ruby-identifier">val</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;            <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>] = <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">to_sym</span>&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]] = <span class="ruby-identifier">get_deep_obj</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]].<span class="ruby-identifier">is_a?</span>(<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>)&#x000A;            <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]][<span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]] = <span class="ruby-identifier">val</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000403'>
-                <a name='M000403'>      </a>
+              <div class='public-instance method' id='method-M000389'>
+                <a name='M000389'>      </a>
                 <div class='synopsis'>
                   <span class='name'>get_deep_obj</span>
                   <span class='arguments'>()</span>
@@ -131,10 +131,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000403-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000389-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000403-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_deep_obj</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000389-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model_hash.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_deep_obj</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

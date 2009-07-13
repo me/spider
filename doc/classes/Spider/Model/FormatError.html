@@ -51,11 +51,11 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000667">new</a></li>
+              <li><a href="#M000652">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000668">to_s</a></li>
+              <li><a href="#M000653">to_s</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -78,36 +78,39 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000667'>
-                <a name='M000667'>      </a>
+              <div class='public-class method' id='method-M000652'>
+                <a name='M000652'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(element, value, message)</span>
                 </div>
                 <div class='description'>
                   <p>
-                  Takes an <a href="Element.html">Element</a>, the value, and a message.
+                  Takes an <a href="Element.html">Element</a>, the value, and a message. The
+                  message should be a format specification; it will be %&#8217;d with the
+                  value.
                   </p>
+                  <pre>error = FormatError.new(my_element, 3, &quot;Element value %s is wrong.&quot;)&#x000A;error.to_s  =&gt; &quot;Element value 3 is wrong.&quot;</pre>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000667-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000652-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000667-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 189</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">element</span>, <span class="ruby-identifier">value</span>, <span class="ruby-identifier">message</span>)&#x000A;                <span class="ruby-ivar">@element</span> = <span class="ruby-identifier">element</span>&#x000A;                <span class="ruby-ivar">@message</span> = <span class="ruby-identifier">message</span>&#x000A;                <span class="ruby-ivar">@value</span> = <span class="ruby-identifier">value</span>&#x000A;                <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">message</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000652-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 195</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">element</span>, <span class="ruby-identifier">value</span>, <span class="ruby-identifier">message</span>)&#x000A;                <span class="ruby-ivar">@element</span> = <span class="ruby-identifier">element</span>&#x000A;                <span class="ruby-ivar">@message</span> = <span class="ruby-identifier">message</span>&#x000A;                <span class="ruby-ivar">@value</span> = <span class="ruby-identifier">value</span>&#x000A;                <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">message</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000668'>
-                <a name='M000668'>      </a>
+              <div class='public-instance method' id='method-M000653'>
+                <a name='M000653'>      </a>
                 <div class='synopsis'>
                   <span class='name'>to_s</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000668-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000653-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000668-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 197</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_s</span>&#x000A;                <span class="ruby-ivar">@message</span> <span class="ruby-operator">%</span> <span class="ruby-ivar">@value</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000653-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/model.rb, line 203</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_s</span>&#x000A;                <span class="ruby-ivar">@message</span> <span class="ruby-operator">%</span> <span class="ruby-ivar">@value</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

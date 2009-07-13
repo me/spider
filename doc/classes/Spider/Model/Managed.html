@@ -42,68 +42,56 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            The main superclass of non-legacy models. Extends the <a
+            href="BaseModel.html">BaseModel</a> providing an autoincrementing id, and
+            creation/modification timestamps. Defines the following elements:
+            </p>
+            <pre>element :id, Fixnum, :primary_key =&gt; true,:autoincrement =&gt; true, :read_only =&gt; true, :element_position =&gt; 0}&#x000A;element :obj_created, DateTime, :hidden =&gt; true&#x000A;element :obj_modified, DateTime, :hidden =&gt; true</pre>
+            <p>
+            Other modules may be mixed in to add default functionality to models.
+            </p>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000394">managed?</a></li>
+              <li><a href="#M000380">managed?</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000393">assign_id</a></li>
-              <li><a href="#M000395">before_save</a></li>
+              <li><a href="#M000381">before_save</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000394'>
-                <a name='M000394'>      </a>
+              <div class='public-class method' id='method-M000380'>
+                <a name='M000380'>      </a>
                 <div class='synopsis'>
                   <span class='name'>managed?</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000394-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000380-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000394-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/extended_models/managed.rb, line 23</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">managed?</span>&#x000A;            <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000380-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/extended_models/managed.rb, line 29</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">managed?</span>&#x000A;            <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000393'>
-                <a name='M000393'>      </a>
-                <div class='synopsis'>
-                  <span class='name'>assign_id</span>
-                  <span class='arguments'>(val)</span>
-                </div>
-                <div class='description'>
-                  <p>
-                  def id=(val)
-                  </p>
-                  <pre>raise ModelException, &quot;You can't assign a value to the 'id' element&quot;</pre>
-                  <p>
-                  end
-                  </p>
-                </div>
-                <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000393-source'); return false">
-                    [show source]
-                  </a>
-                  <pre id='M000393-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/extended_models/managed.rb, line 19</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">assign_id</span>(<span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-ivar">@id</span> = <span class="ruby-identifier">val</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
-                </div>
-              </div>
-              <div class='public-instance method' id='method-M000395'>
-                <a name='M000395'>      </a>
+              <div class='public-instance method' id='method-M000381'>
+                <a name='M000381'>      </a>
                 <div class='synopsis'>
                   <span class='name'>before_save</span>
                   <span class='arguments'>(obj, mode)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000395-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000381-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000395-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/extended_models/managed.rb, line 28</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">before_save</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">mode</span>)&#x000A;                <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">obj_created</span> = <span class="ruby-constant">DateTime</span>.<span class="ruby-identifier">now</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">mode</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">:insert</span>&#x000A;                <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">obj_modified</span> = <span class="ruby-constant">DateTime</span>.<span class="ruby-identifier">now</span>&#x000A;                <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000381-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/extended_models/managed.rb, line 34</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">before_save</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">mode</span>)&#x000A;                <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">obj_created</span> = <span class="ruby-constant">DateTime</span>.<span class="ruby-identifier">now</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">mode</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">:insert</span>&#x000A;                <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">obj_modified</span> = <span class="ruby-constant">DateTime</span>.<span class="ruby-identifier">now</span>&#x000A;                <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

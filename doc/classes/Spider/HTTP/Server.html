@@ -46,83 +46,83 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000881">supports?</a></li>
+              <li><a href="#M000863">supports?</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000882">options</a></li>
-              <li><a href="#M000885">request_received</a></li>
-              <li><a href="#M000884">shutdown</a></li>
-              <li><a href="#M000883">start</a></li>
+              <li><a href="#M000864">options</a></li>
+              <li><a href="#M000867">request_received</a></li>
+              <li><a href="#M000866">shutdown</a></li>
+              <li><a href="#M000865">start</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000881'>
-                <a name='M000881'>      </a>
+              <div class='public-class method' id='method-M000863'>
+                <a name='M000863'>      </a>
                 <div class='synopsis'>
                   <span class='name'>supports?</span>
                   <span class='arguments'>(capability)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000881-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000863-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000881-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 12</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">supports?</span>(<span class="ruby-identifier">capability</span>)&#x000A;            <span class="ruby-ivar">@supports</span>[<span class="ruby-identifier">capability</span>]&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000863-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 12</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">supports?</span>(<span class="ruby-identifier">capability</span>)&#x000A;            <span class="ruby-ivar">@supports</span>[<span class="ruby-identifier">capability</span>]&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000882'>
-                <a name='M000882'>      </a>
+              <div class='public-instance method' id='method-M000864'>
+                <a name='M000864'>      </a>
                 <div class='synopsis'>
                   <span class='name'>options</span>
                   <span class='arguments'>(opts={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000882-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000864-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000882-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 17</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">defaults</span> = {&#x000A;                <span class="ruby-identifier">:host</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'0.0.0.0'</span>,&#x000A;                <span class="ruby-identifier">:port</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">8080</span>&#x000A;            }&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">defaults</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000864-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 17</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">options</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-identifier">defaults</span> = {&#x000A;                <span class="ruby-identifier">:host</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'0.0.0.0'</span>,&#x000A;                <span class="ruby-identifier">:port</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">8080</span>&#x000A;            }&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">defaults</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000885'>
-                <a name='M000885'>      </a>
+              <div class='public-instance method' id='method-M000867'>
+                <a name='M000867'>      </a>
                 <div class='synopsis'>
                   <span class='name'>request_received</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000885-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000867-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000885-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 38</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">request_received</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000867-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 38</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">request_received</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000884'>
-                <a name='M000884'>      </a>
+              <div class='public-instance method' id='method-M000866'>
+                <a name='M000866'>      </a>
                 <div class='synopsis'>
                   <span class='name'>shutdown</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000884-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000866-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000884-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 32</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown</span>&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span>(<span class="ruby-value str">&quot;Webserver shutdown&quot;</span>);&#x000A;            <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">shutdown</span> <span class="ruby-comment cmt"># TODO: if we decide to manage clusters, this will have to be moved outside</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000866-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 32</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">shutdown</span>&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span>(<span class="ruby-value str">&quot;Webserver shutdown&quot;</span>);&#x000A;            <span class="ruby-identifier">shutdown_server</span>&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">shutdown</span> <span class="ruby-comment cmt"># TODO: if we decide to manage clusters, this will have to be moved outside</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000883'>
-                <a name='M000883'>      </a>
+              <div class='public-instance method' id='method-M000865'>
+                <a name='M000865'>      </a>
                 <div class='synopsis'>
                   <span class='name'>start</span>
                   <span class='arguments'>(opts={})</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000883-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000865-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000883-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">startup</span> <span class="ruby-comment cmt"># TODO: if we decide to manage clusters, this will have to be moved outside</span>&#x000A;            <span class="ruby-identifier">trap</span>(<span class="ruby-value str">'TERM'</span>) { <span class="ruby-identifier">shutdown</span> }&#x000A;            <span class="ruby-identifier">trap</span>(<span class="ruby-value str">'INT'</span>) { <span class="ruby-identifier">shutdown</span> }&#x000A;            <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000865-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/server.rb, line 25</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start</span>(<span class="ruby-identifier">opts</span>={})&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">startup</span> <span class="ruby-comment cmt"># TODO: if we decide to manage clusters, this will have to be moved outside</span>&#x000A;            <span class="ruby-identifier">trap</span>(<span class="ruby-value str">'TERM'</span>) { <span class="ruby-identifier">shutdown</span> }&#x000A;            <span class="ruby-identifier">trap</span>(<span class="ruby-value str">'INT'</span>) { <span class="ruby-identifier">shutdown</span> }&#x000A;            <span class="ruby-identifier">start_server</span>(<span class="ruby-identifier">opts</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

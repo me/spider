@@ -42,41 +42,56 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            A couple of monkey-patched utility methods.
+            </p>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000015">to_gm_time</a></li>
-              <li><a href="#M000016">to_local_time</a></li>
+              <li><a href="#M000014">to_gm_time</a></li>
+              <li><a href="#M000015">to_local_time</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000015'>
-                <a name='M000015'>      </a>
+              <div class='public-instance method' id='method-M000014'>
+                <a name='M000014'>      </a>
                 <div class='synopsis'>
                   <span class='name'>to_gm_time</span>
                   <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Converts to a <a href="Time.html">Time</a> object in the GMT timezone.
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000014-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000014-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/monkey/date_time.rb, line 7</span>&#x000A;    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_gm_time</span>&#x000A;        <span class="ruby-identifier">to_time</span>(<span class="ruby-identifier">new_offset</span>, <span class="ruby-identifier">:gm</span>)&#x000A;    <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000015'>
+                <a name='M000015'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>to_local_time</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Converts to a <a href="Time.html">Time</a> object in the local timezone.
+                  </p>
                 </div>
                 <div class='source'>
                   <a class='source-toggle' href='#' onclick="toggleCode('M000015-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000015-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/monkey/date_time.rb, line 2</span>&#x000A;  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_gm_time</span>&#x000A;    <span class="ruby-identifier">to_time</span>(<span class="ruby-identifier">new_offset</span>, <span class="ruby-identifier">:gm</span>)&#x000A;  <span class="ruby-keyword kw">end</span></pre>
-                </div>
-              </div>
-              <div class='public-instance method' id='method-M000016'>
-                <a name='M000016'>      </a>
-                <div class='synopsis'>
-                  <span class='name'>to_local_time</span>
-                  <span class='arguments'>()</span>
-                </div>
-                <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000016-source'); return false">
-                    [show source]
-                  </a>
-                  <pre id='M000016-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/monkey/date_time.rb, line 6</span>&#x000A;  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_local_time</span>&#x000A;    <span class="ruby-identifier">to_time</span>(<span class="ruby-identifier">new_offset</span>(<span class="ruby-constant">DateTime</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">offset</span><span class="ruby-operator">-</span><span class="ruby-identifier">offset</span>), <span class="ruby-identifier">:local</span>)&#x000A;  <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000015-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/monkey/date_time.rb, line 12</span>&#x000A;    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_local_time</span>&#x000A;        <span class="ruby-identifier">to_time</span>(<span class="ruby-identifier">new_offset</span>(<span class="ruby-constant">DateTime</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">offset</span><span class="ruby-operator">-</span><span class="ruby-identifier">offset</span>), <span class="ruby-identifier">:local</span>)&#x000A;    <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

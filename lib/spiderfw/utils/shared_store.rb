@@ -1,5 +1,12 @@
 module Spider; module Utils
     
+    # Abstract class for a shared store.
+    # A Shared Store is a Hash which may be accessed by different threads or processes.
+    # The various implementations will offer different persistency/availability.
+    #
+    # *Note:* thread safety is guaranteed only for setting and getting store values. It doesn't 
+    # know about the data contained in the store: if you modify an object hold by the store,
+    # you should ensure thread safety yourself.
     class SharedStore
         
         def self.get(type=nil, config=nil)

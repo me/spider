@@ -46,15 +46,15 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000396">new</a></li>
+              <li><a href="#M000382">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000399">add</a></li>
-              <li><a href="#M000398">find_dependencies</a></li>
-              <li><a href="#M000397">run</a></li>
-              <li><a href="#M000401">tsort_each_child</a></li>
-              <li><a href="#M000400">tsort_each_node</a></li>
+              <li><a href="#M000385">add</a></li>
+              <li><a href="#M000384">find_dependencies</a></li>
+              <li><a href="#M000383">run</a></li>
+              <li><a href="#M000387">tsort_each_child</a></li>
+              <li><a href="#M000386">tsort_each_node</a></li>
             </ol>
           </div>
           <div id='context'>
@@ -68,83 +68,83 @@
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000396'>
-                <a name='M000396'>      </a>
+              <div class='public-class method' id='method-M000382'>
+                <a name='M000382'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>() {|self| ...}</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000396-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000382-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000396-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 8</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-ivar">@objects</span> = {}&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">proc</span>)&#x000A;                <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">current</span>[<span class="ruby-identifier">:unit_of_work</span>] = <span class="ruby-keyword kw">self</span>&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-keyword kw">self</span>&#x000A;                <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">current</span>[<span class="ruby-identifier">:unit_of_work</span>] = <span class="ruby-keyword kw">nil</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000382-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 8</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-ivar">@objects</span> = {}&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">proc</span>)&#x000A;                <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">current</span>[<span class="ruby-identifier">:unit_of_work</span>] = <span class="ruby-keyword kw">self</span>&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-keyword kw">self</span>&#x000A;                <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">current</span>[<span class="ruby-identifier">:unit_of_work</span>] = <span class="ruby-keyword kw">nil</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000399'>
-                <a name='M000399'>      </a>
+              <div class='public-instance method' id='method-M000385'>
+                <a name='M000385'>      </a>
                 <div class='synopsis'>
                   <span class='name'>add</span>
                   <span class='arguments'>(obj)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000399-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000385-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000399-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 48</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">add</span>(<span class="ruby-identifier">obj</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">obj</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">QuerySet</span>)&#x000A;                <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">item</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-ivar">@objects</span>[<span class="ruby-identifier">item</span>.<span class="ruby-identifier">object_id</span>] = <span class="ruby-identifier">item</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-ivar">@objects</span>[<span class="ruby-identifier">obj</span>.<span class="ruby-identifier">object_id</span>] = <span class="ruby-identifier">obj</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000385-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 48</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">add</span>(<span class="ruby-identifier">obj</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">obj</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">QuerySet</span>)&#x000A;                <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">item</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-ivar">@objects</span>[<span class="ruby-identifier">item</span>.<span class="ruby-identifier">object_id</span>] = <span class="ruby-identifier">item</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-ivar">@objects</span>[<span class="ruby-identifier">obj</span>.<span class="ruby-identifier">object_id</span>] = <span class="ruby-identifier">obj</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000398'>
-                <a name='M000398'>      </a>
+              <div class='public-instance method' id='method-M000384'>
+                <a name='M000384'>      </a>
                 <div class='synopsis'>
                   <span class='name'>find_dependencies</span>
                   <span class='arguments'>(model_task)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000398-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000384-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000398-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 35</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">find_dependencies</span>(<span class="ruby-identifier">model_task</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@processed_tasks</span>[<span class="ruby-identifier">model_task</span>])&#x000A;            <span class="ruby-ivar">@processed_tasks</span>[<span class="ruby-identifier">model_task</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-identifier">dependencies</span> = <span class="ruby-identifier">model_task</span>.<span class="ruby-identifier">object</span>.<span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">get_dependencies</span>(<span class="ruby-identifier">model_task</span>.<span class="ruby-identifier">object</span>, <span class="ruby-identifier">model_task</span>.<span class="ruby-identifier">action</span>)&#x000A;            <span class="ruby-identifier">dependencies</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">dep</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">0</span>]] <span class="ruby-operator">||=</span> <span class="ruby-identifier">dep</span>[<span class="ruby-value">0</span>]&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>]] <span class="ruby-operator">||=</span> <span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>]&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">0</span>]] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>]]&#x000A;                <span class="ruby-identifier">find_dependencies</span>(<span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>])&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000384-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 35</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">find_dependencies</span>(<span class="ruby-identifier">model_task</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@processed_tasks</span>[<span class="ruby-identifier">model_task</span>])&#x000A;            <span class="ruby-ivar">@processed_tasks</span>[<span class="ruby-identifier">model_task</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-identifier">dependencies</span> = <span class="ruby-identifier">model_task</span>.<span class="ruby-identifier">object</span>.<span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">get_dependencies</span>(<span class="ruby-identifier">model_task</span>.<span class="ruby-identifier">object</span>, <span class="ruby-identifier">model_task</span>.<span class="ruby-identifier">action</span>)&#x000A;            <span class="ruby-identifier">dependencies</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">dep</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">0</span>]] <span class="ruby-operator">||=</span> <span class="ruby-identifier">dep</span>[<span class="ruby-value">0</span>]&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>]] <span class="ruby-operator">||=</span> <span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>]&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">0</span>]] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>]]&#x000A;                <span class="ruby-identifier">find_dependencies</span>(<span class="ruby-identifier">dep</span>[<span class="ruby-value">1</span>])&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000397'>
-                <a name='M000397'>      </a>
+              <div class='public-instance method' id='method-M000383'>
+                <a name='M000383'>      </a>
                 <div class='synopsis'>
                   <span class='name'>run</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000397-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000383-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000397-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 17</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">run</span>() <span class="ruby-comment cmt">#(&amp;proc)</span>&#x000A;            <span class="ruby-comment cmt">#proc.call</span>&#x000A;            <span class="ruby-ivar">@tasks</span> = {}&#x000A;            <span class="ruby-ivar">@processed_tasks</span> = {}&#x000A;            <span class="ruby-ivar">@objects</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">obj_id</span>, <span class="ruby-identifier">obj</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-keyword kw">next</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">mapper</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">write?</span>&#x000A;                <span class="ruby-identifier">task</span> = <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Model</span><span class="ruby-operator">::</span><span class="ruby-constant">MapperTask</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">:save</span>)&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">task</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">task</span>&#x000A;                <span class="ruby-identifier">find_dependencies</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">tasks</span> = <span class="ruby-identifier">tsort</span>()&#x000A;            <span class="ruby-identifier">tasks</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">task</span><span class="ruby-operator">|</span> <span class="ruby-identifier">p</span> <span class="ruby-identifier">task</span>}&#x000A;            <span class="ruby-identifier">tasks</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">task</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-node">&quot;Executing task #{task.inspect}&quot;</span>)&#x000A;                <span class="ruby-identifier">task</span>.<span class="ruby-identifier">execute</span>()&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000383-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 17</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">run</span>() <span class="ruby-comment cmt">#(&amp;proc)</span>&#x000A;            <span class="ruby-comment cmt">#proc.call</span>&#x000A;            <span class="ruby-ivar">@tasks</span> = {}&#x000A;            <span class="ruby-ivar">@processed_tasks</span> = {}&#x000A;            <span class="ruby-ivar">@objects</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">obj_id</span>, <span class="ruby-identifier">obj</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-keyword kw">next</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">mapper</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">write?</span>&#x000A;                <span class="ruby-identifier">task</span> = <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Model</span><span class="ruby-operator">::</span><span class="ruby-constant">MapperTask</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">:save</span>)&#x000A;                <span class="ruby-ivar">@tasks</span>[<span class="ruby-identifier">task</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">task</span>&#x000A;                <span class="ruby-identifier">find_dependencies</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">tasks</span> = <span class="ruby-identifier">tsort</span>()&#x000A;            <span class="ruby-identifier">tasks</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">task</span><span class="ruby-operator">|</span> <span class="ruby-identifier">p</span> <span class="ruby-identifier">task</span>}&#x000A;            <span class="ruby-identifier">tasks</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">task</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-node">&quot;Executing task #{task.inspect}&quot;</span>)&#x000A;                <span class="ruby-identifier">task</span>.<span class="ruby-identifier">execute</span>()&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000401'>
-                <a name='M000401'>      </a>
+              <div class='public-instance method' id='method-M000387'>
+                <a name='M000387'>      </a>
                 <div class='synopsis'>
                   <span class='name'>tsort_each_child</span>
                   <span class='arguments'>(node, &amp;block)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000401-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000387-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000401-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 63</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tsort_each_child</span>(<span class="ruby-identifier">node</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;            <span class="ruby-identifier">node</span>.<span class="ruby-identifier">dependencies</span>.<span class="ruby-identifier">each</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000387-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 63</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tsort_each_child</span>(<span class="ruby-identifier">node</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;            <span class="ruby-identifier">node</span>.<span class="ruby-identifier">dependencies</span>.<span class="ruby-identifier">each</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000400'>
-                <a name='M000400'>      </a>
+              <div class='public-instance method' id='method-M000386'>
+                <a name='M000386'>      </a>
                 <div class='synopsis'>
                   <span class='name'>tsort_each_node</span>
                   <span class='arguments'>(&amp;block)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000400-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000386-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000400-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tsort_each_node</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;            <span class="ruby-ivar">@tasks</span>.<span class="ruby-identifier">values</span>.<span class="ruby-identifier">each</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000386-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/unit_of_work.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tsort_each_node</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;            <span class="ruby-ivar">@tasks</span>.<span class="ruby-identifier">values</span>.<span class="ruby-identifier">each</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

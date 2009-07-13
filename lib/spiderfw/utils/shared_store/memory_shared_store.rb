@@ -2,6 +2,8 @@ require 'spiderfw/utils/shared_store'
 
 module Spider; module Utils
     
+    # Implementation of the SharedStore in memory.
+    # This is a transient, per-process, thread safe store. (See SharedStore about thread safety).
     class MemorySharedStore < SharedStore
         
         def initialize(config={})

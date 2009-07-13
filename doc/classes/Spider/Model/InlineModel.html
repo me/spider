@@ -42,73 +42,90 @@
       </div>
       <div id='content'>
         <div id='text'>
+          <div id='description'>
+            <p>
+            <a href="BaseModel.html">BaseModel</a> having its data defined in the
+            class. The data must be an array of hashes, and will be handled by the <a
+            href="Mappers/HashMapper.html">Mappers::HashMapper</a>.
+            </p>
+          </div>
           <div id='method-list'>
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000635">data</a></li>
-              <li><a href="#M000634">data=</a></li>
-              <li><a href="#M000636">mapper</a></li>
+              <li><a href="#M000620">data</a></li>
+              <li><a href="#M000619">data=</a></li>
+              <li><a href="#M000621">mapper</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000637">mapper</a></li>
+              <li><a href="#M000622">mapper</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000635'>
-                <a name='M000635'>      </a>
+              <div class='public-class method' id='method-M000620'>
+                <a name='M000620'>      </a>
                 <div class='synopsis'>
                   <span class='name'>data</span>
                   <span class='arguments'>(val=nil)</span>
                 </div>
+                <div class='description'>
+                  <p>
+                  Sets/gets model data.
+                  </p>
+                </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000635-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000620-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000635-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 13</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">data</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;                <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">data</span> = <span class="ruby-identifier">val</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>)&#x000A;                <span class="ruby-ivar">@data</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000620-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 17</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">data</span>(<span class="ruby-identifier">val</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;                <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">data</span> = <span class="ruby-identifier">val</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>)&#x000A;                <span class="ruby-ivar">@data</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000634'>
-                <a name='M000634'>      </a>
+              <div class='public-class method' id='method-M000619'>
+                <a name='M000619'>      </a>
                 <div class='synopsis'>
                   <span class='name'>data=</span>
                   <span class='arguments'>(val)</span>
                 </div>
+                <div class='description'>
+                  <p>
+                  Sets model data.
+                  </p>
+                </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000634-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000619-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000634-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 9</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">data=</span>(<span class="ruby-identifier">val</span>)&#x000A;                <span class="ruby-ivar">@data</span> = <span class="ruby-identifier">val</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000619-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 12</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">data=</span>(<span class="ruby-identifier">val</span>)&#x000A;                <span class="ruby-ivar">@data</span> = <span class="ruby-identifier">val</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000636'>
-                <a name='M000636'>      </a>
+              <div class='public-class method' id='method-M000621'>
+                <a name='M000621'>      </a>
                 <div class='synopsis'>
                   <span class='name'>mapper</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000636-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000621-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000636-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 18</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">mapper</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-constant">Mappers</span><span class="ruby-operator">::</span><span class="ruby-constant">HashMapper</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">data</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000621-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 22</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">mapper</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-constant">Mappers</span><span class="ruby-operator">::</span><span class="ruby-constant">HashMapper</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">data</span>)&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000637'>
-                <a name='M000637'>      </a>
+              <div class='public-instance method' id='method-M000622'>
+                <a name='M000622'>      </a>
                 <div class='synopsis'>
                   <span class='name'>mapper</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000637-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000622-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000637-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">mapper</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">mapper</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000622-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/inline_model.rb, line 28</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">mapper</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">mapper</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

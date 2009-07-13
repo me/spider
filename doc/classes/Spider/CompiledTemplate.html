@@ -46,13 +46,13 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000942">new</a></li>
+              <li><a href="#M000918">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000945">collect_mtimes</a></li>
-              <li><a href="#M000943">init_code</a></li>
-              <li><a href="#M000944">run_code</a></li>
+              <li><a href="#M000921">collect_mtimes</a></li>
+              <li><a href="#M000919">init_code</a></li>
+              <li><a href="#M000920">run_code</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -90,57 +90,57 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000942'>
-                <a name='M000942'>      </a>
+              <div class='public-class method' id='method-M000918'>
+                <a name='M000918'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000942-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000918-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000942-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 384</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>()&#x000A;            <span class="ruby-ivar">@subtemplates</span> = {}&#x000A;            <span class="ruby-ivar">@devel_info</span> = {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000918-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 384</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>()&#x000A;            <span class="ruby-ivar">@subtemplates</span> = {}&#x000A;            <span class="ruby-ivar">@devel_info</span> = {}&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000945'>
-                <a name='M000945'>      </a>
+              <div class='public-instance method' id='method-M000921'>
+                <a name='M000921'>      </a>
                 <div class='synopsis'>
                   <span class='name'>collect_mtimes</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000945-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000921-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000945-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 397</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">collect_mtimes</span>&#x000A;            <span class="ruby-identifier">mtimes</span> = {<span class="ruby-ivar">@source_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">mtime</span>(<span class="ruby-ivar">@source_path</span>)}&#x000A;            <span class="ruby-ivar">@subtemplates</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">id</span>, <span class="ruby-identifier">sub</span><span class="ruby-operator">|</span> <span class="ruby-identifier">mtimes</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">sub</span>.<span class="ruby-identifier">collect_mtimes</span>)}&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">mtimes</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000921-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 397</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">collect_mtimes</span>&#x000A;            <span class="ruby-identifier">mtimes</span> = {<span class="ruby-ivar">@source_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">mtime</span>(<span class="ruby-ivar">@source_path</span>)}&#x000A;            <span class="ruby-ivar">@subtemplates</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">id</span>, <span class="ruby-identifier">sub</span><span class="ruby-operator">|</span> <span class="ruby-identifier">mtimes</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">sub</span>.<span class="ruby-identifier">collect_mtimes</span>)}&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">mtimes</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000943'>
-                <a name='M000943'>      </a>
+              <div class='public-instance method' id='method-M000919'>
+                <a name='M000919'>      </a>
                 <div class='synopsis'>
                   <span class='name'>init_code</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000943-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000919-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000943-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 389</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">init_code</span>&#x000A;            <span class="ruby-ivar">@block</span>.<span class="ruby-identifier">init_code</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000919-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 389</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">init_code</span>&#x000A;            <span class="ruby-ivar">@block</span>.<span class="ruby-identifier">init_code</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000944'>
-                <a name='M000944'>      </a>
+              <div class='public-instance method' id='method-M000920'>
+                <a name='M000920'>      </a>
                 <div class='synopsis'>
                   <span class='name'>run_code</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000944-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000920-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000944-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 393</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">run_code</span>&#x000A;            <span class="ruby-ivar">@block</span>.<span class="ruby-identifier">run_code</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000920-source'><span class="ruby-comment cmt"># File lib/spiderfw/templates/template.rb, line 393</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">run_code</span>&#x000A;            <span class="ruby-ivar">@block</span>.<span class="ruby-identifier">run_code</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

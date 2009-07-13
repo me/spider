@@ -52,16 +52,16 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000669">new</a></li>
+              <li><a href="#M000654">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000670">&lt;&lt;</a></li>
-              <li><a href="#M000674">===</a></li>
-              <li><a href="#M000672">eql?</a></li>
-              <li><a href="#M000671">execute</a></li>
-              <li><a href="#M000673">hash</a></li>
-              <li><a href="#M000675">inspect</a></li>
+              <li><a href="#M000655">&lt;&lt;</a></li>
+              <li><a href="#M000659">===</a></li>
+              <li><a href="#M000657">eql?</a></li>
+              <li><a href="#M000656">execute</a></li>
+              <li><a href="#M000658">hash</a></li>
+              <li><a href="#M000660">inspect</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -89,87 +89,87 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000669'>
-                <a name='M000669'>      </a>
+              <div class='public-class method' id='method-M000654'>
+                <a name='M000654'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(object, action)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000669-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000654-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000669-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 643</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">object</span>, <span class="ruby-identifier">action</span>)&#x000A;            <span class="ruby-ivar">@object</span> = <span class="ruby-identifier">object</span>&#x000A;            <span class="ruby-ivar">@action</span> = <span class="ruby-identifier">action</span>&#x000A;            <span class="ruby-ivar">@dependencies</span> = []&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000654-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 644</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">object</span>, <span class="ruby-identifier">action</span>)&#x000A;            <span class="ruby-ivar">@object</span> = <span class="ruby-identifier">object</span>&#x000A;            <span class="ruby-ivar">@action</span> = <span class="ruby-identifier">action</span>&#x000A;            <span class="ruby-ivar">@dependencies</span> = []&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000670'>
-                <a name='M000670'>      </a>
+              <div class='public-instance method' id='method-M000655'>
+                <a name='M000655'>      </a>
                 <div class='synopsis'>
                   <span class='name'>&lt;&lt;</span>
                   <span class='arguments'>(task)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000670-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000655-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000670-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 649</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">&lt;&lt;</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-ivar">@dependencies</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">task</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000655-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 650</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">&lt;&lt;</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-ivar">@dependencies</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">task</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000674'>
-                <a name='M000674'>      </a>
+              <div class='public-instance method' id='method-M000659'>
+                <a name='M000659'>      </a>
                 <div class='synopsis'>
                   <span class='name'>===</span>
                   <span class='arguments'>(task)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000674-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000659-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000674-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 668</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">===</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">eql?</span>(<span class="ruby-identifier">task</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000659-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 669</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-operator">===</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">eql?</span>(<span class="ruby-identifier">task</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000672'>
-                <a name='M000672'>      </a>
+              <div class='public-instance method' id='method-M000657'>
+                <a name='M000657'>      </a>
                 <div class='synopsis'>
                   <span class='name'>eql?</span>
                   <span class='arguments'>(task)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000672-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000657-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000672-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 658</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">eql?</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">task</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">task</span>.<span class="ruby-identifier">object</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">object</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">task</span>.<span class="ruby-identifier">action</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">action</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000657-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 659</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">eql?</span>(<span class="ruby-identifier">task</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">task</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">task</span>.<span class="ruby-identifier">object</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">object</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">task</span>.<span class="ruby-identifier">action</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">action</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000671'>
-                <a name='M000671'>      </a>
+              <div class='public-instance method' id='method-M000656'>
+                <a name='M000656'>      </a>
                 <div class='synopsis'>
                   <span class='name'>execute</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000671-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000656-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000671-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 653</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">execute</span>()&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span> <span class="ruby-node">&quot;Executing #{@action} on #{@object}&quot;</span>&#x000A;            <span class="ruby-ivar">@object</span>.<span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">execute_action</span>(<span class="ruby-ivar">@action</span>, <span class="ruby-ivar">@object</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000656-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 654</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">execute</span>()&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span> <span class="ruby-node">&quot;Executing #{@action} on #{@object}&quot;</span>&#x000A;            <span class="ruby-ivar">@object</span>.<span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">execute_action</span>(<span class="ruby-ivar">@action</span>, <span class="ruby-ivar">@object</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000673'>
-                <a name='M000673'>      </a>
+              <div class='public-instance method' id='method-M000658'>
+                <a name='M000658'>      </a>
                 <div class='synopsis'>
                   <span class='name'>hash</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000673-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000658-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000673-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 664</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">hash</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-ivar">@object</span>.<span class="ruby-identifier">hash</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@action</span>.<span class="ruby-identifier">hash</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000658-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 665</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">hash</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-ivar">@object</span>.<span class="ruby-identifier">hash</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@action</span>.<span class="ruby-identifier">hash</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000675'>
-                <a name='M000675'>      </a>
+              <div class='public-instance method' id='method-M000660'>
+                <a name='M000660'>      </a>
                 <div class='synopsis'>
                   <span class='name'>inspect</span>
                   <span class='arguments'>()</span>
@@ -184,10 +184,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000675-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000660-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000675-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 676</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">inspect</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@action</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@object</span>)&#x000A;                <span class="ruby-identifier">str</span> = <span class="ruby-node">&quot;#{@action} on #{@object} (#{object.class})\n&quot;</span>&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@dependencies</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>)&#x000A;                    <span class="ruby-identifier">str</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot;-dependencies:\n&quot;</span>&#x000A;                    <span class="ruby-ivar">@dependencies</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">dep</span><span class="ruby-operator">|</span>&#x000A;                        <span class="ruby-identifier">str</span> <span class="ruby-operator">+=</span> <span class="ruby-node">&quot;---#{dep.action} on #{dep.object}\n&quot;</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-identifier">str</span> = <span class="ruby-value str">&quot;Root Task&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">str</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000660-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mappers/mapper.rb, line 677</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">inspect</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@action</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@object</span>)&#x000A;                <span class="ruby-identifier">str</span> = <span class="ruby-node">&quot;#{@action} on #{@object} (#{object.class})\n&quot;</span>&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@dependencies</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>)&#x000A;                    <span class="ruby-identifier">str</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot;-dependencies:\n&quot;</span>&#x000A;                    <span class="ruby-ivar">@dependencies</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">dep</span><span class="ruby-operator">|</span>&#x000A;                        <span class="ruby-identifier">str</span> <span class="ruby-operator">+=</span> <span class="ruby-node">&quot;---#{dep.action} on #{dep.object}\n&quot;</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-identifier">str</span> = <span class="ruby-value str">&quot;Root Task&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">str</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

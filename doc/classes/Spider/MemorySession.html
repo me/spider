@@ -46,83 +46,83 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M001139">[]</a></li>
-              <li><a href="#M001138">[]=</a></li>
-              <li><a href="#M001140">purge</a></li>
-              <li><a href="#M001137">setup</a></li>
+              <li><a href="#M001112">[]</a></li>
+              <li><a href="#M001111">[]=</a></li>
+              <li><a href="#M001113">purge</a></li>
+              <li><a href="#M001110">setup</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M001141">restore</a></li>
+              <li><a href="#M001114">restore</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M001139'>
-                <a name='M001139'>      </a>
+              <div class='public-class method' id='method-M001112'>
+                <a name='M001112'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]</span>
                   <span class='arguments'>(sid)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001139-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001112-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001139-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 27</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">sid</span>)&#x000A;                <span class="ruby-identifier">check_purge</span>&#x000A;                <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span>{&#x000A;                    <span class="ruby-ivar">@sessions</span>[<span class="ruby-identifier">sid</span>] <span class="ruby-operator">?</span> <span class="ruby-ivar">@sessions</span>[<span class="ruby-identifier">sid</span>][<span class="ruby-identifier">:data</span>] <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>&#x000A;                }&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001112-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 27</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">sid</span>)&#x000A;                <span class="ruby-identifier">check_purge</span>&#x000A;                <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span>{&#x000A;                    <span class="ruby-ivar">@sessions</span>[<span class="ruby-identifier">sid</span>] <span class="ruby-operator">?</span> <span class="ruby-ivar">@sessions</span>[<span class="ruby-identifier">sid</span>][<span class="ruby-identifier">:data</span>] <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>&#x000A;                }&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M001138'>
-                <a name='M001138'>      </a>
+              <div class='public-class method' id='method-M001111'>
+                <a name='M001111'>      </a>
                 <div class='synopsis'>
                   <span class='name'>[]=</span>
                   <span class='arguments'>(sid, data)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001138-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001111-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001138-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 18</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">sid</span>, <span class="ruby-identifier">data</span>)&#x000A;                <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span> {&#x000A;                    <span class="ruby-ivar">@sessions</span>[<span class="ruby-identifier">sid</span>] = {&#x000A;                        <span class="ruby-identifier">:data</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">data</span>,&#x000A;                        <span class="ruby-identifier">:mtime</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>&#x000A;                    }&#x000A;                }&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001111-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 18</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">sid</span>, <span class="ruby-identifier">data</span>)&#x000A;                <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span> {&#x000A;                    <span class="ruby-ivar">@sessions</span>[<span class="ruby-identifier">sid</span>] = {&#x000A;                        <span class="ruby-identifier">:data</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">data</span>,&#x000A;                        <span class="ruby-identifier">:mtime</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>&#x000A;                    }&#x000A;                }&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M001140'>
-                <a name='M001140'>      </a>
+              <div class='public-class method' id='method-M001113'>
+                <a name='M001113'>      </a>
                 <div class='synopsis'>
                   <span class='name'>purge</span>
                   <span class='arguments'>(life)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001140-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001113-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001140-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 34</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">purge</span>(<span class="ruby-identifier">life</span>)&#x000A;                <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span>{&#x000A;                    <span class="ruby-ivar">@sessions</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sid</span>, <span class="ruby-identifier">session</span><span class="ruby-operator">|</span>&#x000A;                        <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">session</span>[<span class="ruby-identifier">:mtime</span>] <span class="ruby-operator">+</span> <span class="ruby-identifier">life</span> <span class="ruby-operator">&lt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>)&#x000A;                            <span class="ruby-ivar">@sessions</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">sid</span>)&#x000A;                        <span class="ruby-keyword kw">end</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                }&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001113-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 34</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">purge</span>(<span class="ruby-identifier">life</span>)&#x000A;                <span class="ruby-ivar">@mutex</span>.<span class="ruby-identifier">synchronize</span>{&#x000A;                    <span class="ruby-ivar">@sessions</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sid</span>, <span class="ruby-identifier">session</span><span class="ruby-operator">|</span>&#x000A;                        <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">session</span>[<span class="ruby-identifier">:mtime</span>] <span class="ruby-operator">+</span> <span class="ruby-identifier">life</span> <span class="ruby-operator">&lt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>)&#x000A;                            <span class="ruby-ivar">@sessions</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">sid</span>)&#x000A;                        <span class="ruby-keyword kw">end</span>&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                }&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M001137'>
-                <a name='M001137'>      </a>
+              <div class='public-class method' id='method-M001110'>
+                <a name='M001110'>      </a>
                 <div class='synopsis'>
                   <span class='name'>setup</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001137-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001110-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001137-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 10</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setup</span>&#x000A;                <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@sessions</span>&#x000A;                    <span class="ruby-ivar">@mutex</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Mutex</span>.<span class="ruby-identifier">new</span>&#x000A;                    <span class="ruby-ivar">@sessions</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001110-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 10</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setup</span>&#x000A;                <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@sessions</span>&#x000A;                    <span class="ruby-ivar">@mutex</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Mutex</span>.<span class="ruby-identifier">new</span>&#x000A;                    <span class="ruby-ivar">@sessions</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;                <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M001141'>
-                <a name='M001141'>      </a>
+              <div class='public-instance method' id='method-M001114'>
+                <a name='M001114'>      </a>
                 <div class='synopsis'>
                   <span class='name'>restore</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001141-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001114-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001141-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 47</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">restore</span>&#x000A;            <span class="ruby-identifier">sess</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>[<span class="ruby-ivar">@sid</span>] <span class="ruby-operator">||</span> {}&#x000A;            <span class="ruby-ivar">@data</span> = <span class="ruby-identifier">sess</span>[<span class="ruby-identifier">:data</span>]&#x000A;            <span class="ruby-ivar">@mtime</span> = <span class="ruby-identifier">sess</span>[<span class="ruby-identifier">:mtime</span>]&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001114-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/session/memory_session.rb, line 47</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">restore</span>&#x000A;            <span class="ruby-identifier">sess</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>[<span class="ruby-ivar">@sid</span>] <span class="ruby-operator">||</span> {}&#x000A;            <span class="ruby-ivar">@data</span> = <span class="ruby-identifier">sess</span>[<span class="ruby-identifier">:data</span>]&#x000A;            <span class="ruby-ivar">@mtime</span> = <span class="ruby-identifier">sess</span>[<span class="ruby-identifier">:mtime</span>]&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

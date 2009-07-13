@@ -46,83 +46,83 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000632">element</a></li>
-              <li><a href="#M000630">prefix</a></li>
-              <li><a href="#M000631">proxied</a></li>
-              <li><a href="#M000629">proxy</a></li>
+              <li><a href="#M000617">element</a></li>
+              <li><a href="#M000615">prefix</a></li>
+              <li><a href="#M000616">proxied</a></li>
+              <li><a href="#M000614">proxy</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000633">method_missing</a></li>
+              <li><a href="#M000618">method_missing</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000632'>
-                <a name='M000632'>      </a>
+              <div class='public-class method' id='method-M000617'>
+                <a name='M000617'>      </a>
                 <div class='synopsis'>
                   <span class='name'>element</span>
                   <span class='arguments'>(name, type, attributes={}, &amp;proc)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000632-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000617-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000632-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">element</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">type</span>, <span class="ruby-identifier">attributes</span>={}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-identifier">define_method</span>(<span class="ruby-identifier">name</span>) <span class="ruby-keyword kw">do</span>&#x000A;                <span class="ruby-ivar">@proxied</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">define_method</span>(<span class="ruby-node">&quot;#{name}=&quot;</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">val</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-ivar">@proxied</span>.<span class="ruby-identifier">send</span>(<span class="ruby-node">&quot;#{name}=&quot;</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000617-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 21</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">element</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">type</span>, <span class="ruby-identifier">attributes</span>={}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-identifier">define_method</span>(<span class="ruby-identifier">name</span>) <span class="ruby-keyword kw">do</span>&#x000A;                <span class="ruby-ivar">@proxied</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">define_method</span>(<span class="ruby-node">&quot;#{name}=&quot;</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">val</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-ivar">@proxied</span>.<span class="ruby-identifier">send</span>(<span class="ruby-node">&quot;#{name}=&quot;</span>, <span class="ruby-identifier">val</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000630'>
-                <a name='M000630'>      </a>
+              <div class='public-class method' id='method-M000615'>
+                <a name='M000615'>      </a>
                 <div class='synopsis'>
                   <span class='name'>prefix</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000630-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000615-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000630-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 13</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">prefix</span>&#x000A;            <span class="ruby-ivar">@prefix</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000615-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 13</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">prefix</span>&#x000A;            <span class="ruby-ivar">@prefix</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000631'>
-                <a name='M000631'>      </a>
+              <div class='public-class method' id='method-M000616'>
+                <a name='M000616'>      </a>
                 <div class='synopsis'>
                   <span class='name'>proxied</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000631-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000616-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000631-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 17</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">proxied</span>&#x000A;            <span class="ruby-ivar">@proxied</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000616-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 17</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">proxied</span>&#x000A;            <span class="ruby-ivar">@proxied</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000629'>
-                <a name='M000629'>      </a>
+              <div class='public-class method' id='method-M000614'>
+                <a name='M000614'>      </a>
                 <div class='synopsis'>
                   <span class='name'>proxy</span>
                   <span class='arguments'>(prefix, proxied)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000629-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000614-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000629-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">proxy</span>(<span class="ruby-identifier">prefix</span>, <span class="ruby-identifier">proxied</span>)&#x000A;            <span class="ruby-ivar">@prefix</span> = <span class="ruby-identifier">prefix</span>&#x000A;            <span class="ruby-ivar">@proxied</span> = <span class="ruby-identifier">proxied</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000614-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 7</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">proxy</span>(<span class="ruby-identifier">prefix</span>, <span class="ruby-identifier">proxied</span>)&#x000A;            <span class="ruby-ivar">@prefix</span> = <span class="ruby-identifier">prefix</span>&#x000A;            <span class="ruby-ivar">@proxied</span> = <span class="ruby-identifier">proxied</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000633'>
-                <a name='M000633'>      </a>
+              <div class='public-instance method' id='method-M000618'>
+                <a name='M000618'>      </a>
                 <div class='synopsis'>
                   <span class='name'>method_missing</span>
                   <span class='arguments'>(method, *arguments)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000633-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000618-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000633-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 31</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">method_missing</span>(<span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">arguments</span>)&#x000A;            <span class="ruby-identifier">proxied</span>.<span class="ruby-identifier">send</span>(<span class="ruby-node">&quot;#{@prefix}#{method}&quot;</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">arguments</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000618-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/proxy_model.rb, line 31</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">method_missing</span>(<span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">arguments</span>)&#x000A;            <span class="ruby-identifier">proxied</span>.<span class="ruby-identifier">send</span>(<span class="ruby-node">&quot;#{@prefix}#{method}&quot;</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">arguments</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

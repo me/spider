@@ -42,12 +42,20 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000375">included</a></li>
+              <li><a href="#M000360">included</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000376">before_save</a></li>
+              <li><a href="#M000361">before_save</a></li>
             </ol>
+          </div>
+          <div id='context'>
+            <div id='includes'>
+              <h2>Included modules</h2>
+              <ol>
+                <li><a href="VersionNumber.html">VersionNumber</a></li>
+              </ol>
+            </div>
           </div>
           <div id='section'>
             <div id='class-list'>
@@ -56,31 +64,31 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000375'>
-                <a name='M000375'>      </a>
+              <div class='public-class method' id='method-M000360'>
+                <a name='M000360'>      </a>
                 <div class='synopsis'>
                   <span class='name'>included</span>
                   <span class='arguments'>(model)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000375-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000360-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000375-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mixins/optimistic_locking.rb, line 4</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">included</span>(<span class="ruby-identifier">model</span>)&#x000A;            <span class="ruby-identifier">model</span>.<span class="ruby-identifier">element</span>(<span class="ruby-identifier">:version</span>, <span class="ruby-constant">Fixnum</span>, <span class="ruby-identifier">:auto</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-keyword kw">true</span>, <span class="ruby-identifier">:lazy</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">:version</span>)&#x000A;            <span class="ruby-identifier">model</span>.<span class="ruby-identifier">extend</span>(<span class="ruby-constant">ClassMethods</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000360-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mixins/optimistic_locking.rb, line 6</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">included</span>(<span class="ruby-identifier">model</span>)&#x000A;            <span class="ruby-identifier">model</span>.<span class="ruby-identifier">element</span>(<span class="ruby-identifier">:version</span>, <span class="ruby-constant">Fixnum</span>, <span class="ruby-identifier">:auto</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-keyword kw">true</span>, <span class="ruby-identifier">:lazy</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">:version</span>)&#x000A;            <span class="ruby-identifier">model</span>.<span class="ruby-identifier">extend</span>(<span class="ruby-constant">ClassMethods</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000376'>
-                <a name='M000376'>      </a>
+              <div class='public-instance method' id='method-M000361'>
+                <a name='M000361'>      </a>
                 <div class='synopsis'>
                   <span class='name'>before_save</span>
-                  <span class='arguments'>(save_mode)</span>
+                  <span class='arguments'>(obj, mode)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000376-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000361-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000376-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mixins/optimistic_locking.rb, line 9</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">before_save</span>(<span class="ruby-identifier">save_mode</span>)&#x000A;            <span class="ruby-identifier">curr_version</span> = <span class="ruby-identifier">get</span>(<span class="ruby-identifier">:version</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span> <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">curr_version</span>)&#x000A;            <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">lock_exc</span>(<span class="ruby-keyword kw">self</span>)&#x000A;            <span class="ruby-identifier">cond</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">elements_array</span>.<span class="ruby-identifier">select</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">el</span><span class="ruby-operator">|</span> <span class="ruby-identifier">el</span>.<span class="ruby-identifier">primary_key?</span> }.<span class="ruby-identifier">inject</span>({}){ <span class="ruby-operator">|</span><span class="ruby-identifier">h</span>, <span class="ruby-identifier">key</span><span class="ruby-operator">|</span> <span class="ruby-identifier">h</span>[<span class="ruby-identifier">key</span>.<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">get</span>(<span class="ruby-identifier">key</span>) }&#x000A;            <span class="ruby-identifier">cond</span>[<span class="ruby-identifier">:version</span>] = <span class="ruby-identifier">curr_version</span>&#x000A;            <span class="ruby-identifier">current</span> = <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">find</span>(<span class="ruby-constant">Query</span>.<span class="ruby-identifier">new</span>({<span class="ruby-identifier">:version</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-keyword kw">true</span>}, <span class="ruby-identifier">cond</span>))&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">current</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&lt;</span> <span class="ruby-value">1</span>) &#x000A;                <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">unlock</span>(<span class="ruby-keyword kw">self</span>)&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-constant">OptimisticLockException</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">unlock</span>(<span class="ruby-keyword kw">self</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000361-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/mixins/optimistic_locking.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">before_save</span>(<span class="ruby-identifier">obj</span>, <span class="ruby-identifier">mode</span>)&#x000A;            <span class="ruby-identifier">version</span> = <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">:version_number</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span> <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">version</span>)&#x000A;            <span class="ruby-identifier">current_obj</span> = <span class="ruby-identifier">obj</span>.<span class="ruby-identifier">get_new</span>&#x000A;            <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">lock_exc</span>(<span class="ruby-keyword kw">self</span>)&#x000A;            <span class="ruby-identifier">current_version</span> = <span class="ruby-identifier">current_obj</span>.<span class="ruby-identifier">get</span>(<span class="ruby-identifier">:version_number</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">current</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&lt;</span> <span class="ruby-value">1</span>) &#x000A;                <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">unlock</span>(<span class="ruby-keyword kw">self</span>)&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-constant">OptimisticLockException</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-identifier">mapper</span>.<span class="ruby-identifier">unlock</span>(<span class="ruby-keyword kw">self</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

@@ -1,9 +1,11 @@
 module Spider
 
     # The DataType module, if included by a Class, allows to use it as an element type in a Model.
-    # The Class must be a subclass of a base type (see #Model.base_types), and allow to be initialized
+    # The Class must be a subclass of a base type (see Spider::Model.base_types), and allow to be initialized
     # passing the superclass instance as the only parameter; or, it must define maps_to, and override
     # the from_value method.
+    #
+    # Extends the including class with ClassMethods.
     
     module DataType
         @maps_to = nil
@@ -46,6 +48,7 @@ module Spider
         end
         
         # Returns the DataType attributes, as set in the Model Element.
+        # (See ClassMethods.take_attributes).
         def attributes
             @attributes ||= {}
         end

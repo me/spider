@@ -46,14 +46,14 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M001125">new</a></li>
+              <li><a href="#M001098">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M001127">body</a></li>
-              <li><a href="#M001126">body=</a></li>
-              <li><a href="#M001129">path</a></li>
-              <li><a href="#M001128">read_body</a></li>
+              <li><a href="#M001100">body</a></li>
+              <li><a href="#M001099">body=</a></li>
+              <li><a href="#M001102">path</a></li>
+              <li><a href="#M001101">read_body</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -143,48 +143,48 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M001125'>
-                <a name='M001125'>      </a>
+              <div class='public-class method' id='method-M001098'>
+                <a name='M001098'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(env)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001125-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001098-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001125-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">env</span>)&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-value str">&quot;REQUEST:&quot;</span>)&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-identifier">env</span>)&#x000A;            <span class="ruby-ivar">@env</span> = <span class="ruby-identifier">env</span>&#x000A;            <span class="ruby-ivar">@locale</span> = <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">locale</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001098-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 11</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">env</span>)&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-value str">&quot;REQUEST:&quot;</span>)&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-identifier">env</span>)&#x000A;            <span class="ruby-ivar">@env</span> = <span class="ruby-identifier">env</span>&#x000A;            <span class="ruby-ivar">@locale</span> = <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">locale</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M001127'>
-                <a name='M001127'>      </a>
+              <div class='public-instance method' id='method-M001100'>
+                <a name='M001100'>      </a>
                 <div class='synopsis'>
                   <span class='name'>body</span>
                   <span class='arguments'>() {|buf| ...}</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001127-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001100-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001127-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 22</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">body</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">b</span> = <span class="ruby-ivar">@body</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>) <span class="ruby-operator">?</span> <span class="ruby-constant">StringIO</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@body</span>) <span class="ruby-operator">:</span> <span class="ruby-ivar">@body</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">b</span>&#x000A;            <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">buf</span> = <span class="ruby-identifier">b</span>.<span class="ruby-identifier">read</span>(<span class="ruby-constant">BUFSIZE</span>))&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">buf</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001100-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 22</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">body</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-identifier">b</span> = <span class="ruby-ivar">@body</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>) <span class="ruby-operator">?</span> <span class="ruby-constant">StringIO</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@body</span>) <span class="ruby-operator">:</span> <span class="ruby-ivar">@body</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">b</span>&#x000A;            <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">buf</span> = <span class="ruby-identifier">b</span>.<span class="ruby-identifier">read</span>(<span class="ruby-constant">BUFSIZE</span>))&#x000A;                <span class="ruby-keyword kw">yield</span> <span class="ruby-identifier">buf</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M001126'>
-                <a name='M001126'>      </a>
+              <div class='public-instance method' id='method-M001099'>
+                <a name='M001099'>      </a>
                 <div class='synopsis'>
                   <span class='name'>body=</span>
                   <span class='arguments'>(b)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001126-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001099-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001126-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 18</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">body=</span>(<span class="ruby-identifier">b</span>)&#x000A;            <span class="ruby-ivar">@body</span> = <span class="ruby-identifier">b</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001099-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 18</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">body=</span>(<span class="ruby-identifier">b</span>)&#x000A;            <span class="ruby-ivar">@body</span> = <span class="ruby-identifier">b</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M001129'>
-                <a name='M001129'>      </a>
+              <div class='public-instance method' id='method-M001102'>
+                <a name='M001102'>      </a>
                 <div class='synopsis'>
                   <span class='name'>path</span>
                   <span class='arguments'>()</span>
@@ -195,23 +195,23 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001129-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001102-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001129-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 40</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">path</span>&#x000A;            <span class="ruby-ivar">@action</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001102-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 40</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">path</span>&#x000A;            <span class="ruby-ivar">@action</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M001128'>
-                <a name='M001128'>      </a>
+              <div class='public-instance method' id='method-M001101'>
+                <a name='M001101'>      </a>
                 <div class='synopsis'>
                   <span class='name'>read_body</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M001128-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M001101-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M001128-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 30</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">read_body</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-ivar">@body</span> <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@body</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>)&#x000A;            <span class="ruby-identifier">b</span> = <span class="ruby-value str">''</span>&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">body</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">buf</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">b</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">buf</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@body</span> = <span class="ruby-identifier">b</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M001101-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/request.rb, line 30</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">read_body</span>&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-ivar">@body</span> <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@body</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>)&#x000A;            <span class="ruby-identifier">b</span> = <span class="ruby-value str">''</span>&#x000A;            <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">body</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">buf</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">b</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">buf</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@body</span> = <span class="ruby-identifier">b</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

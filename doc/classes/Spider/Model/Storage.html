@@ -81,7 +81,7 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000191">get_storage</a></li>
+              <li><a href="#M000177">get_storage</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -97,17 +97,17 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000191'>
-                <a name='M000191'>      </a>
+              <div class='public-class method' id='method-M000177'>
+                <a name='M000177'>      </a>
                 <div class='synopsis'>
                   <span class='name'>get_storage</span>
                   <span class='arguments'>(type, url)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000191-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000177-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000191-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage.rb, line 6</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_storage</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">url</span>)&#x000A;            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'db'</span>&#x000A;                <span class="ruby-identifier">adapter</span> = <span class="ruby-identifier">url</span>.<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/^(.+?):\/\//</span>)[<span class="ruby-value">1</span>]&#x000A;                <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">adapter</span>&#x000A;                <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'sqlite'</span>&#x000A;                    <span class="ruby-identifier">storage</span> = <span class="ruby-constant">Db</span><span class="ruby-operator">::</span><span class="ruby-constant">SQLite</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">url</span>)&#x000A;                <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'oci8'</span>&#x000A;                    <span class="ruby-identifier">storage</span> = <span class="ruby-constant">Db</span><span class="ruby-operator">::</span><span class="ruby-constant">OCI8</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">url</span>)&#x000A;                <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'mysql'</span>&#x000A;                    <span class="ruby-identifier">storage</span> = <span class="ruby-constant">Db</span><span class="ruby-operator">::</span><span class="ruby-constant">Mysql</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">url</span>)&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000177-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/storage.rb, line 6</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_storage</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">url</span>)&#x000A;            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">type</span>&#x000A;            <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'db'</span>&#x000A;                <span class="ruby-identifier">adapter</span> = <span class="ruby-identifier">url</span>.<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/^(.+?):\/\//</span>)[<span class="ruby-value">1</span>]&#x000A;                <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">adapter</span>&#x000A;                <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'sqlite'</span>&#x000A;                    <span class="ruby-identifier">storage</span> = <span class="ruby-constant">Db</span><span class="ruby-operator">::</span><span class="ruby-constant">SQLite</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">url</span>)&#x000A;                <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'oci8'</span>&#x000A;                    <span class="ruby-identifier">storage</span> = <span class="ruby-constant">Db</span><span class="ruby-operator">::</span><span class="ruby-constant">OCI8</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">url</span>)&#x000A;                <span class="ruby-keyword kw">when</span> <span class="ruby-value str">'mysql'</span>&#x000A;                    <span class="ruby-identifier">storage</span> = <span class="ruby-constant">Db</span><span class="ruby-operator">::</span><span class="ruby-constant">Mysql</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">url</span>)&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

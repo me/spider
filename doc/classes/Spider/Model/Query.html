@@ -54,19 +54,19 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000381">new</a></li>
-              <li><a href="#M000380">where</a></li>
+              <li><a href="#M000368">new</a></li>
+              <li><a href="#M000367">where</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000389">clone</a></li>
-              <li><a href="#M000382">condition=</a></li>
-              <li><a href="#M000388">only_polymorphs</a></li>
-              <li><a href="#M000384">order_by</a></li>
-              <li><a href="#M000383">request=</a></li>
-              <li><a href="#M000385">select</a></li>
-              <li><a href="#M000386">where</a></li>
-              <li><a href="#M000387">with_polymorph</a></li>
+              <li><a href="#M000376">clone</a></li>
+              <li><a href="#M000369">condition=</a></li>
+              <li><a href="#M000375">only_polymorphs</a></li>
+              <li><a href="#M000371">order_by</a></li>
+              <li><a href="#M000370">request=</a></li>
+              <li><a href="#M000372">select</a></li>
+              <li><a href="#M000373">where</a></li>
+              <li><a href="#M000374">with_polymorph</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -127,8 +127,8 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000381'>
-                <a name='M000381'>      </a>
+              <div class='public-class method' id='method-M000368'>
+                <a name='M000368'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(condition = nil, request=nil, &amp;proc)</span>
@@ -141,14 +141,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000381-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000368-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000381-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 29</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">condition</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">request</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;           <span class="ruby-ivar">@condition</span> = <span class="ruby-identifier">condition</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Condition</span>) <span class="ruby-operator">?</span> <span class="ruby-identifier">condition</span> <span class="ruby-operator">:</span> <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">condition</span>)&#x000A;           <span class="ruby-ivar">@request</span> = <span class="ruby-identifier">request</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Request</span>) <span class="ruby-operator">?</span> <span class="ruby-identifier">request</span> <span class="ruby-operator">:</span> <span class="ruby-constant">Request</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">request</span>)&#x000A;           <span class="ruby-ivar">@polymorphs</span> = []&#x000A;           <span class="ruby-ivar">@order</span> = []&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">proc</span>)&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000368-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 29</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">condition</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">request</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;           <span class="ruby-ivar">@condition</span> = <span class="ruby-identifier">condition</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Condition</span>) <span class="ruby-operator">?</span> <span class="ruby-identifier">condition</span> <span class="ruby-operator">:</span> <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">condition</span>)&#x000A;           <span class="ruby-ivar">@request</span> = <span class="ruby-identifier">request</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Request</span>) <span class="ruby-operator">?</span> <span class="ruby-identifier">request</span> <span class="ruby-operator">:</span> <span class="ruby-constant">Request</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">request</span>)&#x000A;           <span class="ruby-ivar">@polymorphs</span> = []&#x000A;           <span class="ruby-ivar">@order</span> = []&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">proc</span>)&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000380'>
-                <a name='M000380'>      </a>
+              <div class='public-class method' id='method-M000367'>
+                <a name='M000367'>      </a>
                 <div class='synopsis'>
                   <span class='name'>where</span>
                   <span class='arguments'>(*params)</span>
@@ -159,15 +159,15 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000380-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000367-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000380-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">where</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">params</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>.<span class="ruby-identifier">condition</span>.<span class="ruby-identifier">where</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">params</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000367-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">where</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">params</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>.<span class="ruby-identifier">condition</span>.<span class="ruby-identifier">where</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">params</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000389'>
-                <a name='M000389'>      </a>
+              <div class='public-instance method' id='method-M000376'>
+                <a name='M000376'>      </a>
                 <div class='synopsis'>
                   <span class='name'>clone</span>
                   <span class='arguments'>()</span>
@@ -178,14 +178,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000389-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000376-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000389-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 124</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">clone</span>&#x000A;           <span class="ruby-identifier">cl</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@condition</span>.<span class="ruby-identifier">clone</span>, <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">clone</span>)&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">order</span> = <span class="ruby-ivar">@order</span>.<span class="ruby-identifier">clone</span>&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">offset</span> = <span class="ruby-ivar">@offset</span>&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">limit</span> = <span class="ruby-ivar">@limit</span>&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">polymorphs</span> = <span class="ruby-ivar">@polymorphs</span>.<span class="ruby-identifier">clone</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">cl</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000376-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 124</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">clone</span>&#x000A;           <span class="ruby-identifier">cl</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@condition</span>.<span class="ruby-identifier">clone</span>, <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">clone</span>)&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">order</span> = <span class="ruby-ivar">@order</span>.<span class="ruby-identifier">clone</span>&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">offset</span> = <span class="ruby-ivar">@offset</span>&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">limit</span> = <span class="ruby-ivar">@limit</span>&#x000A;           <span class="ruby-identifier">cl</span>.<span class="ruby-identifier">polymorphs</span> = <span class="ruby-ivar">@polymorphs</span>.<span class="ruby-identifier">clone</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">cl</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000382'>
-                <a name='M000382'>      </a>
+              <div class='public-instance method' id='method-M000369'>
+                <a name='M000369'>      </a>
                 <div class='synopsis'>
                   <span class='name'>condition=</span>
                   <span class='arguments'>(val)</span>
@@ -197,14 +197,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000382-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000369-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000382-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 40</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">condition=</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Condition</span>))&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">else</span>&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-identifier">val</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000369-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 40</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">condition=</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Condition</span>))&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">else</span>&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-identifier">val</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000388'>
-                <a name='M000388'>      </a>
+              <div class='public-instance method' id='method-M000375'>
+                <a name='M000375'>      </a>
                 <div class='synopsis'>
                   <span class='name'>only_polymorphs</span>
                   <span class='arguments'>()</span>
@@ -212,18 +212,18 @@
                 <div class='description'>
                   <p>
                   Requests only polymorphs. (see <a
-                  href="Request.html#M000627">Request#only_polymorphs</a>)
+                  href="Request.html#M000612">Request#only_polymorphs</a>)
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000388-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000375-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000388-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 111</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">only_polymorphs</span>&#x000A;           <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">only_polymorphs</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000375-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 111</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">only_polymorphs</span>&#x000A;           <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">only_polymorphs</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000384'>
-                <a name='M000384'>      </a>
+              <div class='public-instance method' id='method-M000371'>
+                <a name='M000371'>      </a>
                 <div class='synopsis'>
                   <span class='name'>order_by</span>
                   <span class='arguments'>(*elements)</span>
@@ -249,14 +249,14 @@
                   <pre>query.order_by(:element, :desc)&#x000A;query.order_by('name desc', :rating)</pre>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000384-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000371-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000384-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 65</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">order_by</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">elements</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">elements</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">2</span> <span class="ruby-operator">&amp;&amp;</span> [<span class="ruby-identifier">:asc</span>, <span class="ruby-identifier">:desc</span>].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">elements</span>[<span class="ruby-value">1</span>]))&#x000A;               <span class="ruby-ivar">@order</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">elements</span>&#x000A;               <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-identifier">elements</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span>&#x000A;               <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">l</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>))&#x000A;                   <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">l</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">' '</span>)&#x000A;                   <span class="ruby-identifier">name</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]&#x000A;                   <span class="ruby-identifier">order</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;               <span class="ruby-keyword kw">else</span>&#x000A;                   <span class="ruby-identifier">parts</span> = [<span class="ruby-identifier">l</span>, <span class="ruby-identifier">:asc</span>]&#x000A;               <span class="ruby-keyword kw">end</span>&#x000A;               <span class="ruby-ivar">@order</span> <span class="ruby-operator">&lt;&lt;</span> [<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>], <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]]&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000371-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 65</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">order_by</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">elements</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">elements</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">2</span> <span class="ruby-operator">&amp;&amp;</span> [<span class="ruby-identifier">:asc</span>, <span class="ruby-identifier">:desc</span>].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">elements</span>[<span class="ruby-value">1</span>]))&#x000A;               <span class="ruby-ivar">@order</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">elements</span>&#x000A;               <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-identifier">elements</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span>&#x000A;               <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">l</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>))&#x000A;                   <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">l</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">' '</span>)&#x000A;                   <span class="ruby-identifier">name</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]&#x000A;                   <span class="ruby-identifier">order</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;               <span class="ruby-keyword kw">else</span>&#x000A;                   <span class="ruby-identifier">parts</span> = [<span class="ruby-identifier">l</span>, <span class="ruby-identifier">:asc</span>]&#x000A;               <span class="ruby-keyword kw">end</span>&#x000A;               <span class="ruby-ivar">@order</span> <span class="ruby-operator">&lt;&lt;</span> [<span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>], <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]]&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000383'>
-                <a name='M000383'>      </a>
+              <div class='public-instance method' id='method-M000370'>
+                <a name='M000370'>      </a>
                 <div class='synopsis'>
                   <span class='name'>request=</span>
                   <span class='arguments'>(val)</span>
@@ -268,14 +268,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000383-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000370-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000383-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 49</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">request=</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Request</span>))&#x000A;               <span class="ruby-ivar">@request</span> = <span class="ruby-constant">Request</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">else</span>&#x000A;               <span class="ruby-ivar">@request</span> = <span class="ruby-identifier">val</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000370-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 49</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">request=</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Request</span>))&#x000A;               <span class="ruby-ivar">@request</span> = <span class="ruby-constant">Request</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">val</span>)&#x000A;           <span class="ruby-keyword kw">else</span>&#x000A;               <span class="ruby-ivar">@request</span> = <span class="ruby-identifier">val</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000385'>
-                <a name='M000385'>      </a>
+              <div class='public-instance method' id='method-M000372'>
+                <a name='M000372'>      </a>
                 <div class='synopsis'>
                   <span class='name'>select</span>
                   <span class='arguments'>(*elements)</span>
@@ -286,14 +286,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000385-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000372-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000385-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 84</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">select</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">elements</span>)&#x000A;           <span class="ruby-identifier">elements</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">element</span><span class="ruby-operator">|</span>&#x000A;               <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">request</span>(<span class="ruby-identifier">element</span>.<span class="ruby-identifier">to_s</span>)&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000372-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 84</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">select</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">elements</span>)&#x000A;           <span class="ruby-identifier">elements</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">element</span><span class="ruby-operator">|</span>&#x000A;               <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">request</span>(<span class="ruby-identifier">element</span>.<span class="ruby-identifier">to_s</span>)&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000386'>
-                <a name='M000386'>      </a>
+              <div class='public-instance method' id='method-M000373'>
+                <a name='M000373'>      </a>
                 <div class='synopsis'>
                   <span class='name'>where</span>
                   <span class='arguments'>(condition=nil, &amp;proc)</span>
@@ -306,14 +306,14 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000386-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000373-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000386-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 92</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">where</span>(<span class="ruby-identifier">condition</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;           <span class="ruby-identifier">condition</span> = <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>) <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">condition</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">condition</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">String</span>)&#x000A;               <span class="ruby-ivar">@condition</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">condition</span>&#x000A;           <span class="ruby-keyword kw">else</span>&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-identifier">condition</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000373-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 92</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">where</span>(<span class="ruby-identifier">condition</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;           <span class="ruby-identifier">condition</span> = <span class="ruby-constant">Condition</span>.<span class="ruby-identifier">new</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>) <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">condition</span>)&#x000A;           <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">condition</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">String</span>)&#x000A;               <span class="ruby-ivar">@condition</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">condition</span>&#x000A;           <span class="ruby-keyword kw">else</span>&#x000A;               <span class="ruby-ivar">@condition</span> = <span class="ruby-identifier">condition</span>&#x000A;           <span class="ruby-keyword kw">end</span>&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000387'>
-                <a name='M000387'>      </a>
+              <div class='public-instance method' id='method-M000374'>
+                <a name='M000374'>      </a>
                 <div class='synopsis'>
                   <span class='name'>with_polymorph</span>
                   <span class='arguments'>(type, request=nil)</span>
@@ -324,10 +324,10 @@
                   </p>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000387-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000374-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000387-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 103</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">with_polymorph</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">request</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;           <span class="ruby-identifier">query</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">query</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">query</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>)&#x000A;           <span class="ruby-ivar">@polymorphs</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">type</span>&#x000A;           <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">with_polymorphs</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">request</span>)&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000374-source'><span class="ruby-comment cmt"># File lib/spiderfw/model/query.rb, line 103</span>&#x000A;       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">with_polymorph</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">request</span>=<span class="ruby-keyword kw">nil</span>)&#x000A;           <span class="ruby-identifier">query</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">query</span>) <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">query</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>)&#x000A;           <span class="ruby-ivar">@polymorphs</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">type</span>&#x000A;           <span class="ruby-ivar">@request</span>.<span class="ruby-identifier">with_polymorphs</span>(<span class="ruby-identifier">type</span>, <span class="ruby-identifier">request</span>)&#x000A;           <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>&#x000A;       <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

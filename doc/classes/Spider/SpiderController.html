@@ -46,23 +46,23 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000923">route_app</a></li>
+              <li><a href="#M000905">route_app</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000923'>
-                <a name='M000923'>      </a>
+              <div class='public-class method' id='method-M000905'>
+                <a name='M000905'>      </a>
                 <div class='synopsis'>
                   <span class='name'>route_app</span>
                   <span class='arguments'>(app)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000923-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000905-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000923-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/spider_controller.rb, line 5</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">route_app</span>(<span class="ruby-identifier">app</span>)&#x000A;            <span class="ruby-comment cmt">#app_path = app.name.gsub('::', '/')</span>&#x000A;            <span class="ruby-identifier">app_path</span> = <span class="ruby-identifier">app</span>.<span class="ruby-identifier">route_url</span>&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-node">&quot;ROUTING #{app_path} TO #{app.controller}&quot;</span>)&#x000A;            <span class="ruby-identifier">route</span>(<span class="ruby-identifier">app_path</span>, <span class="ruby-identifier">app</span>.<span class="ruby-identifier">controller</span>, <span class="ruby-identifier">:ignore_case</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-keyword kw">true</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000905-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/spider_controller.rb, line 5</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">route_app</span>(<span class="ruby-identifier">app</span>)&#x000A;            <span class="ruby-comment cmt">#app_path = app.name.gsub('::', '/')</span>&#x000A;            <span class="ruby-identifier">app_path</span> = <span class="ruby-identifier">app</span>.<span class="ruby-identifier">route_url</span>&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-node">&quot;ROUTING #{app_path} TO #{app.controller}&quot;</span>)&#x000A;            <span class="ruby-identifier">route</span>(<span class="ruby-identifier">app_path</span>, <span class="ruby-identifier">app</span>.<span class="ruby-identifier">controller</span>, <span class="ruby-identifier">:ignore_case</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-keyword kw">true</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

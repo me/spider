@@ -46,97 +46,97 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000886">new</a></li>
+              <li><a href="#M000868">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000891">flush</a></li>
-              <li><a href="#M000889">headers_sent?</a></li>
-              <li><a href="#M000888">send_headers</a></li>
-              <li><a href="#M000890">set_body_io</a></li>
-              <li><a href="#M000887">write</a></li>
+              <li><a href="#M000873">flush</a></li>
+              <li><a href="#M000871">headers_sent?</a></li>
+              <li><a href="#M000870">send_headers</a></li>
+              <li><a href="#M000872">set_body_io</a></li>
+              <li><a href="#M000869">write</a></li>
             </ol>
           </div>
           <div id='section'>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000886'>
-                <a name='M000886'>      </a>
+              <div class='public-class method' id='method-M000868'>
+                <a name='M000868'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(response, controller_response, w)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000886-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000868-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000886-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 19</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">response</span>, <span class="ruby-identifier">controller_response</span>, <span class="ruby-identifier">w</span>)&#x000A;            <span class="ruby-ivar">@response</span> = <span class="ruby-identifier">response</span>&#x000A;            <span class="ruby-ivar">@controller_response</span> = <span class="ruby-identifier">controller_response</span>&#x000A;            <span class="ruby-ivar">@w</span> = <span class="ruby-identifier">w</span>&#x000A;            <span class="ruby-ivar">@headers_sent</span> = <span class="ruby-keyword kw">false</span>&#x000A;            <span class="ruby-ivar">@rack_thread</span> = <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">current</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000868-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 19</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">response</span>, <span class="ruby-identifier">controller_response</span>, <span class="ruby-identifier">w</span>)&#x000A;            <span class="ruby-ivar">@response</span> = <span class="ruby-identifier">response</span>&#x000A;            <span class="ruby-ivar">@controller_response</span> = <span class="ruby-identifier">controller_response</span>&#x000A;            <span class="ruby-ivar">@w</span> = <span class="ruby-identifier">w</span>&#x000A;            <span class="ruby-ivar">@headers_sent</span> = <span class="ruby-keyword kw">false</span>&#x000A;            <span class="ruby-ivar">@rack_thread</span> = <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">current</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000891'>
-                <a name='M000891'>      </a>
+              <div class='public-instance method' id='method-M000873'>
+                <a name='M000873'>      </a>
                 <div class='synopsis'>
                   <span class='name'>flush</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000891-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000873-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000891-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">flush</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000873-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 59</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">flush</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000889'>
-                <a name='M000889'>      </a>
+              <div class='public-instance method' id='method-M000871'>
+                <a name='M000871'>      </a>
                 <div class='synopsis'>
                   <span class='name'>headers_sent?</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000889-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000871-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000889-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 48</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">headers_sent?</span>&#x000A;            <span class="ruby-ivar">@headers_sent</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000871-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 48</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">headers_sent?</span>&#x000A;            <span class="ruby-ivar">@headers_sent</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000888'>
-                <a name='M000888'>      </a>
+              <div class='public-instance method' id='method-M000870'>
+                <a name='M000870'>      </a>
                 <div class='synopsis'>
                   <span class='name'>send_headers</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000888-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000870-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000888-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 32</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">send_headers</span>&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-value str">&quot;---SENDING HEADERS----&quot;</span>)&#x000A;            <span class="ruby-ivar">@controller_response</span>.<span class="ruby-identifier">prepare_headers</span>&#x000A;            <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:status</span>] = <span class="ruby-ivar">@controller_response</span>.<span class="ruby-identifier">status</span>&#x000A;            <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:headers</span>] = {}&#x000A;            <span class="ruby-ivar">@controller_response</span>.<span class="ruby-identifier">headers</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>))&#x000A;                    <span class="ruby-identifier">val</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:headers</span>][<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span> }&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:headers</span>][<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">val</span>.<span class="ruby-identifier">to_s</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@headers_sent</span> = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-ivar">@rack_thread</span>.<span class="ruby-identifier">run</span> <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'webserver.force_threads'</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000870-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 32</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">send_headers</span>&#x000A;            <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">Logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-value str">&quot;---SENDING HEADERS----&quot;</span>)&#x000A;            <span class="ruby-ivar">@controller_response</span>.<span class="ruby-identifier">prepare_headers</span>&#x000A;            <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:status</span>] = <span class="ruby-ivar">@controller_response</span>.<span class="ruby-identifier">status</span>&#x000A;            <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:headers</span>] = {}&#x000A;            <span class="ruby-ivar">@controller_response</span>.<span class="ruby-identifier">headers</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key</span>, <span class="ruby-identifier">val</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>))&#x000A;                    <span class="ruby-identifier">val</span>.<span class="ruby-identifier">each</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:headers</span>][<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span> }&#x000A;                <span class="ruby-keyword kw">else</span>&#x000A;                    <span class="ruby-ivar">@response</span>[<span class="ruby-identifier">:headers</span>][<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">val</span>.<span class="ruby-identifier">to_s</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@headers_sent</span> = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-ivar">@rack_thread</span>.<span class="ruby-identifier">run</span> <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">conf</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'webserver.force_threads'</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000890'>
-                <a name='M000890'>      </a>
+              <div class='public-instance method' id='method-M000872'>
+                <a name='M000872'>      </a>
                 <div class='synopsis'>
                   <span class='name'>set_body_io</span>
                   <span class='arguments'>(io)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000890-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000872-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000890-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 52</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set_body_io</span>(<span class="ruby-identifier">io</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">headers_sent?</span>&#x000A;            <span class="ruby-ivar">@response</span>.<span class="ruby-identifier">body</span> = <span class="ruby-identifier">io</span>&#x000A;            <span class="ruby-identifier">send_headers</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000872-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 52</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set_body_io</span>(<span class="ruby-identifier">io</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">headers_sent?</span>&#x000A;            <span class="ruby-ivar">@response</span>.<span class="ruby-identifier">body</span> = <span class="ruby-identifier">io</span>&#x000A;            <span class="ruby-identifier">send_headers</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-instance method' id='method-M000887'>
-                <a name='M000887'>      </a>
+              <div class='public-instance method' id='method-M000869'>
+                <a name='M000869'>      </a>
                 <div class='synopsis'>
                   <span class='name'>write</span>
                   <span class='arguments'>(msg)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000887-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000869-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000887-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 27</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write</span>(<span class="ruby-identifier">msg</span>)&#x000A;            <span class="ruby-identifier">send_headers</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@headers_sent</span>&#x000A;            <span class="ruby-ivar">@w</span>.<span class="ruby-identifier">write</span>(<span class="ruby-identifier">msg</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000869-source'><span class="ruby-comment cmt"># File lib/spiderfw/http/adapters/rack.rb, line 27</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write</span>(<span class="ruby-identifier">msg</span>)&#x000A;            <span class="ruby-identifier">send_headers</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@headers_sent</span>&#x000A;            <span class="ruby-ivar">@w</span>.<span class="ruby-identifier">write</span>(<span class="ruby-identifier">msg</span>)&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

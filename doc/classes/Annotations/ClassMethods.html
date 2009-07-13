@@ -44,11 +44,11 @@
             <ol>
               <li><a href="#M000025">__</a></li>
               <li><a href="#M000026">___</a></li>
-              <li><a href="#M000028">annotate</a></li>
-              <li><a href="#M000029">define_annotation</a></li>
-              <li><a href="#M000030">defined_annotations</a></li>
-              <li><a href="#M000031">find_defined_annotation</a></li>
-              <li><a href="#M000027">method_added</a></li>
+              <li><a href="#M000027">annotate</a></li>
+              <li><a href="#M000024">annotations</a></li>
+              <li><a href="#M000028">define_annotation</a></li>
+              <li><a href="#M000029">defined_annotations</a></li>
+              <li><a href="#M000030">find_defined_annotation</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -58,13 +58,18 @@
                 <a name='M000025'>      </a>
                 <div class='synopsis'>
                   <span class='name'>__</span>
-                  <span class='arguments'>(m_name=nil, &amp;proc)</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Annotates the next method.
+                  </p>
                 </div>
                 <div class='source'>
                   <a class='source-toggle' href='#' onclick="toggleCode('M000025-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000025-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 71</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">__</span>(<span class="ruby-identifier">m_name</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-ivar">@annotator</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Annotator</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>).<span class="ruby-identifier">single</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000025-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 112</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">__</span>()&#x000A;            <span class="ruby-ivar">@annotator</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Annotator</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>).<span class="ruby-identifier">single</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <div class='public-instance method' id='method-M000026'>
@@ -73,76 +78,109 @@
                   <span class='name'>___</span>
                   <span class='arguments'>()</span>
                 </div>
+                <div class='description'>
+                  <p>
+                  Annotates all the following methods, until the end of the Class/Module.
+                  </p>
+                </div>
                 <div class='source'>
                   <a class='source-toggle' href='#' onclick="toggleCode('M000026-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000026-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 75</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">___</span>()&#x000A;            <span class="ruby-ivar">@annotator</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Annotator</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>).<span class="ruby-identifier">multiple</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
-                </div>
-              </div>
-              <div class='public-instance method' id='method-M000028'>
-                <a name='M000028'>      </a>
-                <div class='synopsis'>
-                  <span class='name'>annotate</span>
-                  <span class='arguments'>(method, name, *args)</span>
-                </div>
-                <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000028-source'); return false">
-                    [show source]
-                  </a>
-                  <pre id='M000028-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 92</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">annotate</span>(<span class="ruby-identifier">method</span>, <span class="ruby-identifier">name</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)&#x000A;            <span class="ruby-ivar">@annotations</span> <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>] <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">args</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>)&#x000A;                <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">name</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-keyword kw">elsif</span> (<span class="ruby-identifier">args</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;                <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">args</span>[<span class="ruby-value">0</span>]&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">args</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">ann</span> = <span class="ruby-identifier">find_defined_annotation</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">ann</span>)&#x000A;                <span class="ruby-identifier">ann</span>.<span class="ruby-identifier">call</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
-                </div>
-              </div>
-              <div class='public-instance method' id='method-M000029'>
-                <a name='M000029'>      </a>
-                <div class='synopsis'>
-                  <span class='name'>define_annotation</span>
-                  <span class='arguments'>(name, &amp;proc)</span>
-                </div>
-                <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000029-source'); return false">
-                    [show source]
-                  </a>
-                  <pre id='M000029-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 108</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">define_annotation</span>(<span class="ruby-identifier">name</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-ivar">@defined_annotations</span> <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-ivar">@defined_annotations</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">proc</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@annotations</span>)&#x000A;                <span class="ruby-ivar">@annotations</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">method</span>, <span class="ruby-identifier">n</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">proc</span>.<span class="ruby-identifier">call</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">n</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">n</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">name</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
-                </div>
-              </div>
-              <div class='public-instance method' id='method-M000030'>
-                <a name='M000030'>      </a>
-                <div class='synopsis'>
-                  <span class='name'>defined_annotations</span>
-                  <span class='arguments'>()</span>
-                </div>
-                <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000030-source'); return false">
-                    [show source]
-                  </a>
-                  <pre id='M000030-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 118</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">defined_annotations</span>&#x000A;            <span class="ruby-ivar">@defined_annotations</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
-                </div>
-              </div>
-              <div class='public-instance method' id='method-M000031'>
-                <a name='M000031'>      </a>
-                <div class='synopsis'>
-                  <span class='name'>find_defined_annotation</span>
-                  <span class='arguments'>(name)</span>
-                </div>
-                <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000031-source'); return false">
-                    [show source]
-                  </a>
-                  <pre id='M000031-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 122</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">find_defined_annotation</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Module</span>&#x000A;            <span class="ruby-identifier">k</span> = <span class="ruby-keyword kw">self</span>&#x000A;            <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">k</span> <span class="ruby-operator">!=</span> <span class="ruby-constant">Object</span>)&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">k</span> <span class="ruby-operator">&lt;</span> <span class="ruby-constant">Annotations</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">defined_annotations</span>[<span class="ruby-identifier">name</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">defined_annotations</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">defined_annotations</span>[<span class="ruby-identifier">name</span>]&#x000A;                <span class="ruby-identifier">k</span> = <span class="ruby-identifier">k</span>.<span class="ruby-identifier">superclass</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000026-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 117</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">___</span>()&#x000A;            <span class="ruby-ivar">@annotator</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Annotator</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>).<span class="ruby-identifier">multiple</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <div class='public-instance method' id='method-M000027'>
                 <a name='M000027'>      </a>
                 <div class='synopsis'>
-                  <span class='name'>method_added</span>
-                  <span class='arguments'>(name)</span>
+                  <span class='name'>annotate</span>
+                  <span class='arguments'>(method, name, *args)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Explicitly annotates a method
+                  </p>
                 </div>
                 <div class='source'>
                   <a class='source-toggle' href='#' onclick="toggleCode('M000027-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000027-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 79</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">method_added</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">super</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@annotator</span>&#x000A;            <span class="ruby-ivar">@annotations</span> <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">name</span>] <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-ivar">@annotator</span>.<span class="ruby-identifier">pending</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key</span>, <span class="ruby-identifier">args</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">annotate</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">key</span>, <span class="ruby-identifier">args</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-ivar">@annotator</span>.<span class="ruby-identifier">clear_pending</span>&#x000A;            <span class="ruby-comment cmt"># debugger</span>&#x000A;            <span class="ruby-comment cmt"># self.method(name).annotations = @annotations[name]</span>&#x000A;            <span class="ruby-keyword kw">super</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000027-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 135</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">annotate</span>(<span class="ruby-identifier">method</span>, <span class="ruby-identifier">name</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)&#x000A;            <span class="ruby-ivar">@annotations</span> <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>] <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">args</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>)&#x000A;                <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">name</span>] = <span class="ruby-keyword kw">true</span>&#x000A;            <span class="ruby-keyword kw">elsif</span> (<span class="ruby-identifier">args</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>))&#x000A;                <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">args</span>[<span class="ruby-value">0</span>]&#x000A;            <span class="ruby-keyword kw">else</span>&#x000A;                <span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">args</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">ann</span> = <span class="ruby-identifier">find_defined_annotation</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">ann</span>)&#x000A;                <span class="ruby-identifier">ann</span>.<span class="ruby-identifier">call</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000024'>
+                <a name='M000024'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>annotations</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Returns the @annotations Hash.
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000024-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000024-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 107</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">annotations</span>&#x000A;            <span class="ruby-ivar">@annotations</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000028'>
+                <a name='M000028'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>define_annotation</span>
+                  <span class='arguments'>(name, &amp;proc)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Defines an annotation. The given block will be called whenever the name
+                  annotation is encountered; it will be passed the current <a
+                  href="../Class.html">Class</a>, the annotated Method, and the annotation
+                  arguments.
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000028-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000028-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 153</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">define_annotation</span>(<span class="ruby-identifier">name</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">proc</span>)&#x000A;            <span class="ruby-ivar">@defined_annotations</span> <span class="ruby-operator">||=</span> {}&#x000A;            <span class="ruby-ivar">@defined_annotations</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">proc</span>&#x000A;            <span class="ruby-keyword kw">if</span> (<span class="ruby-ivar">@annotations</span>)&#x000A;                <span class="ruby-ivar">@annotations</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">method</span>, <span class="ruby-identifier">n</span><span class="ruby-operator">|</span>&#x000A;                    <span class="ruby-identifier">proc</span>.<span class="ruby-identifier">call</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-ivar">@annotations</span>[<span class="ruby-identifier">method</span>][<span class="ruby-identifier">n</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">n</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">name</span>&#x000A;                <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000029'>
+                <a name='M000029'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>defined_annotations</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Returns the Hash of defined annotations.
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000029-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000029-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 164</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">defined_annotations</span>&#x000A;            <span class="ruby-ivar">@defined_annotations</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000030'>
+                <a name='M000030'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>find_defined_annotation</span>
+                  <span class='arguments'>(name)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Searches for a defined annotation in class and ancestors.
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000030-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000030-source'><span class="ruby-comment cmt"># File lib/spiderfw/utils/annotations.rb, line 169</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">find_defined_annotation</span>(<span class="ruby-identifier">name</span>)&#x000A;            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Module</span>&#x000A;            <span class="ruby-identifier">k</span> = <span class="ruby-keyword kw">self</span>&#x000A;            <span class="ruby-keyword kw">while</span> (<span class="ruby-identifier">k</span> <span class="ruby-operator">!=</span> <span class="ruby-constant">Object</span>)&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">k</span> <span class="ruby-operator">&lt;</span> <span class="ruby-constant">Annotations</span>&#x000A;                <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">defined_annotations</span>[<span class="ruby-identifier">name</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">defined_annotations</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">defined_annotations</span>[<span class="ruby-identifier">name</span>]&#x000A;                <span class="ruby-identifier">k</span> = <span class="ruby-identifier">k</span>.<span class="ruby-identifier">superclass</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>

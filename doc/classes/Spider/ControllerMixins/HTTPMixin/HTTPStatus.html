@@ -46,12 +46,12 @@
             <h2>Methods</h2>
             <h3>public class</h3>
             <ol>
-              <li><a href="#M000756">method_missing</a></li>
-              <li><a href="#M000757">new</a></li>
+              <li><a href="#M000738">method_missing</a></li>
+              <li><a href="#M000739">new</a></li>
             </ol>
             <h3>public instance</h3>
             <ol>
-              <li><a href="#M000758">status_message</a></li>
+              <li><a href="#M000740">status_message</a></li>
             </ol>
           </div>
           <div id='section'>
@@ -69,44 +69,44 @@
             </div>
             <div id='methods'>
               <h2>Public class methods</h2>
-              <div class='public-class method' id='method-M000756'>
-                <a name='M000756'>      </a>
+              <div class='public-class method' id='method-M000738'>
+                <a name='M000738'>      </a>
                 <div class='synopsis'>
                   <span class='name'>method_missing</span>
                   <span class='arguments'>(meth, *args)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000756-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000738-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000756-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/mixins/http_mixin.rb, line 169</span>&#x000A;                <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">method_missing</span>(<span class="ruby-identifier">meth</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)&#x000A;                    <span class="ruby-keyword kw">if</span> (<span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span><span class="ruby-operator">::</span><span class="ruby-constant">StatusCodes</span>.<span class="ruby-identifier">const_defined?</span>(<span class="ruby-identifier">meth</span>))&#x000A;                        <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">new</span>(<span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span><span class="ruby-operator">::</span><span class="ruby-constant">StatusCodes</span>.<span class="ruby-identifier">const_get</span>(<span class="ruby-identifier">meth</span>))&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                    <span class="ruby-keyword kw">super</span>&#x000A;                <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000738-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/mixins/http_mixin.rb, line 169</span>&#x000A;                <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">method_missing</span>(<span class="ruby-identifier">meth</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)&#x000A;                    <span class="ruby-keyword kw">if</span> (<span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span><span class="ruby-operator">::</span><span class="ruby-constant">StatusCodes</span>.<span class="ruby-identifier">const_defined?</span>(<span class="ruby-identifier">meth</span>))&#x000A;                        <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">new</span>(<span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span><span class="ruby-operator">::</span><span class="ruby-constant">StatusCodes</span>.<span class="ruby-identifier">const_get</span>(<span class="ruby-identifier">meth</span>))&#x000A;                    <span class="ruby-keyword kw">end</span>&#x000A;                    <span class="ruby-keyword kw">super</span>&#x000A;                <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
-              <div class='public-class method' id='method-M000757'>
-                <a name='M000757'>      </a>
+              <div class='public-class method' id='method-M000739'>
+                <a name='M000739'>      </a>
                 <div class='synopsis'>
                   <span class='name'>new</span>
                   <span class='arguments'>(code)</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000757-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000739-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000757-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/mixins/http_mixin.rb, line 180</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">code</span>)&#x000A;                <span class="ruby-ivar">@code</span> = <span class="ruby-identifier">code</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000739-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/mixins/http_mixin.rb, line 180</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">code</span>)&#x000A;                <span class="ruby-ivar">@code</span> = <span class="ruby-identifier">code</span>&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
               <h2>Public instance methods</h2>
-              <div class='public-instance method' id='method-M000758'>
-                <a name='M000758'>      </a>
+              <div class='public-instance method' id='method-M000740'>
+                <a name='M000740'>      </a>
                 <div class='synopsis'>
                   <span class='name'>status_message</span>
                   <span class='arguments'>()</span>
                 </div>
                 <div class='source'>
-                  <a class='source-toggle' href='#' onclick="toggleCode('M000758-source'); return false">
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000740-source'); return false">
                     [show source]
                   </a>
-                  <pre id='M000758-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/mixins/http_mixin.rb, line 184</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">status_message</span>&#x000A;                <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span>.<span class="ruby-identifier">status_messages</span>[<span class="ruby-ivar">@code</span>]&#x000A;            <span class="ruby-keyword kw">end</span></pre>
+                  <pre id='M000740-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/mixins/http_mixin.rb, line 184</span>&#x000A;            <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">status_message</span>&#x000A;                <span class="ruby-constant">Spider</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span>.<span class="ruby-identifier">status_messages</span>[<span class="ruby-ivar">@code</span>]&#x000A;            <span class="ruby-keyword kw">end</span></pre>
                 </div>
               </div>
             </div>
