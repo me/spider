@@ -9,8 +9,15 @@ module Spider
         @base_types = [
             String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool
         ]
-        class <<self; attr_reader :base_types; end
         
+        # Base types are String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool
+        # These types must be handled by all mappers.
+        def self.base_types
+            @base_types
+        end
+        
+        # Returns the base type corresponding to class. Will walk superclasses and DataType info until
+        # a base type is found.
         def self.base_type(klass)
             k = klass
             while (k && !base_types.include?(k))
@@ -19,7 +26,8 @@ module Spider
             return k
         end
         
-        def self.ruby_type(klass)
+        # TODO: remove?
+        def self.ruby_type(klass) #:nodoc:
             map_types = {
                 Spider::DataTypes::Text => String,
                 Spider::DataTypes::Bool => FalseClass,
@@ -29,7 +37,8 @@ module Spider
             return klass
         end
         
-        def self.simplify_type(klass)
+        # An iteration in the search for base type.
+        def self.simplify_type(klass) #:nodoc:
             map_types = {
                 
             }
@@ -40,11 +49,12 @@ module Spider
             return nil
         end
         
-        
-        def self.unit_of_work
+        # FIXME: Tread global variables are no good in no-threaded mode
+        def self.unit_of_work #:nodoc:
             Thread.current[:unit_of_work]
         end
         
+        # Returns the identity-mapped object
         def self.get(model, val)
             if (!val.is_a?(Hash))
                 if (model.primary_keys.length == 1)
@@ -60,6 +70,7 @@ module Spider
             end
         end
         
+        # Puts an object into tje IdentityMapper
         def self.put(obj, check=false)
             if (identity_mapper)
                 return identity_mapper.put(obj, check)
@@ -68,20 +79,23 @@ module Spider
             end
         end
         
-        
-        def self.identity_mapper
+        # FIXME: no good
+        def self.identity_mapper #:nodoc:
             Thread.current[:identity_mapper]
         end
         
-        def self.identity_mapper=(im)
+        # FIXME: no good
+        def self.identity_mapper=(im) #:nodoc:
             Thread.current[:identity_mapper] = im
         end
         
-        def self.with_unit_of_work(&proc)
+        # Creates a new unit of work with the proc
+        def self.with_unit_of_work(&proc) #:nodoc: TODO: test
             return if unit_of_work
             UnitOfWork.new(&proc)
         end
         
+        # Executes the block in the context of the main IdentityMapper.
         def self.with_identity_mapper(&proc)
             if identity_mapper
                 yield identity_mapper
@@ -92,7 +106,10 @@ module Spider
             end
         end
         
-        def self.sync_schema(model_or_app, force=false, options={})
+        # Syncs the schema with the storage.
+        #--
+        # FIXME: this is clearly db specific. Move somewhere else.
+        def self.sync_schema(model_or_app, force=false, options={}) #:nodoc:
             models = []
             mod = const_get_full(model_or_app)
             if (mod.is_a?(Module) && mod.include?(Spider::App))
@@ -132,6 +149,7 @@ module Spider
             end
         end
         
+        # Load YAML data
         def self.load_fixtures(file)
             if (file =~ /\.([^\.]+)$/)
                 extension = $1
@@ -157,19 +175,25 @@ module Spider
             end
         end
         
+        # Generic Model error.
+        
         class ModelException < RuntimeError
         end
+        
+        # Error raised when data can't be accepted.
         
         class FormatError < ::FormatError
             attr_reader :element, :value
             
+            # Takes an Element, the value, and a message.
             def initialize(element, value, message)
                 @element = element
                 @message = message
                 @value = value
                 super(message)
             end
-                        
+            
+            
             def to_s
                 @message % @value
             end

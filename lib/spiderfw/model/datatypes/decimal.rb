@@ -2,6 +2,9 @@ require "bigdecimal"
 
 module Spider; module DataTypes
 
+    # A wrapper around BigDecimal.
+    # Takes the :scale attribute.
+
     class Decimal < BigDecimal
         include DataType
 

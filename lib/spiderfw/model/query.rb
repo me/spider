@@ -3,14 +3,29 @@ require 'spiderfw/model/request'
 
 module Spider; module Model
     
+    # The Query combines a Condition and a Request, offering convenience methods and allowing
+    # to further specify how the data should be returned.
+    
     class Query
-        attr_accessor :order, :offset, :limit, :polymorphs
-        attr_reader :condition, :request
+        # An array of element-direction (:asc or :desc) pairs
+        attr_accessor :order
+        # Skip the first :offset objects
+        attr_accessor :offset
+        # Limit the returned results to :limit objects
+        attr_accessor :limit
+        # Requests subclasses of the queried model
+        attr_accessor :polymorphs
+        # The Condition instance
+        attr_reader :condition
+        # The Request instance
+        attr_reader :request
         
+        # Instantiates a new query, calling where on the condition.
         def self.where(*params)
             return self.class.new.condition.where(*params)
         end
        
+       # Parameters are a Condition and a Request. If a block is given, it will be parsed by the Condition.
        def initialize(condition = nil, request=nil, &proc)
            @condition = condition.is_a?(Condition) ? condition : Condition.new(condition)
            @request = request.is_a?(Request) ? request : Request.new(request)
@@ -21,6 +36,7 @@ module Spider; module Model
            end
        end
        
+       # Sets the condition. If val is not a Condition, will attempt to convert it to one.
        def condition=(val)
            if (!val.is_a?(Condition))
                @condition = Condition.new(val)
@@ -29,6 +45,7 @@ module Spider; module Model
            end
        end
        
+       # Sets the request. If val is not a Request, will attempt to convert it to one.
        def request=(val)
            if (!val.is_a?(Request))
                @request = Request.new(val)
@@ -37,6 +54,14 @@ module Spider; module Model
            end
        end
        
+       # Sets required oreder.
+       # Arguments can be:
+       # * an element-direction pair, or
+       # * a list of 'element direction' strings, or
+       # * a list of elements (:asc direction will be implied).
+       # Example:
+       #   query.order_by(:element, :desc)
+       #   query.order_by('name desc', :rating)
        def order_by(*elements)
            if (elements.length == 2 && [:asc, :desc].include?(elements[1]))
                @order << elements
@@ -55,6 +80,7 @@ module Spider; module Model
            return self
        end
        
+       # Adds each element in the given list to the request.
        def select(*elements)
            elements.each do |element|
                @request.request(element.to_s)
@@ -62,6 +88,7 @@ module Spider; module Model
            return self
        end
        
+       # If given an argument, will use it as a Condition. If given a block, will use it on the Condition.
        def where(condition=nil, &proc)
            condition = Condition.new(&proc) unless (condition)
            if (condition.class == String)
@@ -72,6 +99,7 @@ module Spider; module Model
            return self
        end
        
+       # Requests a polymorph
        def with_polymorph(type, request=nil)
            query = self.class.new(query) unless query.is_a?(self.class)
            @polymorphs << type
@@ -79,6 +107,7 @@ module Spider; module Model
            return self
        end
        
+       # Requests only polymorphs. (see Request#only_polymorphs)
        def only_polymorphs
            @request.only_polymorphs
        end
@@ -87,12 +116,12 @@ module Spider; module Model
        # information methods        #
        ##############################
        
-       def polymorphs?
+       def polymorphs? # :nodoc:
            @polymorphs.length > 0
        end
        
+       # Returns a deep copy.
        def clone
-           # FIXME: not sure cloning is ok on those two
            cl = self.class.new(@condition.clone, @request.clone)
            cl.order = @order.clone
            cl.offset = @offset

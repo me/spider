@@ -1,5 +1,6 @@
 require 'rake'
 require 'rake/testtask'
+require 'hanna/rdoctask'
 
 desc "Update pot/po files."
 task :updatepo do
@@ -53,6 +54,18 @@ task :test do
         Spider.test_teardown
     end
     
+end
+
+Rake::RDocTask.new(:rdoc) do |rdoc|
+  rdoc.rdoc_files.include('README', 'LICENSE', 'CHANGELOG').
+    include('lib/**/*.rb')
+#    .exclude('lib/will_paginate/version.rb')
+
+  rdoc.main = "README" # page to start on
+  rdoc.title = "Spider documentation"
+
+  rdoc.rdoc_dir = 'doc' # rdoc output folder
+  rdoc.options << '--webcvs=http://github.com/me/spider/tree/master/'
 end
     
 

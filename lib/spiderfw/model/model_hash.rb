@@ -1,5 +1,15 @@
 module Spider; module Model
     
+    # The ModelHash is a specialized hash for models. It is subclassed by Condition and Request.
+    # It provides two functions: 
+    # * when given a BaseModel instance as a value, it will unwrap it setting its element-value pairs
+    # * if the key is a dotted string, will split it and create sub-hashes.
+    # Example:
+    #   cat = Cat.new(:name => 'Kitty', :color => 'black')
+    #   mh[:test] = cat
+    #     => {:test => {:name => 'Kitty', :color => 'black}}
+    #   mh['test.name'] = 'Devilish Kitty'
+    #     => {:test => {:name => 'Devilish Kitty', :color => 'black'}}
     class ModelHash < Hash
         
         def initialize(hash=nil)
@@ -7,6 +17,7 @@ module Spider; module Model
             merge!(hash) if (hash && hash.is_a?(Hash))
         end
         
+        # Returns a new instance when needed by an assignement. May be overridden by subclasses.
         def get_deep_obj
             return self.class.new
         end

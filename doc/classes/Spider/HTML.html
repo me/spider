@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>: Spider::HTML [Spider documentation]</title>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
+    <link href='../../rdoc-style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>Module</span>
+          Spider::HTML
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a href="../../files/lib/spiderfw/controller/formats/html_rb.html">lib/spiderfw/controller/formats/html.rb</a>
+            (<a href="http://github.com/me/spider/tree/master/lib/spiderfw/controller/formats/html.rb">view online</a>)
+          </li>
+        </ol>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>public instance</h3>
+            <ol>
+              <li><a href="#M000709">before</a></li>
+              <li><a href="#M000711">bottom</a></li>
+              <li><a href="#M000713">print_backtrace</a></li>
+              <li><a href="#M000710">top</a></li>
+              <li><a href="#M000712">try_rescue</a></li>
+            </ol>
+          </div>
+          <div id='context'>
+            <div id='includes'>
+              <h2>Included modules</h2>
+              <ol>
+                <li><a href="ControllerMixin.html">ControllerMixin</a></li>
+              </ol>
+            </div>
+          </div>
+          <div id='section'>
+            <div id='methods'>
+              <h2>Public instance methods</h2>
+              <div class='public-instance method' id='method-M000709'>
+                <a name='M000709'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>before</span>
+                  <span class='arguments'>(action='', *arguments)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  before do
+                  </p>
+                  <pre>Spider.logger.debug('HTML before')&#x000A;#@response.headers['Content-Type'] = 'text/html'&#x000A;&#x000A;begin&#x000A;    run_chain(:before)&#x000A;# rescue NotFound&#x000A;#     render('errors/404')&#x000A;rescue =&gt; exc&#x000A;    top&#x000A;    print_backtrace(exc)&#x000A;    bottom&#x000A;    raise exc&#x000A;end</pre>
+                  <p>
+                  end
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000709-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000709-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/formats/html.rb, line 24</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">before</span>(<span class="ruby-identifier">action</span>=<span class="ruby-value str">''</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">arguments</span>)&#x000A;            <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">debug</span>(<span class="ruby-value str">&quot;HTML BEFORE&quot;</span>)&#x000A;            <span class="ruby-ivar">@response</span>.<span class="ruby-identifier">register</span>(<span class="ruby-identifier">:js</span>, [])&#x000A;            <span class="ruby-keyword kw">begin</span>&#x000A;                <span class="ruby-keyword kw">super</span>&#x000A;            <span class="ruby-keyword kw">rescue</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">exc</span>&#x000A;                <span class="ruby-identifier">top</span>&#x000A;                <span class="ruby-identifier">print_backtrace</span>(<span class="ruby-identifier">exc</span>)&#x000A;                <span class="ruby-identifier">bottom</span>&#x000A;                <span class="ruby-identifier">raise</span> <span class="ruby-identifier">exc</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000711'>
+                <a name='M000711'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>bottom</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000711-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000711-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/formats/html.rb, line 57</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">bottom</span>&#x000A;            <span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000713'>
+                <a name='M000713'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>print_backtrace</span>
+                  <span class='arguments'>(exc)</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000713-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000713-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/formats/html.rb, line 67</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">print_backtrace</span>(<span class="ruby-identifier">exc</span>)&#x000A;            <span class="ruby-identifier">html</span> = <span class="ruby-value str">&quot;&lt;h3&gt;Error: &quot;</span><span class="ruby-operator">+</span><span class="ruby-identifier">exc</span>.<span class="ruby-identifier">to_s</span><span class="ruby-operator">+</span><span class="ruby-value str">&quot;&lt;/h3&gt;&quot;</span>&#x000A;            <span class="ruby-identifier">html</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot;&lt;ul&gt;&quot;</span>&#x000A;            <span class="ruby-identifier">client_editor</span> = (<span class="ruby-constant">Spider</span>.<span class="ruby-identifier">config</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'client.text_editor'</span>) <span class="ruby-operator">||</span> <span class="ruby-value str">''</span>).<span class="ruby-identifier">downcase</span>&#x000A;            <span class="ruby-identifier">prefix</span> = <span class="ruby-value str">''</span>&#x000A;            <span class="ruby-identifier">prefix</span> = <span class="ruby-value str">'txmt://open?url='</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">client_editor</span> <span class="ruby-operator">==</span> <span class="ruby-value str">'textmate'</span>)&#x000A;            <span class="ruby-identifier">exc</span>.<span class="ruby-identifier">backtrace</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">trace_line</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">trace_line</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">':'</span>)&#x000A;                <span class="ruby-identifier">file_path</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">0</span>]&#x000A;                <span class="ruby-identifier">line</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">1</span>]&#x000A;                <span class="ruby-identifier">method</span> = <span class="ruby-identifier">parts</span>[<span class="ruby-value">2</span>]&#x000A;                <span class="ruby-identifier">suffix</span> = <span class="ruby-value str">''</span>&#x000A;                <span class="ruby-identifier">suffix</span> = <span class="ruby-value str">'&amp;line='</span><span class="ruby-operator">+</span><span class="ruby-identifier">line</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">client_editor</span> <span class="ruby-operator">==</span> <span class="ruby-value str">'textmate'</span>)&#x000A;                <span class="ruby-identifier">html</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot;&lt;li&gt;&quot;</span>&#x000A;                <span class="ruby-identifier">html</span> <span class="ruby-operator">+=</span> <span class="ruby-node">&quot;&lt;a href='#{prefix}file://#{file_path}#{suffix}'&gt;#{file_path}&lt;/a&gt;:#{line}:#{method}&quot;</span>&#x000A;                <span class="ruby-identifier">html</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot;&lt;/li&gt;&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">html</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">&quot;&lt;/ul&gt;&quot;</span>&#x000A;            <span class="ruby-identifier">puts</span> <span class="ruby-identifier">html</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000710'>
+                <a name='M000710'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>top</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000710-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000710-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/formats/html.rb, line 47</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">top</span>&#x000A;            <span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;&lt;html&gt;&quot;</span>&#x000A;            <span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;&lt;head&gt;&quot;</span>&#x000A;            <span class="ruby-ivar">@response</span>.<span class="ruby-identifier">js</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">js</span><span class="ruby-operator">|</span>&#x000A;                <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;#{js}\&quot;&gt;&lt;/script&gt;&quot;</span>&#x000A;            <span class="ruby-keyword kw">end</span>&#x000A;            <span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;&lt;/head&gt;&quot;</span>&#x000A;            <span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;&lt;body&gt;&quot;</span> &#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='public-instance method' id='method-M000712'>
+                <a name='M000712'>      </a>
+                <div class='synopsis'>
+                  <span class='name'>try_rescue</span>
+                  <span class='arguments'>(exc)</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000712-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000712-source'><span class="ruby-comment cmt"># File lib/spiderfw/controller/formats/html.rb, line 61</span>&#x000A;        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">try_rescue</span>(<span class="ruby-identifier">exc</span>)&#x000A;            <span class="ruby-identifier">print_backtrace</span>(<span class="ruby-identifier">exc</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Spider</span>.<span class="ruby-identifier">config</span>.<span class="ruby-identifier">get</span>(<span class="ruby-value str">'webserver.show_traces'</span>)&#x000A;            <span class="ruby-identifier">raise</span> <span class="ruby-identifier">exc</span>&#x000A;        <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

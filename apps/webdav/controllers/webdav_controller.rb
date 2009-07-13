@@ -99,6 +99,7 @@ module Spider; module WebDAV
                 @response.headers['Content-Type'] = properties.content_type
                 @response.headers['Content-Length'] = properties.size
                 @response.headers['Last-Modified'] = properties.mtime.httpdate
+                @response.headers['Content-Disposition'] =  "attachment; filename=#{File.basename(path)}"
                 unless just_head
                     vfs.stream(path, "rb") do |f|
                         $out << f.read

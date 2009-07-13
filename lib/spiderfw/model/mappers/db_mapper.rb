@@ -11,11 +11,12 @@ module Spider; module Model; module Mappers
             @type = :db
         end
         
-        def self.write?
+        def self.write? #:nodoc:
             true
         end
         
-        def have_references?(element)
+        # Checks if the schema has some key to reach element. 
+        def have_references?(element) #:nodoc:
             element_name = element.is_a?(Spider::Model::Element) ? element.name : element
             schema.has_foreign_fields?(element_name) || schema.field(element_name)
         end
@@ -24,18 +25,17 @@ module Spider; module Model; module Mappers
         #   Save (insert and update)                                 #
         ##############################################################
         
-        def before_save(obj, mode)
+        def before_save(obj, mode) #:nodoc:
             super
         end            
         
-        def save_all(root)
+        def save_all(root) #:nodoc:
             @storage.start_transaction if @storage.supports_transactions?
             super
             @storage.commit
         end
         
-        # Inserts passed object into the database
-        def do_insert(obj)
+        def do_insert(obj) #:nodoc:
             if (obj.model.managed? || !obj.primary_keys_set?)
                 assign_primary_keys(obj)
             end
@@ -45,14 +45,14 @@ module Spider; module Model; module Mappers
             end
         end
         
-        def do_update(obj)
+        def do_update(obj) #:nodoc:
             sql, values = prepare_update(obj)
             if (sql)
                 storage.execute(sql, *values)
             end
         end
         
-        def do_delete(condition, force=false)
+        def do_delete(condition, force=false) #:nodoc:
             #delete = prepare_delete(obj)
             del = {}
             del[:condition], del[:joins] = prepare_condition(condition)
@@ -65,11 +65,13 @@ module Spider; module Model; module Mappers
         #     storage.execute("DELETE FROM #{schema.table}")
         # end
         
+        # Execute SQL directly, returning raw db results.
         def sql_execute(sql, *values)
             storage.execute(sql, *values)
         end
         
-        def prepare_save(obj, save_mode, request=nil)
+        # Save preprocessing
+        def prepare_save(obj, save_mode, request=nil) #:nodoc:
             values = {}
             obj.no_autoload do
                 @model.each_element do |element|
@@ -108,14 +110,16 @@ module Spider; module Model; module Mappers
             }
         end
         
-        def prepare_insert(obj)
+        # Insert preprocessing
+        def prepare_insert(obj) #:nodoc:
             save = prepare_save(obj, :insert)
             return nil unless save[:values].length > 0
             save[:table] = @schema.table
             return @storage.sql_insert(save)
         end
         
-        def prepare_update(obj)
+        # Update preprocessing
+        def prepare_update(obj) #:nodoc:
             save = prepare_save(obj, :update)
             return nil unless save[:values].length > 0
             condition = Condition.and
@@ -128,6 +132,7 @@ module Spider; module Model; module Mappers
             return @storage.sql_update(save)
         end
         
+        # Updates according to a condition, saving the values passed as a Hash.
         def bulk_update(values, condition)
             db_values = {}
             values.each do |key, val|
@@ -143,10 +148,14 @@ module Spider; module Model; module Mappers
             return @storage.execute(@storage.sql_update(save))
         end
         
-        def lock(obj=nil, mode=:exclusive)
+        # Lock db
+        #--
+        # FIXME
+        def lock(obj=nil, mode=:exclusive) #:nodoc:
             return storage.lock(@schema.table) unless obj
         end 
         
+        # Next value for the named sequence
         def sequence_next(name)
             return storage.sequence_next(schema.sequence(name))
         end
@@ -155,6 +164,7 @@ module Spider; module Model; module Mappers
         #   Loading methods                                          #
         ##############################################################
         
+        # Implements the Mapper#count method doing a count SQL query.
         def count(condition)
             q = Query.new(condition, @model.primary_keys)
             prepare_query(q)
@@ -163,6 +173,7 @@ module Spider; module Model; module Mappers
             return @storage.query(storage_query)
         end
         
+        # Implements the Mapper#fetch method
         def fetch(query)
 #            Spider.logger.debug("Fetching model #{@model} query:")
 #            Spider.logger.debug(query)
@@ -174,6 +185,7 @@ module Spider; module Model; module Mappers
             return result
         end
         
+        # Finds objects by SQL, mapping back the storage result.
         def find_by_sql(sql, *bind_vars)
             result = storage.execute(sql, *bind_vars)
             set = QuerySet.new(@model)
@@ -183,6 +195,8 @@ module Spider; module Model; module Mappers
             return set
         end
         
+        # Implements the Mapper#map method.
+        # Converts a DB result row to an object.
         def map(request, result, obj)
             if (!request)
                 request = Request.new
@@ -240,17 +254,19 @@ module Spider; module Model; module Mappers
             return obj
         end
 
-        def prepare_query_request(request, obj=nil)
+        def prepare_query_request(request, obj=nil) #:nodoc:
             super(request, obj)
         end
         
+        # Returns true if an element can be loaded joined-in.
         def can_join?(element)
             return false if element.multiple?
             return false if element.storage != @storage
             return true
         end
         
-        def prepare_select(query)
+        # Generates a select hash description based on the query.
+        def prepare_select(query) #:nodoc:
             condition, joins = prepare_condition(query.condition)
             elements = query.request.keys.select{ |k| mapped?(k) }
             keys = []
@@ -346,7 +362,9 @@ module Spider; module Model; module Mappers
             }
         end
         
-        def prepare_joins(joins)
+        #--
+        # FIXME: document
+        def prepare_joins(joins) # :nodoc:
             h = {}
             joins.each do |join|
                 h[join[:from]] ||= {}
@@ -364,6 +382,16 @@ module Spider; module Model; module Mappers
         end
         
         
+        # Generates a storage description for the condition
+        # Returns a list of three elements, composed of
+        # * conditions: an hash {
+        #     :conj => 'and'|'or',
+        #     :values => an array of [field, comparison, value] triplets
+        #   }
+        # * joins: an array of structures as returned by #get_join
+        # * remaining_condition: part of the condition which can't be passed to the storage
+        #--
+        # TODO: better name for :values
         def prepare_condition(condition)
             # FIXME: move to mapper
             model = condition.polymorph ? condition.polymorph : @model
@@ -441,6 +469,14 @@ module Spider; module Model; module Mappers
             return [cond, joins, remaining_condition]
         end
         
+        # Figures out a join for element. Returns join hash description, i.e. :
+        #   join = {
+        #     :type => :inner|:outer|...,
+        #     :from => 'table1',
+        #     :to => 'table2',
+        #     :keys => hash of key pairs,
+        #     :condition => join condition
+        #   }
         def get_join(element)
             return unless element.model?
             Spider::Logger.debug("Getting join for model #{@model} to element #{element}")
@@ -501,6 +537,11 @@ module Spider; module Model; module Mappers
             return join
         end
         
+        # Returns the joins needed for an element down the tree, expressed in dotted notation.
+        # Returns a triplet composed of
+        # * joins
+        # * final model called
+        # * final element called
         def get_deep_join(dotted_element)
             #return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
             parts = dotted_element.to_s.split('.').map{ |el| el.to_sym }
@@ -528,6 +569,10 @@ module Spider; module Model; module Mappers
             return [joins, current_model, el]
         end
         
+        # Returns a couple of
+        # * fields, an array of [field, direction] couples
+        # and
+        # * joins, joins needed for the order, if any
         def prepare_order(query)
             joins = []
             fields = []
@@ -561,7 +606,7 @@ module Spider; module Model; module Mappers
             return [fields, joins]
         end
 
-        
+        # Returns a type accepted by the storage for type.
         def map_type(type)
             st = type
             while (st && !storage.class.base_types.include?(st))
@@ -571,6 +616,7 @@ module Spider; module Model; module Mappers
             return st
         end
         
+        # Converts a value in one accepted by the storage.
         def map_value(type, value, mode=nil)
              if (type < Spider::DataType && value)
                  value = type.from_value(value) unless value.is_a?(type)
@@ -587,13 +633,12 @@ module Spider; module Model; module Mappers
         end
         
         # Prepares a value going to be bound to an insert or update statement
-        # This method is also called by map_condition_value
          def map_save_value(type, value, save_mode)
              value = map_value(type, value, :save)
              return @storage.value_for_save(Model.simplify_type(type), value, save_mode)
          end
 
-        # Prepares a value for an sql condition.
+        # Prepares a value for a condition.
         def map_condition_value(type, value)
             if value.is_a?(Range)
                 return Range.new(map_condition_value(type, value.first), map_condition_value(type, value.last))
@@ -603,6 +648,7 @@ module Spider; module Model; module Mappers
             return @storage.value_for_condition(Model.simplify_type(type), value)
         end
 
+        # Converts a storage value back to the corresponding base type or DataType.
         def map_back_value(type, value)
             value = value[0] if value.class == Array
             value = storage.value_to_mapper(Model.simplify_type(type), value)
@@ -632,6 +678,8 @@ module Spider; module Model; module Mappers
         #   External elements                                        #
         ##############################################################
         
+        # Given the results of a query for an element, and a set of objects, associates
+        # the result with the corresponding objects.
         def associate_external(element, objects, result)
             result.reindex
             objects.element_loaded(element.name)
@@ -657,6 +705,7 @@ module Spider; module Model; module Mappers
         #   Primary keys                                             #
         ##############################################################
         
+        # Empty hook to set primary keys in the model before insert. Override if needed.
         def assign_primary_keys(obj)
             # may be implemented in model through the 'with_mapper' method
         end
@@ -666,6 +715,7 @@ module Spider; module Model; module Mappers
         #   Storage strategy                                         #
         ##############################################################
         
+        # UnitOfWork dependencies.
         def get_dependencies(obj, action)
             deps = []
             task = MapperTask.new(obj, action)
@@ -704,19 +754,23 @@ module Spider; module Model; module Mappers
         #   Schema management                                        #
         ##############################################################
 
+        # Extend schema. Given block will be instance_eval'd after schema auto generation.
         def with_schema(*params, &proc)
             @schema_proc = proc
         end
         
+        # Define schema. Given block will be instance_eval'd before schema auto generation.
         def define_schema(*params, &proc)
             @schema_define_proc = proc
         end
 
+        # Returns @schema, or creates one.
         def schema
             @schema ||= get_schema()
             return @schema
         end
         
+        # Returns the schema, as defined or autogenerated.
         def get_schema
             schema = @model.superclass.mapper.get_schema() if (@model.attributes[:inherit_storage])
             if (@schema_define_proc)
@@ -730,6 +784,7 @@ module Spider; module Model; module Mappers
             return schema
         end
 
+        # Autogenerates schema. Returns a DbSchema.
         def generate_schema(schema=nil)
             had_schema = schema ? true : false
             schema ||= Spider::Model::Storage::Db::DbSchema.new
@@ -816,7 +871,8 @@ module Spider; module Model; module Mappers
             return schema
         end
         
-        def collect_real_keys(element, path=[])
+        # Returns an array of all keys, "dereferencing" model keys.
+        def collect_real_keys(element, path=[]) # :nodoc:
             real_keys = []
             element.type.primary_keys.each do |key|
                 if (key.model?)
@@ -828,6 +884,7 @@ module Spider; module Model; module Mappers
             return real_keys
         end
 
+        # Modifies the storage according to the schema.
         def sync_schema(force=false, options={})
             schema_description = schema.get_schemas
             sequences = {}
@@ -875,7 +932,8 @@ module Spider; module Model; module Mappers
             end
         end
 
-        def create_table(table_name, fields, attributes)
+        # Returns a create table structure description.
+        def create_table(table_name, fields, attributes) # :nodoc:
             fields = fields.map{ |name, details| {
               :name => name,
               :type => details[:type],
@@ -888,7 +946,8 @@ module Spider; module Model; module Mappers
             })
         end
 
-        def alter_table(name, fields, attributes, force=nil)
+        # Returns an alter table structure description
+        def alter_table(name, fields, attributes, force=nil) # :nodoc:
             current = @storage.describe_table(name)
             current_fields = current[:columns]
             add_fields = []
@@ -935,6 +994,8 @@ module Spider; module Model; module Mappers
 
     end
 
+    # Error raised when a conversion results in a potential data loss.
+    
     class SchemaSyncUnsafeConversion < RuntimeError
         attr :fields
         def initialize(fields)

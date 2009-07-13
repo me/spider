@@ -2,6 +2,7 @@ module Spider; module Model
     
     module Storage
         
+        
         def self.get_storage(type, url)
             case type
             when 'db'

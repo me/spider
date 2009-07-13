@@ -115,7 +115,6 @@ module Spider; module ControllerMixins
         module ClassMethods
             
             def output_format(method, format=nil)
-                Spider.logger.debug("Method #{method} has output format #{format}") if format
                 @output_formats ||= {}
                 if format
                     @output_formats[method] = format

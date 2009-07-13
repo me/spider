@@ -141,6 +141,9 @@ module Spider; module Model
             attributes[:lazy]
         end
         
+        # Returns the lazy groups this elements is in, as set by BaseModel#element with the :lazy attributes.
+        # Lazy groups are used by the mapper to determine which elements to autoload:
+        # when an element in a lazy group is accessed, all the elements in the same group(s) will be loaded.
         def lazy_groups
             return nil unless attributes[:lazy] && attributes[:lazy] != true
             return attributes[:lazy].is_a?(Array) ? attributes[:lazy] : [attributes[:lazy]]

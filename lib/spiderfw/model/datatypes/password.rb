@@ -8,6 +8,13 @@ module Spider; module DataTypes
     Spider.config_option('password.hash', 'Hash function to use for passwords', :default => :sha2,
         :type => Symbol, :choices => [:md5, :sha1, :sha2]
     )
+    
+    # A hashed password.
+    # Takes :hash attribute (defaults to 'password.hash' configuration value, which in turn defaults to :sha2) and
+    # :salt attribute; the default is to generate a random salt when mapping (unless 'password.salt' configuration is provided).
+    # Maps to a "#{hash_type}$#{salt}$#{hash}" string
+    #--
+    # TODO: remove salt configuration
 
     class Password < String
         include DataType
@@ -22,6 +29,9 @@ module Spider; module DataTypes
             return "#{hash_type}$#{salt}$#{self.class.do_hash(hash_type, self.to_s, salt)}"
         end
         
+        # Checks if a password matches with a stored representation.
+        # Expects a stored string in the form "#{hash_type}$#{salt}$#{hash}": otherwise,
+        # it will assume the string is a hash using the Spider.conf 'password.hash' and 'password.salt'
         def self.check_match(stored, pwd)
             hash_type, salt, hash = stored.split('$')
             if (!salt)
@@ -30,6 +40,7 @@ module Spider; module DataTypes
             return (hash == do_hash(hash_type, pwd, salt))
         end
         
+        # Returns a hash of given type, using given salt
         def self.do_hash(type, str, salt='')
             salt ||= ''
             case type.to_sym

@@ -1,19 +1,61 @@
 module Spider; module Model
-
+    
+    # The QuerySet expresses represents a Query applied on a Model.
+    # It includes Enumerable, and can be accessed as an Array; but, the QuerySet is lazy, and the actual data will be
+    # fetched only when actually requested, or when a #load is issued.
+    # How much data is fetched and kept in memory can be controlled by setting the #fetch_window
+    # and the #keep_window.
     class QuerySet
         include Enumerable
-        attr_accessor :_parent, :_parent_element
-        attr_reader :raw_data, :loaded_elements, :objects
-        attr_accessor :query, :last_query, :model, :owner, :total_rows
-        attr_accessor :loaded, :fetch_window, :keep_window
-        attr_accessor :append_element, :loadable
+        # BaseModel instance pointing to this QuerySet
+        attr_accessor :_parent
+        # Element inside the _parent pointing to this QuerySet.
+        attr_accessor :_parent_element
+        # Raw data returned by the mapper, if requested.
+        attr_reader :raw_data
+        # An Hash of autoloaded elements.
+        attr_reader :loaded_elements
+        # The actual fetched objects.
+        attr_reader :objects
+        # The Query
+        attr_accessor :query
+        # Set by mapper
+        attr_accessor :last_query # :nodoc: TODO: remove?
+        # The BaseModel
+        attr_accessor :model
+        # Total number of objects present in the Storage for the Query
+        attr_accessor :total_rows
+        # (bool) Wether the QuerySet has been loaded
+        attr_accessor :loaded
+        # (Fixnum) How many objects to load at a time. If nil, all the objects returned by the Query 
+        # will be loaded.
+        attr_accessor :fetch_window
+        # (Fixnum) How many objects to keep in memory when advancing the window. If nil, all objects will be kept.
+        attr_accessor :keep_window
+        # If something that can't be converted to a @model instance is appended to the QuerySet,
+        # and append_element is set, the appended value will be set on the element named append_element
+        # of a new instance of @model, which will be appended instead. This is useful for junction models,
+        # which function as both types.
+        # Example:
+        #    cat = Animal.new; tiger = Animal.new;
+        #    # Instead of doing
+        #    friend = Animal::Friend.new(:animal => cat, :other_animal => tiger)
+        #    cat.friends << friend
+        #    # since the junction was created setting append_element = :other_animal, one can do
+        #    cat.friends << lion
+        attr_accessor :append_element
+        # (bool) If false, prevents the QuerySet from loading.
+        attr_accessor :loadable # :nodoc: TODO: remove?
         
+        # Instantiates a non-autoloading queryset
         def self.static(model, query_or_val=nil)
             qs = self.new(model, query_or_val)
             qs.autoload = false
             return qs
         end
 
+        # The first argument must be a BaseModel subclass.
+        # The second argument may be a Query, or data that will be passed to #set_data.
         def initialize(model, query_or_val=nil)
             if (query_or_val.is_a?(Query))
                  query = query_or_val 
@@ -24,7 +66,6 @@ module Spider; module Model
             @model = model
             @objects = []
             @raw_data = []
-            @owner = nil
             @_parent = nil
             @_parent_element = nil
             @index_lookup = {}
@@ -43,19 +84,25 @@ module Spider; module Model
             self
         end
         
+        
+        # Model mapper.
         def mapper
             @model.mapper
         end
         
+        # Sets a fixed value: it will be applied to every object.
         def fixed(name, value)
             @fixed[name] = value
         end
         
+        # Enables or disables autoload; if the second argument is true, will traverse
+        # contained objects.
         def autoload(bool, traverse=true)
             @autoload = bool
             @objects.each{ |obj| obj.autoload = bool } if traverse
         end
         
+        # Enables or disables autoload.
         def autoload=(bool)
             autoload(bool)
         end
@@ -64,18 +111,21 @@ module Spider; module Model
             @autoload ? true : false
         end
         
+        # Sets containing model and element.
         def set_parent(obj, element)
             @_parent = obj
             @_parent_element = element
         end
-                
+        
+        # Disables autoload. If a block is given, the current autoload value will be restored after yielding.
         def no_autoload(traverse=true)
             prev_autoload = autoload?
             self.autoload(false, traverse)
             yield
             self.autoload(prev_autoload, traverse)
         end
-            
+        
+        # Adds objects to the QuerySet. The argument must be an Enumerable (and should contain BaseModel instances).
         def set_data(data)
             if (data.is_a?(Enumerable))
                 data.each do |val|
@@ -101,7 +151,7 @@ module Spider; module Model
         end
 
             
-
+        # Accesses an object. Data will be loaded according to fetch_window.
         def [](index)
             if (index.is_a?(Range))
                 return index.map{ |i| self[i] }
@@ -120,6 +170,7 @@ module Spider; module Model
             return val
         end
         
+        # Sets an object.
         def []=(index, val)
             #load_to_index(index) unless loaded?(index) || !autoload?
             val = instantiate_object(val) unless val.is_a?(@model)
@@ -131,6 +182,7 @@ module Spider; module Model
             @objects[array_index] = val
         end
         
+        # Checks contained objects' loaded elements.
         def update_loaded_elements
             f_loaded = {}
             self.each_current do |obj|
@@ -143,15 +195,18 @@ module Spider; module Model
             @loaded_elements.merge!(f_loaded)
         end
         
+        # Returns the last object.
         def last
             load unless (@loaded || !autoload?) && loaded?(total_rows-1)
             @objects.last
         end
         
+        # Deletes object at the given index.
         def delete_at(index)
             @objects.delete_at(index)
         end
         
+        # Returns a new QuerySet containing objects from both this and the other.
         def +(other)
             qs = self.clone
             other.each do |obj|
@@ -160,11 +215,15 @@ module Spider; module Model
             return qs
         end
         
+        # Number of objects fetched. Will call load if not loaded yet.
+        # Note: this is not the total number of objects corresponding to the Query; 
+        # it may be equal to the fetch_window, or to the @query.limit.
         def length
             load unless @loaded || !autoload?
             @objects.length
         end
         
+        # True if the query had a limit, and more results can be fetched.
         def has_more?
             return true if autoload? && !@loaded
             return false unless query.limit
@@ -172,18 +231,22 @@ module Spider; module Model
             return pos < total_rows
         end
         
+        # Total number of objects that would be returned had the Query no limit.
         def total_rows
             return @total_rows ? @total_rows : @model.mapper.count(@query.condition)
         end
         
+        # Current number of objects fetched.
         def current_length
             @objects.length
         end
         
+        # True if no objects were fetched (yet).
         def empty?
             @objects.empty?
         end
         
+        # Index objects by some elements.
         def index_by(*elements)
             names = elements.map{ |el| (el.class == Spider::Model::Element) ? el.name.to_s : el.to_s }
             index_name = names.sort.join(',')
@@ -192,7 +255,8 @@ module Spider; module Model
             return self
         end
         
-        def reindex
+        # Rebuild object index.
+        def reindex # :nodoc:
             @index_lookup.each_key do |index|
                 @index_lookup[index] = {}
             end
@@ -202,7 +266,8 @@ module Spider; module Model
             return self
         end
         
-        def index_object(obj)
+        # Adds object to the index
+        def index_object(obj) # :nodoc:
             @index_lookup.keys.each do |index_by|
                 names = index_by.split(',')
                 search_key = names.map{ |name| 
@@ -212,7 +277,8 @@ module Spider; module Model
             end
         end
         
-        def search_key(obj, name)
+        # FIXME: ???
+        def search_key(obj, name) # :nodoc:
             sub = obj.is_a?(Hash) ? obj[name] : obj.get(name.to_sym)
             if (sub.is_a?(Spider::Model::BaseModel))
                 @model.elements[name.to_sym].type.primary_keys.map{ |k| sub.get(k).to_s }.join(',')
@@ -221,10 +287,12 @@ module Spider; module Model
             end
         end
         
+        # Iterates on currently loaded objects
         def each_current
             @objects.each { |obj| yield obj }
         end
 
+        # Iterates on objects, loading when needed.
         def each
             self.each_index do |i|
                 obj = @objects[i]
@@ -233,6 +301,7 @@ module Spider; module Model
             end
         end
 
+        # Iterates yielding objects index. Will load when needed.
         def each_index
             @window_current_start = nil if (@fetch_window)
             while (!@fetch_window || has_more?)
@@ -244,6 +313,7 @@ module Spider; module Model
             end
         end
         
+        # Iterates on indexes without loading.
         def each_current_index
             @objects.each_index do |i|
                 i += @window_current_start-1 if @window_current_start
@@ -251,11 +321,13 @@ module Spider; module Model
             end
         end
         
+        # Merges the content of another QuerySet.
         def merge(query_set)
             @objects += query_set.instance_variable_get(:"@objects")
             reindex
         end
         
+        # Searchs the index for objects matching the given params.
         def find(params)
             sorted_keys = params.keys.map{|k| k.to_s}.sort.map{|k| k.to_sym}
             index = sorted_keys.map{ |key| key.to_s }.join(',')
@@ -268,11 +340,13 @@ module Spider; module Model
             return QuerySet.new(@model, result)
         end
 
+        # Calls Query.order_by
         def order_by(*elements)
             @query.order_by *elements
             return self
         end
         
+        # Sets the value of an element on all currently loaded objects.
         def set(element, value)
             element_name = element.is_a?(Element) ? element.name : element
             fixed(element_name, value)
@@ -284,6 +358,7 @@ module Spider; module Model
             end
         end
         
+        # Executes the query and fetches the objects; (the next batch if a fetch_window is set).
         def load
             return self unless loadable?
             @objects = []
@@ -295,18 +370,21 @@ module Spider; module Model
             return self
         end
         
-        def start_for_index(i)
+        # Start for the query to get index i
+        def start_for_index(i) # :nodoc:
             return 1 unless @fetch_window
             page = i / @fetch_window + 1
             return (page - 1) * @fetch_window + 1
         end
         
+        # Loads objects up to index i
         def load_to_index(i)
             return load unless @fetch_window
             page = i / @fetch_window + 1
             load_next(page)
         end
         
+        # Loads the next batch of objects.
         def load_next(page=nil)
             if (@fetch_window)
                 @query.limit = @fetch_window
@@ -324,6 +402,8 @@ module Spider; module Model
             return load
         end
         
+        # If a Fixnum is passed, will tell if the given index is loaded.
+        # With no argument, will tell if the QuerySet is loaded
         def loaded?(index=nil)
             return @loaded if !@loaded || !index || !@fetch_window
             return false unless @window_current_start
@@ -335,19 +415,22 @@ module Spider; module Model
             @loadable
         end
         
+        # Saves each object in the QuerySet.
         def save
             no_autoload(false){ each{ |obj| obj.save } }
         end
-        
+
+        # Calls #BaseModel.insert on each object in the QuerySet.        
         def insert
             no_autoload(false){ each{ |obj| obj.insert } }
         end
-        
+
+        # Calls #BaseModel.update on each object in the QuerySet.        
         def update
             no_autoload(false){ each{ |obj| obj.update } }
         end
         
-
+        # Calls #BaseModel.save_all on each object in the QuerySet.
         def save_all(params={})
             @objects.each do |obj| 
 #                next if (unit_of_work && !unit_of_work.save?(obj))
@@ -355,6 +438,7 @@ module Spider; module Model
             end
         end
         
+        # Returns a new instance of @model from val.
         def instantiate_object(val=nil)
             if (@append_element && !val.is_a?(@model) && !(val.is_a?(Hash) && val[@append_element]))
                 val = @model.elements[@append_element].type.new(val) unless (val.is_a?(BaseModel))
@@ -383,15 +467,18 @@ module Spider; module Model
         end
 
         
+        # Returns an array with the results of calling #BaseModel.cut on each object.
         def cut(*params)
             load unless loaded? || !autoload?
             return self.map{ |obj| obj.cut(*params) }
         end
         
+        # Returns an array with the results of calling #BaseModel.to_hash_array on each object.
         def to_hash_array
             return self.map{ |obj| obj.to_hash }
         end
         
+        # Prints an ASCII table
         def table
             return print("Empty\n") if length < 1
             columns = ENV['COLUMNS'].to_i || 80
@@ -438,6 +525,7 @@ module Spider; module Model
             
         end
         
+        # Returns an array of Hashes, with each value of the object is converted to string.
         def to_flat_array
             map do |obj|
                 h = {}
@@ -456,6 +544,9 @@ module Spider; module Model
             return @query.send(method, *args, &proc)
         end
         
+        # Given a dotted path, will return an array of all objects reachable by that path
+        # Example
+        #   objectset.all_children('friends.collegues.addresses.street_name')
         def all_children(path)
             if (path.length > 0)
                 children = @objects.map{ |obj| obj.all_children(path.clone) }.flatten
@@ -464,21 +555,25 @@ module Spider; module Model
             end
         end
         
+        # Registers that the element has been loaded.
         def element_loaded(element)
             element = element.name if (element.class == Element)
             @loaded_elements[element] = true
         end
         
+        # Returns whether the element has been loaded from the Storage.
         def element_loaded?(element)
             element = element.name if (element.class == Element)
             @loaded_elements[element]
         end
         
+        # Returns the QuerySet IdentityMapper instance
         def identity_mapper
             return Spider::Model.identity_mapper if Spider::Model.identity_mapper
             @identity_mapper ||= IdentityMapper.new
         end
         
+        # Assigns an IdentityMapper
         def identity_mapper=(im)
             @identity_mapper = im
         end
@@ -487,16 +582,19 @@ module Spider; module Model
         # Condition, request and query methods #
         ########################################
         
+        # Calls #Query.where
         def where(*params, &proc)
             @query.where(*params, &proc)
             return self
         end
         
+        # Calls #Query.limit
         def limit(n)
             @query.limit = n
             return self
         end
         
+        # Calls #Query.offset
         def offset(n)
             @query.offset = n
             return self
@@ -506,6 +604,7 @@ module Spider; module Model
         #     return Spider::Model.unit_of_work
         # end
         
+        # Performs a deep copy
         def clone
             c = self.class.new(self.model, self.query.clone)
             c_objects = c.instance_variable_get(:@objects)

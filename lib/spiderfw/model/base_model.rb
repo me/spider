@@ -3,22 +3,84 @@ require 'iconv'
 
 module Spider; module Model
     
+    # The main class for interacting with data.
+    # When not dealing with legacy storages, subclasses should use Managed instead, which provides an id and 
+    # other conveniences.
+    #
+    # Each BaseModel subclass defines a model; instances can be used as "data objects":
+    # they will interact with the Mapper loading and saving the values associated with the BaseModel's defined elements.
+    #
+    # Each element defines an instance variable, a getter and a setter. If the instance is set to #autoload,
+    # when a getter is first called the mapper will fetch the value from the Storage .
+    #
+    # Elements can be of one of the base types (Spider::Model.base_types), of a DataType, or other models. In the last
+    # case, they define a relationship between models.
+    # 
+    # Basic usage:
+    #   model Food < BaseModel
+    #     element :name, String
+    #   end
+    #   model Animal < BaseModel
+    #     element :name, String
+    #     many :friends, Animal
+    #     choice :favorite_food, Food
+    #   end
+    #   
+    #   salmon = Food.new(:name => 'Salmon')
+    #   salmon.save
+    #   cat = Animal.new(:name => 'Cat', :favorite_food = salmon)
+    #   weasel = Animal.new(:name => 'Weasel', :friends => [cat])
+    #   weasel.save
+    #   cat.friends << weasel
+    #   cat.save
+    #   
+    #   wizzy = Animal.load(:name => 'Weasel')
+    #   p wizzy.friends 
+    #     => 'Cat'
+    #   p wizzy.friends[0].favorite_food
+    #     => 'Salmon'
+    #
+    #   bear = Animal.new(:name => 'Bear', :favorite_food = salmon)
+    #   bear.save
+    #   salmon_lovers = Animal.where{ favorite_food == salmon }
+    #   p salmon_lovers.length
+    #     => 2
+    #   p salmon_lovers[0].name
+    #     => 'Cat'
+    
     
     class BaseModel
         include Spider::Logger
         include DataTypes
         
-        attr_accessor :_parent, :_parent_element
-        attr_reader :model, :loaded_elements
+        # The BaseModel class itself. Used when dealing with proxy objects.
+        attr_reader :model
+        # An Hash of loaded elements
+        attr_reader :loaded_elements
+        # Model instance or QuerySet containing the object
+        attr_accessor :_parent
+        # If _parent is a model instance, which element points to this one
+        attr_accessor :_parent_element
         
         class <<self
-            attr_reader :attributes, :elements_order, :integrated_models, :extended_models, :polymorphic_models, :sequences
+            # An Hash of model attributes. They can be used freely.
+            attr_reader :attributes
+            # An array of element names, in definition order.
+            attr_reader :elements_order
+            # An Hash of integrated models => corresponding integrated element name.
+            attr_reader :integrated_models
+            # An Hash of extended models => element name of the extended model element
+            attr_reader :extended_models
+            # An Hash of polymorphic models => polymorphic params
+            attr_reader :polymorphic_models
+            # An Array of named sequences.
+            attr_reader :sequences
         end
         
         
         
         # Copies this class' elements to the subclass.
-        def self.inherited(subclass)
+        def self.inherited(subclass) #:nodoc:
             # FIXME: might need to clone every element
             @subclasses ||= []
             @subclasses << subclass
@@ -28,6 +90,7 @@ module Spider; module Model
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
         end
         
+        # Returns the parent Spider::App of the module
         def self.app
             return @app if @app
             app = self
@@ -37,6 +100,7 @@ module Spider; module Model
             @app = app
         end
         
+        # Returns an instance of the Model with #autoload set to false
         def self.static(value=nil)
             obj = self.new(value)
             obj.autoload = false
@@ -47,7 +111,38 @@ module Spider; module Model
         #   Model definition methods          #
         #######################################
         
-        # Defines an element belonging to the model.
+        # Defines an element.
+        # Arguments are element name (a Symbol), element type, and a Hash of attributes.
+        # Type may be a Class: a base type (see #Model.base_types), a DataType subclass, 
+        # or a BaseModel subclass; or an Array or a Hash, in which case an InlineModel will be created.
+        # An Element instance will be available in #BaseModel.elements; getter and setter methods will be defined on
+        # the class.
+        #
+        # Some attributes interpreted by BaseModel and by Mapper are:
+        # * :primary_key              (bool) The element is a primary key
+        # * :length                   (number) Maximum length of the element (if meaningful)
+        # * :required                 (bool) The element must always have a value
+        # * :multiple                 (bool) defines a 1|n -> n relationship
+        # * :association              (symbol) A named association (such as :choice, :multiple_choice)
+        # * :lazy                     (bool, array or symbol) If true, the element will be placed in the :default lazy group;
+        #                             if a symbol or an array of symbols is passed, the element will be placed in those groups.
+        #                             (see #Element.lazy_groups)
+        # * :reverse                  (symbol) The reverse element in the relationship to the other model
+        # * :add_reverse              (symbol) Adds an element on the other model, and sets it as the association reverse.
+        # * :add_multiple_reverse     (symbol) Adds a multiple element on the other model, and sets it as the association reverse.
+        # * :element_position         (number) inserts the element at the specified position in the elements order
+        # * :auto                     (bool) Informative: the value is set automatically through some mechanism
+        # * :autoincrement            (bool) The value (which must be a Fixnum) will be autoincremented by the mapper 
+        # * :integrate                (bool or symbol) type's elements will be available to this class
+        #                             as if they were defined here (see #integrate)
+        # * :integrated_from          (symbol) the name of the element from which this element is integrated
+        # * :integrated_from_element  (symbol) the name of the element of the child object from which this element is integrated
+        # * :hidden                   (bool) a hint that the element shouldn't be shown by the UI
+        # * :computed_from            (array of symbols) the element is not mapped; its value is computed
+        #                             by the class from the given elements.
+        # 
+        # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
+        #
         def self.element(name, type, attributes={}, &proc)
             @elements ||= {}
             @elements_order ||= []
@@ -276,13 +371,30 @@ module Spider; module Model
 
         end
         
+        
+        # Removes a defined element
+        #--
+        # TODO: remove getter and setter
         def self.remove_element(el)
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
         end
             
-        
+        # Integrates an element: any call to the child object's elements will be passed to the child.
+        # The element must not be multiple.
+        # Example:
+        #   class Address < BaseModel
+        #     element :street, String
+        #     element :area_code, String
+        #   end
+        #   class Person < BaseModel
+        #     element :name, String
+        #     element :address, Address
+        #     integrate :address
+        #   end
+        #   p = Person.new(...)
+        #   p.street == p.address.street
         def self.integrate(element_name, params={})
             params ||= {}
             elements[element_name].attributes[:integrated_model] = true
@@ -307,21 +419,30 @@ module Spider; module Model
             end
         end
         
+        # Sets additional attributes on the element
+        # Warning: for attributes which are parsed by the BaseModel during element definition,
+        # this will not have the desired effect; remove and redefine the element instead.
         def self.element_attributes(element_name, attributes)
             elements[element_name].attributes.merge!(attributes)
         end
         
+        # Defines a multiple element. Equivalent to calling
+        # element(name, type, :multiple => true, :association => :many, ...)
         def self.many(name, type, attributes={}, &proc)
             attributes[:multiple] = true
             attributes[:association] ||= :many
             element(name, type, attributes, &proc)
         end
-                
+        
+        # Defines an element with choice association. Shorthand for
+        # element(name, type, :association => :choice, ...)     
         def self.choice(name, type, attributes={}, &proc)
             attributes[:association] = :choice
             element(name, type, attributes, &proc)
         end
         
+        # Defines a multiple element with :multiple_choice association. Shorthand for
+        # many(name, type, :association => :multiple_choice, ...)
         def self.multiple_choice(name, type, attributes={}, &proc)
             attributes[:association] = :multiple_choice
             many(name, type, attributes, &proc)
@@ -330,11 +451,13 @@ module Spider; module Model
         
         # Saves the element definition and evals it when first needed, avoiding problems with classes not
         # available yet when the model is defined.
-        def self.define_elements(&proc)
+        # FIXME: remove?
+        def self.define_elements(&proc) #:nodoc:
             @elements_definition = proc
         end
         
-        def self.create_inline_model(name, hash)
+        # Creates an inline model
+        def self.create_inline_model(name, hash) #:nodoc:
             model = self.const_set(Spider::Inflector.camelize(name), Class.new(InlineModel))
             model.instance_eval do
                 hash.each do |key, val|
@@ -351,11 +474,13 @@ module Spider; module Model
             return model
         end
         
+        # An array of other models this class points to.
         def self.submodels
             elements.select{ |name, el| el.model? }.map{ |name, el| el.model }
         end
         
-        def self.extend_model(model, params={})
+        
+        def self.extend_model(model, params={}) #:nodoc:
             if (model == superclass) # first undo table per class inheritance
                 @elements = {}
                 @elements_order = []
@@ -386,10 +511,17 @@ module Spider; module Model
             end
         end
         
+        # Externalizes the superclass elements making the superclass an external integrated element.
+        # Parameters may be:
+        # * :name               (symbol) name of the created element
+        # * :delete_cascade     (bool) delete cascade the superclass instance
+        # * :no_local_pk        (bool) do not define an id for this class
+        # * :add_polymorphic    (bool) notify the superclass that it is extended, making polymorphic queries possible
         def self.class_table_inheritance(params={})
             self.extend_model(superclass, params)
         end
         
+        # Makes the class use the superclass storage
         def self.inherit_storage
             self.attributes[:inherit_storage] = true
             (class << self; self; end).instance_eval do
@@ -399,12 +531,15 @@ module Spider; module Model
             end
         end
         
+        # Sets a fixed condition.
         def self.condition(condition)
             self.attributes[:condition] = condition
         end
-            
         
-        def self.group(name, &proc)
+        #
+        #--
+        # TODO: document me
+        def self.group(name, &proc) #:nodoc:
             proxy = Class.new(ProxyModel).proxy(name.to_s+'_', self)
             proxy.instance_eval(&proc)
             proxy.each_element do |el|
@@ -417,6 +552,7 @@ module Spider; module Model
             
         end
         
+        # Add a subclass, allowing polymorphic queries on it.
         def self.polymorphic(model, options)
             through = options[:through] || Spider::Inflector.underscore(self.name).gsub('/', '_')
             through = through.to_sym
@@ -424,6 +560,9 @@ module Spider; module Model
             @polymorphic_models[model] = {:through => through}
         end
 
+        # Sets or gets class attributes (a Hash).
+        # If given a hash of attributes, will merge them with class attributes.
+        # Model attributes are generally empty, and can be used by apps.
         def self.attributes(val=nil)
             @attributes ||= {}
             if (val)
@@ -432,16 +571,19 @@ module Spider; module Model
             @attributes
         end
         
+        # Sets a model attribute. See #self.attributes
         def self.attribute(name, value)
             @attributes ||= {}
             @attributes[name] = value
         end
         
+        # Adds a sequence to the model.
         def self.sequence(name)
             @sequences ||= []
             @sequences << name
         end
         
+        # Model sequences.
         def self.sequences
             @sequences ||= []
         end
@@ -450,24 +592,30 @@ module Spider; module Model
         #   Methods returning information about the model   #
         #####################################################
         
+        # Underscored local name (without namespaces)
         def self.short_name
             return Inflector.underscore(self.name.match(/([^:]+)$/)[1])
         end
         
+        # False for BaseModel (true for Spider::Model::Managed)
         def self.managed?
             return false
         end
         
+        # Name
         def self.to_s
             self.name
         end
         
+        # Sets the singolar and/or the plural label for the model
+        # Returns the singlular label
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
             @label || self.name
         end
         
+        # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
             @label_plural || self.name
@@ -477,29 +625,35 @@ module Spider; module Model
         #   Methods returning information about the elements   #
         ########################################################
         
+        # An Hash of Elements, indexed by name
         def self.elements
             @elements
         end
         
+        # An array of the model's Elements
         def self.elements_array
             @elements_order.map{ |key| @elements[key] }
         end
 
-        
+        # Yields each element in order
         def self.each_element
             @elements_order.each do |name|
                 yield elements[name]
             end
         end
         
+        # Returns true if the model has given element name
         def self.has_element?(name)
             return elements[name] ? true : false
         end
         
+        # An array of elements with primary_key attribute set
         def self.primary_keys
             elements.values.select{|el| el.attributes[:primary_key]}
         end
         
+        # Returns the model actually defining element_name; that could be the model
+        # itself, a superclass, or an integrated model
         def self.first_definer(element_name)
             if (self.superclass.elements && self.superclass.elements[element_name])
                 return self.superclass.first_definer(element_name)
@@ -516,11 +670,15 @@ module Spider; module Model
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
         
+        # The given module will be mixed in any mapper used by the class
         def self.mapper_include(mod)
             @mapper_modules ||= []
             @mapper_modules << mod
         end
         
+        # The given proc will be mixed in the mapper used by this class
+        # Note that the proc will be converted to a Module, so any overridden methods will still have 
+        # access to the super method
         def self.with_mapper(*params, &proc)
             # @mapper_procs ||= []
             # @mapper_procs << proc
@@ -538,11 +696,14 @@ module Spider; module Model
             @mapper_procs << proc
         end
         
+        # Sets the url or the name of the storage to use
         def self.use_storage(name=nil)
             @use_storage = name if name
             @use_storage
         end
         
+        # Returns the current default storage for the class
+        # The storage to use can be set with #use_storage
         def self.storage
             return @storage if @storage
             if (!@use_storage && self.attributes[:sub_model])
@@ -551,6 +712,11 @@ module Spider; module Model
             return @use_storage ? get_storage(@use_storage) : get_storage
         end
         
+        # Returns an instancethe storage corresponding to the storage_string if it is given, 
+        # or of the default storage otherwise.
+        # The storage string can be a storage url (see #Storage.get_storage), or a named storage
+        # defined in configuration
+        #--
         # Mixin!
         def self.get_storage(storage_string='default')
             storage_regexp = /([\w\d]+?):(.+)/
@@ -568,10 +734,12 @@ module Spider; module Model
             return storage
         end
          
+        # Returns an instance of the default mapper for the class. 
         def self.mapper
             @mapper ||= get_mapper(storage)
         end
 
+        # Returns an instance of the mapper for the given storage
         def self.get_mapper(storage)
 #            map_class = self.attributes[:inherit_storage] ? superclass : self
             mapper = storage.get_mapper(self)
@@ -587,22 +755,34 @@ module Spider; module Model
             return mapper
         end
 
-        # Finds objects according to query. Returns a QuerySet.
-        # Accepts a Query, or a Condition and a Request (optional)
+        # Executes #self.where, and calls QuerySet#load on the result.
+        # Returns nil if the result is empty, the QuerySet otherwise
+        # See #self.where for parameter syntax
         def self.find(*params, &proc)
             qs = self.where(*params, &proc)
-            return qs[0] ? qs : nil
+            return qs.empty? ? qs : nil
         end
         
+        # Executes #self.where, returning the first result
+        # See #self.where for parameter syntax
         def self.load(*params, &proc)
             return self.where(*params, &proc)[0]
         end
-        alias :find1 :load
         
+        # Returns a queryset without conditions
         def self.all
-            return self.find
+            return self.where
         end
         
+        # Constructs a Query based on params, and returns a QuerySet
+        # Allowed parameters are:
+        # * a Query object
+        # * a Condition and an (optional) Request, or anything that can be parsed by Condition.new and Request.new
+        # If a block is provided, it is passed to Condition.parse_block
+        # Examples:
+        #   felines = Animals.where({:family => 'felines'})
+        #   felines = Animals.where({:family => 'felines'}, [:name, :description])
+        #   cool_animals = Animals.where{ (has_fangs == true) | (has_claws == true)}
         def self.where(*params, &proc)
             if (params[0] && params[0].is_a?(Query))
                 query = params[0]
@@ -620,6 +800,10 @@ module Spider; module Model
             return qs
         end
         
+        # Returns the condition for a "free" text query
+        # Examples:
+        #   condition = News.free_query_condition('animals')
+        #   animal_news = News.where(condition)
         def self.free_query_condition(q)
             c = Condition.or
             self.elements_array.each do |el|
@@ -630,6 +814,7 @@ module Spider; module Model
             return c
         end
         
+        # Returns the number of objects in storage
         def self.count(condition=nil)
             mapper.count(condition)
         end
@@ -881,16 +1066,23 @@ module Spider; module Model
             end
             return obj
         end
-            
+        
+        # Returns the current autoload status
         def autoload?
             @_autoload
         end
         
+        # Enables or disables autoloading.
+        # An autoloading object will try to load all missing elements on first access.
+        # (see also Element#lazy_groups)
         def autoload=(val)
             autoload(val, false)
         end
         
-        def autoload(a, traverse=true)
+        # Sets autoload mode
+        # The first parameter the value of autoload to be set; it can be true, false or :save_mode (see #save_mode))
+        # the second bool parameter specifies if the value should be propagated on all child objects.
+        def autoload(a, traverse=true) #:nodoc:
             return if @_tmp_autoload_walk
             @_tmp_autoload_walk = true
             @_autoload = a
@@ -903,6 +1095,8 @@ module Spider; module Model
             @_tmp_autoload_walk = nil
         end
         
+        # Disables autoload.
+        # If a block is given, the current autoload setting will be restored after yielding.
         def no_autoload
             prev_autoload = autoload?
             self.autoload = false
@@ -912,6 +1106,9 @@ module Spider; module Model
             end
         end
         
+        # Sets autoload to :save_mode; elements will be autoloaded only one by one, so that
+        # any already set data will not be overwritten
+        # If a block is given, the current autoload setting will be restored after yielding.
         def save_mode
             prev_autoload = autoload?
             self.autoload = :save_mode
@@ -926,8 +1123,10 @@ module Spider; module Model
         #   Methods for getting information about element values     #
         ##############################################################
         
+        # Returns true if other is_a?(self.class), and has the same values for this class' primary keys.
         def ==(other)
             return false unless other
+            return false unless other.is_a?(self.class)
             self.class.primary_keys.each do |k|
                 return false unless get(k) == other.get(k)
             end
@@ -938,18 +1137,21 @@ module Spider; module Model
         #   Iterators                                                #
         ##############################################################
         
-        def each
+        # Iterates over elements and yields name-value pairs
+        def each # :yields: element_name, element_value
             self.class.elements.each do |name, el|
                 yield name, get(name)
             end
         end
 
-        def each_val
+        # Iterates over non-nil elements, yielding name-value pairs
+        def each_val # :yields: element_name, element_value
             self.class.elements.select{ |name, el| element_has_value?(name) }.each do |name, el|
                 yield name, get(name)
             end
         end
         
+        # Returns an array of current primary key values
         def primary_keys
             self.class.primary_keys.map{ |k| get(k) }
         end
@@ -978,7 +1180,7 @@ module Spider; module Model
             return instance_variable_get(:"@#{element_name}") == nil ? false : true
         end
 
-        
+        # Returns true if the element value has been modified since instantiating or loading
         def element_modified?(element)
             element = element.is_a?(Element) ? element : self.class.elements[element]
             set_mod = @modified_elements[element.name]
@@ -993,11 +1195,13 @@ module Spider; module Model
             return false
         end
         
+        # Returns true if any of elements has been modified
         def elements_modified?(*elements)
             elements.each{ |el| return true if element_modified?(el) }
             return false
         end
         
+        # Returns true if any element, or any child object, has been modified
         def modified?
             return true unless @modified_elements.reject{ |key, val| !val }.empty?
             self.class.elements_array.select{ |el| 
@@ -1008,13 +1212,15 @@ module Spider; module Model
             return false
         end
         
-        def set_modified(request)
+        # Given elements are set as modified
+        def set_modified(request) #:nodoc:
             request.each do |key, val| # FIXME: go deep
                 @modified_elements[key] = true
             end
         end
         
-        def reset_modified_elements(*elements)
+        # Resets modified elements
+        def reset_modified_elements(*elements) #:nodoc:
             if (elements.length > 0)
                 elements.each{ |el_name| @modified_elements.delete(el_name) }
             else
@@ -1039,10 +1245,12 @@ module Spider; module Model
             return true
         end
         
+        # Returns true if no element has a value
         def empty?
             return @_has_values
         end
         
+        # Sets all values of obj on the current object, cloning them if possible
         def merge!(obj)
             obj.class.elements_array.select{ |el| obj.element_has_value?(el) && !el.integrated?}.each do |el|
                 val = obj.get(el)
@@ -1054,18 +1262,21 @@ module Spider; module Model
             @loaded_elements.merge!(obj.loaded_elements)
         end
         
+        # Returns a deep copy of the object
         def clone
             obj = self.class.new
             obj.merge!(self)
             return obj
         end
         
+        # Returns a new instance with the same primary keys
         def get_new
             obj = self.class.new
             self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
             return obj
         end
         
+        # Returns a condition based on the current primary keys
         def keys_to_condition
             c = Condition.and
             self.class.primary_keys.each do |key|
@@ -1079,23 +1290,22 @@ module Spider; module Model
             return c
         end
         
-        def in_storage? # FIXME! this must be more generic
-            self.class.primary_keys.each do |key|
-                return false unless element_has_value?(key)
-            end
-            return true
-        end
-
         
         #################################################
         #   Object observers methods                    #
         #################################################
         
+        # The given block will be called whenever a value is modified.
+        # The block will be passed three arguments: the object, the element name, and the previous value
+        # Example:
+        #   obj.observe_all_values do |instance, element_name, old_val|
+        #     puts "#{element_name} for object #{instance} has changed from #{old_val} to #{instance.get(element_name) }"
         def observe_all_values(&proc)
             @all_values_observers << proc
         end
         
-        def notify_observers(element_name, old_val)
+        # Calls the observers for element_name
+        def notify_observers(element_name, old_val) #:nodoc:
             @value_observers[element_name].each { |proc| proc.call(self, element_name, old_val) } if (@value_observers[element_name])
             @all_values_observers.each { |proc| proc.call(self, element_name, old_val) }
         end
@@ -1106,15 +1316,22 @@ module Spider; module Model
         #   Storage, mapper and schema loading (instance methods)    #
         ##############################################################
         
+        # Returns the current @storage, or instantiates the default calling #BaseModel.storage
         def storage
             return @storage || self.class.storage
         end
         
+        # Instantiates the storage for the instance
+        # Accepts a string (url or named storage) which will be passed to #BaseModel.get_storage
+        # Example:
+        #    obj.use_storage('my_named_db')
+        #    obj.use_storage('db:oracle://username:password@XE')
         def use_storage(storage)
             @storage = self.class.get_storage(storage)
             @mapper = self.class.get_mapper(@storage)
         end
         
+        # Returns the current mapper, or instantiates a new one (base on the current storage, if set)
         def mapper
             if (@storage)
                 @mapper ||= self.class.get_mapper(@storage)
@@ -1124,6 +1341,7 @@ module Spider; module Model
             return @mapper
         end
         
+        # Sets the current mapper
         def mapper=(mapper)
             @mapper = mapper
         end
@@ -1132,29 +1350,49 @@ module Spider; module Model
         #   Saving and loading from storage methods                  #
         ##############################################################
         
+        # Saves the object to the storage
+        # (see Mapper#save)
         def save
             mapper.save(self)
             reset_modified_elements
         end
         
+        # Saves the object and all child objects to the storage 
+        # (see Mapper#save_all)
         def save_all
             mapper.save_all(self)
         end
         
+        # Inserts the object in the storage
+        # Note: if the object is already present in the storage and unique indexes are enforced,
+        # this will raise an error.
+        # (see Mapper#insert)
         def insert
             mapper.insert(self)
             reset_modified_elements
         end
         
+        # Updates the object in the storage
+        # Note: the update will silently fail if the object is not present in the storage
+        # (see Mapper#update)
         def update
             mapper.update(self)
             reset_modified_elements
         end
         
+        # Deletes the object from the storage
+        # (see Mapper#delete)
         def delete
             mapper.delete(self)
         end
         
+        # Loads the object from the storage
+        # Acceptable arguments are:
+        # * a Query object, or
+        # * a Request object, or a Hash, which will be converted to a Request, or
+        # * a list of elements to request
+        # It will then construct a Condition with current primary keys, and call Mapper#load
+        # Note that an error will be raised by the Mapper if not all primary keys are set
         def load(*params)
             if (params[0].is_a? Query)
                 query = params[0]
@@ -1181,7 +1419,7 @@ module Spider; module Model
             return mapper.load(self, query) 
         end
         
-        
+        # Sets all values to nil
         def clear_values()
             self.class.elements.each_key do |element_name|
                 instance_variable_set(:"@#{element_name}", nil)
@@ -1192,57 +1430,37 @@ module Spider; module Model
         #   Method missing                                           #
         ##############################################################
         
-        # Autogenerated methods are:
-        # load_by_#{primary_key}( *primary_keys ) : 
-        #    creates a query with the primary_key set in its condition,
-        #    and loads with it
-        #
-        #    If the model has more than one primary key, a ModelException is raised
-        def method_missing(method, *args)
-            case method.to_s
-            when /load_by_(.+)/
-                element = $1
-                if !self.class.elements[element.to_sym].attributes[:primary_key]
-                    raise ModelException, "load_by_ called for element #{element} which is not a primary key"
-                elsif self.class.primary_keys.length > 1
-                    raise ModelException, "can't call #{method} because #{element} is not the only primary key"
-                end
-                query = Query.new
-                query.condition[element.to_sym] = args[0]
-                load(query)
-            else
-                if (self.class.attributes[:integrated_models])
-                    self.class.attributes[:integrated_models].each do |model, name|
-                        obj = send(name)
-                        if (obj.respond_to?(method))
-                            return obj.send(method, *args)
-                        end
+        # Tries the method on integrated models
+        def method_missing(method, *args) #:nodoc:
+            # UNUSED
+            # case method.to_s
+            # when /load_by_(.+)/
+            #     element = $1
+            #     if !self.class.elements[element.to_sym].attributes[:primary_key]
+            #         raise ModelException, "load_by_ called for element #{element} which is not a primary key"
+            #     elsif self.class.primary_keys.length > 1
+            #         raise ModelException, "can't call #{method} because #{element} is not the only primary key"
+            #     end
+            #     query = Query.new
+            #     query.condition[element.to_sym] = args[0]
+            #     load(query)
+            # else
+            if (self.class.attributes[:integrated_models])
+                self.class.attributes[:integrated_models].each do |model, name|
+                    obj = send(name)
+                    if (obj.respond_to?(method))
+                        return obj.send(method, *args)
                     end
                 end
-                raise NoMethodError.new(
-                "undefined method `#{method}' for " +
-                "#{self.class.name}"
-                )
             end
+            super
+            # end
         end
         
-        # def self.clone
-        #     cloned = super
-        #     els = @elements
-        #     els_order = @elements_order
-        #     cloned.class_eval do
-        #          @elements = els.clone if els
-        #          @elements_order = els_order.clone if els_order
-        #      end
-        #      cloned.instance_eval do
-        #          def name
-        #              return @name
-        #          end
-        #      end
-        #      cloned.instance_variable_set(:'@use_storage', @use_storage)
-        #      return cloned
-        # end
-        
+        # Returns a descriptive string for the object.
+        # By default this method returns the value of the first String element, if any; otherwise,
+        # the string representation of the first element of any type.
+        # Descendant classes may well provide a better representation.
         def to_s
             self.class.each_element do |el|
                 if (el.type == String && !el.primary_key?)
@@ -1258,13 +1476,19 @@ module Spider; module Model
             return ''
         end
         
+        # A compact representation of the object.
+        # Note: inspect will not autoload the object.
         def inspect
             self.class.name+': {' +
             self.class.elements_array.select{ |el| (element_loaded?(el) || element_has_value?(el)) && !el.hidden? } \
                 .map{ |el| ":#{el.name} => #{get(el.name).to_s}"}.join(',') + '}'
         end
         
-        
+        # Returns a JSON representation of the object
+        # The tree will be traversed outputting all encountered objects; when an already seen object
+        # is met, the primary keys will be output (as a single value if one, as an array if many) and traversing
+        # will stop.
+        # For more fine-grained control of the output, it is better to use the #cut method and call to_json on it
         def to_json(state=nil, &proc)
             ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
             if (@tmp_json_seen && !block_given?)
@@ -1311,6 +1535,41 @@ module Spider; module Model
             return json
         end
         
+        # Returns a part of the object tree, converted to Hashes, Arrays and Strings.
+        # Arguments can be:
+        # * a String, followed by a list of elements; the String will be sprintf'd with element values
+        # or
+        # * a depth Fixnum; depth 0 means obj.to_s will be returned, depth 1 will return an hash containing the
+        #   object's element values converted to string, and so on
+        # or
+        # * a Hash, whith element names as keys, and depths, or Hashes, or Procs as values; each element
+        # will be traversed up to the depth given, or recursively according to the has; or, if a Proc is given,
+        # it will be called with the current object and element name as arguments
+        # or
+        # * a list of elements; this is equivalent to passing a hash of the elements with depth 0
+        #
+        # Depth 0 means that the object will be converted to a string; depth 1
+        #
+        # Examples:
+        #   obj.inspect
+        #     => Zoo::Animal: {:name => Llama, :family => Camelidae, :friends => Sheep, Camel}
+        #   obj.cut(0) 
+        #     => 'Llama'
+        #   obj.cut(:name, :friends) 
+        #     => {:name => 'Llama', :friends => 'Sheep, Camel'}
+        #   obj.cut(:name => 0, :friends => 1)
+        #     => {:name => 'Llama', :friends => [
+        #           {:name => 'Sheep', :family => 'Bovidae', :friends => 'Llama'},
+        #           {:name => 'Camel', :family => 'Camelidae', :friens => 'Dromedary, LLama'}
+        #         ]}
+        #   obj.cut(:name => 0, :friends => {:name => 0})
+        #     => {:name => 'Llama', :friends => [{:name => 'Sheep'}, {:name => 'Camel'}]}
+        #   objs.cut(:name => 0, :friends => lambda{ |instance, element| 
+        #      instance.get(element).name.upcase
+        #   })
+        #     => {:name => 'Llama', :friends => ['SHEEP', 'CAMEL']}
+        #   obj.cut("Hi, i'm a %s and my friends are %s", :name, :friends)
+        #     => "Hi, i'm a Llama and my friends are Sheep, Camel"
         def cut(*params, &proc)
             h = {}
             if (params[0].is_a?(String))
@@ -1356,6 +1615,7 @@ module Spider; module Model
             return h
         end
         
+        # Returns a element_name => value Hash
         def to_hash()
             h = {}
             self.class.elements.select{ |name, el| element_loaded? el }.each do |name, el|

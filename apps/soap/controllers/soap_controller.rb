@@ -19,10 +19,12 @@ module Spider
         class <<self
             attr_accessor :soap_methods, :soap_types
             
+            # Returns the currently used soap registry
             def soap_registry
                 @registry ||= SOAP::Mapping::Registry.new
             end
 
+            # Defines a soap method
             def soap(name, params)
                 @soap_methods ||= {}
                 params[:in] ||= []
