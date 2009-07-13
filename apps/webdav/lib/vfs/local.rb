@@ -26,7 +26,7 @@ module Spider; module WebDAV; module VFS
 			end
 			
 			def content_type
-				File.directory?(@filename) ? "httpd/unix-directory" : WEBrick::HTTPUtils::mime_type(@filename, @vfs.class.config[:MimeTypes])
+				File.directory?(@filename) ? "httpd/unix-directory" : MIME::Types.type_for(@filename)[0].to_s
 			end
 			
 			def size
