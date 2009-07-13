@@ -6,7 +6,8 @@ module Spider; module HTTP
     class WEBrick < Server
 
         @supports = {
-            :chunked_request => true
+            :chunked_request => true,
+            :ssl => true
         }
 
         def options(opts)
@@ -25,6 +26,12 @@ module Spider; module HTTP
                 :Port           => opts[:port],
                 :BindAddress    => opts[:host]
             }
+            if (opts[:ssl])
+                options[:SSLEnable] = true
+                options[:SSLVerifyClient] = ::OpenSSL::SSL::VERIFY_NONE
+                options[:SSLCertificate] = opts[:ssl_cert]
+                options[:SSLPrivateKey] = opts[:ssl_private_key]
+            end
             @server = ::WEBrick::HTTPServer.new(options)
             @server.mount("/", WEBrickServlet)
             @server.start
