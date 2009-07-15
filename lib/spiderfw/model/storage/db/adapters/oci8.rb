@@ -126,22 +126,22 @@ module Spider; module Model; module Storage; module Db
                      debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
                      debug("oci8 executing:\n#{sql}\n[#{debug_vars_str}]")
                  end
-                 @cursor = connection.parse(sql)
-                 return @cursor if (!@cursor || @cursor.is_a?(Fixnum))
+                 cursor = connection.parse(sql)
+                 return cursor if (!cursor || cursor.is_a?(Fixnum))
                  bind_vars.each_index do |i|
                      var = bind_vars[i]
                      if (var.is_a?(OCI8NilValue))
-                         @cursor.bind_param(i+1, nil, var.type, 0)
+                         cursor.bind_param(i+1, nil, var.type, 0)
                      else
-                         @cursor.bind_param(i+1, var)
+                         cursor.bind_param(i+1, var)
                      end
                  end
-                 res = @cursor.exec
-                 have_result = (@cursor.type == ::OCI8::STMT_SELECT)
+                 res = cursor.exec
+                 have_result = (cursor.type == ::OCI8::STMT_SELECT)
                  # @cursor = connection.exec(sql, *bind_vars)
                  if (have_result)
                      result = []
-                     while (h = @cursor.fetch_hash)
+                     while (h = cursor.fetch_hash)
                          if block_given?
                               yield h
                           else
@@ -162,6 +162,7 @@ module Spider; module Model; module Storage; module Db
                  disconnect
                  raise exc
              ensure
+                 cursor.close if cursor
                  disconnect if @conn && !in_transaction?
              end
          end
@@ -169,7 +170,7 @@ module Spider; module Model; module Storage; module Db
 
          def prepare(sql)
              debug("oci8 preparing: #{sql}")
-             return @cursor = connection.parse(sql)
+             return connection.parse(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
