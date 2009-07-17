@@ -53,6 +53,7 @@ module Spider
             def localize_date_time(locale, object, format = :default, options={})
                 raise ArgumentError, "Object must be a Date, DateTime or Time object. #{object.inspect} given." unless object.respond_to?(:strftime)
                 p = provider(locale)
+                p = p[0] if p.is_a?(Array)
                 unless p
                     Spider::Logger.error("No provider found for locale #{locale}")
                     return object.to_s
