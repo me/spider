@@ -63,10 +63,9 @@ module Spider
             headers = "To: #{to}\n"+headers unless headers =~ /^To/
             headers = "From: #{from}\n"+headers unless headers =~ /^From/
             msg = Email.new(
-                :from => from, :to => to, :headers => headers, :body => body, 
-                :send_from => params[:send_from]
+                :from => from, :to => to, :headers => headers, :body => body
             )
-            msg.next_try = DateTime.now
+            msg.next_try = params[:send_from] || DateTime.now
             msg.save
             return msg
         end
