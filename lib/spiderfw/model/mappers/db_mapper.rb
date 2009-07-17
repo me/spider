@@ -484,7 +484,7 @@ module Spider; module Model; module Mappers
             Spider::Logger.debug(@model.primary_keys.map{|k| k.name})
             element_table = element.mapper.schema.table
             if (schema.has_foreign_fields?(element.name))
-                Spider::Logger.debug("JOIN A")
+                Spider::Logger.debug("JOIN A from #{@model} to #{element.name}")
                 keys = {}
                 element.model.primary_keys.each do |key|
                     if (key.integrated?)
@@ -509,7 +509,7 @@ module Spider; module Model; module Mappers
                     :condition => condition
                 }
             elsif (element.has_single_reverse? && element.mapper.schema.has_foreign_fields?(element.reverse)) # n/1 <-> n
-                Spider::Logger.debug("JOIN B")
+                Spider::Logger.debug("JOIN B from #{@model} to #{element.name}")
                 keys = {}
                 @model.primary_keys.each do |key|
                     our_field = nil
@@ -530,9 +530,8 @@ module Spider; module Model; module Mappers
                     :keys => keys,
                     :condition => condition
                 }
-                #buh
             else # n <-> n
-                #boh
+                # no need to handle n <-> n
             end
             # FIXME: add element conditions!
             return join
