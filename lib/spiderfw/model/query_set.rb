@@ -55,7 +55,8 @@ module Spider; module Model
         end
 
         # The first argument must be a BaseModel subclass.
-        # The second argument may be a Query, or data that will be passed to #set_data.
+        # The second argument may be a Query, or data that will be passed to #set_data. If data is passed,
+        # the QuerySet will be instantiated with autoload set to false.
         def initialize(model, query_or_val=nil)
             if (query_or_val.is_a?(Query))
                  query = query_or_val 
@@ -221,6 +222,14 @@ module Spider; module Model
         def length
             load unless @loaded || !autoload?
             @objects.length
+        end
+        
+        # Like #select, but returns an array
+        alias :select_array :select
+        
+        # Returns a (static) QuerySet of the objects for which the block evaluates to true.
+        def select(&proc)
+            return QuerySet.new(@model, select_array(&proc))
         end
         
         # True if the query had a limit, and more results can be fetched.
