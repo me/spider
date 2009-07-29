@@ -11,7 +11,7 @@ module Spider
                 
                 #@controller ||= :"Spider::AppController"
                 class << self
-                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path
+                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path
                     attr_reader :short_name, :route_url, :label, :version
                     attr_reader :short_prefix
                     attr_reader :command
@@ -23,8 +23,10 @@ module Spider
                         @setup_path ||= @path+'/setup'
                         @widgets_path ||= @path+'/widgets'
                         @views_path ||= @path+'/views'
+                        @tags_path ||= @path+'/tags'
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
+                        find_tags
                     end
                     
                     def request_url
@@ -89,6 +91,21 @@ module Spider
                             return @path[Spider.paths[:core_apps].length+1..-1]
                         end
                     end
+                    
+                    def find_tags
+                        return unless File.directory?(@tags_path)
+                        Dir.new(@tags_path).each do |entry|
+                            next if entry[0].chr == '.'
+                            next unless File.extname(entry) == '.erb'
+                            name = File.basename(entry, '.erb')
+                            klass = Spider::Tag.new_class(@tags_path+'/'+entry)
+                            const_set(Spider::Inflector.camelize(name).to_sym, klass)
+                            Spider::Logger.debug("REGISTERED TAG #{name}, #{klass}")
+                            register_tag(name, klass)
+                        end
+                    end
+                    
+                    
                 end
                 
                 # controllers = Spider::App::Controllers.clone

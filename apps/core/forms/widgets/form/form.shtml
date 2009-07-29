@@ -17,10 +17,8 @@
     <div sp:if="@action == :form">
         <form action="{ @form_action }" method="POST" { @enctype }>
             <div class="fields">
-                <div class="row" sp:each="@names |element|">
-                    <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>
-                    <sp:run obj="@inputs[element]" />
-                </div>
+                <forms:element_row sp:each="@names |element|" element="element">
+
             </div>
             <div class="row buttons">
                 <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>

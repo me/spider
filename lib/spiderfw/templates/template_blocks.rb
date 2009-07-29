@@ -28,8 +28,10 @@ module Spider
                 block = :Debugger
             elsif (Spider::Template.registered?(el.name))
                 klass = Spider::Template.get_registered_class(el.name)
-                if (klass.subclass_of?(::Spider::Widget))
+                if (klass < ::Spider::Widget)
                     block = :Widget
+                elsif (klass < Spider::Tag)
+                    block = :Tag
                 else
                     Spider.logger.error("Could not parse #{el.name} tag")
                 end
@@ -164,6 +166,7 @@ require 'spiderfw/templates/blocks/attr_if'
 require 'spiderfw/templates/blocks/render'
 require 'spiderfw/templates/blocks/yield'
 require 'spiderfw/templates/blocks/pass'
+require 'spiderfw/templates/blocks/tag'
 require 'spiderfw/templates/blocks/widget'
 require 'spiderfw/templates/blocks/run'
 require 'spiderfw/templates/blocks/debugger'
