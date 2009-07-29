@@ -179,7 +179,7 @@ module Spider; module ControllerMixins
                 
             
             def load_template(name)
-                # TODO: check multiple paths, multiple extensions
+                # FIXME: use Template's real_path
                 if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
                     name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])
                     t = Spider::Template.new(name+'.shtml')
