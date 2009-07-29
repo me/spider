@@ -24,7 +24,7 @@ module Spider; module Components
                 crud.model = model
                 @widgets[:switcher].add('Gestione Dati', model.label_plural, crud)
             end
-            if (@request.user)
+            if (@request.respond_to?(:user) && @request.user)
                 @scene.username = @request.user.to_s
             else
                 @scene.username = _("guest")
