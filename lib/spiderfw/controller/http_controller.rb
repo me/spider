@@ -86,8 +86,19 @@ module Spider
         
         module HTTPRequest
             
+            # Returns PATH_INFO reversing any proxy mappings if needed.
             def path
                 Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['PATH_INFO'])
+            end
+            
+            # Returns the REQUEST_URI reversing any proxy mappings if needed
+            def uri
+                Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['REQUEST_URI'])
+            end
+            
+            # Returns #uri prefixed with http:// and the HTTP_HOST
+            def full_uri
+                'http://'+self.env['HTTP_HOST']+uri
             end
             
         end

@@ -30,12 +30,24 @@ module Spider; module ControllerMixins
             return url
         end
         
+        # Returns the http path needed to call the current controller & action.
+        # Reverses any proxy mappings to the Controller#request_path.
         def request_path
             HTTPMixin.reverse_proxy_mapping(super)
         end
         
+        # Returns the request_path prefixed with http:// and the current host.
         def request_url
             'http://'+@request.env['HTTP_HOST']+request_path
+        end
+        
+        # Returns the request_url with query params, if any
+        def request_full_url
+            url = request_url
+            if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
+                url += '?'+@request.env['QUERY_STRING']
+            end
+            return url
         end
         
         def self.output_charset(val)
