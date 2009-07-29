@@ -21,10 +21,16 @@ module Spider; module TemplateBlocks
             end
             # Hpricot fails me when doing a direct search for >tpl:override
             # overrides = @el.search('>tpl:override') + @el.search('>tpl:override-content')
-            overrides = []
-            @template.override_tags.each do |tag|
-                overrides += @el.children_of_type('tpl:'+tag)
+            html = ""
+            @el.each_child do |ch|
+                html += ch.to_html
             end
+            html.gsub!("'", "\\'")
+            html = "<sp:widget-content>#{html}</sp:widget-content>" unless html.empty?
+            runtime_content, overrides = klass.parse_content_xml(html)
+            # @template.override_tags.each do |tag|
+            #     overrides += @el.children_of_type('tpl:'+tag)
+            # end
             template = nil
             if (overrides.length > 0)
                 #template_name = klass.find_template(template_attr)
@@ -32,15 +38,10 @@ module Spider; module TemplateBlocks
                 template.overrides = overrides
                 @template.add_subtemplate(id, template)
             end
-            # FIXME: can't find a better way
-            overrides.each{ |o| o.set_attribute('class', 'to_delete') }
-            @el.search('.to_delete').remove
-            html = ""
-            @el.each_child do |ch|
-                html += ch.to_html
-            end
-            html.gsub!("'", "\\'")
-            html = "<sp:widget-content>#{html}</sp:widget-content>" unless html.empty?
+            # # FIXME: can't find a better way
+            # overrides.each{ |o| o.set_attribute('class', 'to_delete') }
+            # @el.search('.to_delete').remove
+
             init = ""
             t_param = 'nil'
             if (template)
