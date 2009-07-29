@@ -97,7 +97,7 @@ module Spider
         
         define_annotation(:action) { |k, m| k.controller_actions(m) }
         
-        attr_reader :request, :response, :executed_method
+        attr_reader :request, :response, :executed_method, :scene
         attr_accessor :dispatch_action
         
         def initialize(request, response, scene=nil)
@@ -285,3 +285,4 @@ module Spider
 end
 
 require 'spiderfw/widget/widget'
+require 'spiderfw/tag/tag'
