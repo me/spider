@@ -66,7 +66,6 @@ module Spider
         end
         
         def translate_key(key)
-            require 'ruby-debug'
             if (!@options[key])
                 locale = Spider.locale
                 locale = $1 if locale =~ /^([^@\.]+)[@\.].+/
@@ -93,7 +92,7 @@ module Spider
                     if (@options[key][:params][:type] == :conf)
                         self[key] = {}
                         val.each do |h_key, h_val|
-                            self[key][h_key] = Configuration.new(@prefix+"#{key}.x")
+                            self[key][h_key] = Configuration.new(@prefix+".#{key}.x")
                             self[key][h_key].hash_key = h_key
                             h_val.each { |k, v| self[key][h_key].set(k, v) }
                         end
