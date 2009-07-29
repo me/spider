@@ -35,7 +35,7 @@ module Spider; module Auth
                 user.save_to_session(@request.session)
                 if (@request.params['redirect'] && !@request.params['redirect'].empty?)
                     redir_to = @request.params['redirect']
-                    redirect(redir_to)
+                    redirect(redir_to, Spider::HTTP::SEE_OTHER)
                 elsif(self.default_redirect)
                     redirect(self.default_redirect)
                 else
