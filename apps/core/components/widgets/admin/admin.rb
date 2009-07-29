@@ -2,6 +2,18 @@ require 'apps/core/auth/_init.rb'
 
 module Spider; module Components
     
+    # This widget creates an administration page for models.
+    #
+    # Attributes:
+    # *:models*     Comma-separated list of model names
+    # *:title*
+    # *:logout_url* 
+    #
+    # Content:
+    # Takes the tags
+    # *admin:model*     A model to administer
+    # *admin:app*       Administer all models belonging to the app. Can have an 'except' attribute.
+    
     class Admin < Spider::Widget
         tag 'admin'
         

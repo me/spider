@@ -1,5 +1,24 @@
 module Spider; module Forms
     
+    # Widget for managing forms.
+    #
+    # Attributes:
+    # *:model*  model to use
+    # *:elements*   array of elements to display
+    # *:widget_types*   hash of widget classes to use for inputs
+    # *:read_only*  array of read only elements
+    # *:disabled*   array of disabled elements (will not be shown)
+    # *:pk*     primary key element
+    # *:save_submit_text*   text for the save button when updating
+    # *:insert_submit_text* text for the save button when inserting
+    # *:show_submit_and_new*    bool, whether to show the submit and new button (default: true)
+    # *:show_submit_and_stay*   book, whether to show the submit and stay button (default: true)
+    # *:submit_and_new_text*    text for the save and insert new button
+    # *:submit_and_stay_text*   text for the submit and stay button
+    #
+    # Content:
+    # replaces <form:input id="element_name" /> tags with appropriate inputs
+    
     class Form < Spider::Widget
         tag 'form'
         is_attribute :form_action
