@@ -427,6 +427,9 @@ module Spider
             # FIXME: owner_controller should be (almost) always defined
             scene.controller[:request_path] = owner_controller.request_path if owner_controller
             scene.widget[:request_path] = widget_request_path
+            if (@parent && @parent.respond_to?(:scene) && @parent.scene)
+                scene._parent = @parent.scene
+            end
             return scene
         end
         
