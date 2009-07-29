@@ -143,6 +143,7 @@ module Spider; module Forms
             else
                 @scene.submit_text = @attributes[:insert_submit_text]
             end
+            @scene.obj = obj
             @scene.submit_and_new_text = @attributes[:submit_and_new_text] % @scene.submit_text
             @scene.submit_and_stay_text = @attributes[:submit_and_stay_text] % @scene.submit_text
             @scene.submit_buttons = @save_actions.keys
