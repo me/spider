@@ -37,7 +37,7 @@ module Spider; module Components
             super
         end
         
-        def parse_content(doc)
+        def parse_runtime_content(doc)
             doc = super
             mods = []
             doc.search('admin:model').each do |mod|

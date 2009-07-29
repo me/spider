@@ -117,6 +117,51 @@ module Spider
                 w.route_url+'/pub'
             end
             
+            def runtime_content_tags
+                ['sp:attribute']
+            end
+            
+            def parse_content_xml(xml)
+                return ["", []] if !xml || xml.strip.empty?
+                return parse_content(Hpricot(xml))
+            end
+            
+            # Parses widget content at compile time.
+            # Must return a pair consisting of:
+            # - runtime content XML
+            # - an array of overrides (as Hpricot nodes)
+            def parse_content(doc)
+                overrides = []
+                global_overrides = []
+                have_global_override = false
+                to_del = []
+                doc.root.each_child do |child|
+                    if child.is_a?(Hpricot::Text) || child.is_a?(Hpricot::Comment) || !runtime_content_tags.include?(child.name)
+                        if (child.respond_to?(:name) && child.name[0..2] == 'tpl')
+                            overrides << child
+                        else
+                            global_overrides << child
+                            unless (child.is_a?(Hpricot::Text) && child.to_s.strip.empty?) || child.is_a?(Hpricot::Comment)
+                                have_global_ovverride = true
+                            end
+                        end
+                        to_del << child
+                    end
+                end
+                Hpricot::Elements[*to_del].remove
+                if have_global_override
+                    overrides.unshift Hpricot('<tpl:override-content>'+Hpricot::Elements[*global_overrides].to_html+'</tpl:override-content>').root
+                end
+                overrides.each do |ovr|
+                    parse_override(ovr)
+                end
+                return [doc.to_s, overrides]
+            end
+            
+            def parse_override(el)
+                return el
+            end
+            
         end
         
         i_attribute :use_template
@@ -319,11 +364,11 @@ module Spider
         end
             
         
-        def parse_content_xml(xml)
-            parse_content(Hpricot(xml))
+        def parse_runtime_content_xml(xml)
+            parse_runtime_content(Hpricot(xml))
         end
         
-        def parse_content(doc)
+        def parse_runtime_content(doc)
             attributes = doc.search('sp:attribute')
             attributes.each do |a|
                 name = a.attributes['name'].to_sym
@@ -347,6 +392,7 @@ module Spider
             attributes.remove
             return doc
         end
+        
         
         def resources
             res = @resources.clone + widget_resources

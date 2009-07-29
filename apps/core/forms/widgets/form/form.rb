@@ -310,6 +310,14 @@ module Spider; module Forms
             @disabled += names
         end
         
+        def self.parse_override(el)
+            el.search('form:input').each do |input|
+                new_input = "<sp:run obj=\"@inputs[:#{input['id']}]\" />"
+                input.swap(new_input)
+            end
+            return el
+        end
+        
         
     end
     

@@ -116,6 +116,10 @@ module Spider
                 return path
             end
             
+            def override_tags
+                @overrides
+            end
+            
         end
         
         def override_tags
@@ -228,7 +232,7 @@ module Spider
             widget.containing_template = self
             widget.template = template if template
             widget.parent = @owner
-            widget.parse_content_xml(content) if content
+            widget.parse_runtime_content_xml(content) if content
         end
         
         def init(scene)
