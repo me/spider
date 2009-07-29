@@ -25,7 +25,12 @@ module Spider
             @apps_by_short_name ||= {}
             @loaded_apps = {}
             @root = $SPIDER_RUN_PATH
+            @locale = ENV['LANG']
             setup_paths(@root)
+            all_apps = find_all_apps
+            all_apps.each do |path|
+                require path+'/config/options.rb' if File.exist?(path+'/config/options.rb')
+            end
             load_configuration($SPIDER_PATH+'/config')
             load_configuration(@root+'/config')
             start_loggers
@@ -33,7 +38,6 @@ module Spider
             @server = {}
             @paths[:spider] = $SPIDER_PATH
             @runmode = nil
-            @locale = ENV['LANG']
             
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
             if ($SPIDER_CONFIG_SETS)
