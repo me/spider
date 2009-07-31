@@ -2,6 +2,11 @@ require 'spiderfw/templates/template_blocks'
 
 module Spider; module TemplateBlocks
     
+    # *sp:attr-if*
+    # Adds an attribute if a condition holds
+    # Example:
+    #   <div sp:attr-if="@my_condition,class=coolDiv"></div>
+    
     class AttrIf < Block
         
         def compile
