@@ -104,6 +104,16 @@ module Spider
                             register_tag(name, klass)
                         end
                     end
+
+                    def app
+                        self
+                    end
+                    
+                    def req(*list)
+                        list.each do |file|
+                            require @path+'/'+file
+                        end
+                    end
                     
                     
                 end
