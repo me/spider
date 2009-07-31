@@ -89,14 +89,13 @@ module Spider
                 config_option(key, '__auto__') unless @options[key]
                 if val.is_a?(Hash)
                     @values[key] ||= Configuration.new(@prefix+".#{key}")
-                    if (@options[key][:params][:type] == :conf)
-                        self[key] = {}
+                    if (@options[key][:params] && @options[key][:params][:type] == :conf)
                         val.each do |h_key, h_val|
                             self[key][h_key] = Configuration.new(@prefix+".#{key}.x")
                             self[key][h_key].hash_key = h_key
                             h_val.each { |k, v| self[key][h_key].set(k, v) }
                         end
-                    elsif (@options[key][:params][:type] != Hash) # sub conf
+                    elsif (!@options[key][:params] || @options[key][:params][:type] != Hash) # sub conf
                         val.each { |k, v| self[key][k.to_s] = v }
                     end     
                 else
