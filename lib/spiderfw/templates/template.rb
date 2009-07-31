@@ -5,6 +5,8 @@ require 'spiderfw/cache/template_cache'
 
 module Spider
     
+    # This class manages SHTML templates.
+    
     class Template
         include Logger
         
@@ -21,18 +23,22 @@ module Spider
         
         class << self
             
+            # Returns the class TemplateCache instance
             def cache
                 @@cache
             end
-        
-            def allow_blocks(*tags)
+            
+            # Sets allowed blocks
+            def allow_blocks(*tags) # :nodoc:
                 @allowed_blocks = tags
             end
 
-            def allowed_blocks
+            # Returns allowed blocks
+            def allowed_blocks # :nodoc:
                 @allowed_blocks
             end
 
+            # Returns a new instance, loading path.
             def load(path)
                 raise RuntimeError, "Template #{path} does not exist" unless File.exist?(path)
                 template = self.new(path)
@@ -40,14 +46,17 @@ module Spider
                 return template
             end
             
+            # Registers a tag
             def register(tag, symbol_or_class)
                 @@registered[tag] = symbol_or_class
             end
             
+            # Returns an hash of registered tags.
             def registered
                 @@registered
             end
             
+            # Checks if the tag is registered.
             def registered?(tag)
                 return true if @@registered[tag]
                 ns, tag = tag.split(':')
@@ -58,10 +67,13 @@ module Spider
                 return false
             end
             
+            # Registers a namespace (mod should probably be a Spider::App, and must respond to 
+            # get_tag and has_tag? methods).
             def register_namespace(ns, mod)
                 @@namespaces[ns] = mod
             end
             
+            # Returns the Class registered for the given tag.
             def get_registered_class(name)
                 if (@@registered[name])
                     klass = @@registered[name]
@@ -74,16 +86,55 @@ module Spider
                 return klass
             end
             
+            # Returns the view path (see #Spider::find_resource)
             def real_path(path, cur_path=nil, owner_class=nil)
                 Spider.find_resource(:views, path, cur_path, owner_class)
             end
             
+            # An array of possible override tags.
+            # Overrides may be used when placing a widget in a template, or when including another template.
+            # All except tpl:content may have the _search_ attribute, that is a CSS or XPath expression specifing
+            # the nodes to override. If the _search_ attribute is missing, the override will be applied to the
+            # root node.
+            #
+            # Example:
+            #   <div class="my_widget_template">
+            #     <div class="a">aaa</div>
+            #     <div class="b">bbb</div>
+            #   </div>
+            #   
+            # and
+            #
+            #   <div class="my_template">
+            #     <my:widget id="my_widget_instance">
+            #        <tpl:override search=".b">bbb and a c</tpl:override>
+            #     </my:widget>
+            #   </div>
+            #
+            # will result in the widget using the template
+            #   <div class="my_widget_template">
+            #     <div class="a">aaa</div>
+            #     <div class="b">bbb and c</div>
+            #   </div>
+            # 
+            # The tags are in the _tpl_ namespace.
+            # *<tpl:content [name='...'] />*     overrides the content of the found element.
+            #                                    If name is given, will override the named content found in the
+            #                                    original template.
+            # *<tpl:override />*        replaces the found nodes with given content
+            # *<tpl:override-attr name='...' value='...' />*     overrides the given attribute
+            # *<tpl:append />*  appends the given content to the container
+            # *<tpl:prepend />* prepends the given content
+            # *<tpl:delete />* removes the found nodes
+            # *<tpl:before />* inserts the given content before the found nodes
+            # *<tpl:after />* inserts the given content after the found nodes
             def override_tags
-                @overrides
+                @@overrides
             end
             
         end
         
+        # Returns the class override_tags
         def override_tags
             @@overrides
         end
@@ -99,12 +150,14 @@ module Spider
             @overrides = []
         end
         
+        # Sets the scene.
         def bind(scene)
             @scene = scene
             return self
         end
         
         
+        # Loads the compiled template (from cache if available).
         def load(path=nil)
             @path = real_path(path) if path
 #            debug("TEMPLATE LOADING #{@path}")
@@ -114,6 +167,7 @@ module Spider
             end
         end
         
+        # Recompiles the template; returns a CompiledTemplate.
         def compile
             compiled = CompiledTemplate.new
             compiled.source_path = @path
@@ -137,6 +191,8 @@ module Spider
             return compiled
         end
         
+        # Returns the root node of the template at given path.
+        # Will apply overrides and process extends and inclusions.
         def get_el(path=nil)
             path ||= @path
             doc = open(path){ |f| Hpricot.XML(f) }
@@ -163,6 +219,7 @@ module Spider
             return root
         end
         
+        # The full path of a template mentioned in this one.
         def real_path(path)
             self.class.real_path(path, File.dirname(@path), @owner.class)
         end
@@ -171,19 +228,10 @@ module Spider
         def loaded?
             @compiled ? true : false
         end
-                
-        def init_sub_done=(val)
-            @init_sub_done = val
-        end
         
-        def execute_done
-            @execute_done = true
-        end
-        
-        def execute_done?
-            @execute_done
-        end
-        
+        # Adds a widget instance to the template.
+        # This method is usually not called directly; widgets are added during the template
+        # init phase.
         def add_widget(id, widget, attributes=nil, content=nil, template=nil)
             @widgets[id.to_sym] ||= widget
             widget.id = id
@@ -197,6 +245,7 @@ module Spider
             widget.parse_runtime_content_xml(content) if content
         end
         
+        # Does the init phase (evals the template's compiled _init.rb_).
         def init(scene)
 #            Spider::Logger.debug("Template #{@path} INIT")
             load unless loaded?
@@ -207,10 +256,12 @@ module Spider
             @init_done = true
         end
         
+        
         def init_done?
             @init_done
         end
         
+        # Calls the before method of all widget instances.
         def do_widgets_before
             @widgets.each do |id, w|
                 act = (@_action_to == id) ? @_action : ''
@@ -218,6 +269,7 @@ module Spider
             end
         end
         
+        # Calls the run method on all widget instances.
         def run_widgets
             @widgets.each do |id, w|
                 w.run unless w.did_run?
@@ -225,13 +277,18 @@ module Spider
             
         end
         
+        # Does #do_widgets_before and then #run_widgets.
         def exec
             do_widgets_before
             run_widgets
         end
         
-  
-        
+        # Does the render phase.
+        # Will execute the following steps (if needed):
+        # - load
+        # - init
+        # - exec
+        # - eval the template's compiled run code.
         def render(scene=nil)
             scene ||= @scene
             load unless loaded?
@@ -261,6 +318,7 @@ module Spider
             # end
         end
         
+        # Alias for #render.
         def run
             render(@scene)
         end
@@ -270,11 +328,12 @@ module Spider
             self.class.to_s
         end
         
-        def add_subtemplate(id, template)
+        def add_subtemplate(id, template) # :nodoc:
             @subtemplates[id] = template
         end
         
-        def load_subtemplate(id)
+        
+        def load_subtemplate(id) # :nodoc:
             load unless loaded?
             return nil unless @compiled.subtemplates[id]
             t = Template.new
@@ -282,8 +341,10 @@ module Spider
             return t
         end
         
+        # Applies an override to an (Hpricot) element.
         def apply_override(el, override)
             search_string = override.attributes['search']
+            override.name = 'tpl:override-content' if override.name == 'tpl:inline-override'
             if (search_string)
                 # Fix Hpricot bug!
                 search_string.gsub!(/nth-child\((\d+)\)/) do |match|
@@ -324,11 +385,13 @@ module Spider
             end
         end
         
+        # Template resources.
         def resources
             res = @resources.clone
             return res
         end
         
+        # Resources for the template and contained widgets.
         def all_resources
             res = resources
             seen = {}
@@ -342,6 +405,8 @@ module Spider
             
         
     end
+    
+    # Class holding compiled template code.
     
     class CompiledTemplate
         attr_accessor :block, :source_path, :cache_path, :subtemplates, :devel_info
