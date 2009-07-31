@@ -26,6 +26,8 @@ module Spider
             @loaded_apps = {}
             @root = $SPIDER_RUN_PATH
             @locale = ENV['LANG']
+            @resource_types = {}
+            register_resource_type(:views, ['shtml'])
             setup_paths(@root)
             all_apps = find_all_apps
             all_apps.each do |path|
@@ -216,11 +218,13 @@ module Spider
             end
         end
         
+        # Returns the default controller.
         def controller
             require 'spiderfw/controller/spider_controller'
             SpiderController
         end
         
+        # Sets routes on the #controller for the given apps.
         def route_apps(*apps)
             @route_apps = apps.empty? ? true : apps
             if (@route_apps)
@@ -231,6 +235,70 @@ module Spider
             end
         end
         
+        # Adds a resource type
+        # name must be a symbol, extensions an array of extensions (strings, without the dot) for this resource.
+        # rel_path, is the path of the resource relative to resource root; if not given, name will be used.
+        def register_resource_type(name, extensions, rel_path=nil)
+            @resource_types[name] = {
+                :extensions => extensions,
+                :path => rel_path || name.to_s
+            }
+        end
+        
+        # Returns the full path of a resource.
+        # resource_type may be :views, or any other type registered with #register_resource_type
+        # path is the path of the resource, relative to the resource folder
+        # cur_path, if provided, is the current working path
+        # owner_class, if provided, must respond to *app*
+        # 
+        # Will look for the resource in the runtime root first, than in the
+        # app's :"#{resource_type}_path", and finally in the spider folder.
+        def find_resource(resource_type, path, cur_path=nil, owner_class=nil)
+            # FIXME: security check for allowed paths?
+            resource_config = @resource_types[resource_type]
+            raise "Unknown resource type #{resource_type}" unless resource_config
+            resource_rel_path = resource_config[:path]
+            path.strip!
+            if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
+                path.sub!(/^ROOT/, Spider.paths[:root])
+                path.sub!(/^SPIDER/, $SPIDER_PATH)
+                return path
+            elsif (cur_path)
+                if (path[0..1] == './')
+                    return cur_path+path[1..-1]
+                elsif (path[0..1] == '../')
+                    return File.dirname(cur_path)+path[2..-1]
+                end
+            end
+            app = nil
+            if (path[0].chr == '/')
+                Spider.apps_by_path.each do |p, a|
+                    if (path.index(p) == 1)
+                        app = a
+                        path = path[p.length+2..-1]
+                        break
+                    end
+                end
+            else
+                app = owner_class.app if (owner_class && owner_class.app)
+            end
+            return cur_path+'/'+path if cur_path && !app
+            search_paths = ["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}"]
+            if app.respond_to?("#{resource_type}_path")
+                search_paths << app.send("#{resource_type}_path")
+            else
+                search_paths << app.path+'/'+resource_rel_path
+            end
+            search_paths << $SPIDER_PATH+'/'+resource_rel_path
+            extensions = resource_config[:extensions]
+            search_paths.each do |p|
+                extensions.each do |ext|
+                    full = p+'/'+path+'.'+ext
+                    return full if (File.exist?(full))
+                end
+            end
+            return path
+        end
         
         
         # Source file management

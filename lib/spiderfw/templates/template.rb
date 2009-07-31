@@ -75,45 +75,7 @@ module Spider
             end
             
             def real_path(path, cur_path=nil, owner_class=nil)
-                # FIXME: security check for allowed paths?
-                path.strip!
-                if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
-                    path.sub!(/^ROOT/, Spider.paths[:root])
-                    path.sub!(/^SPIDER/, $SPIDER_PATH)
-                    return path
-                elsif (cur_path)
-                    if (path[0..1] == './')
-                        return cur_path+path[1..-1]
-                    elsif (path[0..1] == '../')
-                        return File.dirname(cur_path)+path[2..-1]
-                    end
-                end
-                app = nil
-                if (path[0].chr == '/')
-                    Spider.apps_by_path.each do |p, a|
-                        if (path.index(p) == 1)
-                            app = a
-                            path = path[p.length+2..-1]
-                            break
-                        end
-                    end
-                else
-                    app = owner_class.app if (owner_class && owner_class.app)
-                end
-                return cur_path+'/'+path if cur_path && !app
-                search_paths = [
-                    Spider.paths[:root]+'/views/'+app.relative_path,
-                    app.views_path,
-                    $SPIDER_PATH+'/views'
-                ]
-                extensions = ['shtml']
-                search_paths.each do |p|
-                    extensions.each do |ext|
-                        full = p+'/'+path+'.'+ext
-                        return full if (File.exist?(full))
-                    end
-                end
-                return path
+                Spider.find_resource(:views, path, cur_path, owner_class)
             end
             
             def override_tags
