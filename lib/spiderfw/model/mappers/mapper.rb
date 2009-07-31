@@ -721,10 +721,10 @@ module Spider; module Model
             @msg
         end
         def message
-            self.class.name.to_s + " " + _(self.class.msg) % @element.label
+            _(self.class.msg) % @element.label
         end
         def to_s
-            message
+            self.class.name.to_s + " " + message
         end
     end
     
