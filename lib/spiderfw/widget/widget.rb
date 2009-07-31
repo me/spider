@@ -132,34 +132,28 @@ module Spider
             # - an array of overrides (as Hpricot nodes)
             def parse_content(doc)
                 overrides = []
-                global_overrides = []
-                have_global_override = false
                 to_del = []
                 doc.root.each_child do |child|
-                    if child.is_a?(Hpricot::Text) || child.is_a?(Hpricot::Comment) || !runtime_content_tags.include?(child.name)
-                        if (child.respond_to?(:name) && child.name[0..2] == 'tpl')
-                            overrides << child
-                        else
-                            global_overrides << child
-                            unless (child.is_a?(Hpricot::Text) && child.to_s.strip.empty?) || child.is_a?(Hpricot::Comment)
-                                have_global_ovverride = true
-                            end
-                        end
-                        to_del << child
+                    if (child.respond_to?(:name) && (Spider::Template.override_tags.include?(child.name) || self.override_tags.include?(child.name)))
+                        overrides << child
                     end
-                end
-                Hpricot::Elements[*to_del].remove
-                if have_global_override
-                    overrides.unshift Hpricot('<tpl:override-content>'+Hpricot::Elements[*global_overrides].to_html+'</tpl:override-content>').root
                 end
                 overrides.each do |ovr|
                     parse_override(ovr)
                 end
+                Hpricot::Elements[*overrides].remove
                 return [doc.to_s, overrides]
             end
             
+            # This method is called on each override node found. The widget must return the node,
+            # modifying it if needed.
             def parse_override(el)
                 return el
+            end
+            
+            # An array of custom tags that will be processed at compile time by the widget.
+            def override_tags
+                return []
             end
             
         end
