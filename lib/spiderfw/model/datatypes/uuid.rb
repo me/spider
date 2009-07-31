@@ -14,6 +14,10 @@ module Spider; module DataTypes
             end
             return super
         end
+        
+        def self.generate
+            ::UUID.new.generate
+        end
 
     end
     
