@@ -1,1 +1,1 @@
-<div class="row"><%=@content%></div>
+<div class="row{ (<%= (@attributes['error'])%>) ? ' error' : '' }"><%=@content%></div>

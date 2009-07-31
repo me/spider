@@ -3,13 +3,10 @@
     <div sp:if="@error" class='errors'>
         Errori:
         <ul>
-            <sp:pass sp:each="@save_errors |m|">
-                <li> { m }</li>
-            </sp:pass>
             <sp:pass sp:each="@errors |k, v|">
-                    <li sp:each="v |err|">
-                        { err }
-                    </li>
+                <li sp:each="v |err|">
+                    { err }
+                </li>
             </sp:pass>
         </ul>
                 
@@ -17,8 +14,7 @@
     <div sp:if="@action == :form">
         <form action="{ @form_action }" method="POST" { @enctype }>
             <div class="fields">
-                <forms:element_row sp:each="@names |element|" element="element">
-
+                <forms:element_row sp:each="@names |element|" element="element" error_condition="@errors[element]" />
             </div>
             <div class="row buttons">
                 <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>

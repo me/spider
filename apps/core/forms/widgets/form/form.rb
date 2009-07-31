@@ -34,7 +34,7 @@ module Spider; module Forms
         attribute :submit_and_new_text, :default => _('%s and insert new')
         attribute :submit_and_stay_text, :default => _('%s and stay')
         is_attr_accessor :pk
-        attr_to_scene :inputs, :names, :labels, :error, :errors, :save_errors, :sub_links
+        attr_to_scene :inputs, :names, :labels, :error, :errors, :sub_links
         attr_accessor :save_actions
         attr_accessor :fixed
         
@@ -45,7 +45,6 @@ module Spider; module Forms
             @inputs = {}
             @names = []
             @errors = {}
-            @save_errors = []
             @labels = {}
             @save_actions ||= {}
             @sub_links = {}
@@ -271,9 +270,7 @@ module Spider; module Forms
 #                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
                 rescue FormatError => exc
 #                    debugger
-                    @error = true
-                    @errors[element_name] ||= []
-                    @errors[element_name] << exc.to_s
+                    add_error(exc, exc.message, element_name)
                 end
             end
             if (@fixed)
@@ -291,8 +288,8 @@ module Spider; module Forms
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
                 rescue => exc
                     Spider::Logger.error(exc)
-                    @error = true
-                    @save_errors << exc.message
+                    exc_element = exc.is_a?(Spider::Model::MapperElementError) ? exc.element.name : nil
+                    add_error(exc, exc.message, exc_element)
                 end
             end
             if (action == 'submit_and_new')
@@ -300,6 +297,12 @@ module Spider; module Forms
             elsif (action == 'submit_and_stay')
                 @saved_and_stay = true
             end
+        end
+        
+        def add_error(exception, message, element_name=nil)
+            @error = true
+            @errors[element_name] ||= []
+            @errors[element_name] << message
         end
         
         def saved?
@@ -330,7 +333,20 @@ module Spider; module Forms
             @disabled += names
         end
         
+        
+        def self.parse_content(doc)
+            runtime, overrides = super
+            overrides.each do |ov|
+                ov['search'] = '.fields' if (ov.name == 'tpl:inline-override')
+            end
+            return [runtime, overrides]
+        end
+        
         def self.parse_override(el)
+            if (el.name == 'form:fields')
+                el.name = 'tpl:override-content'
+                el['search'] = '.fields'
+            end
             el.search('form:input').each do |input|
                 new_input = "<sp:run obj=\"@inputs[:#{input['id']}]\" />"
                 input.swap(new_input)

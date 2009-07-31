@@ -23,6 +23,11 @@
     width: 8em;
 }
 
+.spider.forms.form .row.error label{
+    border-left: 1px solid #EE0000;
+    padding-left: 4px;
+}
+
 .spider.forms.form .row{
     clear: both;
     margin-top: 5px;
