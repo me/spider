@@ -92,6 +92,10 @@ module Spider
                 end
             end
             
+            def find_resource(type, name, cur_path=nil)
+                Spider.find_resource(type, name, cur_path, self)
+            end
+            
             
         end
         
