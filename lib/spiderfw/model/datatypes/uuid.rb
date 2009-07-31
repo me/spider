@@ -7,6 +7,10 @@ module Spider; module DataTypes
     class UUID < String
         include DataType
         
+        def map(mapper_type)
+            self.to_s
+        end
+        
         # format :short returns just the first part
         def format(type)
             if (type == :short)
