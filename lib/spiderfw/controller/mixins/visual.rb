@@ -74,7 +74,11 @@ module Spider; module ControllerMixins
             scene = prepare_scene(scene)
             request = options[:request] || @request
             response = options[:response] || @response
-            template = init_template(path, scene, options)
+            if (path.is_a?(Spider::Template))
+                template = path
+            else
+                template = init_template(path, scene, options)
+            end
             template._action_to = options[:action_to]
             template._action = @action
             template.exec
