@@ -1,6 +1,7 @@
 require 'thread'
 require 'fileutils'
 require 'apps/worker/lib/runner'
+require 'apps/worker/models/job'
 
 module Spider
 
@@ -69,6 +70,9 @@ module Spider
                             load @scripts_dir+'/'+script
                         end
                     end
+                    # every(Spider.conf.get('worker.jobs_interval').to_s+'s') do
+                    #     self.run_jobs
+                    # end
                 end
             end
             if (options[:fork])
@@ -101,15 +105,15 @@ module Spider
             end
         end
         
-        def self.run(name, params)
-            
+        def self.in(time, proc_string)
+            secs = Rufus.parse_time_string(time)
+            self.at(Time.now+secs, proc_string)
         end
         
-        def self.in(time, params)
-            
-        end
-        
-        def self.at(time, params)
+        def self.at(time, proc_string)
+            job = Job.new(:uuid => ::UUID.new.generate, :time => time, :task => proc_string)
+            job.save
+            return job.uuid
         end
         
         def self.cron(time, params, &proc)
@@ -132,6 +136,21 @@ module Spider
         
         def self.join
             @runner.join if @runner
+        end
+        
+        def self.run_jobs
+            Spider::Logger.debug("Worker running jobs queue")
+            jobs = Job.where{ (status == nil) & (time <= DateTime.now) }
+            jobs.each do |job|
+                begin
+                    job.run
+                    job.status = 'done'
+                rescue => exc
+                    Spider::Logger.error("Worker job #{job.uuid} failed with error: #{exc.message}")
+                    job.status = 'failed'
+                end
+                job.save
+            end
         end
 
     end
