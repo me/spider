@@ -81,6 +81,8 @@ module Spider
     config_option 'orgs.x.city', _("Name of the city")
     config_option 'orgs.x.common_name', _("Common name (e.g. domain) of the organization")
     config_option 'orgs.x.email', _("Main e-mail address of the organization")
+    config_option 'orgs.x.auto_from_email', _("Email address used as 'From' for automatic e-mails"),
+        :default => lambda{ |name| Spider.conf.get("orgs.#{name}.email") }
     config_option 'orgs.x.organizational_unit', _("Organizational Unit (e.g. department)")
     config_option 'orgs.x.pub_key', _("Path to the public key (defaults to config/certs/org_name/public.pem)"),
         :default => lambda{ |name| Spider.paths[:certs]+'/'+name+'/public.pem'}
