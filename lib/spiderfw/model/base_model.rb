@@ -1,3 +1,4 @@
+require 'spiderfw/model/mixins/state_machine'
 require 'spiderfw/model/element'
 require 'iconv'
 
@@ -52,6 +53,7 @@ module Spider; module Model
     class BaseModel
         include Spider::Logger
         include DataTypes
+        include StateMachine
         
         # The BaseModel class itself. Used when dealing with proxy objects.
         attr_reader :model
@@ -689,6 +691,14 @@ module Spider; module Model
                 end
             end
             return self
+        end
+        
+        # Returns true if the element with given name is associated with the passed
+        # association.
+        # This method should be used instead of querying the element's association directly,
+        # since subclasses and mixins may extend this method to provide association equivalence.
+        def self.element_association?(element_name, association)
+            return true if elements[element_name].association = association
         end
         
         ##############################################################
