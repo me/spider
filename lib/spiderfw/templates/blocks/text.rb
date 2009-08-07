@@ -9,7 +9,7 @@ module Spider; module TemplateBlocks
     class Text < Block
 
         
-        def compile
+        def compile(options={})
             text = @el.content
             scanner = ::StringScanner.new(text)
             pos = 0

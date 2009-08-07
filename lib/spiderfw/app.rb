@@ -33,6 +33,10 @@ module Spider
                         Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
                     end
                     
+                    def pub_url
+                        request_url+'/public'
+                    end
+                    
                     def controller
                         #controllers = self.const_get(:Controllers)
                         if (!@controller || !const_defined?(@controller))

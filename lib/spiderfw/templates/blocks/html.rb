@@ -4,10 +4,10 @@ module Spider; module TemplateBlocks
     
     class HTML < Block
         
-        def compile
+        def compile(options={})
             c = ""
             init = ""
-            start = get_start
+            start = get_start(options)
             c += "$out << '#{start}'\n"
             c, init = compile_content(c, init)
             end_tag = get_end
@@ -15,7 +15,14 @@ module Spider; module TemplateBlocks
             return CompiledBlock.new(init, c)
         end
         
-        def get_start
+        def get_start(options)
+            if options[:mode] == :widget && @el.attributes['id']
+                cl = @el.attributes['class'] || ''
+                cl += ' ' unless cl.empty?
+                cl += "id_#{@el.attributes['id']}"
+                @el.attributes['class'] = cl
+                @el.attributes.delete('id')
+            end
             start = "<"+@el.name
             @el.attributes.each do |key, val|
                 start += " #{key}=\""

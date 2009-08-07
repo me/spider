@@ -1,4 +1,4 @@
-require 'spiderfw/controller/controller'
+require 'spiderfw/controller/page_controller'
 require 'spiderfw/templates/template'
 require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/widget/widget_attributes'
@@ -113,7 +113,9 @@ module Spider
                 w = self
                 # FIXME! this is a quick hack to make extended templates work
                 # but what we need is a better method to handle resource ownership
-                w = w.superclass while w.superclass != Spider::Widget && w.superclass.subclass_of?(Spider::Widget)
+                #
+                # Is it needed anymore?
+                # w = w.superclass while w.superclass != Spider::Widget && w.superclass.subclass_of?(Spider::Widget)
                 w.route_url+'/pub'
             end
             
@@ -202,6 +204,7 @@ module Spider
             end
             @id ||= @attributes[:id]
             @template.id_path = @id_path
+            @template.mode = :widget
             required_groups = {}
             self.class.attributes.each do |k, params|
                 if (params[:required])
@@ -233,6 +236,11 @@ module Spider
             init_widgets
             set_widget_attributes
             prepare_widgets
+            @template.resources.each do |res|
+                res = res.clone
+                res[:src] = self.class.pub_url+'/'+res[:src]
+                @resources << res
+            end
         end
         
         def init_widgets
@@ -277,11 +285,6 @@ module Spider
                 end
                 act ||= ''
                 w.before(act)
-            end
-            @template.resources.each do |res|
-                res = res.clone
-                res[:src] = self.class.pub_url+'/'+res[:src]
-                @resources << res
             end
         end
         

@@ -6,11 +6,18 @@ module Spider; module ControllerMixins
     module StaticContent
         
         def self.included(klass)
-            klass.route('pub/', :serve_static)
+            klass.extend(ClassMethods)
+            klass.route('public/', :serve_static)
             klass.route('w/', :serve_widget_static)
             if (klass < Visual)
-                klass.no_layout('pub')
+                klass.no_layout('public')
                 klass.no_layout('serve_static')
+            end
+        end
+        
+        module ClassMethods
+            def pub_url
+                self.app.pub_url
             end
         end
         
@@ -28,9 +35,9 @@ module Spider; module ControllerMixins
         
         def serve_widget_static(path)
             path = sanitize_path(path)
-            parts = path.split('/pub/', 2)
+            parts = path.split('/public/', 2)
             raise Spider::Controller::NotFound.new(path) unless parts[1]
-            full_path = self.class.app.widgets_path+'/'+parts[0]+'/pub/'+parts[1]
+            full_path = self.class.app.widgets_path+'/'+parts[0]+'/public/'+parts[1]
             raise Spider::Controller::NotFound.new(path) unless File.exist?(full_path)
             output_static(full_path)
         end

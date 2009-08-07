@@ -1,7 +1,7 @@
 require 'erb'
 require 'mailfactory'
 
-Spider.register_resource_type(:email, ['erb'], 'templates/email')
+Spider.register_resource_type(:email, :extensions => ['erb'], :path => 'templates/email')
 
 module Spider; module Messenger
     

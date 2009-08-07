@@ -9,7 +9,7 @@ module Spider; module TemplateBlocks
             super
         end
         
-        def compile
+        def compile(options={})
             init = ""
             rep_type = nil
             rep = nil
@@ -27,7 +27,7 @@ module Spider; module TemplateBlocks
                 arguments = $2.strip
             end
             c = "#{vars_to_scene(repeated)}.#{rep_type} do |#{arguments}|\n"
-            content = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile
+            content = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile(options)
             content.run_code.each_line do |line|
                 c += '  '+line
             end

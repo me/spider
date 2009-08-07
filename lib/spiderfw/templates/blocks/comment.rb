@@ -4,7 +4,7 @@ module Spider; module TemplateBlocks
     
     class Comment < Block
         
-        def compile
+        def compile(options={})
             init = nil
             c = ""
             str = ""

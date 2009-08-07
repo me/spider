@@ -64,12 +64,12 @@ module Spider
                 return content_blocks
             end
             
-            def compile_content(c='', init='')
+            def compile_content(c='', init='', options={})
                 c ||= ""
                 init ||= ""
                 blocks = parse_content(@el)
                 blocks.each do |block|
-                    compiled = block.compile
+                    compiled = block.compile(options)
                     next unless compiled
                     # if (compiled.run_code =~ /nil/)
                     #     Spider::Logger.debug("NIL BLOCK")

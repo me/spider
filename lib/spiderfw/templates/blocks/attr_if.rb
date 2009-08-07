@@ -9,7 +9,7 @@ module Spider; module TemplateBlocks
     
     class AttrIf < Block
         
-        def compile
+        def compile(options={})
             init = ""
             attr_if = @el.attributes['sp:attr-if']
             @el.remove_attribute('sp:attr-if')

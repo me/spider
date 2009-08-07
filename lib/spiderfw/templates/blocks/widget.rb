@@ -4,7 +4,7 @@ module Spider; module TemplateBlocks
     
     class Widget < Block
         
-        def compile
+        def compile(options={})
             klass = Spider::Template.get_registered_class(@el.name)
             init_params = []
             id = @el.attributes['id']

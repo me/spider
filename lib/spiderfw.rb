@@ -27,7 +27,7 @@ module Spider
             @root = $SPIDER_RUN_PATH
             @locale = ENV['LANG']
             @resource_types = {}
-            register_resource_type(:views, ['shtml'])
+            register_resource_type(:views, :extensions => ['shtml'])
             setup_paths(@root)
             all_apps = find_all_apps
             all_apps.each do |path|
@@ -237,11 +237,15 @@ module Spider
         
         # Adds a resource type
         # name must be a symbol, extensions an array of extensions (strings, without the dot) for this resource.
-        # rel_path, is the path of the resource relative to resource root; if not given, name will be used.
-        def register_resource_type(name, extensions, rel_path=nil)
+        # Options may be:
+        # :extensions   an array of possible extensions. If given, find_resource will try appending the extensions
+        #               when looking for the file.
+        # :path         the path of the resource relative to resource root; if not given, name will be used.
+        # 
+        def register_resource_type(name, options={})
             @resource_types[name] = {
-                :extensions => extensions,
-                :path => rel_path || name.to_s
+                :extensions => options[:extensions],
+                :path => options[:path] || name.to_s
             }
         end
         
@@ -290,10 +294,11 @@ module Spider
                 search_paths << app.path+'/'+resource_rel_path
             end
             search_paths << $SPIDER_PATH+'/'+resource_rel_path
-            extensions = resource_config[:extensions]
+            extensions = [nil] + resource_config[:extensions]
             search_paths.each do |p|
                 extensions.each do |ext|
-                    full = p+'/'+path+'.'+ext
+                    full = p+'/'+path
+                    full += '.'+ext if ext
                     return full if (File.exist?(full))
                 end
             end

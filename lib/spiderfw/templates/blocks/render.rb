@@ -4,7 +4,7 @@ module Spider; module TemplateBlocks
     
     class Render < Block
         
-        def compile
+        def compile(options={})
             c = ""
             init = nil
             if (@el.attributes['obj'] =~ /@(.+)/)

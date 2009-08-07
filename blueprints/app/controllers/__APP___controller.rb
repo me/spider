@@ -1,7 +1,6 @@
 <%= modules[0..-2].inject(""){ |s, mod| s+= "module #{mod}; "} %>module <%=modules[-1]%>
     
-    class <%= module_name %>Controller < Spider::PageController
-        include HTTPMixin, StaticContent
+    class <%= module_name %>Controller < Spider::AppController
         
         layout '<%= app_name %>.layout'
     

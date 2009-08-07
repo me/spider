@@ -4,7 +4,7 @@ module Spider; module TemplateBlocks
     
     class Run < Block
         
-        def compile
+        def compile(options={})
             c = ""
             init = nil
             obj = 

@@ -4,7 +4,7 @@ module Spider; module TemplateBlocks
     
     class Yield < Block
         
-        def compile
+        def compile(options={})
             init = nil
             #c = "self[:yield_to][:controller].send(self[:yield_to][:action], *self[:yield_to][:arguments])\n"
             c = "yield :yield_to\n"

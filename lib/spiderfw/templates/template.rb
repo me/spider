@@ -1,9 +1,16 @@
 require 'hpricot'
 require 'spiderfw/templates/template_blocks'
 require 'spiderfw/cache/template_cache'
+begin
+    require 'less'
+    require 'spiderfw/templates/resources/less'
+rescue LoadError
+end
 
 
 module Spider
+    
+    module TemplateResources; end
     
     # This class manages SHTML templates.
     
@@ -13,6 +20,7 @@ module Spider
         attr_accessor :_action, :_action_to
         attr_accessor :widgets, :overrides, :compiled, :id_path
         attr_accessor :request, :response, :owner
+        attr_accessor :mode # :widget, ...
         attr_reader :path, :subtemplates, :widgets
         
         @@registered = {}
@@ -20,6 +28,12 @@ module Spider
         @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
         @@overrides = ['content', 'override', 'override-content', 'override-attr',
                         'append', 'prepend', 'delete', 'before', 'after']
+                        
+        @@resource_types = {
+            :css => {},
+            :js => {},
+            :less => {:processor => :Less}
+        }
         
         class << self
             
@@ -36,6 +50,10 @@ module Spider
             # Returns allowed blocks
             def allowed_blocks # :nodoc:
                 @allowed_blocks
+            end
+            
+            def resource_types # :nodoc:
+                @@resource_types
             end
 
             # Returns a new instance, loading path.
@@ -163,12 +181,12 @@ module Spider
 #            debug("TEMPLATE LOADING #{@path}")
             cache_path = @path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
             @compiled = self.class.cache.fetch(cache_path) do
-                compile
+                compile(:mode => @mode)
             end
         end
         
         # Recompiles the template; returns a CompiledTemplate.
-        def compile
+        def compile(options={})
             compiled = CompiledTemplate.new
             compiled.source_path = @path
             root = get_el(@path)
@@ -177,18 +195,42 @@ module Spider
             res =  root.children_of_type('tpl:resource')
             res_init = ""
             res.each do |r|
-                @resources << { :type => r.attributes['type'], :src => r.attributes['src'], :path => File.dirname(@path) }
-                res_init += "@resources << { :type => :#{r.attributes['type']}, :src => '#{r.attributes['src']}', :path => '#{File.dirname(@path)}' }\n"
+                pr = parse_resource(r.attributes['type'], r.attributes['src'], r.attributes)
+                resources << pr
+                res_init += "@resources << { 
+                    :type => :#{pr[:type]}, 
+                    :src => '#{pr[:src]}',
+                    :path => '#{pr[:path]}'
+                }\n"
             end
             root.search('tpl:resource').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
-            compiled.block = root_block.compile
+            compiled.block = root_block.compile(options)
             subtemplates.each do |id, sub|
-                compiled.subtemplates[id] = sub.compile
+                compiled.subtemplates[id] = sub.compile(options)
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
             return compiled
+        end
+        
+        # Processes a resource. Returns an hash with :type, :src, :path.
+        def parse_resource(type, src, attributes={})
+            # FIXME: use Spider.find_resource ?
+            res = {:type => type}
+            if @owner && @owner.class.respond_to?(:pub_url)
+                res[:src] = @owner.class.pub_url + '/' + src
+                res[:path] = @owner.class.pub_path + '/' + src
+            else
+                res[:src] = src
+                res[:path] = src
+            end
+            res_info = self.class.resource_types[type]
+            if (res_info && res_info[:processor])
+                processor = TemplateResources.const_get(res_info[:processor])
+                res = processor.process(res)
+            end
+            return res
         end
         
         # Returns the root node of the template at given path.
