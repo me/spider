@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="crud.css" />
+    <tpl:resource type="css" src="css/crud.css" />
     <div sp:if="@saved" class="flash">
         Salvataggio effettuato
     </div>

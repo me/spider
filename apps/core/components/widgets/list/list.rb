@@ -1,12 +1,10 @@
 module Spider; module Components
     
     class Menu < Spider::Widget
-        tag 'menu'
+        tag 'list'
         
-        i_attribute :model, :required => :datasource
-        i_attribute :queryset, :required => :datasource
-        
-        rest_model :queryset, :verbs => ['GET']
+        is_attr_accessor :current
+        attr_to_scene :sections
         
         def init
             @sections = {}
