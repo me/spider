@@ -407,7 +407,6 @@ module Spider
                         f.innerHTML = override.innerHTML
                         f.search('tpl:overridden').each{ |o| o.swap(overridden) }
                     elsif (override.name == 'tpl:override' || override.name == 'tpl:content')
-    #                    debugger
                         overridden = f.to_html
                         parent = f.parent
                         f.swap(override.innerHTML)

@@ -140,7 +140,10 @@ module Spider
                 overrides = []
                 to_del = []
                 doc.root.each_child do |child|
-                    if (child.respond_to?(:name) && (Spider::Template.override_tags.include?(child.name) || self.override_tags.include?(child.name)))
+                    if child.respond_to?(:name)
+                        namespace, short_name = child.name.split(':', 2)
+                        next unless namespace == 'tpl'
+                        next unless Spider::Template.override_tags.include?(short_name) || self.override_tags.include?(child.name)
                         overrides << child
                     end
                 end
