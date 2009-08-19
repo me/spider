@@ -119,6 +119,10 @@ module Spider
                 w.route_url+'/pub'
             end
             
+            def pub_path
+                self.app.pub_path
+            end
+            
             def runtime_content_tags
                 ['sp:attribute']
             end
