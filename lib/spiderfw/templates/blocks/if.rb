@@ -16,7 +16,7 @@ module Spider; module TemplateBlocks
                 c += '  '+line
             end
             c += "end\n"
-            unless (content.init_code.strip.empty?)
+            unless (!content.init_code || content.init_code.strip.empty?)
                 init = "if (#{init_cond})\n"
                 content.init_code.each_line do |line|
                     init += "  #{line}"
