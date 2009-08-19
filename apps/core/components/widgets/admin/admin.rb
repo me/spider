@@ -34,7 +34,7 @@ module Spider; module Components
                 crud = Crud.new(@request, @response)
                 crud.id = model.name.to_s.gsub('::', '_').downcase
                 crud.model = model
-                @widgets[:switcher].add('Gestione Dati', model.label_plural, crud)
+                @widgets[:switcher].add(model.label_plural, crud, 'Gestione Dati')
             end
             if (@request.respond_to?(:user) && @request.user)
                 @scene.username = @request.user.to_s
