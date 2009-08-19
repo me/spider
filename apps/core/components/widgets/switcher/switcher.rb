@@ -13,6 +13,7 @@ module Spider; module Components
             @labels = {}
             @links = {}
             @content_by_action = {}
+            @link_mode = :path
         end
         
         def route_widget
@@ -37,7 +38,7 @@ module Spider; module Components
             super
             @sections.each do |section, items|
                 items.each do |item|
-                    menu_link = @path_action ? widget_request_path+'/'+@links[item] : "#{widget_request_path}?_wa[#{full_id}]=#{@links[item]}"
+                    menu_link = @link_mode == :path ? widget_request_path+'/'+@links[item] : "#{widget_request_path}?_wa[#{full_id}]=#{@links[item]}"
                     @widgets[:menu].add(@labels[item], menu_link, section)
                 end
             end
