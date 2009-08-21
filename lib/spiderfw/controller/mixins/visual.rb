@@ -10,15 +10,20 @@ module Spider; module ControllerMixins
         
         def self.included(klass)
            klass.extend(ClassMethods)
-           klass.define_annotation(:html) { |k, m| k.output_format(m, :html) }
-           klass.define_annotation(:xml) { |k, m| k.output_format(m, :xml) }
-           klass.define_annotation(:json) { |k, m| k.output_format(m, :json) }
+           klass.define_annotation(:html) { |k, m, params| k.output_format(m, :html, params) }
+           klass.define_annotation(:xml) { |k, m, params| k.output_format(m, :xml, params) }
+           klass.define_annotation(:json) { |k, m, params| k.output_format(m, :json, params) }
         end
         
-        def before(action, *params)
+        def before(action='', *params)
             @layout ||= self.class.get_layout(action)
             @layout ||= @dispatcher_layout
-            format = self.class.output_format(@executed_method)
+            format = nil
+            if (@request.format)
+                format = @request.format if self.class.output_format?(@executed_method, @request.format)
+                raise Spider::Controller::NotFound.new("#{action}.#{@request.format}") if @executed_method && !format
+            end
+            format ||= self.class.output_format(@executed_method)
             case format
             when :json
                 if (Spider.runmode == 'devel' && @request.params['_text'])
@@ -26,12 +31,58 @@ module Spider; module ControllerMixins
                 else
                     content_type('application/json')
                 end
+            when :js
+                content_type('application/x-javascript')
             when :html
                 content_type('text/html')
             when :xml
                 content_type('text/xml')
             end
+            @executed_format = format
             super
+        end
+        
+        def execute(action='', *params)
+            format_params = self.class.output_format_params(@executed_method, @executed_format)
+            if format_params && format_params[:template]
+                widget_target = @request.params['_wt']
+                if (widget_target)
+                    first, rest = widget_target.split('/', 2)
+                    @template ||= init_template(format_params[:template])
+                    @_widget = @template.find_widget(first)
+                    @_widget_action = rest
+                    @_widget.widget_target = rest
+                    set_dispatched_object_attributes(@_widget, 'index')
+                    @_widget.before()
+                end
+            end
+            super
+            return unless format_params
+            if (format_params[:template])
+                if (@_widget)
+                    @_widget.run
+                    @_widget.render
+                else
+                    if (@template)
+                        render(@template)  # has been init'ed in before method
+                    else
+                        render(format_params[:template])
+                    end
+                end
+            end
+            if (format_params[:redirect])
+                redirect(format_params[:redirect])
+            end
+            if (@executed_format == :json && format_params[:scene]) # FIXME: move in JSON mixin?
+                if (format_params[:scene].is_a?(Array))
+                    h = @scene.to_hash
+                    res = {}
+                    format_params[:scene].each{ |k| res[k] = h[k] }
+                    $out << res.to_json
+                else
+                    $out << @scene.to_json
+                end
+            end
         end
         
         def load_template(path)
@@ -39,6 +90,7 @@ module Spider; module ControllerMixins
             template.owner = self
             template.request = request
             template.response = response
+            @template = template
             return template
         end
         
@@ -47,9 +99,14 @@ module Spider; module ControllerMixins
         end
         
         
-        def init_template(path, scene=nil, options={})
+        def init_template(path=nil, scene=nil, options={})
             scene ||= @scene
             scene ||= get_scene
+            if (!path)
+                format_params = self.class.output_format_params(@executed_method, @executed_format)
+                return unless format_params && format_params[:template]
+                path = format_params[:template]
+            end
             template = load_template(path)
             template.init(scene)
             return template
@@ -79,8 +136,12 @@ module Spider; module ControllerMixins
             else
                 template = init_template(path, scene, options)
             end
-            template._action_to = options[:action_to]
-            template._action = @action
+            if (@request.params['_action'])
+                template._widget_action = @request.params['_action']
+            else
+                template._action_to = options[:action_to]
+                template._action = @controller_action
+            end
             template.exec
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layouts = options[:layout] || @layout
@@ -118,13 +179,29 @@ module Spider; module ControllerMixins
         
         module ClassMethods
             
-            def output_format(method, format=nil)
+            def output_format(method, format=nil, params={})
                 @output_formats ||= {}
+                @output_format_params ||= {}
                 if format
-                    @output_formats[method] = format
+                    @output_formats[method] ||= []
+                    @output_formats[method] << format
+                    @output_format_params[method] ||= {}
+                    @output_format_params[method][format] = params
                     controller_actions(method)
+                    return format
                 end
-                return @output_formats[method] || @default_output_format
+                return @default_output_format unless @output_formats[method] && @output_formats[method][0]
+                return @output_formats[method][0]
+            end
+            
+            def output_format?(method, format)
+                return false unless @output_formats
+                @output_formats[method] && @output_formats[method].include?(format)
+            end
+            
+            def output_format_params(method, format)
+                return nil unless @output_format_params && @output_format_params[method]
+                return @output_format_params[method][format]
             end
             
             def default_output_format(format)
@@ -223,7 +300,7 @@ module Spider; module ControllerMixins
                 if (path.is_a?(Symbol))
                     path = Spider::Layout.named_layouts[path]
                 end
-                path = Spider::Template.real_path(path, layout_path, self)
+                path = Spider::Template.real_path(path+'.layout', layout_path, self)
                 return Spider::Layout.new(path)
             end
             

@@ -17,7 +17,7 @@ module Spider
     class Template
         include Logger
         
-        attr_accessor :_action, :_action_to
+        attr_accessor :_action, :_action_to, :_widget_action
         attr_accessor :widgets, :overrides, :compiled, :id_path
         attr_accessor :request, :response, :owner
         attr_accessor :mode # :widget, ...
@@ -205,6 +205,9 @@ module Spider
             end
             root.search('tpl:resource').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
+            options[:root] = true
+            options[:owner] = @owner
+            options[:template_path] = @path
             compiled.block = root_block.compile(options)
             subtemplates.each do |id, sub|
                 compiled.subtemplates[id] = sub.compile(options)
@@ -284,7 +287,11 @@ module Spider
             widget.containing_template = self
             widget.template = template if template
             widget.parent = @owner
-            widget.parse_runtime_content_xml(content) if content
+            widget.parse_runtime_content_xml(content, @path) if content
+        end
+        
+        def find_widget(path)
+            return @widgets[path.to_sym]
         end
         
         # Does the init phase (evals the template's compiled _init.rb_).
@@ -307,7 +314,7 @@ module Spider
         def do_widgets_before
             @widgets.each do |id, w|
                 act = (@_action_to == id) ? @_action : ''
-                w.before(act) unless w.before_done?
+                w.widget_before(act) unless w.before_done?
             end
         end
         
@@ -355,7 +362,7 @@ module Spider
             # else
             scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb', 0)
             scene.__run_template do |widget|
-                @content[widget].render
+                @content[widget].render if @content[widget]
             end
             # end
         end
@@ -437,7 +444,7 @@ module Spider
             res = resources
             seen = {}
             @widgets.each do |id, w|
-                next if seen[w.class]
+#                next if seen[w.class]
                 seen[w.class] = true
                 res += w.resources
             end

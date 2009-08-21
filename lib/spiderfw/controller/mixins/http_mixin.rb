@@ -59,9 +59,6 @@ module Spider; module ControllerMixins
             @response.headers["Content-Type"] = "#{ct};charset=#{output_charset}"
         end
         
-        # for widgets
-
-        
         def before(action='', *arguments)
             # Redirect to url + slash if controller is called without action
             dest = HTTPMixin.reverse_proxy_mapping(@request.env['PATH_INFO'])

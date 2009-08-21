@@ -9,7 +9,10 @@ module Spider
             @template = @template.is_a?(Template) ? @template : Template.new(@template)
             @template.init(scene) unless @template.init_done?
             @template_resources = {:css => [], :js => []}
+            seen = {}
             all_resources.each do |res|
+                next if seen[res[:src]]
+                seen[res[:src]] = true
                 @template_resources[res[:type].to_sym] ||= []
                 @template_resources[res[:type].to_sym] << res[:src]
             end

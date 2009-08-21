@@ -81,6 +81,7 @@ module Spider
             
             def controller_action?(method)
                 return false unless self.method_defined?(method)
+                return true if default_action && method == default_action.to_sym
                 if @controller_actions
                     res = @controller_actions.include?(method)
                     if (!res)
@@ -156,6 +157,8 @@ module Spider
         
         def execute(action='', *arguments)
             return if @done
+            # return if self.is_a?(Spider::Widget) # FIXME: this is obviously wrong. Widgets must override the behaviour
+            # # somewhere else, or probably just not inherit controller.
             debug("Controller #{self} executing #{action} with arguments #{arguments}")
             @call_path = action
             # before(action, *arguments)
@@ -168,7 +171,7 @@ module Spider
                 elsif (@executed_method)
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
-                    @action = args[0]
+                    @controller_action = args[0]
                     args = meth.arity == 0 ? [] : args[0..meth.arity]
                     args = [nil] if meth.arity == 1 && args.empty?
                     send(@executed_method, *args)
@@ -226,7 +229,7 @@ module Spider
                 :path => @request.path
             }
             scene.controller = {
-                :request_path => request_path
+                :request_path => request_path,
             }
             scene.content = {}
             return scene
@@ -245,22 +248,27 @@ module Spider
             end
             obj = klass.new(@request, @response, @scene)
             obj.dispatch_action = route.matched || ''
-            obj.instance_eval do
-                @executed_method = nil
-                @executed_method_arguments = nil
-                if (!can_dispatch?(:execute, route.action))
-                    method, additional_arguments = get_action_method(route.action)
-                    if (method && self.class.controller_action?(method)) # or class.method_defined? ?
-                        @executed_method = method.to_sym
-                        @executed_method_arguments = additional_arguments || []
-                    end
-                end
-            end
+            # FIXME: this is not clean
+            set_dispatched_object_attributes(obj, route.action)
             if (route.options[:do])
                 obj.instance_eval &route.options[:do]
             end
 #            obj.dispatch_path = @dispatch_path + route.path
             return obj
+        end
+        
+        def set_dispatched_object_attributes(obj, action)
+            obj.instance_eval do
+                @executed_method = nil
+                @executed_method_arguments = nil
+                if (!can_dispatch?(:execute, action))
+                    method, additional_arguments = get_action_method(action)
+                    if (method && self.class.controller_action?(method))
+                        @executed_method = method.to_sym
+                        @executed_method_arguments = additional_arguments || []
+                    end
+                end
+            end
         end
         
 

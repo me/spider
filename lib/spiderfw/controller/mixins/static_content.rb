@@ -1,9 +1,11 @@
+require 'spiderfw/controller/mixins/http_mixin'
 require 'webrick/httputils'
 require 'mime/types'
 
 module Spider; module ControllerMixins
     
     module StaticContent
+        include Spider::ControllerMixins::HTTPMixin
         
         def self.included(klass)
             klass.extend(ClassMethods)
@@ -16,6 +18,12 @@ module Spider; module ControllerMixins
         end
         
         module ClassMethods
+            
+            def output_format?(method, format)
+                return true if method == "serve_static"
+                return super
+            end
+            
             def pub_url
                 self.app.pub_url
             end
@@ -26,6 +34,7 @@ module Spider; module ControllerMixins
         end
         
         def serve_static(path=nil)
+            path += ".#{@request.format}" if @request.format
             raise Spider::Controller::NotFound.new(path) unless path
             path = sanitize_path(path)
             full_path = self.class.app.pub_path+'/'+path
@@ -54,6 +63,12 @@ module Spider; module ControllerMixins
             while (block = f.read(1024)) do
                 $out << block
             end
+        end
+        
+        def prepare_scene(scene)
+            scene = super
+            scene.controller[:pub_url] = self.class.pub_url
+            return scene
         end
         
     end
