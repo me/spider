@@ -135,7 +135,8 @@ module Spider; module Model
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-                obj.get(el).save if obj.element_modified?(el) && obj.get(el).mapper.class.write?
+                sub_obj = obj.get(el)
+                sub_obj.save if sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
         end
         

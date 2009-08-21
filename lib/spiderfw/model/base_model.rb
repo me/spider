@@ -399,12 +399,12 @@ module Spider; module Model
         
         
         # Removes a defined element
-        #--
-        # TODO: remove getter and setter
         def self.remove_element(el)
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
+            remove_method(:"#{el}") rescue NameError
+            remove_method(:"#{el}=") rescue NameError
         end
             
         # Integrates an element: any call to the child object's elements will be passed to the child.
@@ -1542,7 +1542,7 @@ module Spider; module Model
         # Descendant classes may well provide a better representation.
         def to_s
             self.class.each_element do |el|
-                if (el.type == String && !el.primary_key?)
+                if ((el.type == String || el.type == Text) && !el.primary_key?)
                     v = get(el)
                     return v ? v.to_s : ''
                 end
@@ -1701,6 +1701,53 @@ module Spider; module Model
                 h[name] = get(name)
             end
             return h
+        end
+        
+        # Returns a yaml representation of the object. Will try to autoload all elements, unless autoload is false;
+        # foreign keys will be expressed as an array if multiple, as a single primary key value otherwise
+        def to_yaml
+            require 'yaml'
+            #return YAML::dump(self)
+            h = {}
+            def obj_pks(obj, klass)
+                unless obj
+                    return klass.primary_keys.length > 1 ? [] : nil
+                end
+                pks = obj.primary_keys
+                return pks[0] if pks.length == 1
+                return pks
+            end 
+            self.class.elements_array.each do |el|
+                if (el.model?)
+                    obj = get(el)
+                    if (el.multiple?)
+                        h[el.name] = obj.map_array{ |o| obj_pks(o, el.model) }
+                    else
+                        h[el.name] = obj_pks(obj, el.model)
+                    end
+                else
+                    h[el.name] = get(el)
+                end
+            end
+            return YAML::dump(h)
+        end
+        
+        def self.from_yaml(yaml)
+            h = YAML::load(yaml)
+            obj = self.static
+            h.each do |key, value|
+                el = elements[key.to_sym]
+                if (el.multiple?)
+                    el_obj = el.model.static
+                    el.model.primary_keys.each do |pk|
+                        el_obj.set(pk, value.unshift)
+                    end
+                    obj.set(el, el_obj)
+                else
+                    obj.set(el, value)
+                end
+            end
+            return obj
         end
         
     end

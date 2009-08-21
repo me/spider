@@ -296,6 +296,9 @@ module Spider; module Model
             end
         end
         
+        # Remove when merging
+        alias :map_array :map
+        
         # Iterates on currently loaded objects
         def each_current
             @objects.each { |obj| yield obj }
@@ -550,7 +553,8 @@ module Spider; module Model
         end
         
         def method_missing(method, *args, &proc)     
-            return @query.send(method, *args, &proc)
+            return @query.send(method, *args, &proc) if @query.respond_to?(method)
+            return super
         end
         
         # Given a dotted path, will return an array of all objects reachable by that path

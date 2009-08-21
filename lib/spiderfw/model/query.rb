@@ -75,6 +75,7 @@ module Spider; module Model
                else
                    parts = [l, :asc]
                end
+               raise "Order elements must be strings or symbols" unless parts[0].is_a?(String) || parts[0].is_a?(Symbol)
                @order << [parts[0], parts[1]]
            end
            return self
@@ -92,11 +93,7 @@ module Spider; module Model
        # If given an argument, will use it as a Condition. If given a block, will use it on the Condition.
        def where(condition=nil, &proc)
            condition = Condition.new(&proc) unless (condition)
-           if (condition.class == String)
-               @condition << condition
-           else
-               @condition = condition
-           end
+           @condition << condition
            return self
        end
        

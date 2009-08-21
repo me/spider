@@ -548,6 +548,7 @@ module Spider; module Model; module Mappers
             current_model = @model
             joins = []
             el = nil
+            Spider::Logger.debug("GETTING DEEP JOIN TO #{dotted_element} (#{@model})")
             parts.each do |part|
                 el = current_model.elements[part]
                 if (el.integrated?)
