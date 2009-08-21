@@ -29,6 +29,7 @@ module Spider; module Forms
         
         def prepare
             self.value = prepare_value(params)
+            super
         end
         
         # def name

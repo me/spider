@@ -29,12 +29,15 @@ module Spider; module Forms
         i_attribute :disabled
         attribute :save_submit_text, :default => _('Save')
         attribute :insert_submit_text, :default => _('Insert')
-        is_attribute :show_submit_and_new, :default => true
-        is_attribute :show_submit_and_stay, :default => true
+        is_attribute :show_submit_and_new, :default => false
+        is_attribute :show_submit_and_stay, :default => false
+        is_attribute :show_additional_buttons, :default => false
         attribute :submit_and_new_text, :default => _('%s and insert new')
         attribute :submit_and_stay_text, :default => _('%s and stay')
         is_attr_accessor :pk
         attr_to_scene :inputs, :names, :labels, :error, :errors, :sub_links
+        attribute :show_related, :type => TrueClass, :default => false
+        i_attribute :auto_redirect, :default => false
         attr_accessor :save_actions
         attr_accessor :fixed
         
@@ -62,6 +65,7 @@ module Spider; module Forms
         def prepare(action='')
             @form_action = @request.path
             @pk ||= @_action_local
+            @pk ||= params['pk']
             @pk = nil if @pk == 'new'
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
@@ -85,7 +89,7 @@ module Spider; module Forms
                 @disabled = @disabled.split(',').map{ |el| e.strip.to_sym }
             end
             @disabled ||= []
-            @data = params['data'] || {}
+#            @data = params['data'] || {}
             if @_action_rest
                 el_label, sub_rest = @_action_rest.split('/', 2)
                 sub_rest ||= ''
@@ -99,10 +103,15 @@ module Spider; module Forms
                 @action = :form
             end
             @scene.action = @action
+            if (@attributes[:show_additional_buttons])
+                @attributes[:show_submit_and_new] = true
+                @attributes[:show_submit_and_stay] = true
+            end
             super
         end
         
-        def prepare_widgets
+        def init_widgets
+            super
             if (@action == :sub)
                 @widgets[:crud] = Spider::Components::Crud.new(@request, @response)
                 @widgets[:crud].id = (@model.name.to_s+'_'+@sub_element.name.to_s).gsub('::', '_').downcase
@@ -117,7 +126,7 @@ module Spider; module Forms
             else
                 create_inputs
             end
-            super
+
         end
         
         def run
@@ -173,17 +182,23 @@ module Spider; module Forms
                     input_attributes = {:size => 10}
                 elsif (el.type == Spider::DataTypes::Text)
                     widget_type = TextArea
-                elsif (el.type == ::DateTime)
+                elsif (el.type == ::DateTime || el.type == ::Date || el.type == ::Time)
                     widget_type = DateTime
+                    input_attributes = {}
+                    input_attributes[:mode] = case el.type.name
+                    when 'DateTime' then :date_time
+                    when 'Date' then :date
+                    when 'Time' then :time
+                    end
                 elsif (el.type == Spider::DataTypes::Password)
                     widget_type = Password
                 elsif (el.type == Spider::DataTypes::Bool)
                     widget_type = Checkbox
                 elsif (el.model?)
                     if ([:choice, :multiple_choice].include?(el.association) && !el.extended?)
-                        widget_type = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
+                        widget_type = el.type.attributes[:estimated_size] && el.type.attributes[:estimated_size] > 30 ? 
                             SearchSelect : Select
-                    elsif @pk && el.multiple?
+                    elsif @attributes[:show_related] && @pk && el.multiple?
                         @sub_links[@pk+'/'+el.label.downcase.gsub(/\s+/, '_')] = @labels[el.name]
                     end
                 end
@@ -192,7 +207,7 @@ module Spider; module Forms
                 debug("Created input for #{el.name}, #{input}")
                 if (input)
                     input.read_only if read_only?(el.name)
-                    input.id_path.insert(input.id_path.length-1, 'data')
+#                    input.id_path.insert(input.id_path.length-1, 'data')
                     @names << el.name
                     input.id = el.name
                     input.form = self
@@ -253,7 +268,7 @@ module Spider; module Forms
                 input = @inputs[element_name]
                 next unless input
                 next if input.read_only?
-                debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
+#                debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
                 if (input.error?)
                     @error = true
                     @errors[element_name] ||= []
@@ -296,6 +311,8 @@ module Spider; module Forms
                 @saved_and_new = true
             elsif (action == 'submit_and_stay')
                 @saved_and_stay = true
+            elsif (@auto_redirect)
+                redirect(@request.path)
             end
         end
         

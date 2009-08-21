@@ -9,8 +9,18 @@ module Spider; module Forms
             return nil
         end
         
+        # FIXME: change Select to avoid this
+        def prepare_scene(scene)
+            multi = @multiple
+            @multiple = false
+            scene = super
+            @multiple = multi
+            scene.multiple = @multiple
+            return scene
+        end
+        
         def prepare
-            super
+
             if (params['clear'])
                 @value = nil
                 @scene.next_step = :text
@@ -18,12 +28,12 @@ module Spider; module Forms
             if (params['text'] && !params['text'].empty?)
                 @scene.text_query = params['text']
                 cond = @model.free_query_condition(params['text'])
-                @data = @model.find(cond)
-                if (@data.length == 0)
+                @search_results = @model.find(cond)
+                if (@search_results.length == 0)
                     @scene.no_result = true
                     @scene.next_step = :text
-                elsif (@data.length == 1)
-                    self.value = @data[0]
+                elsif (@search_results.length == 1)
+                    self.value = @search_results[0]
                 else
                     @scene.next_step = :select
                 end
@@ -31,23 +41,29 @@ module Spider; module Forms
                 self.value = params['sel']
             end
             @done = false if @scene.next_step && !@value
+            @scene.list_delete_param = "_w#{param_name(self)}[delete]"
+            super
         end
         
         def run
-            if (@value)
+            @scene.value = @value
+            if (@value && !@multiple)
                 @scene.value_desc = @value.to_s
             else
                 @scene.next_step ||= :text
             end
-            if (@data)
-                @scene.values = {}
-                debug("SELECT VALUE:")
-                debug(@value)
-                if (@value)
-                    @scene.value_pks = @model.primary_keys.map{|k| @value.get(k) }.join(',')
+            if (@value)
+                @scene.selected = {}
+                val = @multiple ? @value : [@value]
+                val.each do |v|
+                    @scene.selected[@model.primary_keys.map{|k| v.get(k) }.join(',')]
                 end
-                @data.each_index do |i|
-                    @scene.values[i] = @model.primary_keys.map{|k| @data[i][k] }.join(',')
+            end
+            if (@search_results)
+                @scene.search_results = @search_results
+                @scene.search_values = {}
+                @search_results.each_index do |i|
+                    @scene.search_values[i] = @model.primary_keys.map{|k| @search_results[i][k] }.join(',')
                 end
                 super
             end
