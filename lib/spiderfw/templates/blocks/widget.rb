@@ -12,7 +12,7 @@ module Spider; module TemplateBlocks
             template_attr = @el.attributes['template']
             @el.remove_attribute('template')
             @el.attributes.each do |key, val|
-                if (val[0].chr == '@')
+                if (!val.empty? && val[0].chr == '@')
                     sval = "scene[:#{val[1..-1]}]"
                 else
                     sval = '"'+val+'"'

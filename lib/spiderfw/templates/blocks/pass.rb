@@ -5,7 +5,7 @@ module Spider; module TemplateBlocks
     class Pass < Block
         
         def compile(options={})
-            c, init = compile_content(c, init)
+            c, init = compile_content(c, init, options)
             return CompiledBlock.new(init, c)
         end
         
