@@ -25,6 +25,7 @@ class WebServerCommand < CmdParse::Command
                 raise CmdParse::InvalidArgumentError, _("The webserver %s is not supported") % server_name unless servers[server_name]
                 @server_name = server_name
             }
+            opt.on("--daemonize", _("Detach server process"), "-d"){ @daemonize = true }
             opt.on("--cgi", _("Serve each request spawning a CGI subprocess. Useful in developement."), "-c"){
                 @cgi = true
             }
@@ -42,17 +43,31 @@ class WebServerCommand < CmdParse::Command
             puts _("Using webserver %s") % @server_name if $verbose
             puts _("Listening on port %s") % @port if $verbose
             server = Spider::HTTP.const_get(servers[@server_name]).new
-            thread = Thread.new do
-                server.start(:port => @port, :cgi => @cgi)
-            end
-            if (@ssl)
-                ssl_thread = Thread.new do
-                    server.start(:port => @ssl, :ssl => true)
+            start = lambda{
+                thread = Thread.new do
+                    server.start(:port => @port, :cgi => @cgi)
                 end
+                if (@ssl)
+                    ssl_thread = Thread.new do
+                        server.start(:port => @ssl, :ssl => true)
+                    end
+                end
+                thread.join
+                ssl_thread.join if ssl_thread
+            }
+            if (@daemonize)
+                forked = Spider.fork do
+                    File.new(Spider.paths[:var]+'/run/server.pid', w) do |f|
+                        f.write(Process.pid)
+                    end
+                    $0 = 'spider-server'
+                    start.call
+                    @runner.join
+                end
+                Process.detach(forked)
+            else
+                start.call
             end
-            thread.join
-            ssl_thread.join if ssl_thread
-            
         end
         self.add_command( start )
 
