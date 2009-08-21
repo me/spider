@@ -12,6 +12,11 @@ class Date
     def to_local_time
         to_time(new_offset(DateTime.now.offset-offset), :local)
     end
+    
+    def lformat(format = :default, locale=nil, options={})
+        locale ||= Spider.locale
+        Spider::I18n.localize(locale, self, format, options)
+    end
 
     private
     def to_time(dest, method)
