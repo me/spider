@@ -20,7 +20,7 @@ module Spider; module I18n
             time_format = nil
             date_format = nil
             format_string = nil
-            if (object.respond_to?(:sec))
+            if (object.respond_to?(:sec) && !options[:no_time])
                 time_format = @cldr.calendar.timeformats[options[:calendar].to_sym][format.to_s].dup
             end
             if (object.is_a?(Date))
@@ -39,9 +39,9 @@ module Spider; module I18n
             replacements = [
                 [/y{3,4}/, '%Y'], [/y{1,2}/, '%y'], # year
                 [/M{5}/, months[:narrow][object.month.to_s]], [/M{4}/, months[:wide][object.month.to_s]], #month
-                [/M{1,3}/, months[:abbreviated][object.month.to_s]],
+                [/M{1,2}/, '%m'], [/M{3}/, months[:abbreviated][object.month.to_s]],
                 [/L{5}/, months[:narrow][object.month.to_s]], [/L{4}/, months[:wide][object.month.to_s]], #month
-                [/L{1,3}/, months[:abbreviated][object.month.to_s]],
+                [/L{1,2}/, '%m'], [/L{1,3}/, months[:abbreviated][object.month.to_s]],
                 [/E{5}/, days[:narrow][obj_d]], [/E{4}/, days[:wide][obj_d]], [/E{1,3}/, days[:abbreviated][obj_d]], #day of the week
                 [/e{1,5}/, '%w'], #day of the week (numeric)
                 [/d{1,2}/, '%d'], # day of the month
