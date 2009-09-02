@@ -289,7 +289,7 @@ module Spider; module Model
             Spider::Logger.debug("Deleting with condition:")
             Spider::Logger.debug(condition)
             prepare_query_condition(condition)
-            cascade = @model.elements_array.select{ |el| el.attributes[:delete_cascade] }
+            cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
             assocs = association_elements.select do |el|
                 !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
             end
