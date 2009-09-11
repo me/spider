@@ -706,6 +706,23 @@ module Spider; module Model; module Storage; module Db
         def describe_table(table)
             raise "Unimplemented"
         end
+        
+        ##############################################################
+        #   Aggregates                                               #
+        ##############################################################
+        
+        def sql_max(max)
+            values = []
+            from_sql, from_values = sql_tables(max)
+            values += from_values
+            sql = "SELECT MAX(#{max[:field]}) AS M FROM #{from_sql}"
+            if (max[:condition])
+                condition_sql, condition_values = sql_condition(max)
+                sql += " #{where_sql}"
+                values += condition_values
+            end
+            return sql, values
+        end
             
             
         

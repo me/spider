@@ -1022,6 +1022,21 @@ module Spider; module Model; module Mappers
                 :attributes => alter_attributes
             })
         end
+        
+        ##############################################################
+        #   Aggregates                                               #
+        ##############################################################
+
+        def max(element, condition=nil)
+            max = {}
+            max[:condition], max[:joins] = prepare_condition(condition) if condition
+            max[:tables] = [schema.table]
+            max[:field] = schema.field(element)
+            sql, values = storage.sql_max(max)
+            res = storage.execute(sql, *values)
+            return res[0] && res[0]['M'] ? res[0]['M'] : 0
+        end
+        
 
     end
 
