@@ -376,11 +376,11 @@ module Spider; module Model
                     end
                 end
                 val = prepare_child(element.name, val)
-                old_val = instance_variable_get(ivar)
                 check(name, val)
-                @modified_elements[name] = true unless element.primary_key?
+                notify_observers(name, val)
+                old_val = instance_variable_get(ivar)
+                @modified_elements[name] = true unless element.primary_key? || val == old_val
                 instance_variable_set(ivar, val)
-                notify_observers(name, old_val)
                 #extend_element(name)
             end
             
@@ -880,7 +880,7 @@ module Spider; module Model
             @all_values_observers = []
             @_extra = {}
             @model = self.class
-            @all_values_observers << Proc.new do |element, old_value|
+            @all_values_observers << Proc.new do |element, new_value|
                 @_has_values = true
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
             end
@@ -1388,10 +1388,34 @@ module Spider; module Model
             @all_values_observers << proc
         end
         
+        def observe_element(element_name, &proc)
+            @value_observers[element_name] ||= []
+            @value_observers[element_name] << proc
+        end
+        
+        def self.observer_all_values(&proc)
+            @all_values_observers << proc
+        end
+        
+        def self.observe_element(element_name, &proc)
+            self.value_observers[element_name] ||= []
+            @value_observers[element_name] << proc
+        end
+        
+        def self.value_observers
+            @value_observers ||= {}
+        end
+        
+        def self.all_values_observers
+            @all_values_observers ||= []
+        end
+        
+        
         # Calls the observers for element_name
-        def notify_observers(element_name, old_val) #:nodoc:
-            @value_observers[element_name].each { |proc| proc.call(self, element_name, old_val) } if (@value_observers[element_name])
-            @all_values_observers.each { |proc| proc.call(self, element_name, old_val) }
+        def notify_observers(element_name, new_val) #:nodoc:
+            (self.class.value_observers[element_name].to_a + @value_observers[element_name].to_a) \
+                .each { |proc| proc.call(self, element_name, new_val) }
+            (self.class.all_values_observers.to_a + @all_values_observers.to_a).each { |proc| proc.call(self, element_name, new_val) }
         end
         
         
