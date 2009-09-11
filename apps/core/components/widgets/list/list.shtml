@@ -1,14 +1,16 @@
-<div id="list">
+<ul id="list">
+    <tpl:resource type="js" src="js/jquery/plugins/treeview/jquery.treeview.js" />
+    <tpl:resource type="js" src="js/jquery/plugins/treeview/jquery.treeview.sortable.js" />
+    <tpl:resource type="css" src="js/jquery/plugins/treeview/jquery.treeview.css" />
+    <tpl:resource type="css" src="css/list.css" />
     <tpl:resource type="js" src="js/list.js" />
-    <ul>
-        <li sp:each_index="@lines |i|">
-            <div class="key" sp:if="@keys" style="display: none">{ @keys[i] }</div>
-            { @lines[i] }
-            <span class="actions">
-                <a sp:if="@delete && @keys" href="{ @delete_link }={ @keys[i] }">_(Delete)</a>
-                <a sp:if="@actions" sp:each="@actions |name, link|" href="{ link }{ @keys[i] }">{ name }</a>
-            </span>
-            <sp:run sp:if="@sublists[i]" obj="@sublists[i]" />
-        </li>
-    </ul>
-</div>
+    <li sp:each_index="@lines |i|">
+        <div class="key" sp:if="@keys" style="display: none">{ @keys[i] }</div>
+        <span class="desc">{ @lines[i] }</span>
+        <span class="actions">
+            <a sp:if="@delete && @keys" href="{ @delete_link }={ @keys[i] }">_(Delete)</a>
+            <a sp:if="@actions" sp:each="@actions |name, link|" href="{ link }{ @keys[i] }">{ name }</a>
+        </span>
+        <sp:run sp:if="@sublists[i]" sp:each="@sublists[i] |sl|" obj="sl" />
+    </li>
+</ul>
