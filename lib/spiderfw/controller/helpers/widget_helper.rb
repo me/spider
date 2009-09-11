@@ -2,6 +2,10 @@ module Spider; module Helpers
     
     module WidgetHelper
         
+        def self.included(controller)
+            controller.extend(ClassMethods)
+        end
+        
         def prepare_scene(scene)
             scene = super
             if (self.is_a?(Widget))
@@ -22,7 +26,8 @@ module Spider; module Helpers
                 :full_id => w.full_id,
                 :param => param_name(w),
                 :pub_path => w.class.pub_url,
-                :css_class => w.css_class
+                :css_class => w.css_class,
+                :css_classes => w.css_classes.uniq.join(' ')
             }
         end
         
@@ -32,8 +37,16 @@ module Spider; module Helpers
             return scene
         end
         
+        
+        module ClassMethods
+            
+            def route_widgets(route_name='')
+                route 'widgets', :serve_widgets
+            end
+            
+        end
+        
         module SceneMethods
-
         
             def param_name(widget_desc)
                 if (widget_desc.is_a?(Widget))

@@ -8,7 +8,7 @@ module Spider
                 block = :Text
             elsif (el.class == ::Hpricot::Comment)
                 block = :Comment
-            elsif (el.attributes['sp:if'])
+            elsif (el.attributes['sp:if'] || el.attributes['sp:run-if'])
                 block = :If
             elsif (el.attributes['sp:tag-if'])
                 block = :TagIf

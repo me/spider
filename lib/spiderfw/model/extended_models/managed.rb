@@ -33,7 +33,7 @@ module Spider; module Model
         with_mapper do
             def before_save(obj, mode)
                 obj.obj_created = DateTime.now if mode == :insert
-                obj.obj_modified = DateTime.now
+                obj.obj_modified = DateTime.now if obj.modified?
                 super
             end
         end

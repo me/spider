@@ -5,6 +5,8 @@ module Spider
     class PageController < Controller
         include Visual
         include WidgetHelper
+        include HTTPMixin
+        include StaticContent
 
         def initialize(request, response, scene=nil)
             super

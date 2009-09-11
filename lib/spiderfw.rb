@@ -12,10 +12,34 @@ module Spider
     
     class << self
         # Everything here must be thread safe!!!
-        attr_reader :logger, :controller, :apps, :server, :runmode, :apps_by_path, :apps_by_short_name
+        
+        # An instance of the shared logger.
+        attr_reader :logger
+        # An hash of registered Spider::App, indexed by name.
+        attr_reader :apps
+        # An hash of registred Spider::App modules, indexed by path.
+        attr_reader :apps_by_path
+        # An hash of registred Spider::App modules, indexed by short name (name without namespace).
+        attr_reader :apps_by_short_name
+        # The current runmode (test, devel or production).
+        attr_reader :runmode
+        # An hash of runtime paths.
+        # :root::           The base runtime path.
+        # :apps::           Apps folder.
+        # :core_apps::      Spider apps folder.
+        # :config::         Config folder.
+        # :views::          Runtime views folder.
+        # :var::            Var folder. Must be writable. Contains cache, logs, and other files written by the server.
+        # :data::           Data folder. Holds static and dynamic files. Some subdirs may have to be writable.
+        # :certs::          Certificates folder.
+        # ::tmp::           Temp folder. Must be writable.
+        # ::log::           Log location.
         attr_reader :paths
+        # Current locale.
         attr_accessor :locale
         
+        # Initializes the runtime environment. This method is called when spider is required. Apps may implement
+        # an app_init method, that will be called after Spider::init is done.
         def init(force=false)
             return if @init_done && !force
             @paths = {}
@@ -37,7 +61,6 @@ module Spider
             load_configuration(@root+'/config')
             start_loggers
 #            @controller = Controller
-            @server = {}
             @paths[:spider] = $SPIDER_PATH
             @runmode = nil
             
@@ -66,24 +89,29 @@ module Spider
             # end
         end
         
-        def stop
-            @apps.each do |name, mod|
-                mod.app_stop if mod.respond_to?(:app_stop)
-            end
-        end
-        
+        # 
+        # def stop
+        #     @apps.each do |name, mod|
+        #         mod.app_stop if mod.respond_to?(:app_stop)
+        #     end
+        # end
+
+
+        # Invoked before a server is started. Apps may implement the app_startup method, that will be called.
         def startup
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
         end
         
+        # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
         def shutdown
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
             end
         end
         
+        # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers
             @logger = Spider::Logger
             @logger.close_all
@@ -96,7 +124,7 @@ module Spider
             end
         end
         
-    
+        # Sets the default paths (see #paths).
         def setup_paths(root)
             @paths[:root] = root
             @paths[:apps] = root+'/apps'
@@ -110,6 +138,7 @@ module Spider
             @paths[:log] = @paths[:var]+'/log'
         end
         
+        # Finds an app by name, looking in paths[:apps] and paths[:core_apps]. Returns the found path.
         def find_app(name)
             path = nil
             [@paths[:apps], @paths[:core_apps]].each do |base|
@@ -259,9 +288,20 @@ module Spider
         # app's :"#{resource_type}_path", and finally in the spider folder.
         def find_resource(resource_type, path, cur_path=nil, owner_class=nil)
             # FIXME: security check for allowed paths?
+            
+            def first_found(extensions, path)
+                extensions.each do |ext|
+                    full = path
+                    full += '.'+ext if ext
+                    return full if (File.exist?(full))
+                end
+                return nil
+            end
+            
             resource_config = @resource_types[resource_type]
             raise "Unknown resource type #{resource_type}" unless resource_config
             resource_rel_path = resource_config[:path]
+            extensions = [nil] + resource_config[:extensions]
             path.strip!
             if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
                 path.sub!(/^ROOT/, Spider.paths[:root])
@@ -269,9 +309,9 @@ module Spider
                 return path
             elsif (cur_path)
                 if (path[0..1] == './')
-                    return cur_path+path[1..-1]
+                    return first_found(extensions, cur_path+path[1..-1])
                 elsif (path[0..1] == '../')
-                    return File.dirname(cur_path)+path[2..-1]
+                    return first_found(extensions, File.dirname(cur_path)+path[2..-1])
                 end
             end
             app = nil
@@ -286,7 +326,7 @@ module Spider
             else
                 app = owner_class.app if (owner_class && owner_class.app)
             end
-            return cur_path+'/'+path if cur_path && !app
+            return cur_path+'/'+path if cur_path && File.exist?(cur_path+'/'+path) # !app
             search_paths = ["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}"]
             if app.respond_to?("#{resource_type}_path")
                 search_paths << app.send("#{resource_type}_path")
@@ -294,13 +334,9 @@ module Spider
                 search_paths << app.path+'/'+resource_rel_path
             end
             search_paths << $SPIDER_PATH+'/'+resource_rel_path
-            extensions = [nil] + resource_config[:extensions]
             search_paths.each do |p|
-                extensions.each do |ext|
-                    full = p+'/'+path
-                    full += '.'+ext if ext
-                    return full if (File.exist?(full))
-                end
+                found = first_found(extensions, p+'/'+path)
+                return found if found
             end
             return path
         end

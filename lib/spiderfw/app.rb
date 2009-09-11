@@ -18,7 +18,7 @@ module Spider
                     
                     def init
                         @short_name ||= Inflector.underscore(self.name).gsub('/', '_')
-                        @pub_path ||= @path+'/pub'
+                        @pub_path ||= @path+'/public'
                         @test_path ||= @path+'/test'
                         @setup_path ||= @path+'/setup'
                         @widgets_path ||= @path+'/widgets'

@@ -413,6 +413,8 @@ module Spider; module Model; module Storage; module Db
                     sql, vals = sql_condition({:condition => v})
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
+                elsif (v[2].is_a? Spider::QueryFuncs::Expression)
+                    sql_condition_value(v[0], v[1], v[2].to_s, false)
                 else
                     v[1] = 'between' if (v[2].is_a?(Range))
                     v[2].upcase! if (v[1].to_s.downcase == 'ilike')
@@ -429,7 +431,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns the SQL for a condition comparison.
-        def sql_condition_value(key, comp, value)
+        def sql_condition_value(key, comp, value, bound_vars=true)
             if (comp.to_s.downcase == 'ilike')
                 comp = 'like'
                 key = "UPPER(#{key})"
@@ -438,8 +440,17 @@ module Spider; module Model; module Storage; module Db
                 comp = comp == '=' ? "IS" : "IS NOT"
                 sql = "#{key} #{comp} NULL"
             else
-                sql = "#{key} #{comp} ?"
-                sql += " AND ?" if (comp.to_s.downcase == 'between')
+                if (comp.to_s.downcase == 'between')
+                    if (bound_vars)
+                        val0, val1 = value
+                    else
+                        val0 = val1 = '?'
+                    end
+                    sql = "#{key} #{comp} #{val0} AND #{val1}"
+                else
+                    val = bound_vars ? '?' : value
+                    sql = "#{key} #{comp} #{val}"
+                end
             end
             return sql
         end
@@ -500,7 +511,7 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for an update statement.
         def sql_update(update)
             @last_query_type = :update
-            values = update[:values].values
+            values = update[:values].values.reject{ |v| v.is_a?(Spider::QueryFuncs::Expression) }
             sql = "UPDATE #{update[:table]} SET "
             sql += sql_update_values(update)
             where, bind_vars = sql_condition(update)
@@ -512,7 +523,7 @@ module Spider; module Model; module Storage; module Db
         # Returns the COLUMN = val, ... part of an update statement.
         def sql_update_values(update)
             update[:values].map{ |k, v| 
-                "#{k} = ?"
+                v.is_a?(Spider::QueryFuncs::Expression) ? "#{k} = #{v}" : "#{k} = ?"
             }.join(', ')
         end
         
@@ -694,6 +705,23 @@ module Spider; module Model; module Storage; module Db
         # Returns a description of the table as currently present in the DB.
         def describe_table(table)
             raise "Unimplemented"
+        end
+        
+        ##############################################################
+        #   Aggregates                                               #
+        ##############################################################
+        
+        def sql_max(max)
+            values = []
+            from_sql, from_values = sql_tables(max)
+            values += from_values
+            sql = "SELECT MAX(#{max[:field]}) AS M FROM #{from_sql}"
+            if (max[:condition])
+                condition_sql, condition_values = sql_condition(max)
+                sql += " #{where_sql}"
+                values += condition_values
+            end
+            return sql, values
         end
             
             

@@ -5,6 +5,7 @@ module Spider; module Forms
         i_attr_accessor :model
         is_attr_accessor :multiple
         is_attr_accessor :blank_option, :type => TrueClass, :default => true
+        is_attr_accessor :condition
         attr_accessor :data
         
         def prepare_scene(scene)
@@ -15,7 +16,9 @@ module Spider; module Forms
         
         def run
             @scene.data = @data || @model.all
-            
+            if (@condition)
+                @scene.data.condition = @condition
+            end
             @scene.values = {}
             debug("SELECT VALUE:")
             debug(@value)

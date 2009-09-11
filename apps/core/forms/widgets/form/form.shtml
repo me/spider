@@ -1,5 +1,6 @@
 <div class="{ @widget[:css_class] }">
     <tpl:resource type="css" src="form.css" />
+    <tpl:resource type="js" src="form.js" />
     <div sp:if="@error" class='errors'>
         Errori:
         <ul>
@@ -13,6 +14,7 @@
     </div>
     <div sp:if="@action == :form">
         <form action="{ @form_action }" method="POST" { @enctype }>
+            <input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
             <div class="fields">
                 <forms:element_row sp:each="@names |element|" element="element" error_condition="@errors[element]" />
             </div>

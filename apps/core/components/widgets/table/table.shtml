@@ -13,7 +13,9 @@
         </tr>
         <tr sp:each_index="@rows |row_i|" class="row { (row_i%2==0) ? 'odd' : 'even' }">
             <td sp:each="@elements |element|">
-                { @rows[row_i][element] }
+                <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ @rows[row_i][element] }">
+                    { @rows[row_i][element] }
+                </a>
             </td>
         </tr>
         <tr class="paginator" sp:if="@paginate && @pages > 1">

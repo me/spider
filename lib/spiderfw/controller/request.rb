@@ -1,7 +1,7 @@
 module Spider
     
     class Request
-        attr_accessor :action, :params, :cookies, :env, :protocol, 
+        attr_accessor :action, :params, :cookies, :env, :protocol,
                       :format, :extension, :session, :user_id, :server, :request_time, :controller_path,
                       :locale
                       

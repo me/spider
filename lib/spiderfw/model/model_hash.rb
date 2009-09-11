@@ -11,6 +11,7 @@ module Spider; module Model
     #   mh['test.name'] = 'Devilish Kitty'
     #     => {:test => {:name => 'Devilish Kitty', :color => 'black'}}
     class ModelHash < Hash
+        alias :modelhash_orig_set :[]= # :nodoc:
         
         def initialize(hash=nil)
             super()

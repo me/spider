@@ -135,7 +135,8 @@ module Spider; module Model
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-                obj.get(el).save if obj.element_modified?(el) && obj.get(el).mapper.class.write?
+                sub_obj = obj.get(el)
+                sub_obj.save if sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
         end
         
@@ -147,14 +148,25 @@ module Spider; module Model
         def before_update(obj)
         end
         
+        # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
+        def before_delete(objects)
+        end
+        
         # Called after a succesful save. 'mode' can be :insert or :update.
         def after_save(obj, mode)
-            save_associations(obj)
             obj.reset_modified_elements
+            save_associations(obj)
+            
+        end
+        
+        # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
+        def after_delete(objects)
         end
         
         # Saves the object to the storage.
         def save(obj, request=nil)
+            prev_autoload = obj.autoload?
+            obj.save_mode
             if (@model.extended_models)
                 is_insert = false
                 # Load local primary keys if they exist
@@ -181,6 +193,7 @@ module Spider; module Model
                 do_insert(obj)
             end
             after_save(obj, save_mode)
+            obj.autoload = prev_autoload
         end
 
         # Elements that are associated to this one externally.
@@ -201,40 +214,75 @@ module Spider; module Model
                 element.mapper.delete({element.attributes[:reverse] => obj.primary_keys})
             else
                 associated = obj.get(element)
-                if (element.multiple? && element.owned?)
+                if (element.multiple?)
                     condition = Condition.and
-                    associated.each do |child|
-                        condition_row = Condition.or
-                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
-                        condition << condition_row
+                    condition[element.reverse] = obj
+                    # associated.each do |child|
+                    #     condition_row = Condition.or
+                    #     element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
+                    #     condition << condition_row
+                    # end
+                    if (element.owned?)
+                        element.mapper.delete(condition)
+                    else
+                        element.mapper.bulk_update({element_reverse => nil}, condition)
                     end
-                    element.mapper.delete(condition)
                 end
             end
         end
         
         # Saves the associations from the given object to the element.
         def save_element_associations(obj, element)
-            delete_element_associations(obj, element)
+            our_element = element.attributes[:reverse]
+            val = obj.get(element)
             if (element.attributes[:junction])
-                val = obj.get(element)
-                if (val.is_a?(QuerySet) && val.model == element.type) # construct the junction
-                    qs = QuerySet.static(element.model, val.map{ |el_obj|
-                        {element.attributes[:reverse] => obj, element.attributes[:junction_their_element] => el_obj}
-                    })
-                    val = qs
-                elsif (val.is_a?(QuerySet))
-                    val.no_autoload do
-                        val.each do |row|
-                            row.set(element.attributes[:reverse], obj)
-                        end
+                their_element = element.attributes[:junction_their_element]
+                if (val.model != element.model) # dereferenced junction
+                    current = obj.get_new
+                    current_val = current.get(element)
+                    condition = Condition.and
+                    condition[our_element] = obj
+                    debugger
+                    current_val.each do |row|
+                        next if val.include?(row)
+                        condition_row = Condition.or
+                        condition_row[their_element] = row
+                        condition << condition_row
+                    end
+                    element.model.mapper.delete(condition)
+                    val.each do |row|
+                        next if current_val.include?(row)
+                        junction = element.model.new({ our_element => obj, their_element => row })
+                        junction.insert
+                    end                    
+                else
+                    condition = Condition.and
+                    condition[our_element] = obj
+                    val.each do |row|
+                        next unless row_id = row.get(element.attributes[:junction_id])
+                        condition.set(:id, '<>', row_id)
+                    end
+                    element.model.mapper.delete(condition)
+                    val.set(our_element, obj)
+                    val.save
+                end
+            else
+                if (element.multiple?)
+                    condition = Condition.and
+                    condition[our_element] = obj
+                    val.each do |row|
+                        condition_row = Condition.or
+                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', row.get(el))}
+                        condition << condition_row
+                    end
+                    if (element.owned?)
+                        element.mapper.delete(condition)
+                    else
+                        element.mapper.bulk_update({our_element => nil}, condition)
                     end
                 end
-                val.insert
-            else
-                associated = obj.get(element)
-                associated.set(element.reverse, obj)
-                associated.save
+                val.set(our_element, obj)
+                val.save
             end
         end
         
@@ -247,16 +295,20 @@ module Spider; module Model
         
         # Inserts the object in the storage.
         def insert(obj)
+            prev_autoload = obj.save_mode()
             before_save(obj, :insert)
             do_insert(obj)
             after_save(obj, :insert)
+            obj.autoload = prev_autoload
         end
         
         # Updates the object in the storage.
         def update(obj)
+            prev_autoload = obj.save_mode()
             before_save(obj, :update)
             do_update(obj)
             after_save(obj, :update)
+            obj.autoload = prev_autoload
         end
         
         # FIXME: remove?
@@ -276,8 +328,10 @@ module Spider; module Model
             end
             
             storage.start_transaction
+            curr = nil
             if (obj_or_condition.is_a?(BaseModel))
                 condition = prepare_delete_condition(obj_or_condition)
+                curr = QuerySet.new(@model, obj_or_condition)
             elsif (obj_or_condition.is_a?(QuerySet))
                 qs = obj_or_condition
                 condition = Condition.or
@@ -288,12 +342,13 @@ module Spider; module Model
             Spider::Logger.debug("Deleting with condition:")
             Spider::Logger.debug(condition)
             prepare_query_condition(condition)
-            cascade = @model.elements_array.select{ |el| el.attributes[:delete_cascade] }
+            cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
             assocs = association_elements.select do |el|
                 !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
             end
+            curr = @model.where(condition) unless curr
+            before_delete(curr)
             unless cascade.empty? && assocs.empty?
-                curr = find(Query.new(condition))
                 curr.each do |curr_obj|
                     cascade.each do |el|
                         el.model.mapper.delete(curr_obj.get(el))
@@ -304,6 +359,7 @@ module Spider; module Model
                 end
             end
             do_delete(condition, force)
+            after_delete(curr)
             storage.commit
         end
         
@@ -689,6 +745,14 @@ module Spider; module Model
             return str
         end
         
+    end
+    
+    ##############################################################
+    #   Aggregates                                               #
+    ##############################################################
+    
+    def max(element, condition=nil)
+        raise "Unimplemented"
     end
     
     

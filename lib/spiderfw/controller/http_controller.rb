@@ -41,19 +41,24 @@ module Spider
                 lang = @request.env['HTTP_ACCEPT_LANGUAGE'].split(';')[0].split(',')[0]
                 GetText.locale = lang
             end
-            # @extensions = {
-            #     'js' => {:format => :js, :content_type => 'application/javascript'},
-            #     'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
-            #     #'json' => {:format => :json, :content_type => 'text/x-json'}
-            #     'json' => {:format => :json, :content_type => 'text/plain'}
-            # }
-
-            super
+            if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
+                action = $1
+                @request.format = $2.to_sym
+            end
+            super(action, *arguments)
+        end
+        
+        def execute(action='', *arguments)
+            # FIXME: cache stripped action?
+            action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
+            super(action, *arguments)
         end
         
         def after(action='', *arguments)
+            # FIXME: cache stripped action?
+            action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
             @request.session.persist if @request.session
-            super
+            super(action, *arguments)
         end
         
         def ensure(action='', *arguments)
@@ -89,6 +94,10 @@ module Spider
             # Returns PATH_INFO reversing any proxy mappings if needed.
             def path
                 Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['PATH_INFO'])
+            end
+            
+            def full_path
+                'http://'+self.env['HTTP_HOST']+path
             end
             
             # Returns the REQUEST_URI reversing any proxy mappings if needed

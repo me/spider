@@ -53,18 +53,28 @@ module Spider; module Model
             qs.autoload = false
             return qs
         end
+        
+        def self.autoloading(model, query_or_val=nil)
+            qs = self.new(model, query_or_val)
+            qs.autoload = true
+            return qs
+        end
 
         # The first argument must be a BaseModel subclass.
         # The second argument may be a Query, or data that will be passed to #set_data. If data is passed,
         # the QuerySet will be instantiated with autoload set to false.
         def initialize(model, query_or_val=nil)
+            @model = model
+            model.extend_queryset(self)
+            if (model.attributes[:integrated_models])
+                model.attributes[:integrated_models].each{ |m, el| m.extend_queryset(self) }
+            end
             if (query_or_val.is_a?(Query))
                  query = query_or_val 
             else
                 data = query_or_val
             end
             @query = query || Query.new
-            @model = model
             @objects = []
             @raw_data = []
             @_parent = nil
@@ -295,6 +305,9 @@ module Spider; module Model
                 sub.to_s
             end
         end
+        
+        # Remove when merging
+        alias :map_array :map
         
         # Iterates on currently loaded objects
         def each_current
@@ -550,7 +563,8 @@ module Spider; module Model
         end
         
         def method_missing(method, *args, &proc)     
-            return @query.send(method, *args, &proc)
+            return @query.send(method, *args, &proc) if @query.respond_to?(method)
+            return super
         end
         
         # Given a dotted path, will return an array of all objects reachable by that path

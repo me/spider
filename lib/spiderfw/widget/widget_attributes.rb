@@ -12,7 +12,7 @@ module Spider
         
         def []=(k, v)
             params = @attributes[k]
-            raise ArgumentError, "#{k} is not an allowed attribute for widget #{@widget_klass}" unless params
+            raise ArgumentError, "#{k} is not an allowed attribute for widget #{@widget}" unless params
             raise ArgumentError, "#{k} is not in the correct format" if params[:format] && v !=~ params[:format]
             if (params[:type])
                 case params[:type].name

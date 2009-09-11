@@ -2,13 +2,16 @@ module Spider; module Components
     
     class Table < Spider::Widget
         tag 'table'
-        i_attribute :model, :required => :datasource
-        i_attribute :queryset, :required => :datasource
+ 
         is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
         i_attribute :num_elements, :default => 7
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
         attribute :max_element_length, :type => Fixnum, :default => 80
+        attribute :link_el, :type => Symbol
+        attribute :link
+        i_attribute :queryset
+        i_attribute :model
         attr_accessor :queryset, :condition, :page
         
         def condition
@@ -41,6 +44,8 @@ module Spider; module Components
             @sort = session[:sort] if !@sort && session[:sort]
             session[:sort] = @sort if @sort
             @sort = [@sort] if @sort && !@sort.is_a?(Array)
+            @scene.link_el = @attributes[:link_el]
+            @scene.link = @attributes[:link]
             super
         end
         

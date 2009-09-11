@@ -1,3 +1,4 @@
 <sp:template>
-    <input type="text" name="{ @name }" value="{ @formatted_value }" size="{ @size }">
+    <tpl:resource type="js" src="date_time.js" />
+    <input type="text" name="{ @name }" value="{ @formatted_value }" size="{ @size }" class="{ @mode }">
 </sp:template>

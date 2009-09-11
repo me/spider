@@ -3,6 +3,11 @@ require 'time'
 
 # Monkey-patched conversions to Date and DateTime
 class Time
+    def lformat(format = :default, locale=nil)
+        locale ||= Spider.locale
+        Spider::I18n.localize(locale, self, format)
+    end
+    
     def to_date
         ::Date.new(year, month, day)
     end
