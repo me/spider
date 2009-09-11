@@ -231,11 +231,11 @@ module Spider
         end
         
         def before(action='')
-#            super
-            widget_before(action)
+            widget_init(action)
+            super
         end
         
-        def widget_before(action='')
+        def widget_init(action='')
             action ||= ''
             if (@request.params['_wa'] && @request.params['_wa'][full_id])
                 action = @request.params['_wa'][full_id]
@@ -267,6 +267,10 @@ module Spider
                 next if attributes == false
                 raise ArgumentError, "Widget #{self} requires attribute #{attributes.join(' or ')} to be set"
             end
+        end
+
+        def widget_before(action='')
+            widget_init(action)
             prepare
             @before_done = true
         end
@@ -276,7 +280,7 @@ module Spider
         end
         
         def prepare(action='')
-            init_widgets
+            init_widgets unless @init_widgets_done
             set_widget_attributes
             prepare_widgets
             @template.resources.each do |res|
@@ -296,6 +300,7 @@ module Spider
             @template.init(@scene)
             @widgets.merge!(@template.widgets)
             @widgets.each{ |id, w| w.parent = self }
+            @init_widgets_done = true
         end
         
         def set_widget_attributes
@@ -485,6 +490,10 @@ module Spider
             return @css_class if @css_class
             supers = self.class.ancestors.select{ |c| c != Spider::Widget && c.subclass_of?(Spider::Widget)}
             @css_class = Inflector.underscore(supers.join('/')).gsub('_', '-').gsub('/', ' ').split(' ').uniq.join(' ')
+        end
+        
+        def inspect
+            super + ", id: #{@id}"
         end
             
         

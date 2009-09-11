@@ -19,11 +19,18 @@ module Spider; module ControllerMixins
             @layout ||= self.class.get_layout(action)
             @layout ||= @dispatcher_layout
             format = nil
-            if (@request.format)
-                format = @request.format if self.class.output_format?(@executed_method, @request.format)
-                raise Spider::Controller::NotFound.new("#{action}.#{@request.format}") if @executed_method && !format
+            req_format = self.is_a?(Widget) && @is_target && @request.params['_wf'] ? @request.params['_wf'].to_sym : @request.format
+            if (req_format)
+                format = req_format if self.class.output_format?(@executed_method, req_format)
+                if (format)
+                    format_params = self.class.output_format_params(@executed_method, format)
+                end
+                if @executed_method && !format || (format_params && format_params[:widgets] && !@request.params['_wt'])
+                    raise Spider::Controller::NotFound.new("#{action}.#{@request.format}") 
+                end
             end
             format ||= self.class.output_format(@executed_method)
+            format_params ||= self.class.output_format_params(@executed_method, format)
             case format
             when :json
                 if (Spider.runmode == 'devel' && @request.params['_text'])
@@ -39,29 +46,47 @@ module Spider; module ControllerMixins
                 content_type('text/xml')
             end
             @executed_format = format
+            @executed_format_params = format_params
             super
         end
         
         def execute(action='', *params)
-            format_params = self.class.output_format_params(@executed_method, @executed_format)
-            if format_params && format_params[:template]
+            format_params = @executed_format_params
+            if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
+                params = @request.params['_wp']
+            elsif (format_params && format_params[:params])
+                p_first, p_rest = action.split('/')
+                params = format_params[:params].call(p_rest) if p_rest
+            end
+            super(action, *params)
+            return unless format_params
+            if format_params[:template]
                 widget_target = @request.params['_wt']
+                widget_execute = @request.params['_we']
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
                     @template ||= init_template(format_params[:template])
                     @_widget = @template.find_widget(first)
-                    @_widget_action = rest
                     @_widget.widget_target = rest
-                    set_dispatched_object_attributes(@_widget, 'index')
-                    @_widget.before()
+                    @_widget_target = @_widget if !rest
+                    @_widget.is_target = true if @_widget_target
+                    if !rest && widget_execute
+                        set_dispatched_object_attributes(@_widget, widget_execute)
+                    else
+                        set_dispatched_object_attributes(@_widget, 'index')
+                        @_widget.widget_before() 
+                    end
                 end
             end
-            super
-            return unless format_params
             if (format_params[:template])
                 if (@_widget)
-                    @_widget.run
-                    @_widget.render
+                    if (@_widget_target && widget_execute)
+                        @_widget.before(widget_execute)
+                        @_widget.execute(widget_execute)
+                    else
+                        @_widget.run
+                        @_widget.render
+                    end
                 else
                     if (@template)
                         render(@template)  # has been init'ed in before method
@@ -100,6 +125,7 @@ module Spider; module ControllerMixins
         
         
         def init_template(path=nil, scene=nil, options={})
+            return @template if @template
             scene ||= @scene
             scene ||= get_scene
             if (!path)
@@ -109,6 +135,7 @@ module Spider; module ControllerMixins
             end
             template = load_template(path)
             template.init(scene)
+            @template = template
             return template
         end
         
