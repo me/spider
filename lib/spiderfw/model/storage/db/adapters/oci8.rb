@@ -305,7 +305,8 @@ module Spider; module Model; module Storage; module Db
          
          def sql_update_values(update)
              update[:values].map{ |k, v| 
-                 "#{k} = :#{(@bind_cnt += 1)}"
+                 val = v.is_a?(Spider::QueryFuncs::Expression) ? v : ":#{(@bind_cnt += 1)}"
+                 "#{k} = #{val}"
              }.join(', ')
          end
          

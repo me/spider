@@ -413,6 +413,8 @@ module Spider; module Model; module Storage; module Db
                     sql, vals = sql_condition({:condition => v})
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
+                elsif (v[2].is_a? Spider::QueryFuncs::Expression)
+                    sql_condition_value(v[0], v[1], v[2].to_s, false)
                 else
                     v[1] = 'between' if (v[2].is_a?(Range))
                     v[2].upcase! if (v[1].to_s.downcase == 'ilike')
@@ -509,7 +511,7 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for an update statement.
         def sql_update(update)
             @last_query_type = :update
-            values = update[:values].values
+            values = update[:values].values.reject{ |v| v.is_a?(Spider::QueryFuncs::Expression) }
             sql = "UPDATE #{update[:table]} SET "
             sql += sql_update_values(update)
             where, bind_vars = sql_condition(update)
@@ -521,7 +523,7 @@ module Spider; module Model; module Storage; module Db
         # Returns the COLUMN = val, ... part of an update statement.
         def sql_update_values(update)
             update[:values].map{ |k, v| 
-                "#{k} = ?"
+                v.is_a?(Spider::QueryFuncs::Expression) ? "#{k} = #{v}" : "#{k} = ?"
             }.join(', ')
         end
         

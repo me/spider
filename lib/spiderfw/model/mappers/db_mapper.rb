@@ -135,17 +135,27 @@ module Spider; module Model; module Mappers
         # Updates according to a condition, storing the values, which must passed as a Hash.
         def bulk_update(values, condition)
             db_values = {}
+            joins = []
             values.each do |key, val|
                 element = @model.elements[key]
                 next if !mapped?(element) || element.integrated?
                 next if element.model?
                 store_key = schema.field(element.name)
                 next unless store_key
-                db_values[store_key] = map_save_value(element.type, val, :update)
+                if (val.is_a?(Spider::QueryFuncs::Expression))
+                    joins += prepare_expression(val)
+                    db_values[store_key] = val
+                else
+                    db_values[store_key] = map_save_value(element.type, val, :update)
+                end
             end
-            save = {:values => db_values}
-            save[:condition], save[:joins] = prepare_condition(condition)
-            return @storage.execute(@storage.sql_update(save))
+            save = {:table => schema.table, :values => db_values}
+            condition, c_joins = prepare_condition(condition)
+            joins += c_joins
+            save[:condition] = condition
+            save[:joins] = joins
+            sql, bind_vars = @storage.sql_update(save)
+            return @storage.execute(sql, *bind_vars)
         end
         
         # Lock db
@@ -455,7 +465,13 @@ module Spider; module Model; module Mappers
                 elsif(model_schema.field(element.name))
                     field = model_schema.qualified_field(element.name)
                     op = comp ? comp : '='
-                    cond[:values] << [field, op, map_condition_value(model.elements[k.to_sym].type, v)]
+                    if (v.is_a?(Spider::QueryFuncs::Expression))
+                        v_joins = prepare_expression(v)
+                        joins += v_joins
+                        cond[:values] << [field, op, v]
+                    else
+                        cond[:values] << [field, op, map_condition_value(model.elements[k.to_sym].type, v)]
+                    end
                 end
                 
             end
@@ -568,6 +584,19 @@ module Spider; module Model; module Mappers
                 el = current_model.elements[el.integrated_from_element]
             end
             return [joins, current_model, el]
+        end
+        
+        # Takes a Spider::QueryFuncs::Expression, and associates the fields to the corresponding elements
+        # Returns an array of needed joins
+        def prepare_expression(expr)
+            joins = []
+            expr.each_element do |v_el|
+                v_joins, j_model, j_el = get_deep_join(v_el)
+                db_field = j_model.mapper.schema.qualified_field(j_el.name)
+                joins += v_joins
+                expr[v_el] = db_field
+            end
+            return joins
         end
         
         # Returns a pair composed of
