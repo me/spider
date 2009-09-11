@@ -859,6 +859,9 @@ module Spider; module Model
             mapper.count(condition)
         end
         
+        # Can be defined to provide functionality to this model's querysets.
+        def self.extend_queryset(qs)
+        end
         
         #################################################
         #   Instance methods                            #

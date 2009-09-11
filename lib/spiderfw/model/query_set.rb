@@ -64,13 +64,17 @@ module Spider; module Model
         # The second argument may be a Query, or data that will be passed to #set_data. If data is passed,
         # the QuerySet will be instantiated with autoload set to false.
         def initialize(model, query_or_val=nil)
+            @model = model
+            model.extend_queryset(self)
+            if (model.attributes[:integrated_models])
+                model.attributes[:integrated_models].each{ |m, el| m.extend_queryset(self) }
+            end
             if (query_or_val.is_a?(Query))
                  query = query_or_val 
             else
                 data = query_or_val
             end
             @query = query || Query.new
-            @model = model
             @objects = []
             @raw_data = []
             @_parent = nil
