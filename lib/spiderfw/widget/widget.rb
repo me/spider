@@ -181,10 +181,15 @@ module Spider
             },{
                 :type => :js, :src => Spider::Components.pub_url+'/js/jquery/plugins/jquery.query-2.1.6.js', 
                 :path => Spider::Components.pub_path+'/js/jquery.query-2.1.6.js'
-            },{
-                :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/js/jquery-ui-1.7.2.custom.min.js', 
-                :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/js/jquery-ui-1.7.2.custom.min.js'
-            },{
+            },# ,{
+            #                 :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/js/jquery-ui-1.7.2.custom.min.js', 
+            #                 :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/js/jquery-ui-1.7.2.custom.min.js'
+            #             },
+            {
+                :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js', 
+                :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js'
+            },
+            {
                 :type => :css, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css', 
                 :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css'
             }]
