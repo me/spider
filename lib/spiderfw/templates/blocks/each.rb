@@ -34,7 +34,7 @@ module Spider; module TemplateBlocks
             c += '   $out << "\n"'
             c += "\n"
             c += "end\n"
-            init += content.init_code
+            init += content.init_code if content.init_code
             return CompiledBlock.new(init, c)
         end
         
