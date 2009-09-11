@@ -172,7 +172,9 @@ module Spider
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
                     @controller_action = args[0]
-                    args = meth.arity == 0 ? [] : args[0..meth.arity]
+                    arity = meth.arity
+                    arity = (-arity + 1) if arity < 0
+                    args = arity == 0 ? [] : args[0..(arity-1)]
                     args = [nil] if meth.arity == 1 && args.empty?
                     send(@executed_method, *args)
                 else
