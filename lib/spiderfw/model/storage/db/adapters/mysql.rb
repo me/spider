@@ -41,6 +41,7 @@ module Spider; module Model; module Storage; module Db
             13 => 'YEAR',
             14 => 'NEWDATE',
             16 => 'BIT',
+            246 => 'DECIMAL',
             247 => 'ENUM',
             248 => 'SET',
             249 => 'TINY_BLOB',
@@ -270,10 +271,19 @@ module Spider; module Model; module Storage; module Db
                      type =  self.class.field_types[f.type]
                      length = f.length;
                      length /= 3 if (type == 'VARCHAR')
+                     scale = nil
+                     precision = f.decimals
+                     # FIXME
+                     if (type == 'DECIMAL')
+                         scale = f.decimals
+                         precision = length - scale
+                         length = 0
+                     end
                      col = {
                          :type => type,
                          :length => length,
-                         :precision => f.decimals
+                         :precision => precision,
+                         :scale => scale
                      }
                      flags = f.flags
                      self.class.field_flags.each do |flag_name, flag_val|
