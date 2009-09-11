@@ -53,6 +53,12 @@ module Spider; module Model
             qs.autoload = false
             return qs
         end
+        
+        def self.autoloading(model, query_or_val=nil)
+            qs = self.new(model, query_or_val)
+            qs.autoload = true
+            return qs
+        end
 
         # The first argument must be a BaseModel subclass.
         # The second argument may be a Query, or data that will be passed to #set_data. If data is passed,
