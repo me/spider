@@ -1,6 +1,6 @@
 # A couple of monkey-patched utility methods.
 #--
-# (from Rails)
+# (partially from Rails)
 class Date
 
     # Converts to a Time object in the GMT timezone.
@@ -16,6 +16,12 @@ class Date
     def lformat(format = :default, locale=nil, options={})
         locale ||= Spider.locale
         Spider::I18n.localize(locale, self, format, options)
+    end
+    
+    def self.lparse(string, format = :default, locale=nil, options={})
+        locale ||= Spider.locale
+        options[:return] = self <= DateTime ? :datetime : :date 
+        Spider::I18n.parse_dt(locale, string, format, options)
     end
 
     private

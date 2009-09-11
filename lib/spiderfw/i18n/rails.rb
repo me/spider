@@ -62,6 +62,22 @@ module Spider; module I18n
             object.strftime(format)
         end
         
+        # FIXME: add extended format handling like in localize
+        def parse_date_time(locale, string, format = :default, options={})
+            l = @locale_data
+            type = object.respond_to?(:sec) ? 'time' : 'date'
+            formats = l["#{type}.formats"]
+            format = formats[format.to_s] if formats && formats[format.to_s]
+            raise "Format #{format} not found" unless format
+
+            format = format.to_s.dup
+            if (options[:return] == :datetime)
+                klass = DateTime
+            elsif (options[:return] == :date)
+                klass = Date
+            end
+            object.strptime(format)
+        end
 
         
         def time_ago_in_words(from_time, include_seconds = false)

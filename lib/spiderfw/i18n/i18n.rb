@@ -61,6 +61,23 @@ module Spider
                 return p.localize_date_time(locale, object, format, options)
             end
             
+            def parse_dt(locale, string, format = :default, options={})
+                p = provider(locale)
+                unless p
+                    Spider::Logger.error("No provider found for locale #{locale}")
+                    return Date.parse(string)
+                end
+                return p.parse_dt(locale, string, format, options)
+            end
+            
+            def parse_date(locale, string, format = :default, options = {})
+                parse_dt(locale, string, format, options.merge({:return => :date}))
+            end
+
+            def parse_datetime(locale, string, format = :default, options = {})
+                parse_dt(locale, string, format, options.merge({:return => :datetime}))
+            end
+            
             # from Rails!
             # TODO: finish
             def distance_of_time_in_words(locale, from_time, to_time = 0, include_seconds = false)
