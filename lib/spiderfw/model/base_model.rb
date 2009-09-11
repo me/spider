@@ -335,7 +335,7 @@ module Spider; module Model
                     end
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
-                elsif (element.model?)
+                elsif (element.model? && element.multiple?)
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 val.set_parent(self, name) if element.model? && val
@@ -919,8 +919,8 @@ module Spider; module Model
                     val = QuerySet.static(element.model)
                 else
                     val = element.type.new
+                    val.autoload = autoload?
                 end
-                val.autoload = autoload?
             end       
             return prepare_child(name, val)
         end
@@ -1186,6 +1186,7 @@ module Spider; module Model
                 yield
                 self.autoload = prev_autoload
             end
+            return prev_autoload
         end
         
         # Sets autoload to :save_mode; elements will be autoloaded only one by one, so that
@@ -1198,6 +1199,7 @@ module Spider; module Model
                 yield
                 self.autoload = prev_autoload
             end
+            return prev_autoload
         end
             
         
