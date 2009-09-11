@@ -26,7 +26,8 @@ module Spider; module Helpers
                 :full_id => w.full_id,
                 :param => param_name(w),
                 :pub_path => w.class.pub_url,
-                :css_class => w.css_class
+                :css_class => w.css_class,
+                :css_classes => w.css_classes.uniq.join(' ')
             }
         end
         

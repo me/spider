@@ -10,8 +10,8 @@ module Spider
         include HTTPMixin
         
         attr_accessor :parent
-        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template
-        attr_reader :attributes, :widget_attributes
+        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target
+        attr_reader :attributes, :widget_attributes, :css_classes
         
         @@common_attributes = {
             :id => {}
@@ -195,6 +195,7 @@ module Spider
             }
             
             @use_template ||= self.class.default_template
+            @css_classes = []
         end
         
         def full_id
