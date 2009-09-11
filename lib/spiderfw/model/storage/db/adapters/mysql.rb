@@ -217,8 +217,10 @@ module Spider; module Model; module Storage; module Db
          def value_to_mapper(type, value)
              return unless value
              case type.name
-             when 'Date', 'DateTime'
+             when 'DateTime'
                  return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second)
+             when 'Date'
+                 return type.civil(value.year, value.month, value.day)
              end
              return super(type, value)
          end
