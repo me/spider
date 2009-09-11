@@ -429,7 +429,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns the SQL for a condition comparison.
-        def sql_condition_value(key, comp, value)
+        def sql_condition_value(key, comp, value, bound_vars=true)
             if (comp.to_s.downcase == 'ilike')
                 comp = 'like'
                 key = "UPPER(#{key})"
@@ -438,8 +438,17 @@ module Spider; module Model; module Storage; module Db
                 comp = comp == '=' ? "IS" : "IS NOT"
                 sql = "#{key} #{comp} NULL"
             else
-                sql = "#{key} #{comp} ?"
-                sql += " AND ?" if (comp.to_s.downcase == 'between')
+                if (comp.to_s.downcase == 'between')
+                    if (bound_vars)
+                        val0, val1 = value
+                    else
+                        val0 = val1 = '?'
+                    end
+                    sql = "#{key} #{comp} #{val0} AND #{val1}"
+                else
+                    val = bound_vars ? '?' : value
+                    sql = "#{key} #{comp} #{val}"
+                end
             end
             return sql
         end
