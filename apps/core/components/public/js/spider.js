@@ -8,7 +8,36 @@ function $W(path){
     var wdgt_id = path.replace(/\//, '-');
     var wdgt = $('#'+wdgt_id);
     if (!wdgt) return null;
-    var cl = wdgt.attr('class');
+    return Spider.Widget.initFromEl(wdgt);
+}
+
+
+Spider = function(){};
+
+Spider.widgets = {};
+
+Widgets = function(){};
+
+Spider.Widget = Class.extend({
+    
+    init: function(container, path){
+        this.el = container;
+        this.path = path;
+        this.backend = new Spider.WidgetBackend(this);
+        Spider.widgets[path] = this;
+    },
+    
+    remote: function(){
+        var args = Array.prototype.slice.call(arguments); 
+        var method = args.shift();
+        return this.backend.send(method, args);
+    }
+    
+});
+
+Spider.Widget.initFromEl = function(el){
+    var path = el.attr('id').replace(/-/, '/');
+    var cl = el.attr('class');
     var cl_parts = cl.split(' ');
     var w_cl = null;
     for (var i=0; i < cl_parts.length; i++){
@@ -28,24 +57,38 @@ function $W(path){
     var func = null;
     if (target) func = target;
     else func = Spider.Widget;
-    var obj = new func(wdgt, path);
-    Spider.widgets[path] = obj;
+    var obj = new func(el, path);
     return obj;
-}
+};
 
 
-Spider = function(){};
 
-Spider.widgets = {};
-
-Widgets = function(){};
-
-Spider.Widget = Class.extend({
-    
-    init: function(container, path){
-        this.el = container;
-        this.path = path;
-    }
+Spider.WidgetBackend = Class.extend({
+   
+   init: function(widget){
+       this.widget = widget;
+       this.url = document.location;
+   },
+   
+   send: function(method, args, options){
+       var url = this.url+'?';
+       url += '_wt='+this.widget.path;
+       url += '&_we='+method;
+       for (var i=0; i<args.length; i++){
+           url += '&_wp[]='+args[i];
+       }
+       var data = {};
+       var callback = this.widget[method+'_response'];
+       if (!callback) callback = function(){};
+       var defaults = {
+          url: url,
+          type: 'POST',
+          complete: callback,
+          data: data
+       };
+       options = $.extend(defaults, options);
+       $.ajax(options);
+   }
     
 });
 
