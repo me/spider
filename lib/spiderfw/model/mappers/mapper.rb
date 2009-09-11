@@ -193,6 +193,7 @@ module Spider; module Model
                 do_insert(obj)
             end
             after_save(obj, save_mode)
+            obj.autoload = prev_autoload
         end
 
         # Elements that are associated to this one externally.
@@ -294,16 +295,20 @@ module Spider; module Model
         
         # Inserts the object in the storage.
         def insert(obj)
+            prev_autoload = obj.save_mode()
             before_save(obj, :insert)
             do_insert(obj)
             after_save(obj, :insert)
+            obj.autoload = prev_autoload
         end
         
         # Updates the object in the storage.
         def update(obj)
+            prev_autoload = obj.save_mode()
             before_save(obj, :update)
             do_update(obj)
             after_save(obj, :update)
+            obj.autoload = prev_autoload
         end
         
         # FIXME: remove?
@@ -323,8 +328,10 @@ module Spider; module Model
             end
             
             storage.start_transaction
+            curr = nil
             if (obj_or_condition.is_a?(BaseModel))
                 condition = prepare_delete_condition(obj_or_condition)
+                curr = QuerySet.new(@model, obj_or_condition)
             elsif (obj_or_condition.is_a?(QuerySet))
                 qs = obj_or_condition
                 condition = Condition.or
@@ -339,8 +346,9 @@ module Spider; module Model
             assocs = association_elements.select do |el|
                 !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
             end
+            curr = @model.where(condition) unless curr
+            before_delete(curr)
             unless cascade.empty? && assocs.empty?
-                curr = find(Query.new(condition))
                 curr.each do |curr_obj|
                     cascade.each do |el|
                         el.model.mapper.delete(curr_obj.get(el))
@@ -351,6 +359,7 @@ module Spider; module Model
                 end
             end
             do_delete(condition, force)
+            after_delete(curr)
             storage.commit
         end
         
