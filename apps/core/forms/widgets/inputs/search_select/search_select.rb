@@ -20,11 +20,11 @@ module Spider; module Forms
         end
         
         def prepare
-
             if (params['clear'])
                 @value = nil
                 @scene.next_step = :text
             end
+            did_set_value = false
             if (params['text'] && !params['text'].empty?)
                 @scene.text_query = params['text']
                 cond = @model.free_query_condition(params['text'])
@@ -33,20 +33,33 @@ module Spider; module Forms
                     @scene.no_result = true
                     @scene.next_step = :text
                 elsif (@search_results.length == 1)
-                    self.value = @search_results[0]
+                    set_or_add_value(@search_results[0])
+                    did_set_value = true
                 else
                     @scene.next_step = :select
                 end
             elsif (params['sel'])
-                self.value = params['sel']
+                set_or_add_value(params['sel'])
+                did_set_value = true
             end
-            @done = false if @scene.next_step && !@value
+            @done = false if @scene.next_step && !did_set_value
             @scene.list_delete_param = "_w#{param_name(self)}[delete]"
+            @scene.value = @value
+
             super
         end
         
+        def set_or_add_value(val)
+            if (@multiple)
+                self.value ||= Spider::Model::QuerySet.new(@model)
+                self.value << val
+            else
+                self.value = val
+            end
+        end
+        
         def run
-            @scene.value = @value
+            
             if (@value && !@multiple)
                 @scene.value_desc = @value.to_s
             else

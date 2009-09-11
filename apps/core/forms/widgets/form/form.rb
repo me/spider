@@ -40,6 +40,7 @@ module Spider; module Forms
         i_attribute :auto_redirect, :default => false
         attr_accessor :save_actions
         attr_accessor :fixed
+        attr_accessor :before_save, :after_save
         
         attr_accessor :pk
         attr_reader :obj
@@ -53,6 +54,7 @@ module Spider; module Forms
             @sub_links = {}
             @disabled = []
             @read_only = []
+            @requested_elements = []
 
         end
         
@@ -70,6 +72,7 @@ module Spider; module Forms
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| debug("EL: #{e.strip.to_sym}"); @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
+                @requested_elements = @elements
             end
             @elements = @model.elements_array unless @elements
             @model.each_element do |el|
@@ -107,6 +110,22 @@ module Spider; module Forms
                 @attributes[:show_submit_and_new] = true
                 @attributes[:show_submit_and_stay] = true
             end
+            if (params['submit_and_new'])
+                @submit_action = 'submit_and_new'
+            elsif (params['submit_and_stay'])
+                @submit_action = 'submit_and_stay'
+            else
+                @submit_action = params['submit']
+            end
+            init_widgets
+            # if (@submit_action)
+            # else
+                @obj ||= load
+                if @obj
+                    @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
+                    set_values(@obj) if @action == :form
+                end
+#            end
             super
         end
         
@@ -131,19 +150,10 @@ module Spider; module Forms
         
         def run
             Spider::Logger.debug("FORM EXECUTING")
-            if (params['submit_and_new'])
-                submit_action = 'submit_and_new'
-            elsif (params['submit_and_stay'])
-                submit_action = 'submit_and_stay'
-            else
-                submit_action = params['submit']
-            end
-            save(submit_action) if submit_action
-            @obj ||= load
+            save(@submit_action) if @submit_action
             if (@obj)
-                @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
+                
                 @scene.form_desc = @model.label.downcase+' '+ @obj.to_s
-                set_values(@obj) if @action == :form
                 if (@action == :sub)
                     
                 end
@@ -161,7 +171,8 @@ module Spider; module Forms
         def create_inputs
             test_fixed = @model.new(@fixed) if @fixed
             @elements.each do |el|
-                next if el.hidden? || el.primary_key? || el.attributes[:local_pk] || @disabled.include?(el.name)
+                next if (el.hidden? && !@requested_elements.include?(el)) \
+                    || el.primary_key? || el.attributes[:local_pk] || @disabled.include?(el.name)
                 if @fixed
                     if (el.model?)
                         fixed_sub = test_fixed.get(el)
@@ -240,10 +251,10 @@ module Spider; module Forms
         end
         
         def instantiate_obj
-            if (@pk)
+            if (@pk && !@pk.empty?)
                 parts = @pk.split(':')
                 h = {}
-                @model.primary_keys.each{ |k| h[k.name] = parts.shift}
+                @model.primary_keys.each{ |k| h[k.name] = parts.shift }
                 return @model.new(h)
             else
                 return @model.new
@@ -296,6 +307,8 @@ module Spider; module Forms
                 end
             end
             if inputs_done && !@error
+                save_mode = obj.primary_keys_set? ? :update : :insert
+                @before_save.call(obj, save_mode) if @before_save
                 begin
                     obj.save
                     debug("SAVED")
@@ -306,13 +319,15 @@ module Spider; module Forms
                     exc_element = exc.is_a?(Spider::Model::MapperElementError) ? exc.element.name : nil
                     add_error(exc, exc.message, exc_element)
                 end
+                @after_save.call(obj, save_mode) if @after_save
+                if (@auto_redirect)
+                    redirect(@request.path)
+                end
             end
             if (action == 'submit_and_new')
                 @saved_and_new = true
             elsif (action == 'submit_and_stay')
                 @saved_and_stay = true
-            elsif (@auto_redirect)
-                redirect(@request.path)
             end
         end
         

@@ -28,7 +28,8 @@ module Spider; module Forms
         end
         
         def prepare
-            self.value = prepare_value(params)
+            prepared = prepare_value(params)
+            self.value = prepared if prepared
             super
         end
         

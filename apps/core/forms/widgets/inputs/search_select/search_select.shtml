@@ -9,7 +9,7 @@
     <div sp:if="@next_step == :select" class="notice">
         Per favore, affina la ricerca:
     </div>
-    <select name="{ @name }[sel] }" sp:if="@next_step == :select">
+    <select name="{ @name }[sel]" sp:if="@next_step == :select">
         <option sp:if="@blank_option"> </option>
         <option sp:each_index="@search_results |i|" value="{ @search_values[i] }" sp:attr-if="@selected[@search_values[i]], 'selected'">
             { @search_results[i].to_s }
