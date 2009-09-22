@@ -37,6 +37,8 @@ module Spider
         attr_reader :paths
         # Current locale.
         attr_accessor :locale
+        # Current Home
+        attr_reader :home
         
         # Initializes the runtime environment. This method is called when spider is required. Apps may implement
         # an app_init method, that will be called after Spider::init is done.
@@ -49,6 +51,7 @@ module Spider
             @apps_by_short_name ||= {}
             @loaded_apps = {}
             @root = $SPIDER_RUN_PATH
+            @home = Home.new(@root)
             @locale = ENV['LANG']
             @resource_types = {}
             register_resource_type(:views, :extensions => ['shtml'])
@@ -68,8 +71,9 @@ module Spider
             if ($SPIDER_CONFIG_SETS)
                 $SPIDER_CONFIG_SETS.each{ |set| @configuration.include_set(set) }
             end
-            
-            load(@root+'/init.rb') if File.exist?(@root+'/init.rb')
+            if File.exist?($SPIDER_RUN_PATH+'/init.rb')
+                @home.instance_eval(File.read($SPIDER_RUN_PATH+'/init.rb'), $SPIDER_RUN_PATH+'/init.rb')
+            end
             @logger.close(STDERR)
             @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
             @apps.each do |name, mod|
@@ -260,7 +264,7 @@ module Spider
                 apps_to_route = @route_apps == true ? self.apps.values : @route_apps.map{ |name| self.apps[name] }
             end
             if (apps_to_route)
-                apps_to_route.each{ |app| self.controller.route_app(app) }
+                apps_to_route.each{ |app| @home.controller.route_app(app) }
             end
         end
         
@@ -288,7 +292,6 @@ module Spider
         # app's :"#{resource_type}_path", and finally in the spider folder.
         def find_resource(resource_type, path, cur_path=nil, owner_class=nil)
             # FIXME: security check for allowed paths?
-            
             def first_found(extensions, path)
                 extensions.each do |ext|
                     full = path
@@ -303,15 +306,17 @@ module Spider
             resource_rel_path = resource_config[:path]
             extensions = [nil] + resource_config[:extensions]
             path.strip!
-            if (path[0..3] == 'ROOT' || path[0..5] == 'SPIDER')
+            if (path[0..3] == 'ROOT')
                 path.sub!(/^ROOT/, Spider.paths[:root])
+                return Resource.new(path, @home)
+            elsif (path[0..5] == 'SPIDER')
                 path.sub!(/^SPIDER/, $SPIDER_PATH)
-                return path
+                return Resource.new(path, self)
             elsif (cur_path)
                 if (path[0..1] == './')
-                    return first_found(extensions, cur_path+path[1..-1])
+                    return Resource.new(first_found(extensions, cur_path+path[1..-1]), owner_class)
                 elsif (path[0..1] == '../')
-                    return first_found(extensions, File.dirname(cur_path)+path[2..-1])
+                    return Resource.new(first_found(extensions, File.dirname(cur_path)+path[2..-1]), owner_class)
                 end
             end
             app = nil
@@ -326,19 +331,24 @@ module Spider
             else
                 app = owner_class.app if (owner_class && owner_class.app)
             end
-            return cur_path+'/'+path if cur_path && File.exist?(cur_path+'/'+path) # !app
-            search_paths = ["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}"]
+            return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
+            search_locations = [["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}", @home]]
             if app.respond_to?("#{resource_type}_path")
-                search_paths << app.send("#{resource_type}_path")
+                search_locations << [app.send("#{resource_type}_path"), app]
             else
-                search_paths << app.path+'/'+resource_rel_path
+                search_locations << [app.path+'/'+resource_rel_path, app]
             end
-            search_paths << $SPIDER_PATH+'/'+resource_rel_path
-            search_paths.each do |p|
-                found = first_found(extensions, p+'/'+path)
-                return found if found
+            search_locations << [$SPIDER_PATH+'/'+resource_rel_path, self]
+            search_locations.each do |p|
+                found = first_found(extensions, p[0]+'/'+path)
+                return Resource.new(found, p[1]) if found
             end
-            return path
+            return Resource.new(path)
+        end
+        
+        def find_resource_path(resource_type, path, cur_path=nil, owner_class=nil)
+            res = find_resource(resource_type, path, cur_path, owner_class)
+            return res ? res.path : nil
         end
         
         

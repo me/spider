@@ -97,6 +97,11 @@ module Spider
                 Spider.find_resource(type, name, cur_path, self)
             end
             
+            def find_resource_path(type, name, cur_path=nil)
+                res = Spider.find_resource(type, name, cur_path, self)
+                return res ? res.path : nil
+            end
+            
             
         end
         
@@ -165,10 +170,16 @@ module Spider
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
                 if (can_dispatch?(:execute, action))
+                    d_next = dispatch_next(action)
                     #run_chain(:execute, action, *arguments)
-                    do_dispatch(:execute, action)
+                    if d_next.dest != self # otherwise, shortcut route to self
+                        return do_dispatch(:execute, action) 
+                    else 
+                        arguments = d_next.params
+                    end
 #                        after(action, *arguments)
-                elsif (@executed_method)
+                end
+                if (@executed_method)
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
                     @controller_action = args[0]

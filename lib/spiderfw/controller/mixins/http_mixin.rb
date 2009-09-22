@@ -2,6 +2,7 @@ require 'base64'
 require 'uuid'
 require 'digest/md5'
 require 'macaddr'
+require 'spiderfw/http/http'
 
 module Spider; module ControllerMixins
     
@@ -73,13 +74,19 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
-            if (exc.is_a?(HTTPStatus))
+            if (exc.is_a?(Spider::Controller::NotFound))
+                @response.status = Spider::HTTP::NOT_FOUND
+                error("Not found: #{exc.path}")
+            elsif (exc.is_a?(Spider::Controller::BadRequest))
+                @response.status = Spider::HTTP::BAD_REQUEST
+            elsif (exc.is_a?(Spider::Controller::Forbidden))
+                @response.status = Spider::HTTP::FORBIDDEN
+            elsif (exc.is_a?(HTTPStatus))
                 @response.status = exc.code
-                done
-                #raise
             else
-                super
+                @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
             end
+            super
         end
         
         def challenge_basic_auth()

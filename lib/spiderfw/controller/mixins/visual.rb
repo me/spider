@@ -31,6 +31,13 @@ module Spider; module ControllerMixins
             end
             format ||= self.class.output_format(@executed_method)
             format_params ||= self.class.output_format_params(@executed_method, format)
+            output_format_headers(format)
+            @executed_format = format
+            @executed_format_params = format_params
+            super
+        end
+        
+        def output_format_headers(format)
             case format
             when :json
                 if (Spider.runmode == 'devel' && @request.params['_text'])
@@ -45,16 +52,13 @@ module Spider; module ControllerMixins
             when :xml
                 content_type('text/xml')
             end
-            @executed_format = format
-            @executed_format_params = format_params
-            super
         end
         
         def execute(action='', *params)
             format_params = @executed_format_params
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
-            elsif (format_params && format_params[:params])
+            elsif (format_params.is_a?(Array) && format_params[:params])
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end
@@ -203,10 +207,23 @@ module Spider; module ControllerMixins
             return obj
         end
         
+        def try_rescue(exc)
+            format = self.class.output_format(:error) || :html
+            output_format_headers(format)
+            if (exc.is_a?(Spider::Controller::NotFound))
+                error_page = '404'
+            else
+                error_page = 'error_generic'
+            end
+            render "errors/#{error_page}", :layout => "errors/error"
+            super
+        end
+        
         
         module ClassMethods
             
-            def output_format(method, format=nil, params={})
+            def output_format(method=nil, format=nil, params={})
+                return @default_output_format unless method
                 @output_formats ||= {}
                 @output_format_params ||= {}
                 if format
@@ -287,23 +304,25 @@ module Spider; module ControllerMixins
                 
             
             def load_template(name)
-                # FIXME: use Template's real_path
-                if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
-                    name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])
-                    t = Spider::Template.new(name+'.shtml')
-                else
-                    template_paths.each do |path|
-                        full = path+'/'+name+'.shtml'
-                        next unless File.exist?(full)
-                        t = Spider::Template.new(full)
-                        break
-                    end
-                end
-                if (t)
-                    t.request = @request
-                    t.response = @response
-                    return t
-                end
+                path = Spider::Template.real_path(name, nil, self)
+                return Spider::Template.new(path) if path
+                # # FIXME: use Template's real_path
+                # if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
+                #     name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])
+                #     t = Spider::Template.new(name+'.shtml')
+                # else
+                #     template_paths.each do |path|
+                #         full = path+'/'+name+'.shtml'
+                #         next unless File.exist?(full)
+                #         t = Spider::Template.new(full)
+                #         break
+                #     end
+                # end
+                # if (t)
+                #     t.request = @request
+                #     t.response = @response
+                #     return t
+                # end
                 raise "Template #{name} not found"
             end
             

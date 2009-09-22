@@ -3,14 +3,17 @@ require 'spiderfw/templates/template_blocks'
 require 'spiderfw/cache/template_cache'
 begin
     require 'less'
-    require 'spiderfw/templates/resources/less'
+    require 'spiderfw/templates/assets/less'
 rescue LoadError
 end
+
+Spider.register_resource_type(:css, :extensions => ['css'], :path => 'public')
+Spider.register_resource_type(:css, :extensions => ['js'], :path => 'public')
 
 
 module Spider
     
-    module TemplateResources; end
+    module TemplateAssets; end
     
     # This class manages SHTML templates.
     
@@ -29,7 +32,7 @@ module Spider
         @@overrides = ['content', 'override', 'override-content', 'override-attr',
                         'append', 'prepend', 'delete', 'before', 'after']
                         
-        @@resource_types = {
+        @@asset_types = {
             :css => {},
             :js => {},
             :less => {:processor => :Less}
@@ -52,8 +55,8 @@ module Spider
                 @allowed_blocks
             end
             
-            def resource_types # :nodoc:
-                @@resource_types
+            def asset_types # :nodoc:
+                @@asset_types
             end
 
             # Returns a new instance, loading path.
@@ -104,9 +107,9 @@ module Spider
                 return klass
             end
             
-            # Returns the view path (see #Spider::find_resource)
+            # Returns the view path (see #Spider::find_asset)
             def real_path(path, cur_path=nil, owner_class=nil)
-                Spider.find_resource(:views, path, cur_path, owner_class)
+                Spider.find_resource_path(:views, path, cur_path, owner_class)
             end
             
             # An array of possible override tags.
@@ -162,7 +165,7 @@ module Spider
             @widgets = {}
             @subtemplates = {}
             @id_path = []
-            @resources = []
+            @assets = []
             @content = {}
             @dependencies = []
             @overrides = []
@@ -192,18 +195,18 @@ module Spider
             root = get_el(@path)
             @overrides.each{ |o| apply_override(root, o) } if (@overrides)
             root.search('tpl:placeholder').remove # remove empty placeholders
-            res =  root.children_of_type('tpl:resource')
+            res =  root.children_of_type('tpl:asset')
             res_init = ""
             res.each do |r|
-                pr = parse_resource(r.attributes['type'], r.attributes['src'], r.attributes)
-                resources << pr
-                res_init += "@resources << { 
+                pr = parse_asset(r.attributes['type'], r.attributes['src'], r.attributes)
+                assets << pr
+                res_init += "@assets << { 
                     :type => :#{pr[:type]}, 
                     :src => '#{pr[:src]}',
                     :path => '#{pr[:path]}'
                 }\n"
             end
-            root.search('tpl:resource').remove
+            root.search('tpl:asset').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
             options[:root] = true
             options[:owner] = @owner
@@ -217,23 +220,27 @@ module Spider
             return compiled
         end
         
-        # Processes a resource. Returns an hash with :type, :src, :path.
-        def parse_resource(type, src, attributes={})
-            # FIXME: use Spider.find_resource ?
-            res = {:type => type}
-            if @owner && @owner.class.respond_to?(:pub_url)
-                res[:src] = @owner.class.pub_url + '/' + src
-                res[:path] = @owner.class.pub_path + '/' + src
+        # Processes an asset. Returns an hash with :type, :src, :path.
+        def parse_asset(type, src, attributes={})
+            # FIXME: use Spider.find_asset ?
+            ass = {:type => type}
+            res = Spider.find_resource(type.to_sym, src, @path, @owner.class)
+            controller = nil
+            if (res && res.definer)
+                controller = res.definer.controller
+            end
+            ass[:path] = res.path if res
+            if controller.respond_to?(:pub_url)
+                ass[:src] = controller.pub_url + '/' + src
             else
-                res[:src] = src
-                res[:path] = src
+                ass[:src] = src
             end
-            res_info = self.class.resource_types[type]
-            if (res_info && res_info[:processor])
-                processor = TemplateResources.const_get(res_info[:processor])
-                res = processor.process(res)
+            ass_info = self.class.asset_types[type]
+            if (ass_info && ass_info[:processor])
+                processor = TemplateAssets.const_get(ass_info[:processor])
+                ass = processor.process(ass)
             end
-            return res
+            return ass
         end
         
         # Returns the root node of the template at given path.
@@ -433,20 +440,20 @@ module Spider
             end
         end
         
-        # Template resources.
-        def resources
-            res = @resources.clone
+        # Template assets.
+        def assets
+            res = @assets.clone
             return res
         end
         
-        # Resources for the template and contained widgets.
-        def all_resources
-            res = resources
+        # Assets for the template and contained widgets.
+        def all_assets
+            res = assets
             seen = {}
             @widgets.each do |id, w|
 #                next if seen[w.class]
                 seen[w.class] = true
-                res += w.resources
+                res += w.assets
             end
             return res
         end

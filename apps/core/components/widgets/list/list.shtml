@@ -1,9 +1,9 @@
 <ul id="list">
-    <tpl:resource type="js" src="js/jquery/plugins/treeview/jquery.treeview.js" />
-    <tpl:resource type="js" src="js/jquery/plugins/treeview/jquery.treeview.sortable.js" />
-    <tpl:resource type="css" src="js/jquery/plugins/treeview/jquery.treeview.css" />
-    <tpl:resource type="css" src="css/list.css" />
-    <tpl:resource type="js" src="js/list.js" />
+    <tpl:asset type="js" src="js/jquery/plugins/treeview/jquery.treeview.js" />
+    <tpl:asset type="js" src="js/jquery/plugins/treeview/jquery.treeview.sortable.js" />
+    <tpl:asset type="css" src="js/jquery/plugins/treeview/jquery.treeview.css" />
+    <tpl:asset type="css" src="css/list.css" />
+    <tpl:asset type="js" src="js/list.js" />
     <li sp:each_index="@lines |i|">
         <div class="key" sp:if="@keys" style="display: none">{ @keys[i] }</div>
         <span class="desc">{ @lines[i] }</span>

@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="css/menu.css" />
+    <tpl:asset type="css" src="css/menu.css" />
     <sp:pass sp:each="@sections |section_name, items|">
         <div class="section_title" sp:if="section_name">{ section_name }</div>
         <ul class="section_items">

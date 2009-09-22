@@ -1,6 +1,6 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="form.css" />
-    <tpl:resource type="js" src="form.js" />
+    <tpl:asset type="css" src="form.css" />
+    <tpl:asset type="js" src="form.js" />
     <div sp:if="@error" class='errors'>
         Errori:
         <ul>

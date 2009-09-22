@@ -70,23 +70,7 @@ module Spider
         def get_route(path)
             path = path.clone
             path.slice!(0) if path.length > 0 && path[0].chr == "/"
-            return Route.new(:path => path, :dest => Spider::SpiderController, :action => path)
-        end
-        
-        def try_rescue(exc)
-            if (exc.is_a?(Spider::Controller::NotFound))
-                @response.status = Spider::HTTP::NOT_FOUND
-                error("Not found: #{exc.path}")
-            elsif (exc.is_a?(BadRequest))
-                @response.status = Spider::HTTP::BAD_REQUEST
-                raise
-            elsif (exc.is_a?(Forbidden))
-                @response.status = Spider::HTTP::FORBIDDEN
-                raise
-            else
-                @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
-                super
-            end
+            return Route.new(:path => path, :dest => Spider.home.controller, :action => path)
         end
         
         module HTTPRequest

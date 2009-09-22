@@ -3,8 +3,8 @@
 <html>
     <head>
         <title>Spider - _(Administration)</title>
-        <script sp:each='@resources[:js] |script|' type="text/javascript" src="{ script }"></script>
-        <link sp:each='@resources[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
+        <script sp:each='@assets[:js] |script|' type="text/javascript" src="{ script }"></script>
+        <link sp:each='@assets[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
     </head>
     <body>
         <table>

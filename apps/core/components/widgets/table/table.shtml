@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="css/table.css" />
+    <tpl:asset type="css" src="css/table.css" />
     <div sp:if="!@rows || @rows.length < 1" class="no_result">
         Nessun elemento
     </div>

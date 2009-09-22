@@ -27,6 +27,19 @@ module Spider; module ControllerMixins
             def pub_url
                 self.app.pub_url
             end
+            
+            def pub_path
+                self.app.pub_path
+            end
+            
+        end
+        
+        def pub_path
+            self.class.pub_path
+        end
+        
+        def pub_url
+            self.class.pub_url
         end
         
         def sanitize_path(path)
@@ -37,7 +50,7 @@ module Spider; module ControllerMixins
             path += ".#{@request.format}" if @request.format
             raise Spider::Controller::NotFound.new(path) unless path
             path = sanitize_path(path)
-            full_path = self.class.app.pub_path+'/'+path
+            full_path = pub_path+'/'+path
             raise Spider::Controller::NotFound.new(path) unless File.exist?(full_path)
             output_static(full_path)
         end
@@ -52,7 +65,7 @@ module Spider; module ControllerMixins
         end
         
         def output_static(full_path)
-            debug("Serving resource: #{full_path}")
+            debug("Serving asset: #{full_path}")
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
             stat = File.lstat(full_path)
             ct = File.directory?(full_path) ? "httpd/unix-directory" : WEBrick::HTTPUtils::mime_type(full_path, ::MIME::Types)
@@ -67,7 +80,7 @@ module Spider; module ControllerMixins
         
         def prepare_scene(scene)
             scene = super
-            scene.controller[:pub_url] = self.class.pub_url
+            scene.controller[:pub_url] = pub_url
             return scene
         end
         

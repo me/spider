@@ -15,4 +15,6 @@ require 'spiderfw/utils/fork'
 require 'spiderfw/config/configuration'
 require 'spiderfw/config/configurable'
 require 'spiderfw/model/model'
+require 'spiderfw/home'
+require 'spiderfw/resource'
 

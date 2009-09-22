@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="css/switcher.css" />
+    <tpl:asset type="css" src="css/switcher.css" />
     <div id="switcher_top"></div>
     <table width="100%">
         <tr>

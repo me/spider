@@ -15,16 +15,16 @@ module Spider; module Messenger
         # {:file => '/full/file/path', :type => 'mime type', :file_name => 'optional email file name', 
         # :headers => 'optional string or array of additional headers'}
         def email(template, scene, from, to, headers={}, attachments=[], params={})
-            path_txt = self.class.find_resource(:email, template+'.txt')
+            path_txt = self.class.find_resource_path(:email, template+'.txt')
             path_txt = nil unless File.exist?(path_txt)
-            path_html = self.class.find_resource(:email, template+'.txt')
+            path_html = self.class.find_resource_path(:email, template+'.txt')
             path_html = nil unless File.exist?(path_html)
             scene_binding = scene.instance_eval{ binding }
             if (path_txt || path_html)
                 text = ERB.new(IO.read(path_txt)).result(scene_binding) if path_txt
                 html = ERB.new(IO.read(path_html)).result(scene_binding) if path_html
             else
-                path = self.class.find_resource(:email, template)
+                path = self.class.find_resource_path(:email, template)
                 text = ERB.new(IO.read(path)).result(scene_binding)
             end
             mail = MailFactory.new
