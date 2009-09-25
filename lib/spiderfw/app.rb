@@ -47,23 +47,28 @@ module Spider
                         return const_get(@controller)
                     end
                     
-                    def models
+                    def models(container=nil)
+                        container ||= self
                         mods = []
-                        self.constants.each { |c| mods += get_models(const_get(c)) }
+                        container.constants.each do |c|
+                            mods += get_models(container.const_get(c))
+                        end
                         return mods
                     end
                     
                     def get_models(m)
-                        models = []
+                        ms = []
                         if m.respond_to?(:subclass_of?) && m.subclass_of?(Spider::Model::BaseModel)
-                             models << m
+                             ms << m
                              m.constants.each do |c|
                                  sub_mod = m.const_get(c)
                                  next if !sub_mod.subclass_of?(Spider::Model::BaseModel) || sub_mod.app != self
-                                 models += get_models(sub_mod)
+                                 ms += get_models(sub_mod)
                              end
+                         elsif (m.is_a?(Module) && !m.is_a?(Class))
+                             return models(m)
                          end
-                         return models
+                         return ms
                     end
                     
                     def controllers
