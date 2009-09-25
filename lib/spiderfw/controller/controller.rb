@@ -159,6 +159,12 @@ module Spider
             return [method.to_sym, additional_arguments]
         end
         
+        # Returns true if this controller is the final target for the current action, that is, if it does not
+        # dispatch to any route
+        def action_target?
+            !@dispatch_next[@call_path] || @dispatch_next[@call_path].dest == self
+        end
+        
         
         def execute(action='', *arguments)
             return if @done
