@@ -2,17 +2,20 @@ require 'yaml'
 
 module Spider; module DataTypes
     
-    class DumpedObject
+    class SerializedObject
         include DataType
-        maps_to :string
+        maps_to Text
         
         def self.from_value(val)
-            val.extend(DumpedObjectMixin)
+            if (val.is_a?(String))
+                val = YAML::load(val)
+            end
+            val.extend(SerializedMixin)
         end
         
     end
     
-    module DumpedObjectMixin
+    module SerializedMixin
         include DataType
         
         def map(mapper_type)
@@ -20,7 +23,7 @@ module Spider; module DataTypes
         end
         
         def map_back(mapper_type, val)
-            YAML::load(val).extend(DumpedObjectMixin)
+            YAML::load(val).extend(SerializedMixin)
         end
         
     end
