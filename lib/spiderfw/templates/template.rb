@@ -203,7 +203,8 @@ module Spider
                 res_init += "@assets << { 
                     :type => :#{pr[:type]}, 
                     :src => '#{pr[:src]}',
-                    :path => '#{pr[:path]}'
+                    :path => '#{pr[:path]}',
+                    :if => '#{pr[:if]}'
                 }\n"
             end
             root.search('tpl:asset').remove
@@ -239,6 +240,9 @@ module Spider
             if (ass_info && ass_info[:processor])
                 processor = TemplateAssets.const_get(ass_info[:processor])
                 ass = processor.process(ass)
+            end
+            if attributes['sp:if']
+                ass[:if] = Spider::TemplateBlocks::Block.vars_to_scene(attributes['sp:if']).gsub("'", "\\'") 
             end
             return ass
         end
