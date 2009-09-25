@@ -151,6 +151,9 @@ module Spider
                     end
                 end
                 if (action)
+                    if (options[:prepend])
+                        action = options[:prepend] + action
+                    end
                     if (dest.class == Symbol) # route to self
                         new_params = []
                         new_params << action if action && !action.empty?
