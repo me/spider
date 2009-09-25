@@ -78,7 +78,6 @@ module Spider
                 GetText.bindtextdomain(mod.short_name) if File.directory?(mod.path+'/po')
                 mod.app_init if mod.respond_to?(:app_init)
             end
-            
             @init_done=true
             # routes_file = "#{@paths[:config]}/routes.rb"
             # if (File.exist?(routes_file))
@@ -109,7 +108,7 @@ module Spider
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
         def shutdown
             return unless Thread.current == Thread.main
-            Debugger.post_mortem = false if Debugger
+            Debugger.post_mortem = false if Debugger && Debugger.post_mortem?
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
             end
@@ -138,6 +137,7 @@ module Spider
                     @logger.open(@paths[:log]+'/debug.log', Spider.conf.get('log.debug.level'))
                 end
             end
+            $LOG = @logger
         end
         
         # Sets the default paths (see #paths).
@@ -417,18 +417,21 @@ module Spider
             @configuration.include_set(mode)
             case mode
             when 'devel'
-                if (RUBY_VERSION_PARTS[1] == '8')
-                    begin
-                        require 'ruby-debug'
-                        if (Spider.conf.get('devel.trace.extended'))
-                            require 'spiderfw/utils/monkey/debugger'
-                            Debugger.start
-                            Debugger.post_mortem
-                        end
-                    rescue LoadError; end
-                    require 'ruby-prof' rescue LoadError
-                end
-
+                init_debug
+            end
+        end
+        
+        def init_debug
+            if (RUBY_VERSION_PARTS[1] == '8')
+                begin
+                    require 'ruby-debug'
+                    if (Spider.conf.get('devel.trace.extended'))
+                        require 'spiderfw/utils/monkey/debugger'
+                        Debugger.start
+                        Debugger.post_mortem
+                    end
+                rescue LoadError; end
+                require 'ruby-prof' rescue LoadError
             end
         end
         
