@@ -35,8 +35,6 @@ module Spider
         # ::tmp::           Temp folder. Must be writable.
         # ::log::           Log location.
         attr_reader :paths
-        # Current locale.
-        attr_accessor :locale
         # Current Home
         attr_reader :home
         
@@ -52,7 +50,7 @@ module Spider
             @loaded_apps = {}
             @root = $SPIDER_RUN_PATH
             @home = Home.new(@root)
-            @locale = ENV['LANG']
+            Locale.default = Spider.conf.get('i18n.default_locale')
             @resource_types = {}
             register_resource_type(:views, :extensions => ['shtml'])
             setup_paths(@root)
@@ -400,6 +398,10 @@ module Spider
                     require 'ruby-debug'
                 end
             end
+        end
+        
+        def locale
+            Locale.current[0]
         end
         
         def test_setup

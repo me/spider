@@ -3,7 +3,7 @@ module Spider
     class Request
         attr_accessor :action, :params, :cookies, :env, :protocol,
                       :format, :extension, :session, :user_id, :server, :request_time, :controller_path,
-                      :locale
+                      :locale, :misc
                       
         BUFSIZE = 1024*4
         
@@ -12,7 +12,8 @@ module Spider
             Spider::Logger.debug("REQUEST:")
             Spider::Logger.debug(env)
             @env = env
-            @locale = Spider.locale
+            @locale = Locale.current[0]
+            @misc = {}
         end
         
         def body=(b)

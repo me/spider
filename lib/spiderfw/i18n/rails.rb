@@ -30,7 +30,7 @@ module Spider; module I18n
 
 
         def find_locale(locale)
-            try = locale
+            try = locale.to_s
             while (try)
                 extensions = ['yml', 'rb']
                 extensions.each do |ext|

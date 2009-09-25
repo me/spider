@@ -193,7 +193,7 @@ module Spider
                 :type => :css, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css', 
                 :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css'
             }]
-            locale = @request.locale[0..1]
+            locale = @request.locale.language
             @assets << {
                  :type => :js, :src => Spider::Components.pub_url+"/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js",
                  :path => Spider::Components.pub_path+"/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
