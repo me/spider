@@ -369,7 +369,7 @@ module Spider
                 else
                     $:.each do |dir|
                         file_path = dir+'/'+file
-                        if (FileTest.exists?(file_path) && file_path =~ /^#{path}/)
+                        if (file_path =~ /^#{path}/)  # FileTest.exists?(file_path) && 
                             loaded.push(file_path)
                         end
                     end
@@ -386,13 +386,17 @@ module Spider
 
         def reload_sources
             logger.debug("Reloading sources")
-            logger.debug(@apps)
-            self.reload_sources_in_dir($SPIDER_PATH)
-            @apps.each do |name, mod|
-                dir = mod.path
-                logger.debug("Reloading app #{name} in #{dir}\n")
-                self.reload_sources_in_dir(dir)
+            crit = Thread.critical
+            Thread.critical = true
+            $".each do |file|
+                if file =~ /^(#{$SPIDER_RUN_PATH}|apps)/ 
+                 #   logger.debug("RELOADING #{file}")
+                    load(file)
+                else
+                #    logger.debug("SKIPPING #{file}")
+                end
             end
+            Thread.critical = crit
         end
         
         def runmode=(mode)
