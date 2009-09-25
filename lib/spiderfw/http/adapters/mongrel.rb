@@ -129,7 +129,7 @@ module Spider; module HTTP
                 MongrelIO.send_headers(controller_response, response) unless response.header_sent
                 Spider::Logger.debug("---- Closing Mongrel Response ---- ")
                 response.finished
-                
+                Spider.request_finished
             end
             
             

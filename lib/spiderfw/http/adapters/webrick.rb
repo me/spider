@@ -139,6 +139,7 @@ module Spider; module HTTP
                     controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     w.close
                     controller_done = true
+                    Spider.request_finished
                 end
             end
 
