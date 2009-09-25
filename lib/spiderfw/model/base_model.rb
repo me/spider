@@ -1779,6 +1779,10 @@ module Spider; module Model
             return obj
         end
         
+        def self.transaction
+            yield
+        end
+        
     end
     
 end; end
