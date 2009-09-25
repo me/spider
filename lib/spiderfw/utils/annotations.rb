@@ -102,6 +102,17 @@ module Annotations
 
     module ClassMethods
         
+        def inherited(subclass)
+            if (@annotations)
+                @annotations.each do |method, vals|
+                    vals.each do |k, args|
+                        subclass.annotate(method, k, *args)
+                    end
+                end
+            end
+            super
+        end
+        
         # Returns the @annotations Hash.
         def annotations
             @annotations
