@@ -115,6 +115,18 @@ module Spider
             end
         end
         
+        def thread_current
+            Thread.current[:spider] ||= {}
+        end
+        
+        def reset_thread_current
+            Thread.current[:spider] = {}
+        end
+        
+        def request_finished
+            reset_thread_current
+        end
+        
         # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers
             @logger = Spider::Logger
