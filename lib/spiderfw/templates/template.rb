@@ -8,7 +8,7 @@ rescue LoadError
 end
 
 Spider.register_resource_type(:css, :extensions => ['css'], :path => 'public')
-Spider.register_resource_type(:css, :extensions => ['js'], :path => 'public')
+Spider.register_resource_type(:js, :extensions => ['js'], :path => 'public')
 
 
 module Spider
@@ -22,7 +22,7 @@ module Spider
         
         attr_accessor :_action, :_action_to, :_widget_action
         attr_accessor :widgets, :overrides, :compiled, :id_path
-        attr_accessor :request, :response, :owner
+        attr_accessor :request, :response, :owner, :owner_class
         attr_accessor :mode # :widget, ...
         attr_reader :path, :subtemplates, :widgets
         
@@ -108,8 +108,8 @@ module Spider
             end
             
             # Returns the view path (see #Spider::find_asset)
-            def real_path(path, cur_path=nil, owner_class=nil)
-                Spider.find_resource_path(:views, path, cur_path, owner_class)
+            def real_path(path, cur_path=nil, owner_class=nil, search_paths=[])
+                Spider.find_resource_path(:views, path, cur_path, owner_class, search_paths)
             end
             
             # An array of possible override tags.
@@ -224,7 +224,7 @@ module Spider
         def parse_asset(type, src, attributes={})
             # FIXME: use Spider.find_asset ?
             ass = {:type => type}
-            res = Spider.find_resource(type.to_sym, src, @path, @owner.class)
+            res = Spider.find_resource(type.to_sym, src, @path, (@owner ? @owner.class : @owner_class ))
             controller = nil
             if (res && res.definer)
                 controller = res.definer.controller
@@ -442,7 +442,11 @@ module Spider
         
         # Template assets.
         def assets
-            res = @assets.clone
+            res = []
+            @assets.each do |ass|
+                 # FIXME: is this the best place to check if? Maybe it's better to do it when printing resources?
+                res << ass unless !ass[:if].empty? && !@scene.instance_eval(ass[:if])
+            end
             return res
         end
         

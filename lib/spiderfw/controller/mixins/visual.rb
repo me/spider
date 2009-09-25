@@ -418,8 +418,10 @@ module Spider; module ControllerMixins
                 
             
             def load_template(name)
-                path = Spider::Template.real_path(name, nil, self)
-                return Spider::Template.new(path) if path
+                path = Spider::Template.real_path(name, nil, self, template_paths)
+                t = Spider::Template.new(path) if path
+                t.owner_class = self
+                return t
                 # # FIXME: use Template's real_path
                 # if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
                 #     name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])

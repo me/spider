@@ -290,7 +290,8 @@ module Spider
         # 
         # Will look for the resource in the runtime root first, than in the
         # app's :"#{resource_type}_path", and finally in the spider folder.
-        def find_resource(resource_type, path, cur_path=nil, owner_class=nil)
+        def find_resource(resource_type, path, cur_path=nil, owner_class=nil, search_paths=[])
+            owner_class = nil if owner_class == NilClass
             # FIXME: security check for allowed paths?
             def first_found(extensions, path)
                 extensions.each do |ext|
@@ -339,6 +340,10 @@ module Spider
                 search_locations << [app.path+'/'+resource_rel_path, app]
             end
             search_locations << [$SPIDER_PATH+'/'+resource_rel_path, self]
+            search_paths.each do |p|
+                p = [p, owner_class] unless p.is_a?(Array)
+                search_locations << p
+            end
             search_locations.each do |p|
                 found = first_found(extensions, p[0]+'/'+path)
                 return Resource.new(found, p[1]) if found
@@ -346,8 +351,8 @@ module Spider
             return Resource.new(path)
         end
         
-        def find_resource_path(resource_type, path, cur_path=nil, owner_class=nil)
-            res = find_resource(resource_type, path, cur_path, owner_class)
+        def find_resource_path(resource_type, path, cur_path=nil, owner_class=nil, search_paths=[])
+            res = find_resource(resource_type, path, cur_path, owner_class, search_paths)
             return res ? res.path : nil
         end
         
