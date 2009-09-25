@@ -20,10 +20,15 @@ module Spider; module Model
                         obj.save_mode do
                             new_val = obj.get(name)
                         end
-                        if (new_val < old)
-                            move_up_list(name, new_val, old-1)
+                        new_val ||= max(name) + 1
+                        if (!old)
+                            move_down_list(name, new_val+1)
                         else
-                            move_down_list(name, old+1, new_val)
+                            if (new_val < old)
+                                move_up_list(name, new_val, old-1)
+                            else
+                                move_down_list(name, old+1, new_val)
+                            end
                         end
                     end
                 end
@@ -68,7 +73,7 @@ module Spider; module Model
             def list(name, attributes={})
                 attributes[:list] = true
                 element(name, Fixnum, attributes)
-                observe_element(name) do |obj, el, old_val|
+                observe_element(name) do |obj, el, new_val|
                     obj.save_mode do
                         obj.list_mixin_modified_elements[name] = obj.get(el)
                     end
