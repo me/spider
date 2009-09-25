@@ -1,7 +1,8 @@
 module Spider
     
     class HomeController < Controller
-        route 'spider', Spider.controller
+        route 'spider/public', Spider.controller, :prepend => 'public/'
+#        route 'spider', Spider.controller
                 
         def self.route_app(app)
             #app_path = app.name.gsub('::', '/')
