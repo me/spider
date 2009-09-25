@@ -1,1 +1,6 @@
-<div>La pagina non è stata trovata.</div>
+<div>
+	<h3 class="error_message">{ @error_msg }</h3>
+	<div class="error_description">
+		_(We are sorry, but the required page was not found).
+	</div>
+</div>

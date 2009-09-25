@@ -1,0 +1,6 @@
+<div>
+	<h3 class="error_message">{ @error_msg }</h3>
+	<div class="error_description">
+		_(We are sorry, an error occurred. The administrator of the site has been notified).
+	</div>
+</div>

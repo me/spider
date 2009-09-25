@@ -100,5 +100,9 @@ module Spider
         'organizational_unit' => 'unita_organizzativa'
     }
     
+    config_option 'devel.trace.extended', _("Use ruby-debug to provide extended traces"), :default => true
+    config_option 'devel.trace.show_locals', _("Show locals in debug traces"), :default => true
+    config_option 'devel.trace.show_instance_variables', _("Show locals in debug traces"), :default => true
+    
     
 end

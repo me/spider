@@ -108,6 +108,8 @@ module Spider
         
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
         def shutdown
+            return unless Thread.current == Thread.main
+            Debugger.post_mortem = false if Debugger
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
             end
@@ -393,10 +395,19 @@ module Spider
             @runmode = mode
             @configuration.include_set(mode)
             case mode
-            when 'devel' || 'test'
+            when 'devel'
                 if (RUBY_VERSION_PARTS[1] == '8')
-                    require 'ruby-debug'
+                    begin
+                        require 'ruby-debug'
+                        if (Spider.conf.get('devel.trace.extended'))
+                            require 'spiderfw/utils/monkey/debugger'
+                            Debugger.start
+                            Debugger.post_mortem
+                        end
+                    rescue LoadError; end
+                    require 'ruby-prof' rescue LoadError
                 end
+
             end
         end
         
