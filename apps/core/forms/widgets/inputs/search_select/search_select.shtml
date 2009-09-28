@@ -11,7 +11,7 @@
     </div>
     <select name="{ @name }[sel]" sp:if="@next_step == :select">
         <option sp:if="@blank_option"> </option>
-        <option sp:each_index="@search_results |i|" value="{ @search_values[i] }" sp:attr-if="@selected[@search_values[i]], 'selected'">
+        <option sp:each_index="@search_results |i|" value="{ @search_values[i] }" sp:attr-if="@selected[@search_values[i]],selected">
             { @search_results[i].to_s }
         </option>
     </select>

@@ -64,7 +64,6 @@ module Spider
 #            @controller = Controller
             @paths[:spider] = $SPIDER_PATH
             @runmode = nil
-            
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
             if ($SPIDER_CONFIG_SETS)
                 $SPIDER_CONFIG_SETS.each{ |set| @configuration.include_set(set) }
