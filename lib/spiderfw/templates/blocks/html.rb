@@ -26,8 +26,10 @@ module Spider; module TemplateBlocks
                 end
                 if (options[:root])
                     cl += " widget"
-                    cl += " wdgt-#{options[:owner].class.name.gsub('::', '-')}" if options[:owner]
-                    @el.raw_attributes['id'] = options[:owner].full_id
+                    if options[:owner]
+                        cl += " wdgt-#{options[:owner].class.name.gsub('::', '-')}"
+                        @el.raw_attributes['id'] = options[:owner].full_id
+                    end
                 end
                 cl += ' ' unless cl.empty?
                 cl += '{ @widget[:css_classes] }'
@@ -48,7 +50,7 @@ module Spider; module TemplateBlocks
                 # end
                 start += '"'
             end
-            start += " /" unless @el.etag
+            #start += " /" unless @el.etag
             start += ">"
             return start
         end
