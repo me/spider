@@ -10,7 +10,7 @@ class Date
 
     # Converts to a Time object in the local timezone.
     def to_local_time
-        to_time(new_offset(DateTime.now.offset-offset), :local)
+        to_time(new_offset(DateTime.now.offset), :local)
     end
     
     def lformat(format = :default, locale=nil, options={})
