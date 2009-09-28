@@ -22,9 +22,9 @@ module Spider; module CommandLine
                 opt.on("--sets SETS", Array, _("Include configuration sets"), "-s"){ |sets|
                     $SPIDER_CONFIG_SETS = sets
                 }
-                opt.on("--devel", _("Set runmode to devel"), "-d") do 
+                opt.on("--devel", _("Set runmode to devel"), "-d") do
                     $SPIDER_RUNMODE = 'devel'
-                    Spider.runmode = 'devel' if Spider
+                    Spider.runmode = 'devel' if Spider && Spider.respond_to?(:runmode=)
                 end
             end
 
@@ -44,8 +44,14 @@ module Spider; module CommandLine
         end
 
         def parse
-            cmd_name = ARGV[0]
-            cmd_name = ARGV[1] if (cmd_name == 'help')
+            cmd_name = nil
+            0.upto(ARGV.length) do |i|
+                if (ARGV[i] != 'help' && ARGV[i][0].chr != '-')
+                    cmd_name = ARGV[i]
+                    break
+                end
+            end
+            cmd_name ||= 'help'
             require 'ruby-debug'
             if !@cmd.main_command.commands[cmd_name]
                 require 'spiderfw'

@@ -62,28 +62,6 @@ module Spider; module Components
             return res
         end
         
-        def parse_runtime_content(doc, src_path)
-            doc = super
-            
-            def add_content(section, content, src_path)
-                c = nil
-                if (content.attributes['src'])
-                    path = Spider::Template.real_path(content.attributes['src'], File.dirname(src_path), @owner)
-                    c = Spider::Template.new(path)
-                end
-                return unless c
-                add(content.attributes['label'], c, section)
-            end
-            doc.search('/*/section').each do |section|
-                section.search('content').each do |content|
-                    add_content(section.attributes['label'], content, src_path)
-                end
-            end
-            doc.search('/*/content').each do |content|
-                add_content(nil, content, src_path)
-            end
-            return doc
-        end
         
     end
     

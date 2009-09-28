@@ -9,7 +9,8 @@ module Spider
         end
         
         def [](key)
-            self.send(key)
+            #self.send(key)
+            @table[key]
         end
         
         def to_json

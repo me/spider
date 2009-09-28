@@ -218,7 +218,8 @@ module Spider; module Model; module Storage; module Db
              return unless value
              case type.name
              when 'DateTime'
-                 return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second)
+                 @@time_offset ||= DateTime.now.offset
+                 return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second, @@time_offset)
              when 'Date'
                  return type.civil(value.year, value.month, value.day)
              end

@@ -359,7 +359,9 @@ module Spider; module ControllerMixins
             
             def output_format_params(method, format)
                 return nil unless @output_format_params && @output_format_params[method]
-                return @output_format_params[method][format]
+                fp = @output_format_params[method][format]
+                return nil if fp == true
+                return fp
             end
             
             def default_output_format(format)
