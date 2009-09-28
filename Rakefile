@@ -1,13 +1,12 @@
 require 'rake'
 require 'rake/testtask'
-require 'hanna/rdoctask'
 
 desc "Update pot/po files."
 task :updatepo do
     require 'spiderfw'
     require 'spiderfw/i18n/shtml_parser'
-    require 'gettext/utils'
-    GetText.update_pofiles("spider", Dir.glob("{lib,bin}/**/*.{rb,rhtml}"), "Spider #{Spider::VERSION}")
+    require 'gettext/tools'
+    GetText.update_pofiles("spider", Dir.glob("{lib,bin,views}/**/*.{rb,rhtml,shtml}"), "Spider #{Spider::VERSION}")
     apps = Spider.find_all_apps
     apps.each do |path|
         require path+'/_init.rb' if File.directory?(path+'/po')
@@ -23,14 +22,14 @@ end
 
 desc "Create mo-files"
 task :makemo do
-    require 'gettext/utils'
-    GetText.create_mofiles(true)
+    require 'gettext/tools'
+    GetText.create_mofiles(:verbose => true)
     require 'spiderfw'
     apps = Spider.find_all_apps
     apps.each do |path|
         if File.directory?(path+'/po')
             Dir.chdir(path)
-            GetText.create_mofiles(true, './po', $SPIDER_PATH+'/data/locale')
+            GetText.create_mofiles(:verbose => true, :po_root => './po', :mo_root => $SPIDER_PATH+'/data/locale')
         end
     end
 end
@@ -56,16 +55,20 @@ task :test do
     
 end
 
-Rake::RDocTask.new(:rdoc) do |rdoc|
-  rdoc.rdoc_files.include('README', 'LICENSE', 'CHANGELOG').
-    include('lib/**/*.rb')
-#    .exclude('lib/will_paginate/version.rb')
+begin
+    require 'hanna/rdoctask'
+    Rake::RDocTask.new(:rdoc) do |rdoc|
+      rdoc.rdoc_files.include('README', 'LICENSE', 'CHANGELOG').
+        include('lib/**/*.rb')
+    #    .exclude('lib/will_paginate/version.rb')
 
-  rdoc.main = "README" # page to start on
-  rdoc.title = "Spider documentation"
+      rdoc.main = "README" # page to start on
+      rdoc.title = "Spider documentation"
 
-  rdoc.rdoc_dir = 'doc' # rdoc output folder
-  rdoc.options << '--webcvs=http://github.com/me/spider/tree/master/'
+      rdoc.rdoc_dir = 'doc' # rdoc output folder
+      rdoc.options << '--webcvs=http://github.com/me/spider/tree/master/'
+    end
+rescue LoadError
 end
     
 

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2009-07-01 00:40+0200\n"
+"POT-Creation-Date: 2009-09-23 17:31+0200\n"
 "PO-Revision-Date: 2009-06-30 16:58+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,11 +16,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: widgets/admin/admin.rb:9
+#: widgets/admin/admin.rb:21
 msgid "Administration"
 msgstr "Amministrazione"
 
-#: widgets/admin/admin.rb:30
+#: widgets/admin/admin.rb:42
 msgid "guest"
 msgstr "ospite"
 
@@ -31,3 +31,7 @@ msgstr "Annulla"
 #: widgets/crud/crud.rb:66
 msgid "Ok"
 msgstr "Ok"
+
+#: widgets/list/list.shtml:11
+msgid "Delete"
+msgstr ""

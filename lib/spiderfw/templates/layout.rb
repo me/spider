@@ -8,16 +8,16 @@ module Spider
             super
             @template = @template.is_a?(Template) ? @template : Template.new(@template)
             @template.init(scene) unless @template.init_done?
-            @template_resources = {:css => [], :js => []}
+            @template_assets = {:css => [], :js => []}
             seen = {}
-            all_resources.each do |res|
+            all_assets.each do |res|
                 next if seen[res[:src]]
                 seen[res[:src]] = true
-                @template_resources[res[:type].to_sym] ||= []
-                @template_resources[res[:type].to_sym] << res[:src]
+                @template_assets[res[:type].to_sym] ||= []
+                @template_assets[res[:type].to_sym] << res[:src]
             end
             @content[:yield_to] = @template
-            scene.resources = @template_resources
+            scene.assets = @template_assets
         end
         
         @@named_layouts = {}
@@ -34,8 +34,8 @@ module Spider
             
         end
         
-        def all_resources
-            return @template.all_resources + self.resources
+        def all_assets
+            return @template.all_assets + self.assets
         end
 
         

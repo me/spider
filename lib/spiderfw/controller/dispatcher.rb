@@ -38,7 +38,7 @@ module Spider
             route = @dispatch_next[action]
             if (!route.obj)
                 obj = dispatched_object(route)
-                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=)
+                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
                 route.obj = obj
             end
             obj = route.obj
@@ -151,6 +151,9 @@ module Spider
                     end
                 end
                 if (action)
+                    if (options[:prepend])
+                        action = options[:prepend] + action
+                    end
                     if (dest.class == Symbol) # route to self
                         new_params = []
                         new_params << action if action && !action.empty?

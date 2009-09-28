@@ -55,7 +55,7 @@ module Spider; module TemplateBlocks
         
         def get_end
             str = escape_text(@el.etag.inspect) if @el.etag
-            str = str[1..-2] if str && str[0] == '"' # Work around Hpricot 0.8 differences
+            str = str[1..-2] if str && str[0].chr == '"' # FIXME:  This is a workaround Hpricot 0.6 and 0.8 differences
             return str
         end
         

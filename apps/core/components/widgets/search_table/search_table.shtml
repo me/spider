@@ -1,4 +1,4 @@
-<sp:template extend="SPIDER/apps/core/components/widgets/table/table.shtml" resource_widget="Spider::Components::Table">
+<sp:template extend="SPIDER/apps/core/components/widgets/table/table.shtml" asset_widget="Spider::Components::Table">
     <tpl:prepend search="table">
         <form action="{ @request[:path] }" method="GET">
             <input type="text" name="_w{ param_name(@widget) }[q]" value="{ @query }">

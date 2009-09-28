@@ -92,7 +92,7 @@ module Spider
                 return res
             end
             
-            def vars_to_scene(str, container='self')
+            def self.vars_to_scene(str, container='self')
                 res = ""
                 scanner = ::StringScanner.new(str)
                 pos = 0
@@ -104,6 +104,10 @@ module Spider
                 end
                 res += scanner.rest
                 return res
+            end
+            
+            def vars_to_scene(str, container='self')
+                self.class.vars_to_scene(str, container)
             end
             
             def scan_vars(str, &block)
@@ -123,7 +127,7 @@ module Spider
                 @el
             end
             
-            def var_to_scene(var, container='self')
+            def self.var_to_scene(var, container='self')
                 first, rest = var.split('.', 2)
                 if (first =~ /([^\[]+)(\[.+)/)
                     var_name = $1
@@ -139,6 +143,10 @@ module Spider
                 scene_var += array_rest if (array_rest)
                 scene_var += '.'+rest if (rest)
                 return scene_var
+            end
+            
+            def var_to_scene(var, container='self')
+                self.class.var_to_scene(var, container)
             end
             
         end

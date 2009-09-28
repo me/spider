@@ -37,14 +37,15 @@ module Spider
             if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
                 @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
             end
-            if (@request.env['HTTP_ACCEPT_LANGUAGE'])
-                lang = @request.env['HTTP_ACCEPT_LANGUAGE'].split(';')[0].split(',')[0]
-                GetText.locale = lang
-            end
+            Locale.clear
+            Locale.init(:driver => :cgi)
+            Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
+            @request.locale = Locale.current[0]
             if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
                 action = $1
                 @request.format = $2.to_sym
             end
+#            Spider.reload_sources if Spider.conf.get('webserver.reload_sources')
             super(action, *arguments)
         end
         
@@ -70,21 +71,13 @@ module Spider
         def get_route(path)
             path = path.clone
             path.slice!(0) if path.length > 0 && path[0].chr == "/"
-            return Route.new(:path => path, :dest => Spider::SpiderController, :action => path)
+            return Route.new(:path => path, :dest => Spider.home.controller, :action => path)
         end
         
         def try_rescue(exc)
-            if (exc.is_a?(Spider::Controller::NotFound))
-                @response.status = Spider::HTTP::NOT_FOUND
-                error("Not found: #{exc.path}")
-            elsif (exc.is_a?(BadRequest))
-                @response.status = Spider::HTTP::BAD_REQUEST
-                raise
-            elsif (exc.is_a?(Forbidden))
-                @response.status = Spider::HTTP::FORBIDDEN
-                raise
+            if exc.is_a?(Spider::Controller::NotFound)
+                Spider.logger.error("Not found: #{exc.path}")
             else
-                @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
                 super
             end
         end

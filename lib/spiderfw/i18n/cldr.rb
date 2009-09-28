@@ -1,13 +1,14 @@
 require 'yaml'
 require 'cldr'
+require 'locale'
 
 module Spider; module I18n
     
     class CLDR < Provider
-        
+                
         def initialize(locale)
             @locale = locale
-            @cldr = ::CLDR::Object.new(:locale => Locale::Object.new(locale))
+            @cldr = ::CLDR::Object.new(:locale => locale.to_cldr)
 
         end
 

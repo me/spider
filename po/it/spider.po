@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-07-01 00:39+0200\n"
+"POT-Creation-Date: 2009-09-23 17:31+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -114,7 +114,11 @@ msgstr "Esegui il drop delle tabelle inutilizzate"
 msgid "Update current sequences to max db value"
 msgstr "Aggiorna le sequenze esistenti al max in db"
 
-#: lib/spiderfw/cmd/commands/model.rb:51
+#: lib/spiderfw/cmd/commands/model.rb:24
+msgid "Process also non managed models"
+msgstr "Processa anche i modelli non gestiti"
+
+#: lib/spiderfw/cmd/commands/model.rb:55
 msgid ""
 "The following tables are about to be dropped: \n"
 "%s"
@@ -122,23 +126,23 @@ msgstr ""
 "Le segenti tabelle stanno per essere cancellate: \n"
 "%s"
 
-#: lib/spiderfw/cmd/commands/model.rb:52
+#: lib/spiderfw/cmd/commands/model.rb:56
 msgid "Continue? yes/NO: "
 msgstr "Continuare? sì/NO"
 
-#: lib/spiderfw/cmd/commands/model.rb:54 lib/spiderfw/cmd/commands/model.rb:57
+#: lib/spiderfw/cmd/commands/model.rb:58 lib/spiderfw/cmd/commands/model.rb:61
 msgid "yes"
 msgstr "sì"
 
-#: lib/spiderfw/cmd/commands/model.rb:55
+#: lib/spiderfw/cmd/commands/model.rb:59
 msgid "no"
 msgstr "no"
 
-#: lib/spiderfw/cmd/commands/model.rb:66
+#: lib/spiderfw/cmd/commands/model.rb:70
 msgid "Unable to modify the following fields:"
 msgstr "Impossibile modificare i seguenti campi:"
 
-#: lib/spiderfw/cmd/commands/model.rb:68
+#: lib/spiderfw/cmd/commands/model.rb:72
 msgid "(use -f to force)"
 msgstr "(usa -f per forzare)"
 
@@ -175,20 +179,36 @@ msgid "The webserver %s is not supported"
 msgstr "Il webserver %s non è supportato"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:28
+msgid "Detach server process"
+msgstr "Stacca il processo server dalla console"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:29
 msgid "Serve each request spawning a CGI subprocess. Useful in developement."
 msgstr ""
 "Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo "
 "sviluppo."
 
+#: lib/spiderfw/cmd/commands/webserver.rb:32
+msgid "Listen to SSL requests"
+msgstr "Accetta richieste SSL"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:35
+msgid "SSL certificate"
+msgstr "Certificato SSL"
+
 #: lib/spiderfw/cmd/commands/webserver.rb:36
+msgid "SSL private key"
+msgstr "Chiave privata SSL"
+
+#: lib/spiderfw/cmd/commands/webserver.rb:43
 msgid "Using webserver %s"
 msgstr "Utilizzo il webserver %s"
 
-#: lib/spiderfw/cmd/commands/webserver.rb:37
+#: lib/spiderfw/cmd/commands/webserver.rb:44
 msgid "Listening on port %s"
 msgstr "In ascolto sulla porta %s"
 
-#: lib/spiderfw/config/configuration.rb:86
+#: lib/spiderfw/config/configuration.rb:85
 msgid "%s is not a configuration option"
 msgstr "%s non è un'opzione di configurazione"
 
@@ -305,73 +325,97 @@ msgstr ""
 "Se la richiesta è passata attraverso un proxy, gli url usati per raggiungere "
 "spider, con i corrispondenti percorsi chiamati dal proxy"
 
-#: lib/spiderfw/config/options/spider.rb:67
+#: lib/spiderfw/config/options/spider.rb:66
+msgid "The charset to use for http requests"
+msgstr "Charset da usare per le richieste http"
+
+#: lib/spiderfw/config/options/spider.rb:68
 msgid "Level of debug output to console"
 msgstr "Livello di debug da inviare in console"
 
-#: lib/spiderfw/config/options/spider.rb:69
+#: lib/spiderfw/config/options/spider.rb:70
 msgid "Log errors to file"
 msgstr "Logga gli errori su file"
 
-#: lib/spiderfw/config/options/spider.rb:70
+#: lib/spiderfw/config/options/spider.rb:71
 msgid "Log level to use for debug file (false for no debug)"
 msgstr ""
 "Livello di log da usare per il file di debug (false per disabilitare il "
 "debug)"
 
-#: lib/spiderfw/config/options/spider.rb:76
+#: lib/spiderfw/config/options/spider.rb:77
 msgid "A list of organizations"
 msgstr "Una lista di organizzazioni"
 
-#: lib/spiderfw/config/options/spider.rb:77
+#: lib/spiderfw/config/options/spider.rb:78
 msgid "Descriptive name of the organization"
 msgstr "Nome descrittivo dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:78
+#: lib/spiderfw/config/options/spider.rb:79
 msgid "Country code of the organization"
 msgstr "Codice nazione dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:79
+#: lib/spiderfw/config/options/spider.rb:80
 msgid "State of the organization"
 msgstr "Provincia dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:80
+#: lib/spiderfw/config/options/spider.rb:81
 msgid "Name of the city"
 msgstr "Nome della città"
 
-#: lib/spiderfw/config/options/spider.rb:81
+#: lib/spiderfw/config/options/spider.rb:82
 msgid "Common name (e.g. domain) of the organization"
 msgstr "Common name (p.es. il dominio) dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:82
+#: lib/spiderfw/config/options/spider.rb:83
 msgid "Main e-mail address of the organization"
 msgstr "Indirizzo e-mail principale dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:83
+#: lib/spiderfw/config/options/spider.rb:84
+msgid "Email address used as 'From' for automatic e-mails"
+msgstr "Indirizzo Email utilizzato come 'From' per le e-mail automatiche"
+
+#: lib/spiderfw/config/options/spider.rb:86
 msgid "Organizational Unit (e.g. department)"
 msgstr "Unità Organizzativa (p.es. il dipartimento)"
 
-#: lib/spiderfw/config/options/spider.rb:84
+#: lib/spiderfw/config/options/spider.rb:87
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
 msgstr ""
 "Percorso della chiave pubblica (di default config/certs/nome_org/public.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:86
+#: lib/spiderfw/config/options/spider.rb:89
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr "Percorso del certificato (di default config/certs/nome_org/cert.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:88
+#: lib/spiderfw/config/options/spider.rb:91
 msgid ""
 "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
 msgstr ""
 "Percorso della chiave privata (di default config/certs/nome_org/private/key."
 "pem)"
 
-#: lib/spiderfw/model/base_model.rb:804
+#: lib/spiderfw/config/options/spider.rb:103
+msgid "Name of the site administrator"
+msgstr "Nome dell'amministratore del sito"
+
+#: lib/spiderfw/config/options/spider.rb:104
+msgid "Email of the site administrator"
+msgstr "Indirizzo e-mail dell'amministratore del sito"
+
+#: lib/spiderfw/controller/mixins/visual.rb:215
+msgid "Page not found"
+msgstr "Pagina non trovata"
+
+#: lib/spiderfw/controller/mixins/visual.rb:222
+msgid "An error occurred"
+msgstr "Si è verificato un errore"
+
+#: lib/spiderfw/model/base_model.rb:1069
 msgid "'%s' is not a valid date"
 msgstr "%s non è una data valida"
 
-#: lib/spiderfw/model/base_model.rb:846
+#: lib/spiderfw/model/base_model.rb:1119
 msgid "'%s' is not in the correct format"
 msgstr "%s non è nel formato corretto"
 
@@ -379,10 +423,31 @@ msgstr "%s non è nel formato corretto"
 msgid "%s is not a valid e-mail address"
 msgstr "%s non è un indirizzo e-mail valido"
 
-#: lib/spiderfw/model/mappers/mapper.rb:674
+#: lib/spiderfw/model/mappers/mapper.rb:797
 msgid "Element %s is required"
 msgstr "L'elemento %s è obbligatorio"
 
-#: lib/spiderfw/model/mappers/mapper.rb:675
+#: lib/spiderfw/model/mappers/mapper.rb:801
 msgid "Another item with the same %s is already present"
 msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
+
+#: views/errors/404.shtml:4
+msgid "We are sorry, but the required page was not found"
+msgstr "Siamo spiacenti, la pagina richiesta non è stata trovata"
+
+#: views/errors/error.layout.shtml:17
+msgid ""
+"If you need to contact the administrator to provide additional information, "
+"you may send an e-mail to"
+msgstr "Per contattare l'amministratore e fornire informazioni aggiuntive, è possibile "
+"inviare un'e-mail a"
+
+#: views/errors/error.layout.shtml:22
+msgid "Debug information"
+msgstr "Informazioni di debug"
+
+#: views/errors/error_generic.shtml:4
+msgid ""
+"We are sorry, an error occurred. The administrator of the site has been "
+"notified"
+msgstr "Siamo spiacenti, si è verificato un errore. L'amministratore del sito è stato informato"

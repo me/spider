@@ -97,6 +97,11 @@ module Spider
                 Spider.find_resource(type, name, cur_path, self)
             end
             
+            def find_resource_path(type, name, cur_path=nil)
+                res = Spider.find_resource(type, name, cur_path, self)
+                return res ? res.path : nil
+            end
+            
             
         end
         
@@ -154,6 +159,12 @@ module Spider
             return [method.to_sym, additional_arguments]
         end
         
+        # Returns true if this controller is the final target for the current action, that is, if it does not
+        # dispatch to any route
+        def action_target?
+            !@dispatch_next[@call_path] || @dispatch_next[@call_path].dest == self
+        end
+        
         
         def execute(action='', *arguments)
             return if @done
@@ -165,10 +176,16 @@ module Spider
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
                 if (can_dispatch?(:execute, action))
+                    d_next = dispatch_next(action)
                     #run_chain(:execute, action, *arguments)
-                    do_dispatch(:execute, action)
+                    if d_next.dest != self # otherwise, shortcut route to self
+                        return do_dispatch(:execute, action) 
+                    else 
+                        arguments = d_next.params
+                    end
 #                        after(action, *arguments)
-                elsif (@executed_method)
+                end
+                if (@executed_method)
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
                     @controller_action = args[0]

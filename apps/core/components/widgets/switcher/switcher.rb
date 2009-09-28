@@ -56,9 +56,9 @@ module Spider; module Components
             @links[content] = w_action
         end
         
-        def widget_resources
-            res = @widgets[:menu].resources
-            res += @current_widget.resources if @current_widget
+        def widget_assets
+            res = @widgets[:menu].assets
+            res += @current_widget.assets if @current_widget
             return res
         end
         

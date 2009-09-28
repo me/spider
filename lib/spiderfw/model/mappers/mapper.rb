@@ -242,7 +242,7 @@ module Spider; module Model
                     current_val = current.get(element)
                     condition = Condition.and
                     condition[our_element] = obj
-                    debugger
+#                    debugger
                     current_val.each do |row|
                         next if val.include?(row)
                         condition_row = Condition.or

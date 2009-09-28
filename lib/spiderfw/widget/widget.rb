@@ -109,7 +109,7 @@ module Spider
                 return self.app.pub_url
                 w = self
                 # FIXME! this is a quick hack to make extended templates work
-                # but what we need is a better method to handle resource ownership
+                # but what we need is a better method to handle asset ownership
                 #
                 # Is it needed anymore?
                 # w = w.superclass while w.superclass != Spider::Widget && w.superclass.subclass_of?(Spider::Widget)
@@ -172,7 +172,7 @@ module Spider
             @attributes = WidgetAttributes.new(self)
             @id_path = []
             @widget_attributes = {}
-            @resources = [{
+            @assets = [{
                 :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-1.3.2.js', :path => Spider::Components.pub_path+'/js/jquery-1.3.2.js',
             },{
                 :type => :js, :src => Spider::Components.pub_url+'/js/inheritance.js', :path => Spider::Components.pub_path+'/js/inheritance.js',
@@ -193,8 +193,8 @@ module Spider
                 :type => :css, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css', 
                 :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css'
             }]
-            locale = @request.locale[0..1]
-            @resources << {
+            locale = @request.locale.language
+            @assets << {
                  :type => :js, :src => Spider::Components.pub_url+"/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js",
                  :path => Spider::Components.pub_path+"/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
             }
@@ -283,9 +283,9 @@ module Spider
             init_widgets unless @init_widgets_done
             set_widget_attributes
             prepare_widgets
-            @template.resources.each do |res|
+            @template.assets.each do |res|
                 res = res.clone
-                @resources << res
+                @assets << res
             end
         end
         
@@ -447,15 +447,15 @@ module Spider
         end
         
         
-        def resources
-            res = @resources.clone + widget_resources
+        def assets
+            res = @assets.clone + widget_assets
             return res
         end
         
-        def widget_resources
+        def widget_assets
             res = []
             @widgets.each do |id, w|
-                res += w.resources
+                res += w.assets
             end
             return res
         end

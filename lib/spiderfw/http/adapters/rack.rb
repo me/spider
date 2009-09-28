@@ -102,7 +102,7 @@ module Spider; module HTTP
                     if (Spider.conf.get('webserver.force_threads'))
                         controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     else
-			controller_response.prepare_headers
+                        controller_response.prepare_headers
                         rack_response_hash[:status] = controller_response.status
                         rack_response_hash[:headers] = {}
                         controller_response.headers.each do |key, val|
@@ -115,6 +115,7 @@ module Spider; module HTTP
                         w.rewind
                     end
                     controller_done = true
+                    Spider.request_finished
                 end
             end
             
