@@ -1,7 +1,7 @@
 module Spider
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
-        :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode }
+        :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode || $SPIDER_RUNMODE}
     )
     
     # Storage
@@ -66,7 +66,7 @@ module Spider
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
     
     config_option 'debug.console.level', _("Level of debug output to console"), :default => :INFO,
-        :process => lambda{ |opt| opt && opt != 'false' ? opt.upcase.to_sym : false }
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
     config_option 'log.errors', _("Log errors to file"), :default => true
     config_option 'log.debug.level', _("Log level to use for debug file (false for no debug)"), :default => false,
         :choices => [false, :DEBUG, :INFO],
