@@ -63,7 +63,7 @@ module Spider; module ControllerMixins
                 params = format_params[:params].call(p_rest) if p_rest
             end
             super(action, *params)
-            return unless format_params
+            return unless format_params.is_a?(Hash)
             if format_params[:template]
                 widget_target = @request.params['_wt']
                 widget_execute = @request.params['_we']

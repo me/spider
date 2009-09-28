@@ -139,7 +139,7 @@ module Spider; module Model; module Mappers
             values.each do |key, val|
                 element = @model.elements[key]
                 next if !mapped?(element) || element.integrated?
-                next if element.model?
+                next if element.model? && val != nil
                 store_key = schema.field(element.name)
                 next unless store_key
                 if (val.is_a?(Spider::QueryFuncs::Expression))
@@ -647,6 +647,7 @@ module Spider; module Model; module Mappers
         
         # Converts a value in one accepted by the storage.
         def map_value(type, value, mode=nil)
+            return value if value.nil?
              if (type < Spider::DataType && value)
                  value = type.from_value(value) unless value.is_a?(type)
                  value = value.map(self.type)

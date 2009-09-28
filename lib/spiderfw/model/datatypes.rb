@@ -5,7 +5,7 @@ require 'spiderfw/model/datatypes/decimal'
 require 'spiderfw/model/datatypes/binary'
 require 'spiderfw/model/datatypes/password'
 require 'spiderfw/model/datatypes/uuid'
-require 'spiderfw/model/datatypes/dumped_object'
+require 'spiderfw/model/datatypes/serialized_object'
 
 
 module Spider
