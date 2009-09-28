@@ -225,7 +225,7 @@ module Spider; module Model
                     if (element.owned?)
                         element.mapper.delete(condition)
                     else
-                        element.mapper.bulk_update({element_reverse => nil}, condition)
+                        element.mapper.bulk_update({element.reverse => nil}, condition)
                     end
                 end
             end
