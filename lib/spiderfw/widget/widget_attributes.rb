@@ -6,7 +6,13 @@ module Spider
             @widget = widget
             @attributes = widget.class.attributes
             @attributes.each do |k, params|
-                self[k] = params[:default] if params[:default]
+                if params[:default]
+                    if (params[:default].is_a?(Proc))
+                        self[k] = params[:default].call
+                    else
+                        self[k] = params[:default]
+                    end
+                end
             end
         end
         
