@@ -129,7 +129,7 @@ module Spider; module ControllerMixins
         
         
         def init_template(path=nil, scene=nil, options={})
-            return @template if @template
+            return @template if @template && @loaded_template_path == path
             scene ||= @scene
             scene ||= get_scene
             if (!path)
@@ -140,6 +140,7 @@ module Spider; module ControllerMixins
             template = load_template(path)
             template.init(scene)
             @template = template
+            @loaded_template_path = path
             return template
         end
         
@@ -326,7 +327,7 @@ module Spider; module ControllerMixins
                 locals = nil unless Spider.conf.get('devel.trace.show_locals')
                 bt << {
                     :text => str, :info => info, 
-                    :path => file, :line => line, :method => method, :klass => klass, :locals => locals,
+                    :path => File.expand_path(file), :line => line, :method => method, :klass => klass, :locals => locals,
                     :instance_variables => iv
                 }
             end
