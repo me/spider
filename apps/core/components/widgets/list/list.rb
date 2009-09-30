@@ -57,6 +57,7 @@ module Spider; module Components
                     @requested_sublists.each do |sl|
                         if (sl['element'])
                             el = @model.elements[sl['element'].to_sym]
+                            next unless el # may be ok if the query is polymorphic
                             if (sl['tree'] && el.attributes[:reverse])
                                 sub = el.model.send("#{sl['tree']}_roots")
                                 sub.condition[el.attributes[:reverse]] = row
