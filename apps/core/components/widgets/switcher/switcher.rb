@@ -58,7 +58,7 @@ module Spider; module Components
         
         def widget_assets
             res = @widgets[:menu].assets
-            res += @current_widget.assets if @current_widget
+            res += @current.assets if @current
             return res
         end
         
