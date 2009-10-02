@@ -24,14 +24,44 @@ Spider.Widget = Class.extend({
         this.el = container;
         this.path = path;
         this.backend = new Spider.WidgetBackend(this);
+		this.readyFunctions = [];
         Spider.widgets[path] = this;
+		this.startup();
+		this.ready();
     },
     
     remote: function(){
         var args = Array.prototype.slice.call(arguments); 
         var method = args.shift();
         return this.backend.send(method, args);
-    }
+    },
+
+	onReady: function(callback){
+		this.readyFunctions.push(callback);
+		callback.apply(this);
+	},
+	
+	ready: function(){
+		for (var i=0; i<this.readyFunctions.length; i++){
+			this.readyFunctions[i].apply(this);
+		}
+	},
+	
+	reload: function(){
+		$C.loadWidget(this.path);
+	},
+	
+	startup: function(){},
+	update: function(){},
+	
+	replaceHTML: function(html){
+		var el = $(html)
+		this.el.html(el.html());
+		this.update();
+		this.ready();
+	}
+	
+	
     
 });
 
@@ -83,7 +113,7 @@ Spider.WidgetBackend = Class.extend({
        var defaults = {
           url: url,
           type: 'POST',
-          complete: callback,
+          success: callback,
           data: data
        };
        options = $.extend(defaults, options);
@@ -102,3 +132,62 @@ Spider.defineWidget = function(name, w){
     curr[parts[parts.length-1]] = Spider.Widget.extend(w);
 };
 
+Spider.Controller = Class.extend({
+    
+    init: function(){
+		var url = ''+document.location;
+		var slashPos = url.lastIndexOf('/');
+		url = url.substr(0, slashPos);
+		this.url = url;
+    },
+    
+	remote: function(method, params, callback, options){
+		var args = Array.prototype.slice.call(arguments); 
+		if (!callback) callback = function(){};
+		var url = this.url+'/'+method+'.json';
+		var defaults = {
+			url: url,
+			type: 'POST',
+			complete: callback,
+			data: params
+		};
+		options = $.extend(defaults, options);
+		$.ajax(options);
+	},
+	
+	loadWidget: function(path){
+		var url = document.location+'?_wt='+path;
+		$.ajax({
+			url: url,
+			type: 'GET',
+			dataType: 'html',
+			success: function(res){
+				$W(path).replaceHTML(res);
+				$W(path).el.effect('highlight', {}, 500);
+			}
+		})
+	}
+    
+});
+
+$C = new Spider.Controller();
+
+$(document).ready(function(){
+	$('a.ajax').click(function(e){
+		e.preventDefault();
+		var a = $(e.target);
+		var url = $(this).attr('href');
+		var parts = url.split('?');
+		url = parts[0]+'.json';
+		if (parts[1]) url += '?'+parts[1];
+		$.ajax({
+			url: url,
+			type: 'GET',
+			dataType: 'json',
+			success: function(res){
+				a.trigger('ajaxSuccess', res);
+			}
+		})
+		return false;
+	})
+})
