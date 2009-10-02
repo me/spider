@@ -429,8 +429,8 @@ module Spider
                         Debugger.start
                         Debugger.post_mortem
                     end
+                    require 'ruby-prof' 
                 rescue LoadError; end
-                require 'ruby-prof' rescue LoadError
             end
         end
         
