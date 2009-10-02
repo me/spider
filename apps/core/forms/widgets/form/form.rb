@@ -315,9 +315,13 @@ module Spider; module Forms
                     @saved = true
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
                 rescue => exc
-                    Spider::Logger.error(exc)
-                    exc_element = exc.is_a?(Spider::Model::MapperElementError) ? exc.element.name : nil
-                    add_error(exc, exc.message, exc_element)
+                    if exc.is_a?(Spider::Model::MapperElementError)
+                        Spider::Logger.error(exc)
+                        exc_element =  exc.element.name
+                        add_error(exc, exc.message, exc_element)
+                    else
+                        raise
+                    end
                 end
                 @after_save.call(obj, save_mode) if @after_save
                 if (@auto_redirect)
