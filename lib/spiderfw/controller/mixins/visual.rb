@@ -102,8 +102,10 @@ module Spider; module ControllerMixins
             if (format_params[:redirect])
                 redirect(format_params[:redirect])
             end
-            if (@executed_format == :json && format_params[:scene]) # FIXME: move in JSON mixin?
-                if (format_params[:scene].is_a?(Array))
+            if (@executed_format == :json && format_params[:scene] || format_params[:return]) # FIXME: move in JSON mixin?
+                if (format_params[:return])
+                    $out << format_params[:return].to_json
+                elsif (format_params[:scene].is_a?(Array))
                     h = @scene.to_hash
                     res = {}
                     format_params[:scene].each{ |k| res[k] = h[k] }
