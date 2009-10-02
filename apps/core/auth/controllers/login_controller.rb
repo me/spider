@@ -32,6 +32,10 @@ module Spider; module Auth
         end
         
         def authenticate
+            get_user
+        end
+        
+        def get_user
             return self.class.user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
         end
         
