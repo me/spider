@@ -14,6 +14,7 @@ module Spider; module Components
         is_attr_accessor :actions
         is_attribute :sub_elements
         is_attribute :is_child
+        is_attribute :paginate, :type => Fixnum, :default => false
 
         def widget_init(action='')
             super
@@ -34,10 +35,20 @@ module Spider; module Components
             end
             @sub_elements ||= []
             @requested_sublists ||= []
+            if (@attributes[:paginate])
+                @page = params['page'] if params['page']
+                @page ||= 1
+                @page = @page.to_i
+                @offset = ((@page - 1) * @attributes[:paginate])
+            end
             if (!@lines)
                 @lines = []
                 @keys = []
                 cnt = 0
+                if (@attributes[:paginate])
+                    @queryset.offset = @offset
+                    @queryset.limit = @attributes[:paginate]
+                end
                 @queryset.each do |row|
                     @keys << keys_string(row)
                     cnt2 = 0
@@ -126,7 +137,7 @@ module Spider; module Components
         
         __.json
         def tree_sort(id, parent_id, prev_id=nil)
-            debugger
+            #debugger
             raise "List #{@id} is not a tree" unless @tree
             raise "List #{@id} is not sortable" unless @sortable
             obj = @model.new(id)

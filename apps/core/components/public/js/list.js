@@ -3,7 +3,7 @@ Spider.defineWidget('Spider.Components.List', {
     startup: function(){
         var options = {};
         if (this.el.hasClass('collapsed')) options.collapsed = true;
-        this.el.treeview(options);
+        if (this.el.hasClass('tree')) this.el.treeview(options);
         if (this.el.hasClass('sortable')) this.makeSortable();
     },
     
@@ -38,7 +38,7 @@ Spider.defineWidget('Spider.Components.List', {
             });
             this.el.sortableTree(options);
             // handles drops on non-subtrees nodes
-            debugger;
+//            debugger;
             $('.desc', this.el).droppable({
                 accept: "li",
                 hoverClass: "drop",
@@ -103,6 +103,5 @@ Spider.defineWidget('Spider.Components.List', {
 $(document).ready(function(){
     $('.wdgt-Spider-Components-List:not(.sublist)').each(function(){
         var widget = Spider.Widget.initFromEl($(this));
-        widget.startup();
     });
 });
