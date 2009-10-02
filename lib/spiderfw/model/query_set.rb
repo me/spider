@@ -204,6 +204,7 @@ module Spider; module Model
         
         # Checks contained objects' loaded elements.
         def update_loaded_elements
+            return if empty?
             f_loaded = {}
             self.each_current do |obj|
                 @loaded_elements.each do |el|
