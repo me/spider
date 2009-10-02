@@ -1783,6 +1783,97 @@ module Spider; module Model
             yield
         end
         
+        def self.prepare_to_code
+            modules = self.name.split('::')[0..-2]
+            included = (self.included_modules - Spider::Model::BaseModel.included_modules).select do |m|
+                m.name !~ /^#{Regexp.quote(self.name)}/
+            end
+            local_name = self.name.split('::')[-1]
+            superklass = self.superclass.name
+            elements = []
+            remove_elements = []
+            self.elements_array.each do |el|
+                next if el.integrated?
+                method = case el.attributes[:association]
+                when :many
+                    :many
+                when :choice
+                    :choice
+                when :multiple_choice
+                    :multiple_choice
+                when :tree
+                    :tree
+                else
+                    :element
+                end
+                type = el.type
+                attributes = el.attributes.clone
+                if (method == :many || method == :multiple_choice)
+                    attributes.delete(:multiple)
+                end
+                attributes.delete(:association) if method != :element
+                if (method == :tree)
+                    delete_attrs = [:queryset_module, :multiple]
+                    delete_attrs.each{ |a| attributes.delete(a) }
+                    remove_elements += [attributes[:reverse], attributes[:tree_left], attributes[:tree_right], attributes[:tree_depth]]
+                    type = nil
+                end
+                elements << {
+                    :name => el.name,
+                    :type => type,
+                    :attributes => attributes,
+                    :method => method
+                }
+            end
+            elements.reject!{ |el| remove_elements.include?(el[:name]) }
+            return {
+                :modules => modules,
+                :included => included,
+                :elements => elements,
+                :local_name => local_name,
+                :superclass => superklass,
+                :use_storage => @use_storage,
+                :additional_code => []
+            }
+        end
+        
+        def self.to_code
+            c = prepare_to_code
+            str = ""
+            indent = 0
+            append = lambda do |val|
+                str += " "*indent
+                str += val
+                str
+            end
+            str += c[:modules].map{ |m| "module #{m}" }.join('; ') + "\n"
+            str += "\n"
+            indent = 4
+            append.call "class #{c[:local_name]} < #{c[:superclass]}\n"
+            indent += 4
+            c[:included].each do |i|
+                append.call "include #{i.name}\n"
+            end
+            str += "\n"
+            c[:elements].each do |el|
+                append.call("#{el[:method].to_s} #{el[:name].inspect}")
+                str += ", #{el[:type]}" if el[:type]
+                str += ", #{el[:attributes].inspect}\n" if el[:attributes] && !el[:attributes].empty?
+            end
+            str += "\n"
+            append.call "use_storage '#{c[:use_storage]}'\n" if c[:use_storage]
+            c[:additional_code].each do |block|
+                block.each_line do |line|
+                    append.call line
+                end
+                str += "\n"
+            end
+            indent -= 4
+            append.call("end\n")
+            str += c[:modules].map{ "end" }.join(';')
+            return str
+        end
+        
     end
     
 end; end

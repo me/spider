@@ -81,6 +81,48 @@ class ModelCommand < CmdParse::Command
             end
         end
         self.add_command(sync_cmd)
+        
+        dump_cmd = CmdParse::Command.new( 'dump', false )
+        dump_cmd.short_desc = _("Dump models")
+        dump_cmd.options = CmdParse::OptionParserWrapper.new do |opt|
+            opt.on("--force", _("Overwrite existing files"), "-f"){ |f|
+                @force = true
+            }
+            opt.on("--path [PATH]", _("Specify dump path"), "-p"){ |p|
+                @dump_path = p
+            }
+        end
+        dump_cmd.set_execution_block do |req_models|
+            require 'spiderfw'
+            req_models || []
+            req_models.each do |model_or_app|
+                models = []
+                mod = model_or_app.is_a?(Module) ? model_or_app : const_get_full(model_or_app)
+                if (mod.is_a?(Module) && mod.include?(Spider::App))
+                    mod.models.each do |m|
+                        models << m
+                    end
+                elsif (mod.subclass_of?(Spider::Model::BaseModel))
+                    models << mod if @non_managed || mod < Spider::Model::Managed
+                end
+                Spider.logger.warn("Nothing to do") if models.empty?
+                models.each do |model|
+                    dest = @dump_path || model.app.models_path
+                    FileUtils.mkdir_p(dest)
+                    file_name = "#{model.short_name}.rb"
+                    path = "#{dest}/#{file_name}"
+                    if (File.exist?(path) && !@force)
+                        Spider.logger.warn("File #{path} exists, skipping #{model}")
+                        next
+                    end
+                    code = model.to_code
+                    File.open(path, "w") do |f|
+                        f << code
+                    end
+                end
+            end
+        end
+        self.add_command(dump_cmd)
 
 
     end
