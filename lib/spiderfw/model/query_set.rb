@@ -145,6 +145,15 @@ module Spider; module Model
             else
                 self << data
             end
+            
+        end
+        
+        def change_model(model)
+            @model = model
+            @objects.each_index do |i|
+                @objects[i] = @objects[i].become(model)
+            end
+            return self
         end
 
         # Adds an object to the set. Also stores the raw data if it is passed as the second parameter. 
@@ -599,6 +608,11 @@ module Spider; module Model
         # Assigns an IdentityMapper
         def identity_mapper=(im)
             @identity_mapper = im
+        end
+        
+        def with_superclass
+            @query.with_superclass
+            return self
         end
         
         ########################################

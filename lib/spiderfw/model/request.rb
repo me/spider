@@ -54,10 +54,24 @@ module Spider; module Model
         # Requests only subclasses, not the queried model.
         def only_polymorphs
             @only_polymorphs = true
+            return self
         end
         
         def only_polymorphs?
             @only_polymorphs
+        end
+        
+        def with_superclass
+            @with_superclass = true
+            return self
+        end
+        
+        def with_superclass=(val)
+            @with_superclass = val
+        end
+        
+        def with_superclass?
+            @with_superclass
         end
     
     end

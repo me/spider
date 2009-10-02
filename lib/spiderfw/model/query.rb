@@ -110,6 +110,10 @@ module Spider; module Model
            @request.only_polymorphs
        end
        
+       def with_superclass
+           @request.with_superclass
+       end
+       
        ##############################
        # information methods        #
        ##############################

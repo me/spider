@@ -425,23 +425,30 @@ module Spider; module Model
             set = nil
             Spider::Model.with_identity_mapper do |im|
 #                im.put(query_set)
-                if (@model.attributes[:condition])
-                    query.condition = Condition.and(query.condition, @model.attributes[:condition])
-                end
-                @model.primary_keys.each{ |key| query.request[key] = true}
-                expand_request(query.request) unless options[:no_expand_request]
-                query = prepare_query(query, query_set)
-                query.request.total_rows = true unless query.request.total_rows == false
-                result = fetch(query)
+                query_set.update_loaded_elements if query_set
                 set = query_set || QuerySet.new(@model)
                 was_loaded = set.loaded
                 set.loaded = true
                 set.index_by(*@model.primary_keys)
                 set.last_query = query
+                if (query.request.with_superclass? && @model.superclass < BaseModel)
+                    return find_with_superclass(query, set, options)
+                end
+                
+                if (@model.attributes[:condition])
+                    query.condition = Condition.and(query.condition, @model.attributes[:condition])
+                end
+                @model.primary_keys.each{ |key| query.request[key] = true}
+                expand_request(query.request, set) unless options[:no_expand_request]
+                query = prepare_query(query, query_set)
+                query.request.total_rows = true unless query.request.total_rows == false
+                result = fetch(query)
                 if !result || result.empty?
                     set.each_current do |obj|
                         query.request.keys.each do |element_name|
-                            obj.set_loaded_value(element_name, nil) unless @model.elements[element_name].integrated?
+                            el = @model.elements[element_name]
+                            next if el.integrated? || @model.extended_models[el.model]
+                            obj.set_loaded_value(element_name, nil) 
                         end
                     end
                     return set
@@ -450,26 +457,12 @@ module Spider; module Model
                 result.each do |row|
                     obj =  map(query.request, row, set.model)
                     next unless obj
-                    search = {} 
-                    @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
-                    obj_res = set.find(search)  # FIXME: find a better way
-                    if (obj_res && obj_res[0])
-                        obj_res[0].merge!(obj)
-                        obj.loaded_elements.each{ |name, bool| set.element_loaded(name) }
-                    else
-                        set << obj
-                    end
+                    merge_object(set, obj)
                     @raw_data[obj.object_id] = row
                 end
 #                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
 
-                set = get_external(set, query)
-                # FIXME: avoid the repetition
-                set.each_current do |obj|
-                    query.request.keys.each do |element_name|
-                        obj.set_loaded_value(element_name, nil) unless obj.element_loaded?(element_name) || @model.elements[element_name].integrated?
-                    end
-                end
+               
                 # if (delay_put)
                 #     set.no_autoload(false) do
                 #         set.each_index do |i|
@@ -478,6 +471,38 @@ module Spider; module Model
                 #         end
                 #     end
                 # end
+            end
+            return set
+        end
+        
+        
+        def merge_object(set, obj) # :nodoc:
+            search = {} 
+            @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
+            obj_res = set.find(search)  # FIXME: find a better way
+            if (obj_res && obj_res[0])
+                obj_res[0].merge!(obj)
+                obj.loaded_elements.each{ |name, bool| set.element_loaded(name) }
+            else
+                set << obj
+            end
+        end
+        
+        def find_with_superclass(query, set=nil, options={}) # :nodoc:
+            q = query.clone
+            polym_request = Request.new
+            polym_condition = Condition.new
+            query.request.keys.each do |el_name|
+                if (!@model.superclass.has_element?(el_name))
+                    polym_request[el_name] = true
+                    query.request.delete(el_name)
+                end
+            end
+            q.with_polymorph(@model, polym_request)
+            res = @model.superclass.mapper.find(q)
+            res.change_model(@model)
+            res.each do |obj|
+                merge_object(set, obj)
             end
             return set
         end
@@ -609,9 +634,41 @@ module Spider; module Model
         ##############################################################
 
         def prepare_query(query, obj=nil)
+            if (query.request.polymorphs?)
+                conds = split_condition_polymorphs(query.condition, query.request.polymorphs.keys) 
+                conds.each{ |polym, c| query.condition << c }
+            end
             prepare_query_request(query.request, obj)
             prepare_query_condition(query.condition)
             return query
+        end
+        
+        def split_condition_polymorphs(condition, polymorphs)
+            conditions = {}
+            condition.each_with_comparison do |el, val, comp|
+                if (!@model.has_element?(el))
+                    polymorphs.each do |polym|
+                        if (polym.has_element?(el))
+                            conditions[polym] ||= Condition.new
+                            conditions[polym].polymorph = polym
+                            conditions[polym].set(el, comp, val)
+                            condition.delete(el)
+                        end
+                    end
+                end
+            end
+            condition.subconditions.each do |sub|
+                res = split_condition_polymorphs(sub, polymorphs)
+                polymorphs.each do |polym|
+                    next unless res[polym]
+                    if (!conditions[polym])
+                        conditions[polym] = res[polym]
+                    else
+                        conditions[polym] << res[polym]
+                    end
+                end
+            end
+            return conditions
         end
         
         
