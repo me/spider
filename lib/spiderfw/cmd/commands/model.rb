@@ -34,11 +34,19 @@ class ModelCommand < CmdParse::Command
                 mod = model_or_app.is_a?(Module) ? model_or_app : const_get_full(model_or_app)
                 if (mod.is_a?(Module) && mod.include?(Spider::App))
                     mod.models.each do |m|
-                        next unless @non_managed || m < Spider::Model::Managed
+                        unless @non_managed || m < Spider::Model::Managed
+                            Spider.logger.warn("Skipping #{m} because it's non managed (use -m to override)")
+                            next
+                        end
                         models << m
                     end
                 elsif (mod.subclass_of?(Spider::Model::BaseModel))
-                    models << mod if @non_managed || mod < Spider::Model::Managed
+                    if @non_managed || mod < Spider::Model::Managed
+                        models << mod
+                    else
+                        Spider.logger.warn("Skipping #{mod} because it's non managed (use -m to override)")
+                    end
+                    
                 end
                 models.each do |model|
                     begin
