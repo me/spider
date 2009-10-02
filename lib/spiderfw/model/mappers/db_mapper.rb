@@ -136,9 +136,16 @@ module Spider; module Model; module Mappers
         def bulk_update(values, condition)
             db_values = {}
             joins = []
+            integrated = {}
+            condition = prepare_query_condition(condition)
             values.each do |key, val|
                 element = @model.elements[key]
-                next if !mapped?(element) || element.integrated?
+                if (element.integrated?)
+                    integrated[element.integrated_from] ||= {}
+                    integrated[element.integrated_from][key] = val
+                    next
+                end
+                next if !mapped?(element)
                 next if element.model? && val != nil
                 store_key = schema.field(element.name)
                 next unless store_key
@@ -149,6 +156,11 @@ module Spider; module Model; module Mappers
                     db_values[store_key] = map_save_value(element.type, val, :update)
                 end
             end
+            integrated.each do |i_el, i_values|
+                next unless condition[i_el.name]
+                i_el.mapper.bulk_update(i_values, condition[i_el.name]) # FIXME?
+            end
+            return if db_values.empty?
             save = {:table => schema.table, :values => db_values}
             condition, c_joins = prepare_condition(condition)
             joins += c_joins
