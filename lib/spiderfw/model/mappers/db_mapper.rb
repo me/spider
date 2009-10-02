@@ -858,8 +858,8 @@ module Spider; module Model; module Mappers
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
                         end
                     end
-                    column_name = current_column[:name] || @storage.column_name(element.name)
-                    column_type = current_column[:type] || @storage.column_type(storage_type, element.attributes)
+                    column_name = current_column[:name] || element.attributes[:db_column_name] || @storage.column_name(element.name)
+                    column_type = current_column[:type] || element.attributes[:db_column_type] || @storage.column_type(storage_type, element.attributes)
                     schema.set_column(element.name,
                         :name => column_name,
                         :type => column_type,
@@ -887,14 +887,15 @@ module Spider; module Model; module Mappers
                                 :precision => key_attributes[:precision]
                             }
                             current = current_schema[key.name] || {}
+                            c_name = element.attributes[:db_column_name]
                             # if (element.attributes[:integrated_model] && element.model == @model.superclass && 
                             #                                 @model.elements[key.name].integrated_from.name == element.name)
                             #                                 c_name = @storage.column_name(key.name)
                             #                             else
-                                c_name = @storage.column_name("#{element.name}_#{key.name}")
+                            c_name ||= @storage.column_name("#{element.name}_#{key.name}")
                             # end
                             column_name = current[:name] || c_name
-                            column_type = current[:type] || @storage.column_type(key_type, key_attributes)
+                            column_type = current[:type] || element.attributes[:db_column_type] || @storage.column_type(key_type, key_attributes)
                             column_attributes = current[:attributes] || @storage.column_attributes(key_type, key_attributes)
                             schema.set_foreign_key(element.name, key.name, 
                                 :name => column_name,
