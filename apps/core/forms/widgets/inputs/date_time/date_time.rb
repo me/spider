@@ -12,7 +12,7 @@ module Spider; module Forms
             return nil unless val.is_a?(String) && !val.empty?
             klass = @mode == :date ? ::Date : ::DateTime
             begin
-                return klass.lparse(val)
+                return klass.lparse(val, :short)
             rescue => exc
                 add_error(_("%s is not a valid date") % val)
             end
