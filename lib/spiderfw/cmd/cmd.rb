@@ -46,7 +46,7 @@ module Spider; module CommandLine
         def parse
             cmd_name = nil
             0.upto(ARGV.length) do |i|
-                if (ARGV[i] != 'help' && ARGV[i][0].chr != '-')
+                if (ARGV[i] && ARGV[i] != 'help' && ARGV[i][0].chr != '-')
                     cmd_name = ARGV[i]
                     break
                 end
