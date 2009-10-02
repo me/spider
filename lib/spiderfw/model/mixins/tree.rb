@@ -45,10 +45,9 @@ module Spider; module Model
                element(attributes[:tree_right], Fixnum, :hidden => true)
                element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true)
 #               sequence(name)
+               qs_module ||= Module.new
                
-               @tree_queryset_module ||= Module.new
-               
-               @tree_queryset_module.module_eval do
+               qs_module.module_eval do
                    
                    define_method("#{name}_roots") do
                        qs = self.clone
@@ -64,10 +63,14 @@ module Spider; module Model
                    
                    
                end
+               @elements[name].attributes[:queryset_module] = qs_module
                
                def extend_queryset(qs)
                    super
-                   qs.extend(@tree_queryset_module)
+                   @elements.each do |name, el|
+                       qs_module = el.attributes[:queryset_module]
+                       qs.extend(qs_module) if qs_module
+                   end
                end
                
                (class << self; self; end).instance_eval do
