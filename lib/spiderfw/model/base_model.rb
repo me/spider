@@ -71,8 +71,6 @@ module Spider; module Model
             attr_reader :elements_order
             # An Hash of integrated models => corresponding integrated element name.
             attr_reader :integrated_models
-            # An Hash of extended models => element name of the extended model element
-            attr_reader :extended_models
             # An Hash of polymorphic models => polymorphic params
             attr_reader :polymorphic_models
             # An Array of named sequences.
@@ -204,7 +202,7 @@ module Spider; module Model
 
             orig_type = type
             assoc_type = nil
-            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:reverse] || \
+            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && (!attributes[:reverse] || \
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
                 (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?)))
@@ -335,7 +333,8 @@ module Spider; module Model
                     end
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
-                elsif (element.model? && element.multiple?)
+                end
+                if (!val && element.model? && element.multiple?)
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 val.set_parent(self, name) if element.model? && val
@@ -432,7 +431,8 @@ module Spider; module Model
                 next if params[:except].include?(el.name)
                 next if elements[el.name] # don't overwrite existing elements
                 attributes = el.attributes.clone.merge({
-                    :integrated_from => elements[element_name]
+                    :integrated_from => elements[element_name],
+                    :integrated_from_element => el.name
                 })
                 attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
@@ -441,7 +441,8 @@ module Spider; module Model
                     attributes.delete(:add_multiple_reverse)
                 end
                 attributes.delete(:primary_key) unless (params[:keep_pks])
-                element(el.name, el.type, attributes)
+                name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
+                element(name, el.type, attributes)
             end
         end
         
@@ -525,7 +526,8 @@ module Spider; module Model
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
             attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
-            integrate(integrated_name, :keep_pks => true)
+            integrate_options = {:keep_pks => true}.merge((params[:integrate_options] || {}))
+            integrate(integrated_name, integrate_options)
             model.elements_array.select{ |el| el.attributes[:local_pk] }.each{ |el| remove_element(el.name) }
 
             unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
@@ -699,6 +701,11 @@ module Spider; module Model
         # since subclasses and mixins may extend this method to provide association equivalence.
         def self.element_association?(element_name, association)
             return true if elements[element_name].association = association
+        end
+        
+        # An Hash of extended models => element name of the extended model element
+        def self.extended_models
+            @extended_models ||= {}
         end
         
         ##############################################################
@@ -887,7 +894,7 @@ module Spider; module Model
             if (values)
                 if (values.is_a? Hash)
                     values.each do |key, val|
-                        set(key, val)
+                        set!(key, val)
                     end
                 elsif (values.is_a? BaseModel)
                     values.each_val do |name, val|
@@ -1014,11 +1021,28 @@ module Spider; module Model
         # The element can be a symbol, or a dotted path String.
         # Will call the associated setter.
         #   cat.set('favorite_food.name', 'Salmon')
-        def set(element, value)
+        def set(element, value, options={})
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
-            return send(first).set(rest, value) if (rest)
+            if (rest)
+                first_val = send(first)
+                unless first_val
+                    if (options[:instantiate])
+                        first_val = instantiate_element(first.to_sym)
+                        set(first, first_val)
+                    else
+                        raise "Element #{first} is nil, can't set #{element}" 
+                    end
+                end
+                return first_val.set(rest, value, options)
+            end
             return send("#{element}=", value)
+        end
+        
+        # Sets an element, instantiating intermediate objects if needed
+        def set!(element, value, options={})
+            options[:instantiate] = true
+            set(element, value, options)
         end
         
         # Calls #get on element; whenever no getter responds, returns the extra data.
@@ -1064,7 +1088,7 @@ module Spider; module Model
                 when 'Date', 'DateTime'
                     return nil if value.is_a?(String) && value.empty?
                     begin
-                        value = element.type.parse(value) if value.is_a?(String)
+                        value = element.type.lparse(value, :short) if value.is_a?(String)
                     rescue ArgumentError => exc
                         raise FormatError.new(element, value, _("'%s' is not a valid date"))
                     end
@@ -1133,7 +1157,15 @@ module Spider; module Model
         def polymorphic_become(model)
             raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
             obj = model.new
-            obj.set(self.class.polymorphic_models[model][:through], self)
+            el = self.class.polymorphic_models[model][:through]
+            obj.set(el, self)
+            obj.element_loaded(el)
+            return obj
+        end
+        
+        def become(model)
+            return self if self.class == model
+            obj = polymorphic_become(model) rescue ModelException
             return obj
         end
         
