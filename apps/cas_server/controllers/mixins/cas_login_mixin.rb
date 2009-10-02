@@ -67,20 +67,12 @@ module Spider; module CASServer
             return xm
         end
         
-        def serialize_extra_attribute(value)
-          if value.kind_of?(String) || value.kind_of?(Numeric)
-            value
-          else
-            "<![CDATA[#{value.to_yaml}]]>"
-          end
-        end
-
         def authenticate
             if error = validate_login_ticket(@request.params['lt'])
                 @scene.message = error
                 return nil
             end
-            user = super
+            user = get_user
             return nil unless user
             extra_attributes = user.user_attributes
             tgt = generate_ticket_granting_ticket(user.identifier, extra_attributes)
@@ -154,12 +146,12 @@ module Spider; module CASServer
                             # TODO: Maybe we should do some special handling if send_logout_notification_for_service_ticket fails? 
                             #       (the above method returns false if the POST results in a non-200 HTTP response).
                             $LOG.debug "Deleting #{st.class.name} #{st.ticket.inspect}."
-                            st.destroy
+                            st.delete
                         end
                     end
 
                     $LOG.debug("Deleting #{tgt.class.name} '#{tgt}' for user '#{tgt.username}'")
-                    tgt.destroy
+                    tgt.delete
                 end  
 
                 $LOG.info("User '#{tgt.username}' logged out.")
@@ -225,16 +217,20 @@ module Spider; module CASServer
             xm.cas(:serviceResponse, 'xmlns:cas' => 'http://www.yale.edu/tp/cas') do
                 if (@success)
                     xm.cas(:authenticationSuccess) do
-                        xm.cas(:user){ @username.to_s }
+                        xm.cas(:user, @username.to_s)
                         @extra_attributes.each do |key, value|
-                            xm.tag!(key) {serialize_extra_attribute(value)}
+                            if value.kind_of?(String) || value.kind_of?(Numeric)
+                                xm.tag!(key.to_s, value)
+                            else
+                                xm.tag!(key.to_s){ xm.cdata!(value.to_yaml) }
+                            end
                         end
                         if (@pgtiou)
-                            xm.cas(:proxyGrantingTicket){ @pgtiou.to_s }
+                            xm.cas(:proxyGrantingTicket, @pgtiou.to_s)
                         end
                     end
                 else
-                    xm.cas(:authenticationFailure, :code => @error.code){ @error.to_s }
+                    xm.cas(:authenticationFailure, :code => @error.code){ xm.text!(@error.to_s) }
                 end
             end
         end
@@ -266,8 +262,6 @@ module Spider; module CASServer
                     @pgtiou = pgt.iou if pgt
                 end
                 
-                debugger
-                # Extra attributes vengono vuoti
                 @extra_attributes = t.ticket_granting_ticket.extra_attributes || {}
             end
 
@@ -276,23 +270,27 @@ module Spider; module CASServer
             xm.cas(:serviceResponse, 'xmlns:cas' => 'http://www.yale.edu/tp/cas') do
                 if (@success)
                     xm.cas(:authenticationSuccess) do
-                        xm.cas(:user){ @username.to_s }
+                        xm.cas(:user, @username.to_s)
                         @extra_attributes.each do |key, value|
-                            xm.tag!(key) {serialize_extra_attribute(value)}
+                            if value.kind_of?(String) || value.kind_of?(Numeric)
+                                xm.tag!(key.to_s, value)
+                            else
+                                xm.tag!(key.to_s){ xm.cdata!(value.to_yaml) }
+                            end
                         end
                         if (@pgtiou)
-                            xm.cas(:proxyGrantingTicket){ @pgtiou.to_s }
+                            xm.cas(:proxyGrantingTicket, @pgtiou.to_s)
                         end
                         if (@proxies && !@proxies.empty?)
                             xm.cas(:proxies) do
                                 @proxies.each do |proxy_url|
-                                    xm.cas(:proxy){ proxy_url.to_s }
+                                    xm.cas(:proxy, proxy_url.to_s)
                                 end
                             end
                         end
                     end
                 else
-                    xm.cas(:authenticationFailure, :code => @error.code){ @error.to_s }
+                    xm.cas(:authenticationFailure, :code => @error.code){ xm.text!(@error.to_s) }
                 end
             end
         end
@@ -318,10 +316,10 @@ module Spider; module CASServer
             xm.cas(:serviceResponse, 'xmlns:cas' => 'http://www.yale.edu/tp/cas') do
                 if (@success)
                     xm.cas(:proxySuccess) do
-                        xm.cas(:proxyTicket){ @pt.to_s }
+                        xm.cas(:proxyTicket, @pt.to_s)
                     end
                 else
-                    xm.cas(:proxyFailure, :code => @error.code){ @error.to_s }
+                    xm.cas(:proxyFailure, :code => @error.code){ xm.text!(@error.to_s) }
                 end
             end
         end
