@@ -164,6 +164,7 @@ module Spider
             @path = path
             @widgets = {}
             @subtemplates = {}
+            @subtemplate_owners = {}
             @id_path = []
             @assets = []
             @content = {}
@@ -211,10 +212,13 @@ module Spider
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
             options[:root] = true
             options[:owner] = @owner
+            options[:owner_class] = @owner_class || @owner.class
             options[:template_path] = @path
             compiled.block = root_block.compile(options)
             subtemplates.each do |id, sub|
-                compiled.subtemplates[id] = sub.compile(options)
+                sub.owner_class = @subtemplate_owners[id]
+                compiled.subtemplates[id] = sub.compile(options.merge({:mode => :widget})) # FIXME! :mode => :widget is wrong,
+                # it's just a quick kludge
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
@@ -388,8 +392,9 @@ module Spider
             self.class.to_s
         end
         
-        def add_subtemplate(id, template) # :nodoc:
+        def add_subtemplate(id, template, owner) # :nodoc:
             @subtemplates[id] = template
+            @subtemplate_owners[id] = owner
         end
         
         
@@ -477,6 +482,7 @@ module Spider
         
         def initialize()
             @subtemplates = {}
+            @subtemplate_owners = {}
             @devel_info = {}
         end
         

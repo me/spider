@@ -36,7 +36,7 @@ module Spider; module TemplateBlocks
                 #template_name = klass.find_template(template_attr)
                 template = klass.load_template(template_attr || klass.default_template)
                 template.overrides = overrides
-                @template.add_subtemplate(id, template)
+                @template.add_subtemplate(id, template, klass)
             end
             # # FIXME: can't find a better way
             # overrides.each{ |o| o.set_attribute('class', 'to_delete') }

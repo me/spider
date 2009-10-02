@@ -26,10 +26,10 @@ module Spider; module TemplateBlocks
                 end
                 if (options[:root])
                     cl += " widget"
-                    if options[:owner]
-                        cl += " wdgt-#{options[:owner].class.name.gsub('::', '-')}"
-                        @el.raw_attributes['id'] = options[:owner].full_id
+                    if options[:owner_class]
+                        cl += " wdgt-#{options[:owner_class].name.gsub('::', '-')}"
                     end
+                    @el.raw_attributes['id'] =  "{ @widget[:full_id] }"
                 end
                 cl += ' ' unless cl.empty?
                 cl += '{ @widget[:css_classes] }'
