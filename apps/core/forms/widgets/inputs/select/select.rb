@@ -15,6 +15,7 @@ module Spider; module Forms
         end
         
         def run
+            @model = const_get_full(@model) if @model.is_a?(String)
             @scene.data = @data || @model.all
             if (@condition)
                 @scene.data.condition = @condition
