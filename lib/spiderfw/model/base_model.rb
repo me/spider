@@ -1574,6 +1574,10 @@ module Spider; module Model
             end
         end
         
+        def remove_association(element, object)
+            mapper.delete_element_associations(self, element, object)
+        end
+        
         ##############################################################
         #   Method missing                                           #
         ##############################################################
