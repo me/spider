@@ -9,8 +9,11 @@ module Spider; module TemplateBlocks
             init = ""
             start = get_start(options)
             c += "$out << '#{start}'\n"
+            is_root = options[:root]
             options.delete(:root)
+            c += "unless self[:widget][:target_only] && !self[:widget][:is_target]\n" if (options[:mode] == :widget && is_root)
             c, init = compile_content(c, init, options)
+            c += "end\n"  if (options[:mode] == :widget && is_root)
             end_tag = get_end
             c += "$out << '#{end_tag}'\n" if end_tag
             return CompiledBlock.new(init, c)
