@@ -216,14 +216,19 @@ module Spider; module Model
         end
         
         # Deletes all associations from the given object to the element.
-        def delete_element_associations(obj, element)
+        def delete_element_associations(obj, element, associated=nil)
             if (element.attributes[:junction])
-                element.mapper.delete({element.attributes[:reverse] => obj.primary_keys})
+                condition = {element.attributes[:reverse] => obj.primary_keys}
+                condition[element.attributes[:junction_their_element]] = associated if associated
+                element.mapper.delete(condition)
             else
-                associated = obj.get(element)
                 if (element.multiple?)
                     condition = Condition.and
-                    condition[element.reverse] = obj
+                    if (associated)
+                        condition = associated.keys_to_condition
+                    else
+                        condition[element.reverse] = obj
+                    end
                     # associated.each do |child|
                     #     condition_row = Condition.or
                     #     element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
@@ -248,7 +253,6 @@ module Spider; module Model
                     current = obj.get_new
                     current_val = current.get(element)
                     condition = Condition.and
-                    condition[our_element] = obj
 #                    debugger
                     current_val.each do |row|
                         next if val.include?(row)
@@ -256,7 +260,10 @@ module Spider; module Model
                         condition_row[their_element] = row
                         condition << condition_row
                     end
-                    element.model.mapper.delete(condition)
+                    unless condition.empty?
+                        condition[our_element] = obj
+                        element.model.mapper.delete(condition)
+                    end
                     val.each do |row|
                         next if current_val.include?(row)
                         junction = element.model.new({ our_element => obj, their_element => row })
