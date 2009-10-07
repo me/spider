@@ -10,7 +10,7 @@ module Spider
         include HTTPMixin
         
         attr_accessor :parent
-        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target
+        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
         attr_reader :attributes, :widget_attributes, :css_classes
         
         @@common_attributes = {
@@ -33,6 +33,10 @@ module Spider
             
             def attributes
                 @attributes ||= @@common_attributes.clone
+            end
+            
+            def attribute?(name)
+                @attributes[name.to_sym]
             end
             
             def i_attribute(name, params={})
@@ -141,7 +145,7 @@ module Spider
                         namespace, short_name = child.name.split(':', 2)
                         next unless namespace == 'tpl'
                         next unless Spider::Template.override_tags.include?(short_name) || self.override_tags.include?(child.name)
-                        overrides << child
+                        overrides << child unless child.is_a?(Hpricot::BogusETag)
                     end
                 end
                 overrides.each do |ovr|
@@ -165,6 +169,7 @@ module Spider
         end
         
         i_attribute :use_template
+        attribute :"sp:target-only"
         
         def initialize(request, response, scene=nil)
             super
@@ -172,32 +177,18 @@ module Spider
             @attributes = WidgetAttributes.new(self)
             @id_path = []
             @widget_attributes = {}
-            @assets = [{
-                :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-1.3.2.js', :path => Spider::Components.pub_path+'/js/jquery-1.3.2.js',
-            },{
-                :type => :js, :src => Spider::Components.pub_url+'/js/inheritance.js', :path => Spider::Components.pub_path+'/js/inheritance.js',
-            },{
-                :type => :js, :src => Spider::Components.pub_url+'/js/spider.js', :path => Spider::Components.pub_path+'/js/spider.js'
-            },{
-                :type => :js, :src => Spider::Components.pub_url+'/js/jquery/plugins/jquery.query-2.1.6.js', 
-                :path => Spider::Components.pub_path+'/js/jquery.query-2.1.6.js'
-            },# ,{
-            #                 :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/js/jquery-ui-1.7.2.custom.min.js', 
-            #                 :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/js/jquery-ui-1.7.2.custom.min.js'
-            #             },
-            {
-                :type => :js, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js', 
-                :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js'
-            },
-            {
-                :type => :css, :src => Spider::Components.pub_url+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css', 
-                :path => Spider::Components.pub_path+'/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css'
-            }]
             locale = @request.locale.language
-            @assets << {
-                 :type => :js, :src => Spider::Components.pub_url+"/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js",
-                 :path => Spider::Components.pub_path+"/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
-            }
+            include_js = [
+                '/js/jquery/jquery-1.3.2.js', '/js/inheritance.js', '/js/spider.js', '/js/jquery/plugins/jquery.query-2.1.6.js',
+                '/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js', #'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js'
+                "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js", '/js/jquery/plugins/jquery.form.js'
+            ]
+            include_css = [
+                '/css/spider.css', '/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css', 
+            ]
+            @assets = []
+            include_js.each{ |js| @assets << {:type => :js, :src => Spider::Components.pub_url+js, :path => Spider::Components.pub_path+js}}
+            include_css.each{ |css| @assets << {:type => :css, :src => Spider::Components.pub_url+css, :path => Spider::Components.pub_path+css}}
             
             @use_template ||= self.class.default_template
             @css_classes = []
@@ -235,6 +226,7 @@ module Spider
             super
         end
         
+        # Loads the template and sets the widget attributes
         def widget_init(action='')
             action ||= ''
             if (@request.params['_wa'] && @request.params['_wa'][full_id])
@@ -279,6 +271,7 @@ module Spider
             @before_done
         end
         
+        # Recursively instantiates the subwidgets.
         def prepare(action='')
             init_widgets unless @init_widgets_done
             set_widget_attributes
@@ -289,6 +282,7 @@ module Spider
             end
         end
         
+        # Instantiates this widget's own subwidgets.
         def init_widgets
             if (self.class.scene_attributes)
                 self.class.scene_attributes.each do |name|
@@ -326,6 +320,7 @@ module Spider
             end
         end
         
+        # Runs widget_before on all subwidgets.
         def prepare_widgets
             r = route_widget
             @widgets.each do |id, w|
@@ -349,6 +344,10 @@ module Spider
             @did_run
         end
         
+        def run?
+            @is_target || (!@target_mode && !attributes[:"sp:target_only"])
+        end
+        
         def init_widget_done?
             @init_widget_done
         end
@@ -360,14 +359,7 @@ module Spider
         
         def render
             prepare_scene(@scene)
-            if (@widget_target)
-                first, rest = @widget_target.split('/', 2)
-                target_widget = @template.find_widget(first)
-                target_widget.widget_target = rest
-                target_widget.render
-            else
-                @template.render(@scene)
-            end
+            @template.render(@scene) unless @target_mode && !@is_target
         end
                         
         def try_rescue(exc)
@@ -480,6 +472,9 @@ module Spider
             # FIXME: owner_controller should be (almost) always defined
             scene.controller[:request_path] = owner_controller.request_path if owner_controller
             scene.widget[:request_path] = widget_request_path
+            scene.widget[:target_only] = attributes[:"sp:target-only"]
+            scene.widget[:is_target] = @is_target
+            scene.widget[:is_running] = run?
             if (@parent && @parent.respond_to?(:scene) && @parent.scene)
                 scene._parent = @parent.scene
             end
@@ -492,8 +487,16 @@ module Spider
             @css_class = Inflector.underscore(supers.join('/')).gsub('_', '-').gsub('/', ' ').split(' ').uniq.join(' ')
         end
         
+        def css_model_class(model)
+            "model-#{model.name.gsub('::', '-')}"
+        end
+        
         def inspect
             super + ", id: #{@id}"
+        end
+        
+        def find_widget(name)
+            @widgets[name.to_sym] || super
         end
             
         

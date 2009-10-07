@@ -1,4 +1,5 @@
 require 'spiderfw/controller/app_controller'
+require 'fileutils'
 
 module Spider
     
@@ -11,7 +12,7 @@ module Spider
                 
                 #@controller ||= :"Spider::AppController"
                 class << self
-                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path
+                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path, :models_path
                     attr_reader :short_name, :route_url, :label, :version
                     attr_reader :short_prefix
                     attr_reader :command
@@ -21,11 +22,13 @@ module Spider
                         @pub_path ||= @path+'/public'
                         @test_path ||= @path+'/test'
                         @setup_path ||= @path+'/setup'
+                        @models_path ||= @path+'/models'
                         @widgets_path ||= @path+'/widgets'
                         @views_path ||= @path+'/views'
                         @tags_path ||= @path+'/tags'
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
+                        @version = Gem::Version.new(@version) unless @version.is_a?(Gem::Version)
                         find_tags
                     end
                     
@@ -121,6 +124,24 @@ module Spider
                     def req(*list)
                         list.each do |file|
                             require @path+'/'+file
+                        end
+                    end
+                    
+                    def installed_version_path
+                         "#{Spider.paths[:var]}/apps/#{self.name}/installed_version"
+                    end
+                    
+                    def installed_version
+                        FileUtils.mkpath(File.dirname(installed_version_path))
+                        return unless File.exist?(installed_version_path)
+                        return Gem::Version.new(IO.read(installed_version_path))
+                    end
+                    
+                    def installed_version=(version)
+                        FileUtils.mkpath(File.dirname(installed_version_path))
+                        version = Gem::Version.new(version) unless version.is_a?(Gem::Version)
+                        File.open(installed_version_path, 'w') do |f|
+                            f << version.to_s
                         end
                     end
                     

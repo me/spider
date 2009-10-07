@@ -63,17 +63,17 @@ module Spider; module ControllerMixins
                 params = format_params[:params].call(p_rest) if p_rest
             end
             super(action, *params)
-            return unless format_params.is_a?(Hash)
-            if format_params[:template]
-                widget_target = @request.params['_wt']
+            return unless format_params.is_a?(Hash) || @widget_target
+            if @widget_target || format_params[:template]
+                widget_target = @widget_target || @request.params['_wt']
                 widget_execute = @request.params['_we']
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
                     @template ||= init_template(format_params[:template])
-                    @_widget = @template.find_widget(first)
+                    @_widget = find_widget(first)
+                    @_widget.target_mode = true
                     @_widget.widget_target = rest
-                    @_widget_target = @_widget if !rest
-                    @_widget.is_target = true if @_widget_target
+                    @_widget.is_target = true if !rest
                     if !rest && widget_execute
                         set_dispatched_object_attributes(@_widget, widget_execute)
                     else
@@ -82,14 +82,18 @@ module Spider; module ControllerMixins
                     end
                 end
             end
-            if (format_params[:template])
+            if ((format_params.is_a?(Hash) && format_params[:template]) || @_widget)
                 if (@_widget)
-                    if (@_widget_target && widget_execute)
+                    if(!widget_execute && @is_target)
+                        @_widget.run
+                        debugger
+                        @_widget.render
+                    elsif (@_widget_target)
                         @_widget.before(widget_execute)
                         @_widget.execute(widget_execute)
                     else
-                        @_widget.run
-                        @_widget.render
+                        @_widget.before
+                        @_widget.execute
                     end
                 else
                     if (@template)
@@ -99,11 +103,16 @@ module Spider; module ControllerMixins
                     end
                 end
             end
+            return unless format_params.is_a?(Hash)
             if (format_params[:redirect])
+                # red = format_params[:redirect] == true ? request_url : format_params[:redirect]
+                # red = owner_controller.request_url if (self.is_a?(Widget))
                 redirect(format_params[:redirect])
             end
-            if (@executed_format == :json && format_params[:scene]) # FIXME: move in JSON mixin?
-                if (format_params[:scene].is_a?(Array))
+            if (@executed_format == :json && format_params[:scene] || format_params[:return]) # FIXME: move in JSON mixin?
+                if (format_params[:return])
+                    $out << format_params[:return].to_json
+                elsif (format_params[:scene].is_a?(Array))
                     h = @scene.to_hash
                     res = {}
                     format_params[:scene].each{ |k| res[k] = h[k] }
@@ -129,7 +138,7 @@ module Spider; module ControllerMixins
         
         
         def init_template(path=nil, scene=nil, options={})
-            return @template if @template
+            return @template if @template && @loaded_template_path == path
             scene ||= @scene
             scene ||= get_scene
             if (!path)
@@ -140,6 +149,7 @@ module Spider; module ControllerMixins
             template = load_template(path)
             template.init(scene)
             @template = template
+            @loaded_template_path = path
             return template
         end
         
@@ -191,6 +201,10 @@ module Spider; module ControllerMixins
                 end
             end
             return template
+        end
+        
+        def find_widget(name)
+            @template.find_widget(name)
         end
         
         
@@ -330,7 +344,7 @@ module Spider; module ControllerMixins
                 locals = nil unless Spider.conf.get('devel.trace.show_locals')
                 bt << {
                     :text => str, :info => info, 
-                    :path => file, :line => line, :method => method, :klass => klass, :locals => locals,
+                    :path => File.expand_path(file), :line => line, :method => method, :klass => klass, :locals => locals,
                     :instance_variables => iv
                 }
             end

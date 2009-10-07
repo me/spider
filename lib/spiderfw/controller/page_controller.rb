@@ -25,7 +25,7 @@ module Spider
         
         def load_template(path)
             template = super
-            template.widgets = @widgets
+            #template.widgets = @widgets
             return template
         end
         # 

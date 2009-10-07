@@ -45,10 +45,9 @@ module Spider; module Model
                element(attributes[:tree_right], Fixnum, :hidden => true)
                element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true)
 #               sequence(name)
+               qs_module ||= Module.new
                
-               @tree_queryset_module ||= Module.new
-               
-               @tree_queryset_module.module_eval do
+               qs_module.module_eval do
                    
                    define_method("#{name}_roots") do
                        qs = self.clone
@@ -64,10 +63,14 @@ module Spider; module Model
                    
                    
                end
+               @elements[name].attributes[:queryset_module] = qs_module
                
                def extend_queryset(qs)
                    super
-                   qs.extend(@tree_queryset_module)
+                   @elements.each do |name, el|
+                       qs_module = el.attributes[:queryset_module]
+                       qs.extend(qs_module) if qs_module
+                   end
                end
                
                (class << self; self; end).instance_eval do
@@ -214,45 +217,53 @@ module Spider; module Model
             end
             
             def tree_insert_node_under(tree_el, obj, parent)
+                obj.set(tree_el.attributes[:reverse], parent)
                 tree_insert_node(tree_el, obj, parent.get(tree_el.attributes[:tree_right]))
             end
             
             def tree_insert_node_first(tree_el, obj, parent)
+                obj.set(tree_el.attributes[:reverse], parent)
                 tree_insert_node(tree_el, obj, parent.get(tree_el.attributes[:tree_left])+1)
             end
             
             def tree_insert_node_left(tree_el, obj, sibling)
+                obj.set(tree_el.attributes[:reverse], sibling.get(tree_el.attributes[:reverse]))
                 tree_insert_node(tree_el, obj, sibling.get(tree_el.attributes[:tree_left]))
             end
             
             def tree_insert_node_right(tree_el, obj, sibling)
+                obj.set(tree_el.attributes[:reverse], sibling.get(tree_el.attributes[:reverse]))
                 tree_insert_node(tree_el, obj, sibling.get(tree_el.attributes[:tree_right]))
             end
             
             def tree_remove(tree_el, obj)
                 left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
                 left = obj.get(left_el); right = obj.get(right_el)
+                return unless left && right
                 diff = right-left+1
                 condition = Condition.new.set(left_el, '>', right)
                 bulk_update({left_el => QueryFuncs::Expression.new(":#{left_el} - #{diff}")}, condition)
                 condition = Condition.new.set(right_el, '>', right)
                 bulk_update({right_el => QueryFuncs::Expression.new(":#{right_el} - #{diff}")}, condition)
-                unset_tree_vals = lambda do |obj|
+                def unset_tree_vals(obj, tree_el)
+                    left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
                     obj.set(left_el, nil); obj.set(right_el, nil)
                     obj.get(tree_el).each do |sub|
-                        unset_tree_vals(sub)
+                        unset_tree_vals(sub, tree_el)
                     end
                 end
-                unset_tree_vals.call(obj)
+                unset_tree_vals(obj, tree_el)
             end
             
             def tree_delete(tree_el, obj)
                 tree_remove(tree_el, obj)
-                delete_children = lambda do obj
-                    obj.get(tree_el).each{ |child| delete_children(child) }
+                def delete_children(obj, tree_el)
+                    obj.get(tree_el).each do |child| 
+                        delete_children(child, tree_el)
+                    end
+                    obj.delete
                 end
-                delete_children.call(obj)
-                obj.delete
+                delete_children(obj, tree_el)
             end
             
             def tree_move_up_children(tree_el, obj)

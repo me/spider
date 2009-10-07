@@ -17,8 +17,16 @@ module Spider; module Model; module Mappers
         
         # Checks if the schema has some key to reach element. 
         def have_references?(element) #:nodoc:
-            element_name = element.is_a?(Spider::Model::Element) ? element.name : element
-            schema.has_foreign_fields?(element_name) || schema.field(element_name)
+            element = @model.elements[element] unless element.is_a?(Element)
+            schema.has_foreign_fields?(element.name) || schema.field(element.name)
+        end
+        
+        def someone_have_references?(element)
+            element = @model.elements[element] unless element.is_a?(Element)
+            if (element.integrated?)
+                return element.model.someone_have_references?(element.attributes[:integrated_from_element])
+            end
+            return have_references?(element)
         end
         
         ##############################################################
@@ -136,9 +144,16 @@ module Spider; module Model; module Mappers
         def bulk_update(values, condition)
             db_values = {}
             joins = []
+            integrated = {}
+            condition = prepare_query_condition(condition)
             values.each do |key, val|
                 element = @model.elements[key]
-                next if !mapped?(element) || element.integrated?
+                if (element.integrated?)
+                    integrated[element.integrated_from] ||= {}
+                    integrated[element.integrated_from][key] = val
+                    next
+                end
+                next if !mapped?(element)
                 next if element.model? && val != nil
                 store_key = schema.field(element.name)
                 next unless store_key
@@ -149,6 +164,11 @@ module Spider; module Model; module Mappers
                     db_values[store_key] = map_save_value(element.type, val, :update)
                 end
             end
+            integrated.each do |i_el, i_values|
+                next unless condition[i_el.name]
+                i_el.mapper.bulk_update(i_values, condition[i_el.name]) # FIXME?
+            end
+            return if db_values.empty?
             save = {:table => schema.table, :values => db_values}
             condition, c_joins = prepare_condition(condition)
             joins += c_joins
@@ -445,7 +465,7 @@ module Spider; module Model; module Mappers
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
                             field = model_schema.qualified_foreign_key_field(element.name, el_k)
-                            op = comp ? comp : '='
+                            op = el_comp ? el_comp : '='
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
                         end
@@ -846,8 +866,8 @@ module Spider; module Model; module Mappers
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
                         end
                     end
-                    column_name = current_column[:name] || @storage.column_name(element.name)
-                    column_type = current_column[:type] || @storage.column_type(storage_type, element.attributes)
+                    column_name = current_column[:name] || element.attributes[:db_column_name] || @storage.column_name(element.name)
+                    column_type = current_column[:type] || element.attributes[:db_column_type] || @storage.column_type(storage_type, element.attributes)
                     schema.set_column(element.name,
                         :name => column_name,
                         :type => column_type,
@@ -875,14 +895,15 @@ module Spider; module Model; module Mappers
                                 :precision => key_attributes[:precision]
                             }
                             current = current_schema[key.name] || {}
+                            c_name = element.attributes[:db_column_name]
                             # if (element.attributes[:integrated_model] && element.model == @model.superclass && 
                             #                                 @model.elements[key.name].integrated_from.name == element.name)
                             #                                 c_name = @storage.column_name(key.name)
                             #                             else
-                                c_name = @storage.column_name("#{element.name}_#{key.name}")
+                            c_name ||= @storage.column_name("#{element.name}_#{key.name}")
                             # end
                             column_name = current[:name] || c_name
-                            column_type = current[:type] || @storage.column_type(key_type, key_attributes)
+                            column_type = current[:type] || element.attributes[:db_column_type] || @storage.column_type(key_type, key_attributes)
                             column_attributes = current[:attributes] || @storage.column_attributes(key_type, key_attributes)
                             schema.set_foreign_key(element.name, key.name, 
                                 :name => column_name,
@@ -1029,10 +1050,14 @@ module Spider; module Model; module Mappers
         ##############################################################
 
         def max(element, condition=nil)
+            element = @model.elements[element] if element.is_a?(Symbol)
+            schema = element.integrated? ? @model.elements[element.integrated_from.name].model.mapper.schema : self.schema
             max = {}
-            max[:condition], max[:joins] = prepare_condition(condition) if condition
+            max[:condition], joins = prepare_condition(condition) if condition
             max[:tables] = [schema.table]
-            max[:field] = schema.field(element)
+            max[:field] = schema.field(element.name)
+            joins ||= []
+            max[:joins] = prepare_joins(joins)
             sql, values = storage.sql_max(max)
             res = storage.execute(sql, *values)
             return res[0] && res[0]['M'] ? res[0]['M'] : 0

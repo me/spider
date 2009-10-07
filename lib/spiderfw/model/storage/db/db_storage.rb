@@ -718,7 +718,7 @@ module Spider; module Model; module Storage; module Db
             sql = "SELECT MAX(#{max[:field]}) AS M FROM #{from_sql}"
             if (max[:condition])
                 condition_sql, condition_values = sql_condition(max)
-                sql += " #{where_sql}"
+                sql += " WHERE #{condition_sql}"
                 values += condition_values
             end
             return sql, values

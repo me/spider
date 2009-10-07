@@ -14,20 +14,26 @@ module Spider; module Model
         module MapperMethods
             
             def before_save(obj, mode)
+                obj.class.lists.each do |l|
+                    cond = get_list_condition(l, obj)
+                    cur = obj.get(l.name)
+                    obj.set(l.name, max(l.name, cond) + 1) unless cur
+                end
                 if (obj.list_mixin_modified_elements)
                     obj.list_mixin_modified_elements.each do |name, old|
+                        cond = get_list_condition(name, obj)
                         new_val = nil
                         obj.save_mode do
                             new_val = obj.get(name)
                         end
-                        new_val ||= max(name) + 1
+                        new_val ||= max(name, cond) + 1
                         if (!old)
-                            move_down_list(name, new_val+1)
+                            move_down_list(name, new_val+1, nil, cond)
                         else
                             if (new_val < old)
-                                move_up_list(name, new_val, old-1)
+                                move_up_list(name, new_val, old-1, cond)
                             else
-                                move_down_list(name, old+1, new_val)
+                                move_down_list(name, old+1, new_val, cond)
                             end
                         end
                     end
@@ -38,27 +44,37 @@ module Spider; module Model
             def before_delete(objects)
                 @model.lists.each do |list_el|
                     objects.each do |obj|
+                        cond = get_list_condition(list_el, obj)
                         val = obj.get(list_el)
-                        move_down_list(list_el.name, val) if val
+                        move_down_list(list_el.name, val, nil, cond) if val
                     end
                 end
                 super(objects)
             end
             
-            def move_up_list(element_name, from, to=nil)
+            def move_up_list(element_name, from, to=nil, condition=nil)
                 expr = ":#{element_name} + 1"
-                cond = Condition.and
+                cond = condition || Condition.and
                 cond.set(element_name, '>=', from)
                 cond.set(element_name, '<=', to) if to
                 bulk_update({element_name => Spider::QueryFuncs::Expression.new(expr)}, cond)
             end
             
-            def move_down_list(element_name, from, to=nil)
+            def move_down_list(element_name, from, to=nil, condition=nil)
                 expr = ":#{element_name} - 1"
-                cond = Condition.and
+                cond = condition || Condition.and
                 cond.set(element_name, '>=', from)
                 cond.set(element_name, '<=', to) if to
                 bulk_update({element_name => Spider::QueryFuncs::Expression.new(expr)}, cond)
+            end
+            
+            def get_list_condition(element, obj)
+                element = @model.elements[element] unless element.is_a?(Element)
+                l_cond = element.attributes[:list_condition]
+                return nil unless l_cond
+                cond = l_cond.call(obj)
+                cond = Condition.new(cond) unless cond.is_a?(Condition)
+                return cond
             end
             
         end

@@ -16,6 +16,10 @@ module Spider; module Model; module Mappers
             false
         end
         
+        def have_references?(key)
+            true
+        end
+        
         # Fetch implementation.
         #--
         # TODO: This is only for one-element hashes; make this a subclass of

@@ -71,8 +71,6 @@ module Spider; module Model
             attr_reader :elements_order
             # An Hash of integrated models => corresponding integrated element name.
             attr_reader :integrated_models
-            # An Hash of extended models => element name of the extended model element
-            attr_reader :extended_models
             # An Hash of polymorphic models => polymorphic params
             attr_reader :polymorphic_models
             # An Array of named sequences.
@@ -204,7 +202,7 @@ module Spider; module Model
 
             orig_type = type
             assoc_type = nil
-            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:reverse] || \
+            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && (!attributes[:reverse] || \
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
                 (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?)))
@@ -278,10 +276,13 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (type.subclass_of?(BaseModel) && attributes[:multiple])
+                if attributes[:primary_key]
+                    attributes[:lazy] = true
+                elsif (type < BaseModel && attributes[:multiple])
                     # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = true
                 else
+                    attributes[:lazy_check_owner] = true if type < BaseModel
                     attributes[:lazy] = :default
                 end
             end
@@ -335,7 +336,8 @@ module Spider; module Model
                     end
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
-                elsif (element.model? && element.multiple?)
+                end
+                if (!val && element.model? && element.multiple?)
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 val.set_parent(self, name) if element.model? && val
@@ -345,6 +347,7 @@ module Spider; module Model
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
@@ -379,7 +382,7 @@ module Spider; module Model
                 check(name, val)
                 notify_observers(name, val)
                 old_val = instance_variable_get(ivar)
-                @modified_elements[name] = true unless element.primary_key? || val == old_val
+                @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
                 #extend_element(name)
             end
@@ -430,9 +433,10 @@ module Spider; module Model
             params[:except] ||= []
             model.each_element do |el|
                 next if params[:except].include?(el.name)
-                next if elements[el.name] # don't overwrite existing elements
+                next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
                 attributes = el.attributes.clone.merge({
-                    :integrated_from => elements[element_name]
+                    :integrated_from => elements[element_name],
+                    :integrated_from_element => el.name
                 })
                 attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
@@ -441,7 +445,8 @@ module Spider; module Model
                     attributes.delete(:add_multiple_reverse)
                 end
                 attributes.delete(:primary_key) unless (params[:keep_pks])
-                element(el.name, el.type, attributes)
+                name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
+                element(name, el.type, attributes)
             end
         end
         
@@ -525,7 +530,8 @@ module Spider; module Model
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
             attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
-            integrate(integrated_name, :keep_pks => true)
+            integrate_options = {:keep_pks => true}.merge((params[:integrate_options] || {}))
+            integrate(integrated_name, integrate_options)
             model.elements_array.select{ |el| el.attributes[:local_pk] }.each{ |el| remove_element(el.name) }
 
             unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
@@ -699,6 +705,11 @@ module Spider; module Model
         # since subclasses and mixins may extend this method to provide association equivalence.
         def self.element_association?(element_name, association)
             return true if elements[element_name].association = association
+        end
+        
+        # An Hash of extended models => element name of the extended model element
+        def self.extended_models
+            @extended_models ||= {}
         end
         
         ##############################################################
@@ -887,7 +898,7 @@ module Spider; module Model
             if (values)
                 if (values.is_a? Hash)
                     values.each do |key, val|
-                        set(key, val)
+                        set!(key, val)
                     end
                 elsif (values.is_a? BaseModel)
                     values.each_val do |name, val|
@@ -1014,11 +1025,28 @@ module Spider; module Model
         # The element can be a symbol, or a dotted path String.
         # Will call the associated setter.
         #   cat.set('favorite_food.name', 'Salmon')
-        def set(element, value)
+        def set(element, value, options={})
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
-            return send(first).set(rest, value) if (rest)
+            if (rest)
+                first_val = send(first)
+                unless first_val
+                    if (options[:instantiate])
+                        first_val = instantiate_element(first.to_sym)
+                        set(first, first_val)
+                    else
+                        raise "Element #{first} is nil, can't set #{element}" 
+                    end
+                end
+                return first_val.set(rest, value, options)
+            end
             return send("#{element}=", value)
+        end
+        
+        # Sets an element, instantiating intermediate objects if needed
+        def set!(element, value, options={})
+            options[:instantiate] = true
+            set(element, value, options)
         end
         
         # Calls #get on element; whenever no getter responds, returns the extra data.
@@ -1064,7 +1092,7 @@ module Spider; module Model
                 when 'Date', 'DateTime'
                     return nil if value.is_a?(String) && value.empty?
                     begin
-                        value = element.type.parse(value) if value.is_a?(String)
+                        value = element.type.lparse(value, :short) if value.is_a?(String)
                     rescue ArgumentError => exc
                         raise FormatError.new(element, value, _("'%s' is not a valid date"))
                     end
@@ -1133,7 +1161,15 @@ module Spider; module Model
         def polymorphic_become(model)
             raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
             obj = model.new
-            obj.set(self.class.polymorphic_models[model][:through], self)
+            el = self.class.polymorphic_models[model][:through]
+            obj.set(el, self)
+            obj.element_loaded(el)
+            return obj
+        end
+        
+        def become(model)
+            return self if self.class == model
+            obj = polymorphic_become(model) rescue ModelException
             return obj
         end
         
@@ -1238,6 +1274,10 @@ module Spider; module Model
         # Returns an array of current primary key values
         def primary_keys
             self.class.primary_keys.map{ |k| get(k) }
+        end
+        
+        def keys_string
+            self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
         end
 
             
@@ -1534,6 +1574,10 @@ module Spider; module Model
             end
         end
         
+        def remove_association(element, object)
+            mapper.delete_element_associations(self, element, object)
+        end
+        
         ##############################################################
         #   Method missing                                           #
         ##############################################################
@@ -1781,6 +1825,100 @@ module Spider; module Model
         
         def self.transaction
             yield
+        end
+        
+        def self.prepare_to_code
+            modules = self.name.split('::')[0..-2]
+            included = (self.included_modules - Spider::Model::BaseModel.included_modules).select do |m|
+                m.name !~ /^#{Regexp.quote(self.name)}/
+            end
+            local_name = self.name.split('::')[-1]
+            superklass = self.superclass.name
+            elements = []
+            remove_elements = []
+            self.elements_array.each do |el|
+                next if el.integrated?
+                next if (el.reverse && el.model.elements[el.reverse] && \
+                    (el.model.elements[el.reverse].attributes[:add_reverse] || \
+                    el.model.elements[el.reverse].attributes[:add_multiple_reverse]))
+                method = case el.attributes[:association]
+                when :many
+                    :many
+                when :choice
+                    :choice
+                when :multiple_choice
+                    :multiple_choice
+                when :tree
+                    :tree
+                else
+                    :element
+                end
+                type = el.type
+                attributes = el.attributes.clone
+                if (method == :many || method == :multiple_choice)
+                    attributes.delete(:multiple)
+                end
+                attributes.delete(:association) if method != :element
+                if (method == :tree)
+                    delete_attrs = [:queryset_module, :multiple]
+                    delete_attrs.each{ |a| attributes.delete(a) }
+                    remove_elements += [attributes[:reverse], attributes[:tree_left], attributes[:tree_right], attributes[:tree_depth]]
+                    type = nil
+                end
+                elements << {
+                    :name => el.name,
+                    :type => type,
+                    :attributes => attributes,
+                    :method => method
+                }
+            end
+            elements.reject!{ |el| remove_elements.include?(el[:name]) }
+            return {
+                :modules => modules,
+                :included => included,
+                :elements => elements,
+                :local_name => local_name,
+                :superclass => superklass,
+                :use_storage => @use_storage,
+                :additional_code => []
+            }
+        end
+        
+        def self.to_code
+            c = prepare_to_code
+            str = ""
+            indent = 0
+            append = lambda do |val|
+                str += " "*indent
+                str += val
+                str
+            end
+            str += c[:modules].map{ |m| "module #{m}" }.join('; ') + "\n"
+            str += "\n"
+            indent = 4
+            append.call "class #{c[:local_name]} < #{c[:superclass]}\n"
+            indent += 4
+            c[:included].each do |i|
+                append.call "include #{i.name}\n"
+            end
+            str += "\n"
+            c[:elements].each do |el|
+                append.call("#{el[:method].to_s} #{el[:name].inspect}")
+                str += ", #{el[:type]}" if el[:type]
+                str += ", #{el[:attributes].inspect}\n" if el[:attributes] && !el[:attributes].empty?
+            end
+            str += "\n"
+            append.call "use_storage '#{c[:use_storage]}'\n" if c[:use_storage]
+            c[:additional_code].each do |block|
+                block.each_line do |line|
+                    append.call line
+                end
+                str += "\n"
+            end
+            indent -= 4
+            append.call("end\n")
+            str += c[:modules].map{ "end" }.join(';')
+            return str
         end
         
     end

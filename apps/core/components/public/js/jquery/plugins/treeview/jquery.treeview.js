@@ -63,20 +63,24 @@
 			return this.filter(":has(>ul)");
 		},
 		applyClasses: function(settings, toggler) {
-			this.filter(":has(>ul):not(:has(>a))").find(">span").click(function(event) {
-				toggler.apply($(this).next());
-			}).add( $("a", this) ).hoverClass();
+			// this.filter(":has(>ul):not(:has(>a))").find(">span").click(function(event) {
+			// 	toggler.apply($(this).next());
+			// }).add( $("a", this) ).hoverClass();
 			
 			if (!settings.prerendered) {
 				// handle closed ones first
-				this.filter(":has(>ul:hidden)")
-						.addClass(CLASSES.expandable)
-						.replaceClass(CLASSES.last, CLASSES.lastExpandable);
-						
-				// handle open ones
-				this.not(":has(>ul:hidden)")
-						.addClass(CLASSES.collapsable)
+				this.filter(":has(>ul)").each(function(){
+					var $this = $(this);
+					var ul = $('>ul', this);
+					if (ul.css('display') == 'none' || ul.find('>li').length == 0){
+						$this.addClass(CLASSES.expandable)
+							.replaceClass(CLASSES.last, CLASSES.lastExpandable);
+					}
+					else{
+						$this.addClass(CLASSES.collapsable)
 						.replaceClass(CLASSES.last, CLASSES.lastCollapsable);
+					}
+				});						
 						
 	            // create hitarea
 				this.prepend("<div class=\"" + CLASSES.hitarea + "\"/>").find("div." + CLASSES.hitarea).each(function() {

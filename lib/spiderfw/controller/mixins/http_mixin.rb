@@ -61,9 +61,12 @@ module Spider; module ControllerMixins
         end
         
         def before(action='', *arguments)
+            return super if self.is_a?(Spider::Widget)
+             # FIXME: the Spider::Widget check
+            # is needed because with _wt the widget executes without action
             # Redirect to url + slash if controller is called without action
             dest = HTTPMixin.reverse_proxy_mapping(@request.env['PATH_INFO'])
-            if (action == '' && dest[-1].chr != '/')
+            if (action == '' && dest[-1].chr != '/' && !self.is_a?(Spider::Widget))
                 dest = dest += '/'
                 if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
                     dest += '?'+@request.env['QUERY_STRING']

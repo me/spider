@@ -3,13 +3,12 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Forms 0.1\n"
-"POT-Creation-Date: 2009-09-23 17:31+0200\n"
-"PO-Revision-Date: 2009-06-30 17:03+0200\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2009-10-07 19:34+0200\n"
+"PO-Revision-Date: 2009-10-07 19:35+0100\n"
+"Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -34,4 +33,5 @@ msgstr "%s e rimani"
 
 #: widgets/inputs/date_time/date_time.rb:17
 msgid "%s is not a valid date"
-msgstr ""
+msgstr "%s non è una data valida"
+

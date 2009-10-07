@@ -101,6 +101,10 @@ module Spider; module Model
        def with_polymorph(type, request=nil)
            query = self.class.new(query) unless query.is_a?(self.class)
            @polymorphs << type
+           unless request
+               request = Request.new
+               type.primary_keys.each{ |k| request[k.name] = true }
+           end
            @request.with_polymorphs(type, request)
            return self
        end
@@ -108,6 +112,10 @@ module Spider; module Model
        # Requests only polymorphs. (see Request#only_polymorphs).
        def only_polymorphs
            @request.only_polymorphs
+       end
+       
+       def with_superclass
+           @request.with_superclass
        end
        
        ##############################

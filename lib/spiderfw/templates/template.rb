@@ -29,7 +29,7 @@ module Spider
         @@registered = {}
         @@namespaces = {}
         @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
-        @@overrides = ['content', 'override', 'override-content', 'override-attr',
+        @@overrides = ['content', 'override', 'override-content', 'override-attr', 'append-attr',
                         'append', 'prepend', 'delete', 'before', 'after']
                         
         @@asset_types = {
@@ -164,6 +164,7 @@ module Spider
             @path = path
             @widgets = {}
             @subtemplates = {}
+            @subtemplate_owners = {}
             @id_path = []
             @assets = []
             @content = {}
@@ -211,10 +212,13 @@ module Spider
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
             options[:root] = true
             options[:owner] = @owner
+            options[:owner_class] = @owner_class || @owner.class
             options[:template_path] = @path
             compiled.block = root_block.compile(options)
             subtemplates.each do |id, sub|
-                compiled.subtemplates[id] = sub.compile(options)
+                sub.owner_class = @subtemplate_owners[id]
+                compiled.subtemplates[id] = sub.compile(options.merge({:mode => :widget})) # FIXME! :mode => :widget is wrong,
+                # it's just a quick kludge
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
@@ -388,8 +392,9 @@ module Spider
             self.class.to_s
         end
         
-        def add_subtemplate(id, template) # :nodoc:
+        def add_subtemplate(id, template, owner) # :nodoc:
             @subtemplates[id] = template
+            @subtemplate_owners[id] = owner
         end
         
         
@@ -431,14 +436,17 @@ module Spider
                         parent.search('tpl:overridden').each{ |o| o.swap(overridden) }
                     elsif (override.name == 'tpl:override-attr')
                         f.set_attribute(override.attributes["name"], override.attributes["value"])
+                    elsif (override.name == 'tpl:append-attr')
+                        f.set_attribute(override.attributes["name"], \
+                        (f.attributes[override.attributes["name"]] || '')+override.attributes["value"]) 
                     elsif (override.name == 'tpl:append')
                         f.innerHTML += override.innerHTML
                     elsif (override.name == 'tpl:prepend')
                         f.innerHTML = override.innerHTML + f.innerHTML
                     elsif (override.name == 'tpl:before')
-                        f.parent.innerHTML = override.innerHTML + f.parent.innerHTML
+                        f.before(override.innerHTML)
                     elsif (override.name == 'tpl:after')
-                        f.parent.innerHTML += override.innerHTML
+                        f.after(override.innerHTML)
                     end
                 end
             end
@@ -477,6 +485,7 @@ module Spider
         
         def initialize()
             @subtemplates = {}
+            @subtemplate_owners = {}
             @devel_info = {}
         end
         

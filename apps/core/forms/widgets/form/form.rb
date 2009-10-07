@@ -27,13 +27,13 @@ module Spider; module Forms
         i_attribute :widget_types
         i_attribute :read_only
         i_attribute :disabled
-        attribute :save_submit_text, :default => _('Save')
-        attribute :insert_submit_text, :default => _('Insert')
+        attribute :save_submit_text, :default => lambda{ _('Save') }
+        attribute :insert_submit_text, :default => lambda{ _('Insert') }
         is_attribute :show_submit_and_new, :default => false
         is_attribute :show_submit_and_stay, :default => false
         is_attribute :show_additional_buttons, :default => false
-        attribute :submit_and_new_text, :default => _('%s and insert new')
-        attribute :submit_and_stay_text, :default => _('%s and stay')
+        attribute :submit_and_new_text, :default => lambda{ _('%s and insert new') }
+        attribute :submit_and_stay_text, :default => lambda{ _('%s and stay') }
         is_attr_accessor :pk
         attr_to_scene :inputs, :names, :labels, :error, :errors, :sub_links
         attribute :show_related, :type => TrueClass, :default => false
@@ -302,7 +302,7 @@ module Spider; module Forms
             if (@fixed)
                 obj.no_autoload do
                     @fixed.each do |k, v| 
-                        obj.set(k, v)
+                        obj.set!(k, v)
                     end
                 end
             end
@@ -315,9 +315,13 @@ module Spider; module Forms
                     @saved = true
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
                 rescue => exc
-                    Spider::Logger.error(exc)
-                    exc_element = exc.is_a?(Spider::Model::MapperElementError) ? exc.element.name : nil
-                    add_error(exc, exc.message, exc_element)
+                    if exc.is_a?(Spider::Model::MapperElementError)
+                        Spider::Logger.error(exc)
+                        exc_element =  exc.element.name
+                        add_error(exc, exc.message, exc_element)
+                    else
+                        raise
+                    end
                 end
                 @after_save.call(obj, save_mode) if @after_save
                 if (@auto_redirect)
