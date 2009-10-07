@@ -3,13 +3,12 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-09-23 17:31+0200\n"
-"PO-Revision-Date: 2008-11-20 22:55+0100\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2009-10-07 19:34+0200\n"
+"PO-Revision-Date: 2009-10-05 19:25+0100\n"
+"Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -118,7 +117,7 @@ msgstr "Aggiorna le sequenze esistenti al max in db"
 msgid "Process also non managed models"
 msgstr "Processa anche i modelli non gestiti"
 
-#: lib/spiderfw/cmd/commands/model.rb:55
+#: lib/spiderfw/cmd/commands/model.rb:63
 msgid ""
 "The following tables are about to be dropped: \n"
 "%s"
@@ -126,33 +125,53 @@ msgstr ""
 "Le segenti tabelle stanno per essere cancellate: \n"
 "%s"
 
-#: lib/spiderfw/cmd/commands/model.rb:56
+#: lib/spiderfw/cmd/commands/model.rb:64
 msgid "Continue? yes/NO: "
 msgstr "Continuare? sì/NO"
 
-#: lib/spiderfw/cmd/commands/model.rb:58 lib/spiderfw/cmd/commands/model.rb:61
+#: lib/spiderfw/cmd/commands/model.rb:66 lib/spiderfw/cmd/commands/model.rb:69
 msgid "yes"
 msgstr "sì"
 
-#: lib/spiderfw/cmd/commands/model.rb:59
+#: lib/spiderfw/cmd/commands/model.rb:67
 msgid "no"
 msgstr "no"
 
-#: lib/spiderfw/cmd/commands/model.rb:70
+#: lib/spiderfw/cmd/commands/model.rb:78
 msgid "Unable to modify the following fields:"
 msgstr "Impossibile modificare i seguenti campi:"
 
-#: lib/spiderfw/cmd/commands/model.rb:72
+#: lib/spiderfw/cmd/commands/model.rb:80
 msgid "(use -f to force)"
 msgstr "(usa -f per forzare)"
+
+#: lib/spiderfw/cmd/commands/model.rb:86
+msgid "Dump models"
+msgstr "Esegui il dump dei modelli"
+
+#: lib/spiderfw/cmd/commands/model.rb:88
+msgid "Overwrite existing files"
+msgstr "Sovrascrivi file esistenti"
+
+#: lib/spiderfw/cmd/commands/model.rb:91
+msgid "Specify dump path"
+msgstr "Specifica percorso per il dump"
 
 #: lib/spiderfw/cmd/commands/setup.rb:8
 msgid "Setup an application"
 msgstr "Esegui il setup di un'applicazione"
 
-#: lib/spiderfw/cmd/commands/setup.rb:15
+#: lib/spiderfw/cmd/commands/setup.rb:14
+msgid "Assume a specific version is installed"
+msgstr "Assumi che una versione specifica è installata"
+
+#: lib/spiderfw/cmd/commands/setup.rb:17
 msgid "Setup to a specific version"
 msgstr "Esegui il setup fino a una versione specifica"
+
+#: lib/spiderfw/cmd/commands/setup.rb:20
+msgid "Setup all active apps"
+msgstr "Esegui il setup di tutte le applicazioni attive"
 
 #: lib/spiderfw/cmd/commands/test.rb:6
 msgid "Manage tests"
@@ -403,19 +422,28 @@ msgstr "Nome dell'amministratore del sito"
 msgid "Email of the site administrator"
 msgstr "Indirizzo e-mail dell'amministratore del sito"
 
-#: lib/spiderfw/controller/mixins/visual.rb:215
+#: lib/spiderfw/config/options/spider.rb:106
+msgid "Use ruby-debug to provide extended traces"
+msgstr "Usa ruby-debug per creare trace estesi"
+
+#: lib/spiderfw/config/options/spider.rb:107
+#: lib/spiderfw/config/options/spider.rb:108
+msgid "Show locals in debug traces"
+msgstr "Mostra le variabili locali nei trace"
+
+#: lib/spiderfw/controller/mixins/visual.rb:231
 msgid "Page not found"
 msgstr "Pagina non trovata"
 
-#: lib/spiderfw/controller/mixins/visual.rb:222
+#: lib/spiderfw/controller/mixins/visual.rb:238
 msgid "An error occurred"
 msgstr "Si è verificato un errore"
 
-#: lib/spiderfw/model/base_model.rb:1069
+#: lib/spiderfw/model/base_model.rb:1097
 msgid "'%s' is not a valid date"
 msgstr "%s non è una data valida"
 
-#: lib/spiderfw/model/base_model.rb:1119
+#: lib/spiderfw/model/base_model.rb:1147
 msgid "'%s' is not in the correct format"
 msgstr "%s non è nel formato corretto"
 
@@ -423,11 +451,11 @@ msgstr "%s non è nel formato corretto"
 msgid "%s is not a valid e-mail address"
 msgstr "%s non è un indirizzo e-mail valido"
 
-#: lib/spiderfw/model/mappers/mapper.rb:797
+#: lib/spiderfw/model/mappers/mapper.rb:893
 msgid "Element %s is required"
 msgstr "L'elemento %s è obbligatorio"
 
-#: lib/spiderfw/model/mappers/mapper.rb:801
+#: lib/spiderfw/model/mappers/mapper.rb:897
 msgid "Another item with the same %s is already present"
 msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 
@@ -435,14 +463,15 @@ msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 msgid "We are sorry, but the required page was not found"
 msgstr "Siamo spiacenti, la pagina richiesta non è stata trovata"
 
-#: views/errors/error.layout.shtml:17
+#: views/errors/error.layout.shtml:19
 msgid ""
 "If you need to contact the administrator to provide additional information, "
 "you may send an e-mail to"
-msgstr "Per contattare l'amministratore e fornire informazioni aggiuntive, è possibile "
-"inviare un'e-mail a"
+msgstr ""
+"Per contattare l'amministratore e fornire informazioni aggiuntive, è "
+"possibile inviare un'e-mail a"
 
-#: views/errors/error.layout.shtml:22
+#: views/errors/error.layout.shtml:24
 msgid "Debug information"
 msgstr "Informazioni di debug"
 
@@ -450,4 +479,6 @@ msgstr "Informazioni di debug"
 msgid ""
 "We are sorry, an error occurred. The administrator of the site has been "
 "notified"
-msgstr "Siamo spiacenti, si è verificato un errore. L'amministratore del sito è stato informato"
+msgstr ""
+"Siamo spiacenti, si è verificato un errore. L'amministratore del sito è "
+"stato informato"
