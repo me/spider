@@ -226,21 +226,25 @@ module Spider; module ControllerMixins
             end
             @scene.admin_email = Spider.conf.get('site.admin.email')
             if (Spider.runmode == 'devel')
-                @scene.devel = true
-                @scene.backtrace = build_backtrace(exc)
-                client_editor = Spider.conf.get('client.text_editor')
-                prefix = 'txmt://open?url=' if client_editor == 'textmate'
-                @scene.exception = "#{exc.class.name}: #{exc.message}"
-                cnt = 0
-                @scene.backtrace.each do |tr|
-                    tr[:index] = cnt
-                    cnt += 1
-                    suffix = ''
-                    suffix = "&line=#{tr[:line]}" if (client_editor == 'textmate')
-                    tr[:link] = "#{prefix}file://#{tr[:path]}#{suffix}"
+                begin
+                    @scene.devel = true
+                    @scene.backtrace = build_backtrace(exc)
+                    client_editor = Spider.conf.get('client.text_editor')
+                    prefix = 'txmt://open?url=' if client_editor == 'textmate'
+                    @scene.exception = "#{exc.class.name}: #{exc.message}"
+                    cnt = 0
+                    @scene.backtrace.each do |tr|
+                        tr[:index] = cnt
+                        cnt += 1
+                        suffix = ''
+                        suffix = "&line=#{tr[:line]}" if (client_editor == 'textmate')
+                        tr[:link] = "#{prefix}file://#{tr[:path]}#{suffix}"
+                    end
+                    @scene.request_params = @request.params.inspect
+                    @scene.session = @request.session.inspect
+                rescue => exc2
+                    super(exc)
                 end
-                @scene.request_params = @request.params.inspect
-                @scene.session = @request.session.inspect
             end
             render "errors/#{error_page}", :layout => "errors/error"
             super
