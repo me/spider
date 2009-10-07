@@ -452,28 +452,48 @@ module Spider; module Model
                 if (@model.attributes[:condition])
                     query.condition = Condition.and(query.condition, @model.attributes[:condition])
                 end
-                @model.primary_keys.each{ |key| query.request[key] = true}
-                expand_request(query.request, set) unless options[:no_expand_request]
-                query = prepare_query(query, query_set)
-                query.request.total_rows = true unless query.request.total_rows == false
-                result = fetch(query)
-                if !result || result.empty?
-                    set.each_current do |obj|
-                        query.request.keys.each do |element_name|
-                            el = @model.elements[element_name]
-                            next if el.integrated? || @model.extended_models[el.model]
-                            obj.set_loaded_value(element_name, nil) 
+                keys_loaded = true
+                @model.primary_keys.each do |key|
+                    unless set.element_loaded?(key)
+                        keys_loaded = false
+                        break
+                    end
+                end
+                do_fetch = true
+                if (keys_loaded)
+                    do_fetch = false
+                    query.request.each_key do |key|
+                        if (have_references?(key))
+                            do_fetch = true
+                            break
                         end
                     end
-                    return set
                 end
-                set.total_rows = result.total_rows if (!was_loaded)
-                result.each do |row|
-                    obj =  map(query.request, row, set.model)
-                    next unless obj
-                    merge_object(set, obj)
-                    @raw_data[obj.object_id] = row
+                if (do_fetch)
+                    @model.primary_keys.each{ |key| query.request[key] = true}
+                    expand_request(query.request, set) unless options[:no_expand_request]
+                    query = prepare_query(query, query_set)
+                    query.request.total_rows = true unless query.request.total_rows == false
+                    result = fetch(query)
+                    if !result || result.empty?
+                        set.each_current do |obj|
+                            query.request.keys.each do |element_name|
+                                el = @model.elements[element_name]
+                                next if el.integrated? || @model.extended_models[el.model]
+                                obj.set_loaded_value(element_name, nil) 
+                            end
+                        end
+                        return set
+                    end
+                    set.total_rows = result.total_rows if (!was_loaded)
+                    result.each do |row|
+                        obj =  map(query.request, row, set.model)
+                        next unless obj
+                        merge_object(set, obj)
+                        @raw_data[obj.object_id] = row
+                    end
                 end
+                set = get_external(set, query)
 #                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
 
                
@@ -554,6 +574,7 @@ module Spider; module Model
                    get_integrated[element.integrated_from] ||= Request.new
                    get_integrated[element.integrated_from][element.integrated_from_element] = query.request[element_name]
                 elsif element.model?
+                    next if query.request[element_name] == true && someone_have_references?(element)
                     sub_query = Query.new
                     sub_query.request = ( query.request[element_name].class == Request ) ? query.request[element_name] : nil
                     sub_query.condition = element.attributes[:condition] if element.attributes[:condition]
