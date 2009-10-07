@@ -1275,6 +1275,10 @@ module Spider; module Model
         def primary_keys
             self.class.primary_keys.map{ |k| get(k) }
         end
+        
+        def keys_string
+            self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
+        end
 
             
         
