@@ -92,6 +92,13 @@ module Spider; module Model
             raise MapperError, "Unimplemented"
         end
         
+        # Returns true if information to find the given element is accessible to the mapper, or to an integrated model's mapper.
+        # (see for example DbMapper#someone_have_references?)
+        def someone_have_references?(element)
+            raise MapperError, "Unimplemented"
+        end
+        
+        
         ##############################################################
         #   Save (insert and update)                                 #
         ##############################################################
