@@ -276,10 +276,13 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (type.subclass_of?(BaseModel) && attributes[:multiple])
+                if attributes[:primary_key]
+                    attributes[:lazy] = true
+                elsif (type < BaseModel && attributes[:multiple])
                     # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = true
                 else
+                    attributes[:lazy_check_owner] = true if type < BaseModel
                     attributes[:lazy] = :default
                 end
             end

@@ -702,6 +702,9 @@ module Spider; module Model
             @model.elements.each do |name, element|
                 next if (obj && obj.element_loaded?(name))
                 if (element.lazy_groups && (lazy_groups - element.lazy_groups).length < lazy_groups.length)
+                    if (element.attributes[:lazy_check_owner])
+                        next unless have_references?(name)
+                    end
                     request.request(name)
                 end
             end
