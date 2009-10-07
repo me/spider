@@ -42,7 +42,7 @@ module Spider; module HTTP
                 #Spider::Logger.debug("Sending headers because wrote #{msg}")
                 send_headers
             end
-            @response.write(msg)
+            @response.write(msg) rescue Errno::EPIPE # FIXME: is it bad?
         end
         
         def self.send_headers(controller_response, response)
