@@ -17,7 +17,9 @@ module Spider; module TemplateBlocks
                 else
                     sval = '"'+val+'"'
                 end
-                init_params << ":#{key} => #{sval}"
+                init_key = key
+                init_key = "\"#{init_key}\"" unless key =~ /^[\w\d]+$/
+                init_params << ":#{init_key} => #{sval}"
             end
             # Hpricot fails me when doing a direct search for >tpl:override
             # overrides = @el.search('>tpl:override') + @el.search('>tpl:override-content')
@@ -25,7 +27,6 @@ module Spider; module TemplateBlocks
             @el.each_child do |ch|
                 html += ch.to_html
             end
-            html.gsub!("'", "\\'")
             html = "<sp:widget-content>#{html}</sp:widget-content>" unless html.empty?
             runtime_content, overrides = klass.parse_content_xml(html)
             # @template.override_tags.each do |tag|
@@ -49,6 +50,7 @@ module Spider; module TemplateBlocks
                 init = "t = load_subtemplate('#{id}')\n"
                 t_param = 't'
             end
+            html.gsub!("'", "\\\\'")
             init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{html}', #{t_param})\n"
             c = "yield :#{id}\n"
             return CompiledBlock.new(init, c)
