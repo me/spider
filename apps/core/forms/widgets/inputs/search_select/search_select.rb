@@ -42,8 +42,15 @@ module Spider; module Forms
                 set_or_add_value(params['sel'])
                 did_set_value = true
             end
+            if (params['delete'])
+                new_val = Spider::Model::QuerySet.new(@model)
+                @value.each do |row|
+                    new_val << row unless row.keys_string == params['delete']
+                end
+                @value = new_val
+            end
             @done = false if @scene.next_step && !did_set_value
-            @scene.list_delete_param = "_w#{param_name(self)}[delete]"
+            @scene.list_delete_param = "_w#{param_name(self)}[delete]="
             @scene.value = @value
 
             super
