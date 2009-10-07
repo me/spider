@@ -433,7 +433,7 @@ module Spider; module Model
             params[:except] ||= []
             model.each_element do |el|
                 next if params[:except].include?(el.name)
-                next if elements[el.name] # don't overwrite existing elements
+                next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
                 attributes = el.attributes.clone.merge({
                     :integrated_from => elements[element_name],
                     :integrated_from_element => el.name
