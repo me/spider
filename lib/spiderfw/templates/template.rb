@@ -29,7 +29,7 @@ module Spider
         @@registered = {}
         @@namespaces = {}
         @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
-        @@overrides = ['content', 'override', 'override-content', 'override-attr',
+        @@overrides = ['content', 'override', 'override-content', 'override-attr', 'append-attr',
                         'append', 'prepend', 'delete', 'before', 'after']
                         
         @@asset_types = {
@@ -436,14 +436,17 @@ module Spider
                         parent.search('tpl:overridden').each{ |o| o.swap(overridden) }
                     elsif (override.name == 'tpl:override-attr')
                         f.set_attribute(override.attributes["name"], override.attributes["value"])
+                    elsif (override.name == 'tpl:append-attr')
+                        f.set_attribute(override.attributes["name"], \
+                        (f.attributes[override.attributes["name"]] || '')+override.attributes["value"]) 
                     elsif (override.name == 'tpl:append')
                         f.innerHTML += override.innerHTML
                     elsif (override.name == 'tpl:prepend')
                         f.innerHTML = override.innerHTML + f.innerHTML
                     elsif (override.name == 'tpl:before')
-                        f.parent.innerHTML = override.innerHTML + f.parent.innerHTML
+                        f.before(override.innerHTML)
                     elsif (override.name == 'tpl:after')
-                        f.parent.innerHTML += override.innerHTML
+                        f.after(override.innerHTML)
                     end
                 end
             end
