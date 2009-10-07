@@ -347,6 +347,7 @@ module Spider; module Model
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
@@ -381,7 +382,7 @@ module Spider; module Model
                 check(name, val)
                 notify_observers(name, val)
                 old_val = instance_variable_get(ivar)
-                @modified_elements[name] = true unless element.primary_key? || val == old_val
+                @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
                 #extend_element(name)
             end
