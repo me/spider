@@ -96,7 +96,11 @@ module Spider; module Model
                     column = col.name
                     type = type_conversion[col.type]
                     skip = skip_columns[name]
-                    options[:primary_key] = true if ar.primary_key == column
+                    if ar.primary_key == column
+                        options[:primary_key] = true 
+                        options[:autoincrement] = true
+                    end
+                    
                     hidden = [:obj_created, :obj_modified]
                     options[:hidden] = true if hidden.include?(name)
                     next if skip
@@ -142,8 +146,11 @@ module Spider; module Model
                             klass = reflection.klass
                         end
                         klass.reflections.each do |r_name, r_refl|
-                            if (r_refl.klass == ar && r_refl.primary_key_name == reflection.primary_key_name)
-                                options[:reverse] = r_name
+                            begin
+                                if (r_refl.klass == ar && r_refl.primary_key_name == reflection.primary_key_name)
+                                    options[:reverse] = r_name
+                                end
+                            rescue => exc
                             end
                         end                            
                         type ||= klass.spider_model
