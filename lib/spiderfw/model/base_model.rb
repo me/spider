@@ -1838,6 +1838,9 @@ module Spider; module Model
             remove_elements = []
             self.elements_array.each do |el|
                 next if el.integrated?
+                next if (el.reverse && el.model.elements[el.reverse] && \
+                    (el.model.elements[el.reverse].attributes[:add_reverse] || \
+                    el.model.elements[el.reverse].attributes[:add_multiple_reverse]))
                 method = case el.attributes[:association]
                 when :many
                     :many
