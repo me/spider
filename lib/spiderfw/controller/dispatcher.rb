@@ -42,6 +42,9 @@ module Spider
                 route.obj = obj
             end
             obj = route.obj
+            if (route.options[:do])
+                route.options[:do].call(obj, *(route.params || []))
+            end
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
             return [obj, route.action, new_arguments]
