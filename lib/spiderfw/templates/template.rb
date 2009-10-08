@@ -229,7 +229,12 @@ module Spider
         def parse_asset(type, src, attributes={})
             # FIXME: use Spider.find_asset ?
             ass = {:type => type}
-            res = Spider.find_resource(type.to_sym, src, @path, (@owner ? @owner.class : @owner_class ))
+            if (attributes['app'])
+                owner_class = Spider.apps_by_path[attributes['app']]
+            else
+                owner_class = (@owner ? @owner.class : @owner_class )
+            end
+            res = Spider.find_resource(type.to_sym, src, @path, owner_class)
             controller = nil
             if (res && res.definer)
                 controller = res.definer.controller

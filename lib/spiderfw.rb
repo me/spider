@@ -340,6 +340,8 @@ module Spider
                         break
                     end
                 end
+            elsif (owner_class.is_a?(Spider::App))
+                app = owner_class
             else
                 app = owner_class.app if (owner_class && owner_class.app)
             end
