@@ -1,4 +1,6 @@
 Spider.defineWidget('Spider.Components.List', {
+	
+	autoInit: '.wdgt-Spider-Components-List:not(.sublist)',
     
     startup: function(){
         var options = {};
@@ -154,6 +156,25 @@ Spider.defineWidget('Spider.Components.List', {
 		else this.scrollBackButton.show();
 		if (this.scrollPos == max) this.scrollForwarButton.hide();
 		else this.scrollForwarButton.show();
+	},
+	
+	makeEditable: function(button, form_path){
+		$(button, this.el).click(function(e){
+			e.preventDefault();
+			var form = $W(form_path);
+			form.el.appendTo($(this).parents('.listItem').eq(0));
+			form.reload({pk: $(this).getDataObjectKey()}, function(){
+				var widget = this;
+				$('.buttons', this.el).append(
+					$('<input type="submit" value="Annulla" />').click(function(e){
+						e.preventDefault();
+						widget.el.html('');
+						widget.el.hide();
+					})
+				);
+			});
+		});
+			
 	}
     
     
