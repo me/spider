@@ -244,6 +244,20 @@ Spider.defineWidget = function(name, w){
         curr = curr[parts[i]];
     }
     curr[parts[parts.length-1]] = Spider.Widget.extend(w);
+	if (w.autoInit){
+		var initSelector = null;
+		if (w.autoInit === true){
+			initSelector = '.wdgt-'+parts.join('-');
+		}
+		else{
+			initSelector = w.autoInit;
+		}
+		Spider.onHTML(function(){
+			$(initSelector, this).each(function(){
+				Spider.Widget.initFromEl($(this));
+			});
+		});
+	}
 };
 
 Spider.Controller = Class.extend({
