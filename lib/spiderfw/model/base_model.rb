@@ -1091,11 +1091,15 @@ module Spider; module Model
                 case element.type.name
                 when 'Date', 'DateTime'
                     return nil if value.is_a?(String) && value.empty?
+                    parsed = nil
                     begin
-                        value = element.type.lparse(value, :short) if value.is_a?(String)
+                        parsed = element.type.strptime(value, "%Y-%m-%dT%H-%M-%S") rescue ArgumentError
+                        parsed ||= element.type.lparse(value, :short) if value.is_a?(String) rescue ArgumentError
+                        parsed ||= element.type.parse(value)
                     rescue ArgumentError => exc
                         raise FormatError.new(element, value, _("'%s' is not a valid date"))
                     end
+                    value = parsed
                 when 'String'
                 when 'Spider::DataTypes::Text'
                     value = value.to_s
