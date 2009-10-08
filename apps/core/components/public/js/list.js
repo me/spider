@@ -13,7 +13,7 @@ Spider.defineWidget('Spider.Components.List', {
 
 	ready: function(){
 		this.ajaxify($('form, .paginator a', this.el));
-		this.ajaxify($('.delete_link', this.el));
+		this.ajaxify($('.delete_link:not(.unmanaged)', this.el));
 	},
 	
 	update: function(){
