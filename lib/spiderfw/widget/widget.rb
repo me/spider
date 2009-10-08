@@ -184,7 +184,7 @@ module Spider
                 "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js", '/js/jquery/plugins/jquery.form.js'
             ]
             include_css = [
-                '/css/spider.css', '/js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.custom.css', 
+                '/css/spider.css', '/js/jquery/jquery-ui/css/smoothness/jquery-ui-1.7.2.custom.css', 
             ]
             @assets = []
             include_js.each{ |js| @assets << {:type => :js, :src => Spider::Components.pub_url+js, :path => Spider::Components.pub_path+js}}
