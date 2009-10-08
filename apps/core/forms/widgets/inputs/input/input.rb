@@ -33,10 +33,6 @@ module Spider; module Forms
             super
         end
         
-        # def name
-        #     @name || param_name(self)
-        # end
-        
         def value
             @value
         end
