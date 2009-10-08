@@ -85,12 +85,15 @@ Spider.Widget = Class.extend({
 		el.each(function(){
 			var $this = $(this);
 			if (this.tagName == 'FORM'){
-				$this.submit(function(e){
+				$('input[type=submit]', $this).click(function(e){
 					e.preventDefault();
 					w.setLoading();
-					$(this).ajaxSubmit({
+					var submitName = $(this).attr('name');
+					var submitValue = $(this).val();
+					$this.ajaxSubmit({
 						dataType: 'html',
 						beforeSubmit: function(data, form, options){
+							data.push({name: submitName, value: submitValue});
 							data.push({name: '_wt', value: w.path});
 						},
 						success: function(res){
