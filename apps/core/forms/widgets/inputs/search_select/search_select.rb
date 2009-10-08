@@ -5,7 +5,7 @@ module Spider; module Forms
         i_attr_accessor :model
         is_attr_accessor :blank_option, :type => TrueClass, :default => true
         
-        def prepare_value(val)
+        def prepare_value(params)
             return nil
         end
         
@@ -16,12 +16,17 @@ module Spider; module Forms
             scene = super
             @multiple = multi
             scene.multiple = @multiple
+            scene.value_param = "#{scene.name}[value]"
+            if (@multiple)
+                scene.value_param += "[]"
+            end
             return scene
         end
         
         def prepare
+            self.value = params['value']
             if (params['clear'])
-                @value = nil
+                self.value = nil
                 @scene.next_step = :text
             end
             did_set_value = false
@@ -38,9 +43,6 @@ module Spider; module Forms
                 else
                     @scene.next_step = :select
                 end
-            elsif (params['sel'])
-                set_or_add_value(params['sel'])
-                did_set_value = true
             end
             if (params['delete'])
                 new_val = Spider::Model::QuerySet.new(@model)
@@ -52,21 +54,36 @@ module Spider; module Forms
             @done = false if @scene.next_step && !did_set_value
             @scene.list_delete_param = "_w#{param_name(self)}[delete]="
             @scene.value = @value
-
+            @scene.list_value = @value
+            if (@multiple && !@value)
+                @scene.list_value = Spider::Model::QuerySet.static(@model)
+            end
+            @scene.keys = []
+            if (@value)
+                if (@multiple)
+                    @value.each do |val|
+                        @scene.keys << @model.primary_keys.map{|k| val.get(k) }.join(',')
+                    end
+                else
+                    @scene.key = @model.primary_keys.map{|k| @value.get(k) }.join(',')
+                end
+            end
             super
         end
         
-        def set_or_add_value(val)
-            if (@multiple)
-                self.value ||= Spider::Model::QuerySet.new(@model)
-                self.value << val
-            else
-                self.value = val
+        def set_or_add_value(vals)
+            vals = [vals] unless vals.is_a?(Array)
+            vals.each do |val|
+                if (@multiple)
+                    self.value ||= Spider::Model::QuerySet.new(@model)
+                    self.value << val
+                else
+                    self.value = val
+                end
             end
         end
         
         def run
-            
             if (@value && !@multiple)
                 @scene.value_desc = @value.to_s
             else

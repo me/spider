@@ -1,15 +1,18 @@
 <div class='input'>
+	<tpl:asset type="js" app="core/components" src="js/jquery/plugins/jquery-autocomplete/jquery.autocomplete.js" />
+	<tpl:asset type="js" src="search_select.js" />
+	<tpl:asset type="css" app="core/components" src="js/jquery/plugins/jquery-autocomplete/jquery.autocomplete.css" />
     <div sp:if="@no_result" class="notice">
         Nessun risultato trovato per "{ @text_query }".
     </div>
-    <div sp:if="@next_step == :text">
-        <span sp:if="@multiple">Aggiungi:</span>
+    <div sp:if="@next_step == :text" class="add_box">
+        <span sp:if="@multiple" class="add_text">Aggiungi:</span>
         <input type="text" name="{ @name }[text]" value="" size="{ @size }" />
     </div>
     <div sp:if="@next_step == :select" class="notice">
         Per favore, affina la ricerca:
     </div>
-    <select name="{ @name }[sel]" sp:if="@next_step == :select">
+    <select name="{ @value_param }" sp:if="@next_step == :select">
         <option sp:if="@blank_option"> </option>
         <option sp:each_index="@search_results |i|" value="{ @search_values[i] }" sp:attr-if="@selected[@search_values[i]],selected">
             { @search_results[i].to_s }
@@ -21,5 +24,7 @@
             (Cambia <input type="checkbox" name="{ @name }[clear]" value="1">)
         </span>
     </div>
-    <core:list sp:if="@multiple && @value" id="values" queryset="@value" delete="true" delete_param="@list_delete_param"/>
+    <core:list sp:if="@multiple" id="list" queryset="@list_value" delete="true" delete_param="@list_delete_param"/>
+	<input sp:if="@multiple" type="hidden" name="{ @value_param }" sp:each="@keys |key|" value="{ key }">
+	<input sp:if="!@multiple" type="hidden" name="{ @value_param }" value="{ @key }">
 </div>
