@@ -361,7 +361,7 @@ $.fn.getDataModel = function(){
 Spider.htmlFunctions = [];
 Spider.onHTML = function(callback){
 	Spider.htmlFunctions.push(callback);
-	callback.call($(document.body));
+	if ($.isReady) callback.call($(document.body));
 };
 
 Spider.newHTML = function(el){
