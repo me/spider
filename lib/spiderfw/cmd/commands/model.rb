@@ -26,6 +26,7 @@ class ModelCommand < CmdParse::Command
         
         sync_cmd.set_execution_block do |req_models|
             require 'spiderfw'
+            require 'spiderfw/model/mappers/db_mapper.rb'
             req_models || []
             unsafe_fields = {}
             req_models = Spider.apps.values if (req_models.empty?)
