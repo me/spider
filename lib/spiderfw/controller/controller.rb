@@ -178,12 +178,9 @@ module Spider
                 if (can_dispatch?(:execute, action))
                     d_next = dispatch_next(action)
                     #run_chain(:execute, action, *arguments)
-                    if d_next.dest != self # otherwise, shortcut route to self
-                        return do_dispatch(:execute, action) 
-                    else 
-                        arguments = d_next.params
-                    end
-#                        after(action, *arguments)
+                    #  shortcut route to self
+                    return do_dispatch(:execute, action) if d_next.dest != self 
+                    arguments = d_next.params
                 end
                 if (@executed_method)
                     meth = self.method(@executed_method)
