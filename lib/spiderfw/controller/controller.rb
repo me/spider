@@ -167,7 +167,7 @@ module Spider
         
         
         def execute(action='', *arguments)
-            return if @done
+            return if @__done
             # return if self.is_a?(Spider::Widget) # FIXME: this is obviously wrong. Widgets must override the behaviour
             # # somewhere else, or probably just not inherit controller.
             debug("Controller #{self} executing #{action} with arguments #{arguments}")
@@ -221,13 +221,17 @@ module Spider
             # end
         end
         
+        def done?
+            @__done
+        end
+        
         def done
             self.done = true
             throw :done
         end
         
         def done=(val)
-            @done = val
+            @__done = val
             @dispatch_previous.done = val if @dispatch_previous
         end
         
