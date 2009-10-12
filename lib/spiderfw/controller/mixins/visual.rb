@@ -13,6 +13,7 @@ module Spider; module ControllerMixins
            klass.define_annotation(:html) { |k, m, params| k.output_format(m, :html, params) }
            klass.define_annotation(:xml) { |k, m, params| k.output_format(m, :xml, params) }
            klass.define_annotation(:json) { |k, m, params| k.output_format(m, :json, params) }
+           klass.define_annotation(:text) { |k, m, params| k.output_format(m, :text, params) }
         end
         
         def before(action='', *params)
@@ -39,6 +40,8 @@ module Spider; module ControllerMixins
         
         def output_format_headers(format)
             case format
+            when :text
+                content_type('text/plain')
             when :json
                 if (Spider.runmode == 'devel' && @request.params['_text'])
                     content_type('text/plain')
@@ -63,44 +66,24 @@ module Spider; module ControllerMixins
                 params = format_params[:params].call(p_rest) if p_rest
             end
             super(action, *params)
-            return unless format_params.is_a?(Hash) || @widget_target
-            if @widget_target || format_params[:template]
-                widget_target = @widget_target || @request.params['_wt']
-                widget_execute = @request.params['_we']
+            return unless format_params.is_a?(Hash)
+            if (format_params.is_a?(Hash) && format_params[:template])
+                @template ||= init_template(format_params[:template])
+                widget_target = @request.params['_wt']
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
-                    @template ||= init_template(format_params[:template])
                     @_widget = find_widget(first)
                     @_widget.target_mode = true
                     @_widget.widget_target = rest
-                    @_widget.is_target = true if !rest
-                    if !rest && widget_execute
-                        set_dispatched_object_attributes(@_widget, widget_execute)
-                    else
-                        set_dispatched_object_attributes(@_widget, 'index')
-                        @_widget.widget_before() 
-                    end
+                    @template.do_widgets_before
+                    @_widget.execute
                 end
             end
-            if ((format_params.is_a?(Hash) && format_params[:template]) || @_widget)
-                if (@_widget)
-                    if(!widget_execute && @is_target)
-                        @_widget.run
-                        debugger
-                        @_widget.render
-                    elsif (@_widget_target)
-                        @_widget.before(widget_execute)
-                        @_widget.execute(widget_execute)
-                    else
-                        @_widget.before
-                        @_widget.execute
-                    end
+            if (format_params.is_a?(Hash) && format_params[:template] && !@_widget)
+                if (@template)
+                    render(@template)  # has been init'ed in before method
                 else
-                    if (@template)
-                        render(@template)  # has been init'ed in before method
-                    else
-                        render(format_params[:template])
-                    end
+                    render(format_params[:template])
                 end
             end
             return unless format_params.is_a?(Hash)

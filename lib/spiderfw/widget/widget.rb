@@ -170,6 +170,7 @@ module Spider
         
         i_attribute :use_template
         attribute :"sp:target-only"
+        attribute :class
         
         def initialize(request, response, scene=nil)
             super
@@ -192,10 +193,15 @@ module Spider
             
             @use_template ||= self.class.default_template
             @css_classes = []
+            @widgets_runtime_content = {}
         end
         
         def full_id
             @id_path.join('-')
+        end
+        
+        def local_id
+            @id_path.last
         end
         
         def attributes=(hash)
@@ -223,7 +229,18 @@ module Spider
         
         def before(action='')
             widget_init(action)
+            init_widgets unless @init_widgets_done
             super
+        end
+        
+        def widget_before(action='')
+            widget_init(action)
+            prepare
+            @before_done = true
+        end
+        
+        def before_done?
+            @before_done
         end
         
         # Loads the template and sets the widget attributes
@@ -259,16 +276,9 @@ module Spider
                 next if attributes == false
                 raise ArgumentError, "Widget #{self} requires attribute #{attributes.join(' or ')} to be set"
             end
-        end
-
-        def widget_before(action='')
-            widget_init(action)
-            prepare
-            @before_done = true
-        end
-        
-        def before_done?
-            @before_done
+            if (@attributes[:class])
+                @css_classes += @attributes[:class].split(/\s+/)
+            end
         end
         
         # Recursively instantiates the subwidgets.
@@ -361,6 +371,29 @@ module Spider
             prepare_scene(@scene)
             @template.render(@scene) unless @target_mode && !@is_target
         end
+        
+        def execute(action='', *params)
+            widget_execute = @request.params['_we']
+            if (@is_target)
+                if (widget_execute)
+                    super(widget_execute, *params)
+                else
+                    run
+                    render
+                end
+            elsif (@widget_target)
+                first, rest = @widget_target.split('/')
+                @_widget = find_widget(first)
+                @_widget.target_mode = true
+                @_widget.widget_target = rest
+                @_widget.is_target = true unless rest
+                set_dispatched_object_attributes(@_widget, widget_execute)
+                @_widget.before(rest, *params)
+                @_widget.execute(rest, *params)
+            else
+                super
+            end
+        end
                         
         def try_rescue(exc)
             if (exc.is_a?(NotFound))
@@ -399,13 +432,19 @@ module Spider
         def create_widget(klass, id,  *params)
             obj = klass.new(*params)
             obj.id = id
-            obj.id_path = @id_path + [id]
-            @widgets[id.to_sym] = obj
+            add_widget(obj)
+            return obj
         end
         
         def add_widget(widget)
             widget.id_path = @id_path + [widget.id]
             @widgets[widget.id.to_sym] = widget
+            if (@widgets_runtime_content[widget.id])
+                @widgets_runtime_content[widget.id].each do |el|
+                    widget.parse_runtime_content_xml(el)
+                end
+            end
+                    
         end
             
         
@@ -435,6 +474,14 @@ module Spider
                 end
             end
             attributes.remove
+            doc.search('sp:runtime-content').each do |cont|
+                w = cont.attributes['widget']
+                if (w)
+                    @widgets_runtime_content[w.to_sym] ||= []
+                    @widgets_runtime_content[w.to_sym] << "<sp:widget-content>#{cont.innerHTML}</sp:widget-content>"
+                end
+            end
+            doc.search('sp:runtime-content').remove
             return doc
         end
         
