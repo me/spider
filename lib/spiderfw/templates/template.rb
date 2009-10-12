@@ -21,10 +21,10 @@ module Spider
         include Logger
         
         attr_accessor :_action, :_action_to, :_widget_action
-        attr_accessor :widgets, :overrides, :compiled, :id_path
+        attr_accessor :widgets, :compiled, :id_path
         attr_accessor :request, :response, :owner, :owner_class
         attr_accessor :mode # :widget, ...
-        attr_reader :path, :subtemplates, :widgets
+        attr_reader :overrides, :path, :subtemplates, :widgets
         
         @@registered = {}
         @@namespaces = {}
@@ -170,6 +170,7 @@ module Spider
             @content = {}
             @dependencies = []
             @overrides = []
+            @widgets_overrides = {}
         end
         
         # Sets the scene.
@@ -194,11 +195,13 @@ module Spider
             compiled = CompiledTemplate.new
             compiled.source_path = @path
             root = get_el(@path)
+            el = process_tags(root)
             @overrides.each{ |o| apply_override(root, o) } if (@overrides)
             root.search('tpl:placeholder').remove # remove empty placeholders
             res =  root.children_of_type('tpl:asset')
             res_init = ""
             res.each do |r|
+                r.set_attribute('class', 'to_delete')
                 pr = parse_asset(r.attributes['type'], r.attributes['src'], r.attributes)
                 assets << pr
                 res_init += "@assets << { 
@@ -208,7 +211,7 @@ module Spider
                     :if => '#{pr[:if]}'
                 }\n"
             end
-            root.search('tpl:asset').remove
+            root.search('.to_delete').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
             options[:root] = true
             options[:owner] = @owner
@@ -268,12 +271,18 @@ module Spider
             end
             overrides.each{ |o| o.set_attribute('class', 'to_delete') }
             root.search('.to_delete').remove
-            @overrides += overrides
+            add_overrides overrides
             if (root.name == 'sp:template' && ext = root.attributes['extend'])
+                assets = root.children_of_type('tpl:asset')
                 ext = real_path(ext)
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
+                if (assets && !assets.empty?)
+                    assets.each do |ass|
+                        root.innerHTML += ass.to_html
+                    end
+                end
             else
                 root.search('tpl:include').each do |incl|
                     src = real_path(incl.attributes['src'])
@@ -282,6 +291,31 @@ module Spider
                 end
             end
             return root
+        end
+        
+        def process_tags(el)
+            block = TemplateBlocks.get_block_type(el, true)
+            if (block == :Tag)
+                sp_attributes = {}
+                # FIXME: should use blocks instead
+                el.attributes.each do |key, value|
+                    if (key[0..1] == 'sp')
+                        sp_attributes[key] = value
+                        el.raw_attributes.delete(key)
+                    end
+                end
+                klass = Spider::Template.get_registered_class(el.name)
+                tag = klass.new(el)
+                res = process_tags(Hpricot(tag.render).root)
+                sp_attributes.each{ |key, value| res.raw_attributes[key] = value }
+                return res
+            else
+                el.each_child do |child|
+                    next if child.is_a?(Hpricot::Text) || child.is_a?(Hpricot::Comment)
+                    el.replace_child(child, process_tags(child))
+                end
+            end
+            return el
         end
         
         # The full path of a template mentioned in this one.
@@ -411,15 +445,39 @@ module Spider
             return t
         end
         
+        def add_overrides(overrides)
+            overrides.each do |ov|
+                w = ov.attributes['widget']
+                if (w)
+                    first, rest = w.split('/', 2)
+                    if (rest)
+                        ov.raw_attributes['widget'] = rest
+                    else
+                        ov.raw_attributes.delete('widget')
+                    end
+ #                   debugger
+                    @widgets_overrides[first] ||= []
+                    @widgets_overrides[first] << ov
+                else
+                    @overrides << ov
+                end
+            end
+        end
+        
+        def overrides_for(widget_id)
+#            debugger
+            @widgets_overrides[widget_id] || []
+        end
+        
         # Applies an override to an (Hpricot) element.
         def apply_override(el, override)
             search_string = override.attributes['search']
             override.name = 'tpl:override-content' if override.name == 'tpl:inline-override'
             if (search_string)
-                # Fix Hpricot bug!
-                search_string.gsub!(/nth-child\((\d+)\)/) do |match|
-                    "nth-child(#{$1.to_i-2})"
-                end
+                # # Fix Hpricot bug!
+                # search_string.gsub!(/nth-child\((\d+)\)/) do |match|
+                #     "nth-child(#{$1.to_i-2})"
+                # end
                 found = el.parent.search(search_string)
             elsif (override.name == 'tpl:content')
                 found = el.search("tpl:placeholder[@name='#{override.attributes['name']}']")
