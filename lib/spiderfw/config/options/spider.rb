@@ -26,7 +26,12 @@ module Spider
     
     # Templates
     config_option 'template.cache.disable', _("Refresh template cache every time"), { :default => false }
-    config_option 'template.safe', _("Run templates in safe mode"), { :default => false }
+    config_option 'template.cache.reload_on_restart', _("Refresh template cache when server restarts"), { :default => true }
+    config_option 'template.cache.no_check', _("Never recompile templates"), { :default => true }
+    config_option 'template.cache.check_files', _("Check on every request if templates are changed"), { :default => true }
+    
+    
+    #config_option 'template.safe', _("Run templates in safe mode"), { :default => false }
     
     # Model
     
