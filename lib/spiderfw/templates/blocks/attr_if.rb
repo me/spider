@@ -14,7 +14,7 @@ module Spider; module TemplateBlocks
             attr_if = @el.attributes['sp:attr-if']
             @el.remove_attribute('sp:attr-if')
             @el.set_attribute("tmp-attr-if", attr_if)
-            compiled = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile
+            compiled = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile(options)
             c, init = compiled.run_code, compiled.init_code
             cond, name, val = attr_if.split(',')
             cond = vars_to_scene(cond)
