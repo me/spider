@@ -42,6 +42,7 @@ module Spider; module Forms
         attr_accessor :fixed
         attr_accessor :before_save, :after_save
         
+        attr_accessor :inputs
         attr_accessor :pk
         attr_reader :obj
         
@@ -120,11 +121,11 @@ module Spider; module Forms
             init_widgets
             # if (@submit_action)
             # else
-                @obj ||= load
-                if @obj
-                    @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
-                    set_values(@obj) if @action == :form
-                end
+            @obj ||= load
+            if @obj
+                @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
+                set_values(@obj) if @action == :form
+            end
 #            end
             super
         end
@@ -235,6 +236,7 @@ module Spider; module Forms
         
         def create_input(type, el)
             input = create_widget(type, el.name, @request, @response)
+            input.css_classes << "el-#{el.name}"
             case type.name
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?

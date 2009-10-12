@@ -2,6 +2,7 @@ require 'spiderfw/env'
 
 require 'rubygems'
 require 'find'
+require 'fileutils'
 require 'spiderfw/autoload'
 require 'spiderfw/requires'
 
@@ -99,6 +100,9 @@ module Spider
 
         # Invoked before a server is started. Apps may implement the app_startup method, that will be called.
         def startup
+            if (Spider.conf.get('template.cache.reload_on_restart'))
+                FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
+            end
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
