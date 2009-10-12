@@ -28,15 +28,25 @@ module Spider
                 debug("Cache disabled, recreating #{path}")
                 return false
             end
-            return false if @invalid[path]
             full_path = get_location(path)
-            return false unless File.exist?(full_path+'/check')
+            exists = File.exist?(full_path)
+            if (Spider.config.get('template.cache.no_check') && exists)
+                return true
+            end
+            return false if @invalid[path]
+            global_reload_file = "#{Spider.paths[:tmp]}/templates_reload.txt"
+            check_file = "#{full_path}/check"
+            return false unless File.exist?(check_file)
+            if (File.exist?("#{Spider.paths[:tmp]}/templates_reload.txt"))
+                return false if (File.mtime(global_reload_file) > File.mtime(check))
+            end
+            return true unless Spider.conf.get('template.cache.check_files')
             lock_file = File.new(full_path)
             lock_file.flock(File::LOCK_SH)
             File.new(full_path).flock(File::LOCK_SH)
             # TODO: maybe insert here an (optional) tamper check 
             # that looks if the cache mtime is later then the saved time
-            Marshal.load(IO.read(full_path+'/check')).each do |check, time|
+            Marshal.load(IO.read(check_file)).each do |check, time|
                 debug("Template file #{check} changed, refreshing cache")
                 return false if File.mtime(check) > time
             end
