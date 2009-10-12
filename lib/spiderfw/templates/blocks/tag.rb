@@ -4,10 +4,14 @@ module Spider; module TemplateBlocks
 
         
         def compile(options={})
+            block = Spider::TemplateBlocks.parse_element(process, @allowed_blocks, @template)
+            return block.compile(options)
+        end
+        
+        def process
             klass = Spider::Template.get_registered_class(@el.name)
             tag = klass.new(@el)
-            block = Spider::TemplateBlocks.parse_element(Hpricot(tag.render).root, @allowed_blocks, @template)
-            return block.compile(options)
+            return Hpricot(tag.render).root
         end
         
         
