@@ -4,7 +4,7 @@ module Spider; module Components
         tag 'table'
  
         is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
-        i_attribute :num_elements, :default => 7
+        i_attribute :num_elements, :default => 7, :type => Fixnum
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
         attribute :max_element_length, :type => Fixnum, :default => 80
