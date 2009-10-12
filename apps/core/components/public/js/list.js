@@ -4,20 +4,23 @@ Spider.defineWidget('Spider.Components.List', {
     
     startup: function(){
         var options = {};
-		this.listTagName = $('>ul, >ol', this.el).get(0).tagName;
-		this.listEl = $('>'+this.listTagName, this.el);
-        if (this.el.hasClass('collapsed')) options.collapsed = true;
-        if (this.el.hasClass('tree')) $(this.listTagName, this.el).treeview(options);
-        if (this.el.hasClass('sortable')) this.makeSortable();
+		
     },
 
 	ready: function(){
+		this.listEl = $('>ul, >ol', this.el);
+		if (this.listEl.length > 0){
+			this.listTagName = this.listEl.get(0).tagName;
+			if (this.el.hasClass('collapsed')) options.collapsed = true;
+	        if (this.el.hasClass('tree')) $(this.listTagName, this.el).treeview(options);
+	        if (this.el.hasClass('sortable')) this.makeSortable();
+	        
+		};
 		this.ajaxify($('form, .paginator a', this.el));
 		this.ajaxify($('.delete_link:not(.unmanaged)', this.el));
 	},
 	
 	update: function(){
-		this.listEl = $('>'+this.listTagName, this.el);
 	},
     
     
@@ -175,6 +178,14 @@ Spider.defineWidget('Spider.Components.List', {
 			});
 		});
 			
+	},
+	
+	keys: function(){
+		var keys = [];
+		$('>li >.dataobject-key').each(function(){
+			keys.push($(this).text());
+		});
+		return keys;
 	}
     
     
