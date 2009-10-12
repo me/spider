@@ -5,7 +5,7 @@ function $W(path){
     //     wdgt = $('.widget.id-'+path_parts[i]);
     // }
     if (Spider.widgets[path]) return Spider.widgets[path];
-    var wdgt_id = path.replace(/\//, '-');
+    var wdgt_id = path.replace(/\//g, '-');
     var wdgt = $('#'+wdgt_id);
     if (!wdgt) return null;
     return Spider.Widget.initFromEl(wdgt);
@@ -29,6 +29,7 @@ Spider.Widget = Class.extend({
 		this.config = config;
 		this.model = config.model;
         Spider.widgets[path] = this;
+		this.events = [];
 		this.startup();
 		this.ready();
 		this.applyReady();
@@ -49,7 +50,6 @@ Spider.Widget = Class.extend({
 		for (var i=0; i<this.readyFunctions.length; i++){
 			this.readyFunctions[i].apply(this);
 		}
-		Spider.newHTML(this.el);
 	},
 	
 	reload: function(params, callback){
@@ -66,6 +66,7 @@ Spider.Widget = Class.extend({
 		this.update();
 		this.ready();
 		this.applyReady();
+		Spider.newHTML(this.el);
 	},
 	
 	paramName: function(key){
@@ -74,7 +75,10 @@ Spider.Widget = Class.extend({
 		for (var i=0; i<pathParts.length; i++){
 			param += "["+pathParts[i]+"]";
 		}
-		param += "["+key+"]";
+		if (matches = key.match(/(.+)(\[.*\])/)){
+			param += "["+matches[1]+"]"+matches[2];
+		}
+		else param += "["+key+"]";
 		return param;
 	},
 	
@@ -161,6 +165,33 @@ Spider.Widget = Class.extend({
 			});
 		}
 		else this.el.droppable(droppableOptions);
+	},
+	
+	getClassInfo: function(prefix){
+		var info = [];
+		var cl = this.el.attr('class');
+		var cl_parts = cl.split(' ');
+		for (var i=0; i < cl_parts.length; i++){
+			if (cl_parts[i].substr(0, prefix.length) == prefix){
+				info.push(cl_parts[i].substr(prefix.length+1));
+			}
+		}
+		return info;
+	},
+	
+	bind: function(eventName, callback){
+		if (!this.events[eventName]){
+			this.events[eventName] = [];
+		}
+		this.events[eventName].push(callback);
+	},
+	
+	trigger: function(eventName){
+		if (!this.events[eventName]) return;
+		var args = Array.prototype.slice.call(arguments, 1); 
+		for (var i=0; i < this.events[eventName].length; i++){
+			this.events[eventName][i].apply(this, args);
+		}
 	}
 	
 	
@@ -170,6 +201,7 @@ Spider.Widget = Class.extend({
 Spider.Widget.initFromEl = function(el){
 	if (!el || !el.attr('id')) return;
     var path = Spider.Widget.pathFromId(el.attr('id'));
+	if (Spider.widgets[path]) return Spider.widgets[path];
     var cl = el.attr('class');
     var cl_parts = cl.split(' ');
     var w_cl = null;
@@ -177,7 +209,6 @@ Spider.Widget.initFromEl = function(el){
     for (var i=0; i < cl_parts.length; i++){
         if (cl_parts[i].substr(0, 5) == 'wdgt-'){
             w_cl = cl_parts[i].substr(5);
-            break;
         }
 		else if (cl_parts[i].substr(0, 6) == 'model-'){
 			config.model = cl_parts[i].substr(6);
@@ -199,51 +230,65 @@ Spider.Widget.initFromEl = function(el){
 };
 
 Spider.Widget.pathFromId = function(id){
-	return id.replace(/-/, '/');
+	return id.replace(/-/g, '/');
 };
 
 
 
 Spider.WidgetBackend = Class.extend({
-   
+
 	init: function(widget){
 		this.widget = widget;
-		this.url = document.location.href;
-		this.urlParts = this.url.split('?');
+		this.baseUrl = document.location.href;
+		this.urlParts = this.baseUrl.split('?');
 		this.urlParts[0] = this.urlParts[0].split('#')[0];
+		this.wUrl = this.urlParts[0]+'?';
+		if (this.urlParts[1]) this.wUrl += this.urlParts[1]+'&';
+		this.wUrl += '_wt='+this.widget.path;
 	},
-   
-   send: function(method, args, options){
-       var url = this.urlParts[0]+'?';
-	   if (this.urlParts[1]) url += this.urlParts[1]+'&';
-       url += '_wt='+this.widget.path;
-       url += '&_we='+method;
-       for (var i=0; i<args.length; i++){
-           url += '&_wp[]='+args[i];
-       }
-       var data = {};
-       var callback = this.widget[method+'_response'];
-       if (!callback) callback = function(){};
-       var defaults = {
-          url: url,
-          type: 'POST',
-          success: callback,
-          data: data
-       };
-       options = $.extend(defaults, options);
-       $.ajax(options);
-   }
-    
+
+	urlForMethod: function(method){
+		return this.wUrl + '&_we='+method;
+	},
+
+	send: function(method, args, options){
+		var url = this.urlForMethod(method);
+		for (var i=0; i<args.length; i++){
+			url += '&_wp[]='+args[i];
+		}
+		var data = {};
+		var callback = this.widget[method+'_response'];
+		if (!callback) callback = function(){};
+		var defaults = {
+			url: url,
+			type: 'POST',
+			success: callback,
+			data: data
+		};
+		options = $.extend(defaults, options);
+		$.ajax(options);
+	}
+
 });
 
-Spider.defineWidget = function(name, w){
+Spider.widgetClasses = {};
+
+Spider.defineWidget = function(name, parent, w){
+	if (!w){
+		w = parent;
+		parent = null;
+	}
     var parts = name.split('.');
     var curr = Widgets;
     for (var i=0; i<parts.length-1; i++){
         if (!curr[parts[i]]) curr[parts[i]] = function(){};
         curr = curr[parts[i]];
     }
-    curr[parts[parts.length-1]] = Spider.Widget.extend(w);
+	if (parent) parent = Spider.widgetClasses[parent];
+	else parent = Spider.Widget;
+    var widget = parent.extend(w);
+	curr[parts[parts.length-1]] = widget;
+	Spider.widgetClasses[name] = widget;
 	if (w.autoInit){
 		var initSelector = null;
 		if (w.autoInit === true){
@@ -286,13 +331,13 @@ Spider.Controller = Class.extend({
 	loadWidget: function(path, params, callback){
 		var widget = $W(path);
 		var href = document.location.href;
-		var urlParts = this.url.split('?');
+		var urlParts = href.split('?');
 		var docParts = urlParts[0].split('#');
 		var url = docParts[0]+'?_wt='+path;
 		if (urlParts[1]) url += "&"+urlParts[1];
 		if (params){
 			for (var key in params){
-				url += '&'+widget.paramName(key)+'='+params[key];
+				url += '&'+widget.paramName(key)+this.paramToQuery(params[key]);
 			}
 		}
 		widget.setLoading();
@@ -307,6 +352,33 @@ Spider.Controller = Class.extend({
 				if (callback) callback.apply(widget);
 			}
 		});
+	},
+	
+	paramToQuery: function(value, prefix){
+		var res = null;
+		if (!prefix) prefix = '';
+		if (!value){
+			return '=null';
+		}
+		else if (value.push){ // array
+			for (var i=0; i < value.length; i++){
+				if (!res) res = "";
+				else res += '&';
+				res += this.paramToQuery(value[i], prefix+'[]');
+			}
+			return res;
+		}
+		else if (typeof (value) == 'object'){
+			for (var name in value){
+				if (!res) res = "";
+				else res += '&';
+				res += this.paramToQuery(value[name], prefix+'['+name+']');
+			}
+			return res;
+		}
+		else{
+			return prefix+"="+value;
+		}
 	}
     
 });
@@ -375,7 +447,9 @@ $.fn.getDataModel = function(){
 Spider.htmlFunctions = [];
 Spider.onHTML = function(callback){
 	Spider.htmlFunctions.push(callback);
-	if ($.isReady) callback.call($(document.body));
+	$(document).ready(function(){
+		callback.call($(this.body));
+	});
 };
 
 Spider.newHTML = function(el){
