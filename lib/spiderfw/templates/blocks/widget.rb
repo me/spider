@@ -21,27 +21,23 @@ module Spider; module TemplateBlocks
                 init_key = "\"#{init_key}\"" unless key =~ /^[\w\d]+$/
                 init_params << ":#{init_key} => #{sval}"
             end
-            # Hpricot fails me when doing a direct search for >tpl:override
-            # overrides = @el.search('>tpl:override') + @el.search('>tpl:override-content')
+
             html = ""
             @el.each_child do |ch|
                 html += ch.to_html
             end
             html = "<sp:widget-content>#{html}</sp:widget-content>" unless html.empty?
             runtime_content, overrides = klass.parse_content_xml(html)
-            # @template.override_tags.each do |tag|
-            #     overrides += @el.children_of_type('tpl:'+tag)
-            # end
+
             template = nil
+            overrides += @template.overrides_for(id)
             if (overrides.length > 0)
                 #template_name = klass.find_template(template_attr)
                 template = klass.load_template(template_attr || klass.default_template)
-                template.overrides = overrides
+                template.add_overrides overrides
                 @template.add_subtemplate(id, template, klass)
             end
-            # # FIXME: can't find a better way
-            # overrides.each{ |o| o.set_attribute('class', 'to_delete') }
-            # @el.search('.to_delete').remove
+
 
             init = ""
             t_param = 'nil'
