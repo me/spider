@@ -11,7 +11,7 @@ module Spider
         
         attr_accessor :parent
         attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
-        attr_reader :attributes, :widget_attributes, :css_classes
+        attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
         
         @@common_attributes = {
             :id => {}
@@ -302,7 +302,9 @@ module Spider
             template.request = @request
             template.response = @response
             @template.init(@scene)
-            @widgets.merge!(@template.widgets)
+            @template.widgets.each do |name, w|
+                add_widget(w)
+            end
             @widgets.each{ |id, w| w.parent = self }
             @init_widgets_done = true
         end
@@ -382,7 +384,7 @@ module Spider
                     render
                 end
             elsif (@widget_target)
-                first, rest = @widget_target.split('/')
+                first, rest = @widget_target.split('/', 2)
                 @_widget = find_widget(first)
                 @_widget.target_mode = true
                 @_widget.widget_target = rest
@@ -439,12 +441,32 @@ module Spider
         def add_widget(widget)
             widget.id_path = @id_path + [widget.id]
             @widgets[widget.id.to_sym] = widget
-            if (@widgets_runtime_content[widget.id])
-                @widgets_runtime_content[widget.id].each do |el|
-                    widget.parse_runtime_content_xml(el)
+            if (@widgets_runtime_content[widget.id.to_sym])
+                @widgets_runtime_content[widget.id.to_sym].each do |content|
+                    if (content[:widget])
+                        first, rest = content[:widget].split('/', 2)
+                        content[:widget] = rest
+                        widget.widgets_runtime_content[first.to_sym] ||= [] 
+                        widget.widgets_runtime_content[first.to_sym] << content
+                    else
+                        next if (content[:params] && !check_subwidget_conditions(widget, content[:params]))
+                        widget.parse_runtime_content_xml(content[:xml])
+                    end
                 end
             end
-                    
+            if (@widget_procs[widget.id.to_sym])
+                @widget_procs[widget.id.to_sym].each do |wp|
+                    if (wp[:target])
+                        widget.with_widget(wp[:target], &wp[:proc])
+                    else
+                        widget.instance_eval(&wp[:proc])
+                    end
+                end
+            end
+        end
+        
+        def check_subwidget_conditions
+            return false
         end
             
         
@@ -476,12 +498,34 @@ module Spider
             attributes.remove
             doc.search('sp:runtime-content').each do |cont|
                 w = cont.attributes['widget']
+                first, rest = w.split('/', 2)
+                params = nil
+                if (first =~ /(.+)\[(.+)\]/)
+                    params = {}
+                    parts = $2.split(',')
+                    parts.each do |p|
+                        key, val = p.split('=')
+                        params[key] = val
+                    end
+                end
                 if (w)
-                    @widgets_runtime_content[w.to_sym] ||= []
-                    @widgets_runtime_content[w.to_sym] << "<sp:widget-content>#{cont.innerHTML}</sp:widget-content>"
+                    @widgets_runtime_content[first.to_sym] ||= []
+                    @widgets_runtime_content[first.to_sym] << {
+                        :widget => rest,
+                        :xml => "<sp:widget-content>#{cont.innerHTML}</sp:widget-content>",
+                        :params => params
+                    }
                 end
             end
             doc.search('sp:runtime-content').remove
+            doc.search('sp:use-template').each do |templ|
+                if (templ.attributes['app'])
+                    owner = Spider.apps_by_path[templ.attributes['app']]
+                else
+                    owner = self
+                end
+                @template = load_template(templ.attributes['src'], nil, owner)
+            end
             return doc
         end
         
