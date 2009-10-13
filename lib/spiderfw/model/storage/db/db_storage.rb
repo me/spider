@@ -511,8 +511,15 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for an update statement.
         def sql_update(update)
             @last_query_type = :update
-            values = update[:values].values.reject{ |v| v.is_a?(Spider::QueryFuncs::Expression) }
-            sql = "UPDATE #{update[:table]} SET "
+            values = []
+            tables = update[:table]
+            if (update[:joins] && update[:joins][update[:table]])
+                join_str, join_values = sql_tables_join(update, update[:table])
+                tables += " "+join_str
+                values += join_values
+            end
+            values += update[:values].values.reject{ |v| v.is_a?(Spider::QueryFuncs::Expression) }
+            sql = "UPDATE #{tables} SET "
             sql += sql_update_values(update)
             where, bind_vars = sql_condition(update)
             values += bind_vars

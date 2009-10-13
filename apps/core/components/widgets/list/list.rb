@@ -86,7 +86,7 @@ module Spider; module Components
                         @sort_keys ||= []
                         @sort_keys << dr_keys
                     end
-                    @delete_keys << (@dereference_junction && !@dereference_delete) ? dr_keys : keys_string(@keys)
+                    @delete_keys << ((@dereference_junction && !@dereference_delete) ? dr_keys : @keys.last)
                     cnt2 = 0
                     if @tree && row.get(@tree).length > 0
                         sl = create_sublist("sublist_#{cnt}_#{cnt2+=1}")

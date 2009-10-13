@@ -4,17 +4,23 @@ module Spider
         
         def self.parse_element(el, allowed_blocks=nil, template=nil)
             return nil if (el.class == ::Hpricot::BogusETag)
+            block = get_block_type(el)
+            return nil unless (!allowed_blocks || allowed_blocks.include?(block))
+            return const_get(block).new(el, template, allowed_blocks)
+        end
+        
+        def self.get_block_type(el, skip_attributes=false)
             if (el.class == ::Hpricot::Text)
                 block = :Text
             elsif (el.class == ::Hpricot::Comment)
                 block = :Comment
-            elsif (el.attributes['sp:if'] || el.attributes['sp:run-if'])
+            elsif (!skip_attributes && (el.attributes['sp:if'] || el.attributes['sp:run-if']))
                 block = :If
-            elsif (el.attributes['sp:tag-if'])
+            elsif (!skip_attributes && el.attributes['sp:tag-if'])
                 block = :TagIf
-            elsif (el.attributes['sp:attr-if'])
+            elsif (!skip_attributes && el.attributes['sp:attr-if'])
                 block = :AttrIf
-            elsif (el.attributes['sp:each'] || el.attributes['sp:each_index'])
+            elsif (!skip_attributes && (el.attributes['sp:each'] || el.attributes['sp:each_index']))
                 block = :Each
             elsif (el.name == 'sp:render')
                 block = :Render
@@ -38,8 +44,7 @@ module Spider
             else
                 block = :HTML
             end
-            return nil unless (!allowed_blocks || allowed_blocks.include?(block))
-            return const_get(block).new(el, template, allowed_blocks)
+            return block
         end
         
         class Block

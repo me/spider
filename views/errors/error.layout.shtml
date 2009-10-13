@@ -31,7 +31,7 @@
 				<pre>{ @session }</pre>
 			</div>
 			<div id="exception_details">
-				Exception: <span id="exception_message">{ @exception }</span>
+				Exception: <pre id="exception_message">{ @exception }</pre>
 			</div>
 			<div id="exception_backtrace">
 				Backtrace:

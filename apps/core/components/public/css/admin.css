@@ -43,4 +43,31 @@
     margin-bottom: 15px;
 }
 
+.spider.components.admin .spider.forms.form .errors{
+    background-color: #FAFAFA ;
+    border: 2px solid #CC0000;
+}
+
+.spider.components.admin .spider.forms.form .fields{
+    border:2px solid #D5D5F7;
+    background: #ececf6;
+}
+
+.spider.components.admin .spider.forms.form .row.error label{
+    border-left: 1px solid #EE0000;
+}
+
+.spider.components.admin .spider.forms.form .buttons input {
+	background-color:#1188C1;
+	border-color: #d1d8e5;
+	border-style:solid none none;
+	border-width:1px medium medium;
+	color:white;
+	cursor:pointer;
+	font-weight:bold;
+	outline-color:#333333;
+	outline-style:solid;
+	outline-width:1px;
+}
+
 

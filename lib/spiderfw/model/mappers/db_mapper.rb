@@ -136,6 +136,7 @@ module Spider; module Model; module Mappers
             end
             prepare_query_condition(condition)
             save[:condition], save[:joins] = prepare_condition(condition)
+            save[:joins] = prepare_joins(save[:joins])
             save[:table] = @schema.table
             return @storage.sql_update(save)
         end
@@ -173,7 +174,7 @@ module Spider; module Model; module Mappers
             condition, c_joins = prepare_condition(condition)
             joins += c_joins
             save[:condition] = condition
-            save[:joins] = joins
+            save[:joins] = prepare_joins(joins)
             sql, bind_vars = @storage.sql_update(save)
             return @storage.execute(sql, *bind_vars)
         end

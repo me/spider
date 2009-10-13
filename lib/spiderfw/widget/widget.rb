@@ -11,7 +11,7 @@ module Spider
         
         attr_accessor :parent
         attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
-        attr_reader :attributes, :widget_attributes, :css_classes
+        attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
         
         @@common_attributes = {
             :id => {}
@@ -170,6 +170,7 @@ module Spider
         
         i_attribute :use_template
         attribute :"sp:target-only"
+        attribute :class
         
         def initialize(request, response, scene=nil)
             super
@@ -192,10 +193,16 @@ module Spider
             
             @use_template ||= self.class.default_template
             @css_classes = []
+            @widgets_runtime_content = {}
+            @widget_procs = {}
         end
         
         def full_id
             @id_path.join('-')
+        end
+        
+        def local_id
+            @id_path.last
         end
         
         def attributes=(hash)
@@ -223,7 +230,18 @@ module Spider
         
         def before(action='')
             widget_init(action)
+            init_widgets unless @init_widgets_done
             super
+        end
+        
+        def widget_before(action='')
+            widget_init(action)
+            prepare
+            @before_done = true
+        end
+        
+        def before_done?
+            @before_done
         end
         
         # Loads the template and sets the widget attributes
@@ -259,16 +277,9 @@ module Spider
                 next if attributes == false
                 raise ArgumentError, "Widget #{self} requires attribute #{attributes.join(' or ')} to be set"
             end
-        end
-
-        def widget_before(action='')
-            widget_init(action)
-            prepare
-            @before_done = true
-        end
-        
-        def before_done?
-            @before_done
+            if (@attributes[:class])
+                @css_classes += @attributes[:class].split(/\s+/)
+            end
         end
         
         # Recursively instantiates the subwidgets.
@@ -292,7 +303,9 @@ module Spider
             template.request = @request
             template.response = @response
             @template.init(@scene)
-            @widgets.merge!(@template.widgets)
+            @template.widgets.each do |name, w|
+                add_widget(w)
+            end
             @widgets.each{ |id, w| w.parent = self }
             @init_widgets_done = true
         end
@@ -361,6 +374,29 @@ module Spider
             prepare_scene(@scene)
             @template.render(@scene) unless @target_mode && !@is_target
         end
+        
+        def execute(action='', *params)
+            widget_execute = @request.params['_we']
+            if (@is_target)
+                if (widget_execute)
+                    super(widget_execute, *params)
+                else
+                    run
+                    render
+                end
+            elsif (@widget_target)
+                first, rest = @widget_target.split('/', 2)
+                @_widget = find_widget(first)
+                @_widget.target_mode = true
+                @_widget.widget_target = rest
+                @_widget.is_target = true unless rest
+                set_dispatched_object_attributes(@_widget, widget_execute)
+                @_widget.before(rest, *params)
+                @_widget.execute(rest, *params)
+            else
+                super
+            end
+        end
                         
         def try_rescue(exc)
             if (exc.is_a?(NotFound))
@@ -399,13 +435,39 @@ module Spider
         def create_widget(klass, id,  *params)
             obj = klass.new(*params)
             obj.id = id
-            obj.id_path = @id_path + [id]
-            @widgets[id.to_sym] = obj
+            add_widget(obj)
+            return obj
         end
         
         def add_widget(widget)
             widget.id_path = @id_path + [widget.id]
             @widgets[widget.id.to_sym] = widget
+            if (@widgets_runtime_content[widget.id.to_sym])
+                @widgets_runtime_content[widget.id.to_sym].each do |content|
+                    if (content[:widget])
+                        first, rest = content[:widget].split('/', 2)
+                        content[:widget] = rest
+                        widget.widgets_runtime_content[first.to_sym] ||= [] 
+                        widget.widgets_runtime_content[first.to_sym] << content
+                    else
+                        next if (content[:params] && !check_subwidget_conditions(widget, content[:params]))
+                        widget.parse_runtime_content_xml(content[:xml])
+                    end
+                end
+            end
+            if (@widget_procs[widget.id.to_sym])
+                @widget_procs[widget.id.to_sym].each do |wp|
+                    if (wp[:target])
+                        widget.with_widget(wp[:target], &wp[:proc])
+                    else
+                        widget.instance_eval(&wp[:proc])
+                    end
+                end
+            end
+        end
+        
+        def check_subwidget_conditions
+            return false
         end
             
         
@@ -435,6 +497,36 @@ module Spider
                 end
             end
             attributes.remove
+            doc.search('sp:runtime-content').each do |cont|
+                w = cont.attributes['widget']
+                first, rest = w.split('/', 2)
+                params = nil
+                if (first =~ /(.+)\[(.+)\]/)
+                    params = {}
+                    parts = $2.split(',')
+                    parts.each do |p|
+                        key, val = p.split('=')
+                        params[key] = val
+                    end
+                end
+                if (w)
+                    @widgets_runtime_content[first.to_sym] ||= []
+                    @widgets_runtime_content[first.to_sym] << {
+                        :widget => rest,
+                        :xml => "<sp:widget-content>#{cont.innerHTML}</sp:widget-content>",
+                        :params => params
+                    }
+                end
+            end
+            doc.search('sp:runtime-content').remove
+            doc.search('sp:use-template').each do |templ|
+                if (templ.attributes['app'])
+                    owner = Spider.apps_by_path[templ.attributes['app']]
+                else
+                    owner = self
+                end
+                @template = load_template(templ.attributes['src'], nil, owner)
+            end
             return doc
         end
         
@@ -497,6 +589,13 @@ module Spider
         
         def find_widget(name)
             @widgets[name.to_sym] || super
+        end
+        
+        # FIXME: is the same in template. Refactor out.
+        def with_widget(path, &proc)
+            first, rest = path.split('/', 2)
+            @widget_procs[first.to_sym] ||= []
+            @widget_procs[first.to_sym] << {:target => rest, :proc => proc }
         end
             
         

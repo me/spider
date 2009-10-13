@@ -276,9 +276,10 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if attributes[:primary_key]
-                    attributes[:lazy] = true
-                elsif (type < BaseModel && attributes[:multiple])
+                # if attributes[:primary_key]
+                #                     attributes[:lazy] = true
+                #                 els
+                if (type < BaseModel && attributes[:multiple])
                     # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = true
                 else

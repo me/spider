@@ -1,7 +1,7 @@
 module Spider; module Forms
     
     class Input < Spider::Widget
-        attr_accessor :form, :errors
+        attr_accessor :element, :form, :errors
         i_attr_accessor :name
         is_attribute :value
         is_attr_accessor :label
@@ -14,6 +14,7 @@ module Spider; module Forms
             @done = true
             @errors = []
             @modified = true
+            @connections = {}
         end
         
         def prepare_scene(scene)
@@ -32,10 +33,6 @@ module Spider; module Forms
             self.value = prepared if prepared
             super
         end
-        
-        # def name
-        #     @name || param_name(self)
-        # end
         
         def value
             @value
@@ -79,6 +76,21 @@ module Spider; module Forms
         
         def read_only?
             @read_only
+        end
+        
+        def parse_runtime_content(doc, src_path=nil)
+            doc.search('input:connect').each do |connect|
+                options = {}
+                options[:required] = connect.attributes['required'] ? true : false
+                connect(connect.attributes['element'].to_sym, connect.attributes['target'].to_sym, options)
+            end
+        end
+        
+        def connect(element_name, target, options)
+            @connections[element_name] = ({
+              :target => target  
+            }).merge(options)
+            @css_classes << "connect-#{target}"
         end
         
         

@@ -8,17 +8,37 @@ module Spider; module Forms
         is_attr_accessor :condition
         attr_accessor :data
         
+        def widget_init(action='')
+            super
+            @model = const_get_full(@model) if @model.is_a?(String)
+        end
+        
         def prepare_scene(scene)
             scene = super
-            scene.name += '[]' if @multiple
+            scene.value_param = "#{scene.name}[value]"
+            scene.value_param += '[]' if @multiple
             return scene
         end
         
+        def prepare_value(p)
+            if (p && p['value'])
+                self.value = p['value']
+            else
+                self.value = nil
+            end
+        end
+        
         def run
-            @model = const_get_full(@model) if @model.is_a?(String)
+            
             @scene.data = @data || @model.all
             if (@condition)
                 @scene.data.condition = @condition
+            end
+            conn_cond = connection_condition
+            if (conn_cond == false)
+                @scene.data = Spider::Model::QuerySet.static(@model)
+            elsif (conn_cond)
+                @scene.data.condition.and(conn_cond)
             end
             @scene.values = {}
             debug("SELECT VALUE:")
@@ -58,6 +78,10 @@ module Spider; module Forms
             end
         end
         
+        def obj_to_key_str(obj)
+            @model.primary_keys.map{|k| obj.get(k) }.join(',')
+        end
+        
         def str_to_pks(val)
             if (val.is_a?(String))
                 parts = val.split(',')
@@ -67,6 +91,23 @@ module Spider; module Forms
                 pk = val
             end
             return pk
+        end
+        
+        def connection_condition
+#           debugger
+            if (@connections && @form)
+                conn_cond = Spider::Model::Condition.and
+                conn_param = params['connected'] || {}
+                @connections.each do |el, conn|
+                    val = @form.inputs[el].value
+                    val = conn_param[el.to_s] if (conn_param[el.to_s])
+                    return false if (conn[:required] && !val)
+                    next unless val
+                    conn_cond.set(conn[:target], '=', val)
+                end
+                return conn_cond
+            end
+            return nil
         end
 
     end
