@@ -23,11 +23,6 @@ module Spider
             return super
         end
         
-        def load_template(path)
-            template = super
-            #template.widgets = @widgets
-            return template
-        end
         # 
         # def render(path=nil, scene=nil)
         #     scene ||= @scene
