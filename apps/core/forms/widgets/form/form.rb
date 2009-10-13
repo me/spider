@@ -61,7 +61,7 @@ module Spider; module Forms
         
         def route_widget
             if (@action == :sub)
-                [:crud, @_action.split('/', 3)[2]]
+                [@crud.id, @_action.split('/', 3)[2]]
             end
         end
         
@@ -118,10 +118,11 @@ module Spider; module Forms
             else
                 @submit_action = params['submit']
             end
+            @obj ||= load
+            @scene.obj = @obj
             init_widgets
             # if (@submit_action)
             # else
-            @obj ||= load
             if @obj
                 @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
                 set_values(@obj) if @action == :form
@@ -133,16 +134,17 @@ module Spider; module Forms
         def init_widgets
             super
             if (@action == :sub)
-                @widgets[:crud] = Spider::Components::Crud.new(@request, @response)
-                @widgets[:crud].id = (@model.name.to_s+'_'+@sub_element.name.to_s).gsub('::', '_').downcase
-                @widgets[:crud].model = @sub_element.model
-                @scene.crud = @widgets[:crud]
+                @crud = Spider::Components::Crud.new(@request, @response)
+                @crud.id = "crud_#{@sub_element.name.to_s}"
+                @crud.model = @sub_element.model
+                add_widget(@crud)
+                @scene.crud = @crud
                 @obj = load
                 cond = {}
                 @model.primary_keys.each do |key|
                     cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
                 end
-                @widgets[:crud].fixed = cond
+                @crud.fixed = cond
             else
                 create_inputs
             end
@@ -240,7 +242,7 @@ module Spider; module Forms
             case type.name
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?
-                input.model = el.type
+                input.model = el.type if input.respond_to?(:model)
             end
             return input
         end
@@ -310,6 +312,7 @@ module Spider; module Forms
             end
             if inputs_done && !@error
                 save_mode = obj.primary_keys_set? ? :update : :insert
+                before_save(obj, save_mode)
                 @before_save.call(obj, save_mode) if @before_save
                 begin
                     obj.save
@@ -326,6 +329,7 @@ module Spider; module Forms
                     end
                 end
                 @after_save.call(obj, save_mode) if @after_save
+                after_save(obj, save_mode)
                 if (@auto_redirect)
                     redirect(@request.path)
                 end
@@ -335,6 +339,12 @@ module Spider; module Forms
             elsif (action == 'submit_and_stay')
                 @saved_and_stay = true
             end
+        end
+        
+        def before_save(obj, save_mode)
+        end
+        
+        def after_save(obj, save_mode)
         end
         
         def add_error(exception, message, element_name=nil)

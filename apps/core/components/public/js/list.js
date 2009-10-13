@@ -9,6 +9,7 @@ Spider.defineWidget('Spider.Components.List', {
 
 	ready: function(){
 		this.listEl = $('>ul, >ol', this.el);
+		var options = {};
 		if (this.listEl.length > 0){
 			this.listTagName = this.listEl.get(0).tagName;
 			if (this.el.hasClass('collapsed')) options.collapsed = true;
