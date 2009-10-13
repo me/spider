@@ -272,9 +272,24 @@ module Spider
             overrides.each{ |o| o.set_attribute('class', 'to_delete') }
             root.search('.to_delete').remove
             add_overrides overrides
-            if (root.name == 'sp:template' && ext = root.attributes['extend'])
+            if (root.name == 'tpl:extend')
+                ext_src = root.attributes['src']
+                ext_app = root.attributes['app']
+                ext_widget = root.attributes['widget']
+                if ext_widget
+                    ext_widget = Spider::Template.get_registered_class(ext_widget)
+                    ext_src ||= ext_widget.default_template
+                    ext_owner = ext_widget
+                elsif ext_app
+                    ext_app = Spider.apps_by_path[ext_app]
+                    ext_owner = ext_widget
+                end
+                ext_search_paths = nil
+                if (ext_owner && ext_owner.respond_to?(:template_paths))
+                    ext_search_paths = ext_owner.template_paths
+                end 
+                ext = self.class.real_path(ext_src, @path, ext_owner, ext_search_paths)
                 assets = root.children_of_type('tpl:asset')
-                ext = real_path(ext)
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
