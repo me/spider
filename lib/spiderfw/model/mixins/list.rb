@@ -15,12 +15,17 @@ module Spider; module Model
             
             def before_save(obj, mode)
                 obj.class.lists.each do |l|
+                    next if (!check_list_condition(l, obj))
                     cond = get_list_condition(l, obj)
                     cur = obj.get(l.name)
                     obj.set(l.name, max(l.name, cond) + 1) unless cur
                 end
                 if (obj.list_mixin_modified_elements)
                     obj.list_mixin_modified_elements.each do |name, old|
+                        if (!check_list_condition(name, obj))
+                            obj.set(name, nil)
+                            next
+                        end
                         cond = get_list_condition(name, obj)
                         new_val = nil
                         obj.save_mode do
@@ -75,6 +80,14 @@ module Spider; module Model
                 cond = l_cond.call(obj)
                 cond = Condition.new(cond) unless cond.is_a?(Condition)
                 return cond
+            end
+            
+            def check_list_condition(element, obj)
+                element = @model.elements[element] unless element.is_a?(Element)
+                l_check = element.attributes[:check_list_condition]
+                return true unless l_check
+                return l_check.call(obj)
+
             end
             
         end
