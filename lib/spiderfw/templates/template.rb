@@ -171,6 +171,7 @@ module Spider
             @dependencies = []
             @overrides = []
             @widgets_overrides = {}
+            @widget_procs = {}
         end
         
         # Sets the scene.
@@ -310,6 +311,7 @@ module Spider
         
         def process_tags(el)
             block = TemplateBlocks.get_block_type(el, true)
+            raise "Bad html in #{@path} at '#{el}', can't parse" if (el == Hpricot::BogusETag)
             if (block == :Tag)
                 sp_attributes = {}
                 # FIXME: should use blocks instead
@@ -357,6 +359,11 @@ module Spider
             widget.template = template if template
             widget.parent = @owner
             widget.parse_runtime_content_xml(content, @path) if content
+            if (@widget_procs[id.to_sym])
+                @widget_procs[id.to_sym].each do |wp|
+                    apply_widget_proc(widget, wp)
+                end
+            end
         end
         
         def find_widget(path)
@@ -550,6 +557,24 @@ module Spider
                 res += w.assets
             end
             return res
+        end
+        
+        def with_widget(path, &proc)
+            first, rest = path.split('/', 2)
+            @widget_procs[first.to_sym] ||= []
+            wp = {:target => rest, :proc => proc }
+            @widget_procs[first.to_sym] << wp
+            if (@widgets[first.to_sym])
+                apply_widget_proc(@widgets[first.to_sym], wp)
+            end
+        end
+        
+        def apply_widget_proc(widget, wp)
+            if (wp[:target])
+                widget.with_widget(wp[:target], &wp[:proc])
+            else
+                widget.instance_eval(wp[:proc])
+            end
         end
             
         

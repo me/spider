@@ -194,6 +194,7 @@ module Spider
             @use_template ||= self.class.default_template
             @css_classes = []
             @widgets_runtime_content = {}
+            @widget_procs = {}
         end
         
         def full_id
@@ -588,6 +589,13 @@ module Spider
         
         def find_widget(name)
             @widgets[name.to_sym] || super
+        end
+        
+        # FIXME: is the same in template. Refactor out.
+        def with_widget(path, &proc)
+            first, rest = path.split('/', 2)
+            @widget_procs[first.to_sym] ||= []
+            @widget_procs[first.to_sym] << {:target => rest, :proc => proc }
         end
             
         
