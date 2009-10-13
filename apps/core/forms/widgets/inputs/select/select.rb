@@ -8,6 +8,11 @@ module Spider; module Forms
         is_attr_accessor :condition
         attr_accessor :data
         
+        def widget_init(action='')
+            super
+            @model = const_get_full(@model) if @model.is_a?(String)
+        end
+        
         def prepare_scene(scene)
             scene = super
             scene.value_param = "#{scene.name}[value]"
@@ -24,7 +29,7 @@ module Spider; module Forms
         end
         
         def run
-            @model = const_get_full(@model) if @model.is_a?(String)
+            
             @scene.data = @data || @model.all
             if (@condition)
                 @scene.data.condition = @condition

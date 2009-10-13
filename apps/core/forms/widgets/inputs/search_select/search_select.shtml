@@ -34,7 +34,9 @@
 			</span>
 		</tpl:append>
 	</core:list>
+	<!---
 	<core:search-table class="search_table" id="table" sp:target-only="true" queryset="@data" row_limit="5" num_elements="3" />
+	-->
 	<input sp:if="@multiple" type="hidden" name="{ @value_param }" sp:each="@keys |key|" value="{ key }">
 	<input sp:if="!@multiple" type="hidden" name="{ @value_param }" value="{ @key }">
 </div>

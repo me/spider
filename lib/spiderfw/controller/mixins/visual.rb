@@ -73,6 +73,7 @@ module Spider; module ControllerMixins
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
                     @_widget = find_widget(first)
+                    @_widget.is_target = true unless rest
                     @_widget.target_mode = true
                     @_widget.widget_target = rest
                     @template.do_widgets_before
@@ -81,9 +82,9 @@ module Spider; module ControllerMixins
             end
             if (format_params.is_a?(Hash) && format_params[:template] && !@_widget)
                 if (@template)
-                    render(@template)  # has been init'ed in before method
+                    render(@template, format_params)  # has been init'ed in before method
                 else
-                    render(format_params[:template])
+                    render(format_params[:template], format_params)
                 end
             end
             return unless format_params.is_a?(Hash)
@@ -106,8 +107,8 @@ module Spider; module ControllerMixins
             end
         end
         
-        def load_template(path)
-            template = self.class.load_template(path)
+        def load_template(path, cur_path=nil, owner=nil, search_paths=nil)
+            template = self.class.load_template(path, cur_path, owner, search_paths)
             template.owner = self
             template.request = request
             template.response = response
@@ -128,11 +129,18 @@ module Spider; module ControllerMixins
                 format_params = self.class.output_format_params(@executed_method, @executed_format)
                 return unless format_params && format_params[:template]
                 path = format_params[:template]
+                options = format_params.merge(options)
             end
             template = load_template(path)
             template.init(scene)
             @template = template
             @loaded_template_path = path
+            if (@request.params['_action'])
+                template._widget_action = @request.params['_action']
+            else
+                template._action_to = options[:action_to]
+                template._action = @controller_action
+            end
             return template
         end
         
@@ -160,12 +168,6 @@ module Spider; module ControllerMixins
             else
                 template = init_template(path, scene, options)
             end
-            if (@request.params['_action'])
-                template._widget_action = @request.params['_action']
-            else
-                template._action_to = options[:action_to]
-                template._action = @controller_action
-            end
             template.exec
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layouts = options[:layout] || @layout
@@ -189,6 +191,7 @@ module Spider; module ControllerMixins
         def find_widget(name)
             @template.find_widget(name)
         end
+        
         
         
         def dispatched_object(route)
@@ -420,8 +423,10 @@ module Spider; module ControllerMixins
             end
                 
             
-            def load_template(name)
-                path = Spider::Template.real_path(name, nil, self, template_paths)
+            def load_template(name, cur_path=nil, owner=nil, search_paths=nil)
+                owner ||= self
+                search_paths ||= template_paths
+                path = Spider::Template.real_path(name, cur_path, owner, search_paths)
                 t = Spider::Template.new(path) if path
                 t.owner_class = self
                 return t

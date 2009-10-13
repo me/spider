@@ -43,24 +43,24 @@ Spider.defineWidget('Spider.Forms.SearchSelect', 'Spider.Forms.Input', {
 			});
 			textSpan.replaceWith(a);
 		});
-		var showTable = $('<a href="#" class="show_table"><span class="action_text">Tabella</span></a>').appendTo($('.add_box', this.el));
-		showTable.click(function(e){
-			e.preventDefault();
-			var table = $('.search_table', w.el).spiderWidget();
-			if (table.el.is(':hidden')){
-				table.el.show();
-				$(this).addClass('open');
-				table.reload({}, function(e){
-					$('tr.row', this.el).click(function(e){
-						
-					});
-				});
-			}
-			else{
-				$(this).removeClass('open');
-				table.el.hide();
-			}
-		});
+		// var showTable = $('<a href="#" class="show_table"><span class="action_text">Tabella</span></a>').appendTo($('.add_box', this.el));
+		// 		showTable.click(function(e){
+		// 			e.preventDefault();
+		// 			var table = $('.search_table', w.el).spiderWidget();
+		// 			if (table.el.is(':hidden')){
+		// 				table.el.show();
+		// 				$(this).addClass('open');
+		// 				table.reload({}, function(e){
+		// 					$('tr.row', this.el).click(function(e){
+		// 						
+		// 					});
+		// 				});
+		// 			}
+		// 			else{
+		// 				$(this).removeClass('open');
+		// 				table.el.hide();
+		// 			}
+		// 		});
 		$('.add_box input', this.el).attr('name', 'autocomplete-box').autocomplete(this.backend.urlForMethod('jquery_autocomplete'), {
 			extraParams: function(){
 				var current = $('.values_list', w.el).spiderWidget().keys();

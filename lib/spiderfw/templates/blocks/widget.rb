@@ -13,7 +13,7 @@ module Spider; module TemplateBlocks
             @el.remove_attribute('template')
             @el.attributes.each do |key, val|
                 if (!val.empty? && val[0].chr == '@')
-                    sval = "scene[:#{val[1..-1]}]"
+                    sval = var_to_scene(val, 'scene')
                 else
                     sval = '"'+val+'"'
                 end

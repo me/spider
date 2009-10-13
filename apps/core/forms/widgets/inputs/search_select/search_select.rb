@@ -8,6 +8,7 @@ module Spider; module Forms
         def prepare_value(params)
             return nil
         end
+
         
         # FIXME: change Select to avoid this
         def prepare_scene(scene)
@@ -33,6 +34,7 @@ module Spider; module Forms
                 @scene.clear = true
             end
             did_set_value = false
+            @model = const_get_full(@model) if @model.is_a?(String)
             @data = @model.all
             if (params['text'] && !params['text'].empty?)
                 @scene.text_query = params['text']

@@ -1,7 +1,7 @@
 module Spider; module Forms
     
     class Input < Spider::Widget
-        attr_accessor :form, :errors
+        attr_accessor :element, :form, :errors
         i_attr_accessor :name
         is_attribute :value
         is_attr_accessor :label
