@@ -70,10 +70,12 @@ module Spider; module ControllerMixins
             if (format_params.is_a?(Hash) && format_params[:template])
                 @template ||= init_template(format_params[:template])
                 widget_target = @request.params['_wt']
+                widget_execute = @request.params['_we']
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
                     @_widget = find_widget(first)
                     @_widget.is_target = true unless rest
+                    @_widget.set_action(widget_execute) if widget_execute
                     @_widget.target_mode = true
                     @_widget.widget_target = rest
                     @template.do_widgets_before

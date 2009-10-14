@@ -390,7 +390,7 @@ module Spider
                 @_widget.target_mode = true
                 @_widget.widget_target = rest
                 @_widget.is_target = true unless rest
-                set_dispatched_object_attributes(@_widget, widget_execute)
+                @_widget.set_action(widget_execute)
                 @_widget.before(rest, *params)
                 @_widget.execute(rest, *params)
             else

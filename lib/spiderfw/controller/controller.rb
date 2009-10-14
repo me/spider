@@ -272,24 +272,22 @@ module Spider
             obj = klass.new(@request, @response, @scene)
             obj.dispatch_action = route.matched || ''
             # FIXME: this is not clean
-            set_dispatched_object_attributes(obj, route.action)
+            obj.set_action(route.action)
             if (route.options[:do])
                 obj.instance_eval &route.options[:do]
             end
 #            obj.dispatch_path = @dispatch_path + route.path
             return obj
         end
-        
-        def set_dispatched_object_attributes(obj, action)
-            obj.instance_eval do
-                @executed_method = nil
-                @executed_method_arguments = nil
-                if (!can_dispatch?(:execute, action))
-                    method, additional_arguments = get_action_method(action)
-                    if (method && self.class.controller_action?(method))
-                        @executed_method = method.to_sym
-                        @executed_method_arguments = additional_arguments || []
-                    end
+                
+        def set_action(action)
+            @executed_method = nil
+            @executed_method_arguments = nil
+            if (!can_dispatch?(:execute, action))
+                method, additional_arguments = get_action_method(action)
+                if (method && self.class.controller_action?(method))
+                    @executed_method = method.to_sym
+                    @executed_method_arguments = additional_arguments || []
                 end
             end
         end
