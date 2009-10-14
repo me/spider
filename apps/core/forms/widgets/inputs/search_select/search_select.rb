@@ -89,6 +89,9 @@ module Spider; module Forms
         def set_or_add_value(vals)
             vals = [vals] unless vals.is_a?(Array)
             vals.each do |val|
+                unless val.is_a?(@model)
+                    val = @model.new(val)
+                end
                 if (@multiple)
                     self.value ||= Spider::Model::QuerySet.new(@model)
                     self.value << val

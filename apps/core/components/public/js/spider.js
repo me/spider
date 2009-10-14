@@ -337,7 +337,7 @@ Spider.Controller = Class.extend({
 		if (urlParts[1]) url += "&"+urlParts[1];
 		if (params){
 			for (var key in params){
-				url += '&'+widget.paramName(key)+this.paramToQuery(params[key]);
+				url += '&'+this.paramToQuery(params[key], widget.paramName(key));
 			}
 		}
 		widget.setLoading();
@@ -348,7 +348,7 @@ Spider.Controller = Class.extend({
 			success: function(res){
 				widget.replaceHTML(res);
 				widget.removeLoading();
-				widget.el.effect('highlight', {}, 700);
+				//widget.el.effect('highlight', {}, 700);
 				if (callback) callback.apply(widget);
 			}
 		});

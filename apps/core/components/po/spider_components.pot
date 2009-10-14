@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2009-10-07 19:34+0200\n"
+"POT-Creation-Date: 2009-10-14 12:58+0200\n"
 "PO-Revision-Date: 2009-06-30 16:58+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,6 +48,6 @@ msgstr ""
 msgid "No element"
 msgstr ""
 
-#: widgets/list/list.shtml:24
+#: widgets/list/list.shtml:25
 msgid "Delete"
 msgstr ""
