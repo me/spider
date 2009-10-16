@@ -388,6 +388,7 @@ module Spider
         end
         
         def execute(action='', *params)
+            Spider.logger.debug("Widget #{self} executing #{action}")
             widget_execute = @request.params['_we']
             if (@is_target)
                 if (widget_execute)
@@ -598,6 +599,10 @@ module Spider
         end
         
         def inspect
+            super + ", id: #{@id}"
+        end
+        
+        def to_s
             super + ", id: #{@id}"
         end
         
