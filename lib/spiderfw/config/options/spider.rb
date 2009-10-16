@@ -46,6 +46,8 @@ module Spider
     config_option 'storages.x.encoding', _("Encoding the DB uses"), :type => String
     
     config_option 'debugger.start', _("Start the debugger")
+    config_option 'profiling.enable', _("Enable on-request profiling")
+    config_option 'request.mutex', _("Respond to requests sequencially"), :default => false
     
     config_option 'locale', _("The locale to use") do |val|
         Spider.locale = Locale.new(val)
