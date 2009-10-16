@@ -35,8 +35,8 @@ module Spider; module Forms
             end
             did_set_value = false
             @model = const_get_full(@model) if @model.is_a?(String)
-            @data = @model.all
             if (params['text'] && !params['text'].empty?)
+                @data = @model.all
                 @scene.text_query = params['text']
                 cond = search_condition(params['text'])
                 @data.condition = @data.condition.and(cond)
