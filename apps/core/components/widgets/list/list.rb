@@ -60,9 +60,14 @@ module Spider; module Components
             end
             css_model = @dereference_junction ? @model.elements[@dereference_junction.to_sym].model : @model
             @scene.model_class = css_model_class(css_model)
+            
+            @css_classes << 'sortable' if @sortable
+            @css_classes << 'collapsable' if @collapsable
+            @css_classes << 'collapsed' if @collapsed
+            @css_classes << 'sublist' if @attributes[:is_child]
+            @css_classes << 'tree' if @attributes[:tree]
+            @scene.show_empty = @attributes[:show_empty]
             if (!@lines && @queryset)
-                @lines = []
-                cnt = 0
                 if (@attributes[:paginate])
                     @queryset.offset = @offset
                     @queryset.limit = @attributes[:paginate]
@@ -76,6 +81,23 @@ module Spider; module Components
                     @scene.search_query = @search_query.to_s
                     @queryset.condition.and(@queryset.model.free_query_condition(@search_query))
                 end
+            end
+            if (@widget_target)
+                first, rest = @widget_target.split('/', 2)
+                if first =~ /sublist_(\d+)_(.+)/
+                    cnt = $1.to_i
+                    sublist_id = $2
+                    found = @requested_sublists.select{ |sbl| sbl['id'] == sublist_id }[0]
+                    create_requested_sublist(found, @queryset[cnt], cnt) if (found)
+                end
+            end
+            super
+        end
+        
+        def run
+            if (!@lines && @queryset)
+                @lines = []
+                cnt = 0
                 @queryset.each do |row|
                     if (@dereference_junction)
                         dr_keys = keys_string(row)
@@ -102,24 +124,7 @@ module Spider; module Components
                         @sublists[cnt] << sl
                     end
                     @requested_sublists.each do |sbl|
-                        sl = sbl.clone
-                        if (sl['element'])
-                            el = @model.elements[sl['element'].to_sym]
-                            #next unless el # may be ok if the query is polymorphic
-                            if (sl['tree'] && el && el.attributes[:reverse])
-                                sub = el.model.send("#{sl['tree']}_roots")
-                                sub.condition[el.attributes[:reverse]] = row
-                            else
-                                sub = row.get(sl['element'].to_sym)
-                            end
-                        end
-                        el_name = sl['element']
-                        sl.delete('element')
-                        sl = create_sublist("sublist_#{cnt}_#{el_name}", sl)
-                        sl.queryset = sub
-                        sl.css_classes << "sublist_#{el_name}"
-                        @sublists[cnt] ||= []
-                        @sublists[cnt] << sl
+                        create_requested_sublist(sbl, row, cnt)
                     end
                     @values << row
                     @lines << format_line(row)
@@ -146,13 +151,28 @@ module Spider; module Components
                     @scene.delete_link += "?_w#{param_name(self)}[delete]="
                 end
             end
-            @css_classes << 'sortable' if @sortable
-            @css_classes << 'collapsable' if @collapsable
-            @css_classes << 'collapsed' if @collapsed
-            @css_classes << 'sublist' if @attributes[:is_child]
-            @css_classes << 'tree' if @attributes[:tree]
-            @scene.show_empty = @attributes[:show_empty]
-            super
+        end
+        
+        def create_requested_sublist(sbl, row, cnt)
+            sl = sbl.clone
+            if (sl['element'])
+                el = @model.elements[sl['element'].to_sym]
+                #next unless el # may be ok if the query is polymorphic
+                if (sl['tree'] && el && el.attributes[:reverse])
+                    sub = el.model.send("#{sl['tree']}_roots")
+                    sub.condition[el.attributes[:reverse]] = row
+                else
+                    sub = row.get(sl['element'].to_sym)
+                end
+            end
+            el_name = sl['element']
+            sl.delete('element')
+            sl = create_sublist("sublist_#{cnt}_#{sl['id']}", sl)
+            sl.queryset = sub
+            sl.css_classes << "sublist_#{el_name}"
+            @sublists[cnt] ||= []
+            @sublists[cnt] << sl
+            return sl
         end
 
         def create_sublist(name, attributes = {})
@@ -167,6 +187,7 @@ module Spider; module Components
             @attributes.each do |key, val|
                 w.attributes[key.to_sym] = val
             end
+            w.widget_before
             return w
         end
 
@@ -180,6 +201,7 @@ module Spider; module Components
 
         def parse_runtime_content(doc, src_path='')
             doc.search('sublist').each do |sl|
+                raise ArgumentError, "Sublist of #{@id} does not have an id" unless sl['id']
                 @requested_sublists ||= []
                 @requested_sublists << sl.attributes
             end
