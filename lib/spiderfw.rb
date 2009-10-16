@@ -103,6 +103,9 @@ module Spider
             if (Spider.conf.get('template.cache.reload_on_restart'))
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
+            if (Spider.conf.get('request.mutex'))
+                mutex_requests!
+            end
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
@@ -125,8 +128,25 @@ module Spider
             Thread.current[:spider] = {}
         end
         
+        def request_started
+            @request_mutex.lock if (@request_mutex)
+        end
+        
         def request_finished
             reset_thread_current
+            @request_mutex.unlock if (@request_mutex)
+        end
+        
+        def mutex_requests!
+            @request_mutex = Mutex.new
+        end
+        
+        def request_mutex
+            @request_mutex
+        end
+        
+        def request_mutex=(val)
+            @request_mutex = val
         end
         
         # Closes any open loggers, and opens new ones based on configured settings.
