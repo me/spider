@@ -149,11 +149,17 @@ module Spider
             @request_mutex = val
         end
         
+        
         # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers
             @logger = Spider::Logger
             @logger.close_all
             @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
+            begin
+                FileUtils.mkpath(@paths[:log]) unless File.exist?(@paths[:log])
+            rescue => exc
+                @logger.error("Unable to create log folder")
+            end
             if (File.exist?(@paths[:log]))
                 @logger.open(@paths[:log]+'/error.log', :ERROR) if Spider.conf.get('log.errors')
                 if (Spider.conf.get('log.debug.level'))
