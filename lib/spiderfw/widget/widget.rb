@@ -12,6 +12,7 @@ module Spider
         attr_accessor :parent
         attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
         attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
+        attr_accessor :active
         
         @@common_attributes = {
             :id => {}
@@ -229,15 +230,24 @@ module Spider
         end
         
         def before(action='')
+            Spider.logger.debug("Widget #{self} before(#{action})")
             widget_init(action)
             init_widgets unless @init_widgets_done
             super
         end
         
         def widget_before(action='')
+            return unless active?
+            Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
             prepare
             @before_done = true
+        end
+        
+        
+        def active?
+            return @active unless @active.nil?
+            @active = (!@request.params['_wt'] || @target_mode)
         end
         
         def before_done?
@@ -306,7 +316,9 @@ module Spider
             @template.widgets.each do |name, w|
                 add_widget(w)
             end
-            @widgets.each{ |id, w| w.parent = self }
+            @widgets.each do |id, w| 
+                w.parent = self
+            end
             @init_widgets_done = true
         end
         
@@ -441,6 +453,8 @@ module Spider
         
         def add_widget(widget)
             widget.id_path = @id_path + [widget.id]
+            widget.parent = self
+            widget.active = true if @is_target || @active
             @widgets[widget.id.to_sym] = widget
             if (@widgets_runtime_content[widget.id.to_sym])
                 @widgets_runtime_content[widget.id.to_sym].each do |content|
