@@ -167,6 +167,7 @@ Spider.defineWidget('Spider.Components.List', {
 			e.preventDefault();
 			var form = $W(form_path);
 			form.el.appendTo($(this).parents('.listItem').eq(0));
+			form.el.show();
 			form.reload({pk: $(this).getDataObjectKey()}, function(){
 				var widget = this;
 				$('.buttons', this.el).append(
