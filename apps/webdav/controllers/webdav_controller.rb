@@ -273,7 +273,11 @@ module Spider; module WebDAV
     			type = (v = REXML::XPath.first(item, 'locktype/*', ns)) && v.name
     			#owner = REXML::XPath.first(item, 'owner/*', ns)
     			owner = REXML::XPath.first(item, 'owner')
-    			owner = owner.elements.size > 0 ? owner.elements[1] : owner.text
+			if (owner)
+    			    owner = owner.elements.size > 0 ? owner.elements[1] : owner.text
+                        else
+			    owner = ""
+                        end
                 if (request_timeout = @request.env['HTTP_TIMEOUT'])
                     timeout_parts = request_timeout.split(/,\s+/)
                     timeout = timeout_parts[0]
