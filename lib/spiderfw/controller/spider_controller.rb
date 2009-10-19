@@ -1,13 +1,18 @@
 module Spider
     
     class SpiderController < Controller
+        include HTTPMixin
+        include StaticContent
         
-        def self.route_app(app)
-            #app_path = app.name.gsub('::', '/')
-            app_path = app.route_url
-            Spider::Logger.debug("ROUTING #{app_path} TO #{app.controller}")
-            route(app_path, app.controller, :ignore_case => true)
+        
+        def self.pub_path
+            $SPIDER_PATH+'/public'
         end
+        
+        def self.pub_url
+            HTTPMixin.reverse_proxy_mapping('/spider/public')
+        end
+        
                 
     end
     

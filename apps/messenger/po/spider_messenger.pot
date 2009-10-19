@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Messenger 0.1\n"
-"POT-Creation-Date: 2009-07-01 00:40+0200\n"
+"POT-Creation-Date: 2009-10-14 12:58+0200\n"
 "PO-Revision-Date: 2009-06-30 16:44+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,6 +29,10 @@ msgid "Headers"
 msgstr ""
 
 #: models/email.rb:10
+msgid "Subject"
+msgstr ""
+
+#: models/email.rb:11
 msgid "Body"
 msgstr ""
 
@@ -37,26 +41,22 @@ msgid "Ticket"
 msgstr ""
 
 #: models/message.rb:7
-msgid "Send from"
-msgstr ""
-
-#: models/message.rb:8
 msgid "Last try"
 msgstr ""
 
-#: models/message.rb:9
+#: models/message.rb:8
 msgid "Next try"
 msgstr ""
 
-#: models/message.rb:10
+#: models/message.rb:9
 msgid "Attempts"
 msgstr ""
 
-#: models/message.rb:11
-msgid "Last error"
+#: models/message.rb:10
+msgid "Last status"
 msgstr ""
 
-#: models/message.rb:12
+#: models/message.rb:11
 msgid "Sent at"
 msgstr ""
 
@@ -64,14 +64,14 @@ msgstr ""
 msgid "Queues"
 msgstr ""
 
-#: views/index.shtml:7
+#: views/index.shtml:7 views/queue.shtml:2
 msgid "Sent messages"
 msgstr ""
 
-#: views/index.shtml:8
+#: views/index.shtml:8 views/queue.shtml:4
 msgid "Queued messages"
 msgstr ""
 
-#: views/index.shtml:9
+#: views/index.shtml:9 views/queue.shtml:6
 msgid "Failed messages"
 msgstr ""

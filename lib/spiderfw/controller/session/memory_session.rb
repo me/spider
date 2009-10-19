@@ -41,13 +41,17 @@ module Spider
                 }
             end
             
+            def delete(sid)
+                @mutex.synchronize{
+                    @sessions.delete(sid)
+                }
+            end
+            
         end
         
         
         def restore
-            sess = self.class[@sid] || {}
-            @data = sess[:data]
-            @mtime = sess[:mtime]
+            @data = self.class[@sid]
         end
         
         

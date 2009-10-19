@@ -1,48 +1,44 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="form.css" />
-    <div sp:if="@error" class='errors'>
-        Errori:
-        <ul>
-            <sp:pass sp:each="@save_errors |m|">
-                <li> { m }</li>
-            </sp:pass>
-            <sp:pass sp:each="@errors |k, v|">
-                    <li sp:each="v |err|">
-                        { err }
-                    </li>
-            </sp:pass>
-        </ul>
-                
-    </div>
-    <div sp:if="@action == :form">
-        <form action="{ @form_action }" method="POST" { @enctype }>
-            <div class="fields">
-                <div class="row" sp:each="@names |element|">
-                    <label for="{ @inputs[element].id }">{ @inputs[element].label }</label>
-                    <sp:run obj="@inputs[element]" />
-                </div>
-            </div>
-            <div class="row buttons">
-                <input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
-                <input type='submit' sp:if="@show_submit_and_stay" name='_w{ @widget[:param] }[submit_and_stay]' value='{ @submit_and_stay_text }'>
-                <input type='submit' sp:if="@show_submit_and_new" name='_w{ @widget[:param] }[submit_and_new]' value='{ @submit_and_new_text }'>
-                <input sp:each="@submit_buttons |text|" type='submit' name='_w{ @widget[:param] }[submit]' value='{ text }'>
-            </div>
-        </form>
-        <div class="sub_links" sp:if="!@sub_links.empty?">
-            <h4>Dati collegati:</h4>
-            <ul>
-                <li sp:each="@sub_links |link, label|">
-                    <a href="{ @widget[:request_path] }/{ link }">{ label }</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div sp:if="@action == :sub" class="sub_element_crud">
-        <h4 class="sub_element_title">Gestione { @sub_element.label.downcase } di 
-            <a href="{ @widget[:request_path] }/{ @pk }">{ @form_desc }</a>
-        </h4>
-        <sp:run obj="@crud" />
-    </div>
-        
+	<tpl:asset type="css" src="form.css" />
+	<tpl:asset type="js" src="form.js" />
+	<div sp:if="@error" class='errors'>
+		Errori:
+		<ul>
+			<sp:pass sp:each="@errors |k, v|">
+				<li sp:each="v |err|">
+					{ err }
+				</li>
+			</sp:pass>
+		</ul>
+
+	</div>
+	<div sp:if="@action == :form">
+		<form action="{ @form_action }" method="POST" sp:attr-if="@enctype,enctype,@enctype">
+			<input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
+			<div class="fields">
+				<forms:element_row sp:each="@names |element|" element="element" error_condition="@errors[element]" />
+			</div>
+			<div class="row buttons">
+				<input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
+				<input type='submit' sp:if="@show_submit_and_stay" name='_w{ @widget[:param] }[submit_and_stay]' value='{ @submit_and_stay_text }'>
+				<input type='submit' sp:if="@show_submit_and_new" name='_w{ @widget[:param] }[submit_and_new]' value='{ @submit_and_new_text }'>
+				<input sp:each="@submit_buttons |text|" type='submit' name='_w{ @widget[:param] }[submit]' value='{ text }'>
+			</div>
+		</form>
+		<div class="sub_links" sp:if="!@sub_links.empty?">
+			<h4>Dati collegati:</h4>
+			<ul>
+				<li sp:each="@sub_links |link, label|">
+					<a href="{ @widget[:request_path] }/{ link }">{ label }</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div sp:if="@action == :sub" class="sub_element_crud">
+		<h4 class="sub_element_title">Gestione { @sub_element.label.downcase } di 
+			<a href="{ @widget[:request_path] }/{ @pk }">{ @form_desc }</a>
+		</h4>
+		<sp:run obj="@crud" />
+	</div>
+
 </div>

@@ -105,6 +105,7 @@ module Spider; module HTTP
     class WEBrickServlet < ::WEBrick::HTTPServlet::AbstractServlet
 
         def service(request, response)
+            Spider.request_started
             env = prepare_env(request)
             controller_request = WEBrickRequest.new(env)
             controller_request.server = WEBrick
@@ -139,6 +140,7 @@ module Spider; module HTTP
                     controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     w.close
                     controller_done = true
+                    Spider.request_finished
                 end
             end
 

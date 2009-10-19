@@ -37,23 +37,29 @@ module Spider
             if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
                 @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
             end
-            if (@request.env['HTTP_ACCEPT_LANGUAGE'])
-                lang = @request.env['HTTP_ACCEPT_LANGUAGE'].split(';')[0].split(',')[0]
-                GetText.locale = lang
+            Locale.clear
+            Locale.init(:driver => :cgi)
+            Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
+            @request.locale = Locale.current[0]
+            if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
+                action = $1
+                @request.format = $2.to_sym
             end
-            # @extensions = {
-            #     'js' => {:format => :js, :content_type => 'application/javascript'},
-            #     'html' => {:format => :html, :content_type => 'text/html', :mixin => HTML},
-            #     #'json' => {:format => :json, :content_type => 'text/x-json'}
-            #     'json' => {:format => :json, :content_type => 'text/plain'}
-            # }
-
-            super
+#            Spider.reload_sources if Spider.conf.get('webserver.reload_sources')
+            super(action, *arguments)
+        end
+        
+        def execute(action='', *arguments)
+            # FIXME: cache stripped action?
+            action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
+            super(action, *arguments)
         end
         
         def after(action='', *arguments)
+            # FIXME: cache stripped action?
+            action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
             @request.session.persist if @request.session
-            super
+            super(action, *arguments)
         end
         
         def ensure(action='', *arguments)
@@ -65,29 +71,36 @@ module Spider
         def get_route(path)
             path = path.clone
             path.slice!(0) if path.length > 0 && path[0].chr == "/"
-            return Route.new(:path => path, :dest => Spider::SpiderController, :action => path)
+            return Route.new(:path => path, :dest => Spider.home.controller, :action => path)
         end
         
         def try_rescue(exc)
-            if (exc.is_a?(Spider::Controller::NotFound))
-                @response.status = Spider::HTTP::NOT_FOUND
-                error("Not found: #{exc.path}")
-            elsif (exc.is_a?(BadRequest))
-                @response.status = Spider::HTTP::BAD_REQUEST
-                raise
-            elsif (exc.is_a?(Forbidden))
-                @response.status = Spider::HTTP::FORBIDDEN
-                raise
+            if exc.is_a?(Spider::Controller::NotFound)
+                Spider.logger.error("Not found: #{exc.path}")
             else
-                @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
                 super
             end
         end
         
         module HTTPRequest
             
+            # Returns PATH_INFO reversing any proxy mappings if needed.
             def path
                 Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['PATH_INFO'])
+            end
+            
+            def full_path
+                'http://'+self.env['HTTP_HOST']+path
+            end
+            
+            # Returns the REQUEST_URI reversing any proxy mappings if needed
+            def uri
+                Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['REQUEST_URI'])
+            end
+            
+            # Returns #uri prefixed with http:// and the HTTP_HOST
+            def full_uri
+                'http://'+self.env['HTTP_HOST']+uri
             end
             
         end

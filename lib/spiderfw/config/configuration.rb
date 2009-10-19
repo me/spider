@@ -66,7 +66,6 @@ module Spider
         end
         
         def translate_key(key)
-            require 'ruby-debug'
             if (!@options[key])
                 locale = Spider.locale
                 locale = $1 if locale =~ /^([^@\.]+)[@\.].+/
@@ -89,17 +88,19 @@ module Spider
                 key = translate_key(key)
                 config_option(key, '__auto__') unless @options[key]
                 if val.is_a?(Hash)
-                    @values[key] ||= Configuration.new(@prefix+".#{key}")
-                    if (@options[key][:params][:type] == :conf)
-                        self[key] = {}
+                    if (@options[key][:params] && @options[key][:params][:type] == :conf)
+                        @values[key] ||= Configuration.new(@prefix+".#{key}") # FIXME: needed?
                         val.each do |h_key, h_val|
-                            self[key][h_key] = Configuration.new(@prefix+"#{key}.x")
+                            self[key][h_key] = Configuration.new(@prefix+".#{key}.x")
                             self[key][h_key].hash_key = h_key
                             h_val.each { |k, v| self[key][h_key].set(k, v) }
                         end
-                    elsif (@options[key][:params][:type] != Hash) # sub conf
+                    elsif (!@options[key][:params] || @options[key][:params][:type] != Hash) # sub conf
+                        @values[key] ||= Configuration.new(@prefix+".#{key}")
                         val.each { |k, v| self[key][k.to_s] = v }
-                    end     
+                    else
+                        self[key] = val
+                    end
                 else
                     val = convert_val(@options[key][:params][:type], val) if (@options[key][:params][:type])
                     self[key] = val
@@ -155,7 +156,6 @@ module Spider
         # -:choiches    an array of allowed values
         # -:type        parameter type; can be one of int, string, bool
         def config_option(name, description, params={}, &proc)
-            #debugger
             name = name.to_s
             if (params.empty? && description.is_a?(Hash))
                 params = description
@@ -174,7 +174,6 @@ module Spider
 
         
         def get(key)
-#            debugger
             key = key.to_s
             first, rest = key.split('.', 2)
             if rest
@@ -207,7 +206,9 @@ module Spider
         def configure_set(name, values)
             s = (@sets[name] ||= Configuration.new(@prefix))
             s.options = @options
-            values.each { |k, v| s.configure(k, v) }
+            values.each do |k, v|
+                s.configure(k, v)
+            end
         end
         
         def include_set(name)

@@ -42,7 +42,7 @@ module Spider; module HTTP
                 #Spider::Logger.debug("Sending headers because wrote #{msg}")
                 send_headers
             end
-            @response.write(msg)
+            @response.write(msg) rescue Errno::EPIPE # FIXME: is it bad?
         end
         
         def self.send_headers(controller_response, response)
@@ -94,6 +94,7 @@ module Spider; module HTTP
         end
         
         def process(request, response)
+            Spider.request_started
             @server.request_received
             path = request.params['REQUEST_PATH']
             env = normalize_request(request.params.clone)
@@ -129,7 +130,7 @@ module Spider; module HTTP
                 MongrelIO.send_headers(controller_response, response) unless response.header_sent
                 Spider::Logger.debug("---- Closing Mongrel Response ---- ")
                 response.finished
-                
+                Spider.request_finished
             end
             
             

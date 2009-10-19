@@ -1,6 +1,7 @@
 require 'thread'
 require 'fileutils'
 require 'apps/worker/lib/runner'
+require 'apps/worker/models/job'
 
 module Spider
 
@@ -32,25 +33,33 @@ module Spider
         end
         
         def self.app_shutdown
-            @mutex.synchronize do
-                if @runner
-                    Spider::Logger.info("Shutting down worker #{Process.pid}")
+            @mutex.try_lock || return
+            Spider::Logger.info("Shutting down worker in #{Process.pid}")
+            if @runner
+                unless @runner == Thread.current
                     @runner.stop
                     @runner = nil
-                elsif(File.exist?(@pid_file))
+                end
+            elsif(File.exist?(@pid_file))
+                begin
                     pid = IO.read(@pid_file).to_i
                     unless pid == Process.pid
                         Spider::Logger.info("Sending TERM signal to worker #{pid}")
                         Process::kill 'TERM', pid
                     end
+                rescue Errno::ENOENT
                 end
-                File.unlink(@pid_file) if File.exist?(@pid_file)
             end
+            begin
+                File.unlink(@pid_file)
+            rescue Errno::ENOENT
+            end
+            @mutex.unlock
         end
         
         def self.start_runner
             start = lambda do
-                @mutex.synchronize do
+                if @mutex.try_lock
                     return false if File.exist?(@pid_file)
                     FileUtils.mkdir_p(File.dirname(@pid_file))
                     pid_file = File.new(@pid_file, 'w')
@@ -69,6 +78,10 @@ module Spider
                             load @scripts_dir+'/'+script
                         end
                     end
+                    # every(Spider.conf.get('worker.jobs_interval').to_s+'s') do
+                    #     self.run_jobs
+                    # end
+                    @mutex.unlock
                 end
             end
             if (options[:fork])
@@ -101,15 +114,15 @@ module Spider
             end
         end
         
-        def self.run(name, params)
-            
+        def self.in(time, proc_string)
+            secs = Rufus.parse_time_string(time)
+            self.at(Time.now+secs, proc_string)
         end
         
-        def self.in(time, params)
-            
-        end
-        
-        def self.at(time, params)
+        def self.at(time, proc_string)
+            job = Job.new(:uuid => ::UUID.new.generate, :time => time, :task => proc_string)
+            job.save
+            return job.uuid
         end
         
         def self.cron(time, params, &proc)
@@ -132,6 +145,21 @@ module Spider
         
         def self.join
             @runner.join if @runner
+        end
+        
+        def self.run_jobs
+            Spider::Logger.debug("Worker running jobs queue")
+            jobs = Job.where{ (status == nil) & (time <= DateTime.now) }
+            jobs.each do |job|
+                begin
+                    job.run
+                    job.status = 'done'
+                rescue => exc
+                    Spider::Logger.error("Worker job #{job.uuid} failed with error: #{exc.message}")
+                    job.status = 'failed'
+                end
+                job.save
+            end
         end
 
     end

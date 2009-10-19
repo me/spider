@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="switcher.css" />
+    <tpl:asset type="css" src="css/switcher.css" />
     <div id="switcher_top"></div>
     <table width="100%">
         <tr>
@@ -8,7 +8,8 @@
             </td>
             <td valign="top">
                 <div id="content" class="content">
-                    <sp:run obj="@current_widget" />
+                    <sp:render sp:if="@current.is_a?(Spider::Template)" obj="@current" />
+                    <sp:run sp:if="@current.is_a?(Spider::Widget)" obj="@current" />
                 </div>
             </td>
         </tr>

@@ -1,0 +1,73 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+
+.spider.components.admin{
+    font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+    font-size: .9em;
+    margin-bottom: 10px;
+}
+
+.spider.components.admin .heading{
+   background-color: #417690;
+   padding: 8px 0px 5px 12px;
+   position: relative;
+}
+
+.spider.components.admin .heading h1{
+    color: #F4F379;
+    font-size: 18px;
+}
+
+.spider.components.admin .heading a{
+    color: white;
+    text-decoration: none;
+}
+
+.spider.components.admin .heading .tools{
+    position: absolute;
+    padding: 6px 10px;
+    right: 0;
+    top: 0;
+    text-align: right;
+    color: #FFFFCC;
+}
+
+.spider.components.admin .current_section{
+    padding: 4px 0px 3px 25px;
+    font-size: 1.1em;
+    background: white url(img/gray_gradient.gif) repeat-x scroll 0 -10px;
+    border-bottom: 1px solid gray;
+    margin-bottom: 15px;
+}
+
+.spider.components.admin .spider.forms.form .errors{
+    background-color: #FAFAFA ;
+    border: 2px solid #CC0000;
+}
+
+.spider.components.admin .spider.forms.form .fields{
+    border:2px solid #D5D5F7;
+    background: #ececf6;
+}
+
+.spider.components.admin .spider.forms.form .row.error label{
+    border-left: 1px solid #EE0000;
+}
+
+.spider.components.admin .spider.forms.form .buttons input {
+	background-color:#1188C1;
+	border-color: #d1d8e5;
+	border-style:solid none none;
+	border-width:1px medium medium;
+	color:white;
+	cursor:pointer;
+	font-weight:bold;
+	outline-color:#333333;
+	outline-style:solid;
+	outline-width:1px;
+}
+
+

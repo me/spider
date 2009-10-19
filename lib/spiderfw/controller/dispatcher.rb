@@ -9,7 +9,7 @@ module Spider
            klass.extend(ClassMethods)
         end
         
-        
+        # Defined routes.
         def routes
             @routes ||= []
         end
@@ -29,21 +29,41 @@ module Spider
             self.class.add_route(@routes, path, dest, options)
         end
         
+        # Given a method and an action, returns a triplet containing
+        # - the object on which to call the method
+        # - the new action
+        # - the new arguments
         def dispatch(method, action='', *arguments)
             return nil unless can_dispatch?(method, action)
             route = @dispatch_next[action]
             if (!route.obj)
                 obj = dispatched_object(route)
-                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=)
+                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
                 route.obj = obj
             end
             obj = route.obj
+            if (route.options[:do])
+                route.options[:do].call(obj, *(route.params || []))
+            end
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
             return [obj, route.action, new_arguments]
 #            return obj.send(method, route.action, *(new_arguments))
         end
         
+        # Dispatches the given method and action:
+        # will get an object and new action and arguments from #dispatch,
+        # and then call the method on the object, with new action and new arguments as params.
+        # 
+        # If #dispatch_methods are defined, will call them *before* calling method.
+        # After calling method, will call a method called "#{method}_{new_action.downcase}", if it exists
+        # 
+        # Example:
+        #   do_dispatch(:before, 'section_b/news/list')
+        # will get obj (in the example, the 'section_b' controller) and call
+        #   # any method configured in dispatch_methods
+        #   obj.before('news/list')
+        #   obj.before_news
         def do_dispatch(method, action='', *arguments)
             obj, route_action, new_arguments = dispatch(method, action, *arguments)
             return nil unless obj
@@ -75,6 +95,7 @@ module Spider
         end
 
         
+        # Returns true if there is a route for action, and the routed object responds to method.
         def can_dispatch?(method, action)
             d_next = dispatch_next(action)
             return false unless d_next
@@ -85,18 +106,14 @@ module Spider
             end
             return true
         end
-                
-        def do_route(path)
-            next_route = get_route(path)
-            return false unless next_route
-            return next_route
-        end
         
+        # Returns the (possibly cached) route for path.
         def dispatch_next(path)
             @dispatch_next ||= {}
-            @dispatch_next[path] ||= do_route(path)
+            @dispatch_next[path] ||= get_route(path)
         end
         
+        # Looks in defined routes, and returns the first matching Route for path.
         def get_route(path)
             r = routes + self.class.routes
             r.each do |route|
@@ -137,6 +154,9 @@ module Spider
                     end
                 end
                 if (action)
+                    if (options[:prepend])
+                        action = options[:prepend] + action
+                    end
                     if (dest.class == Symbol) # route to self
                         new_params = []
                         new_params << action if action && !action.empty?

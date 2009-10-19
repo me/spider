@@ -1,4 +1,5 @@
-require 'gettext/rgettext'
+require 'gettext/tools'
+require 'spiderfw/templates/blocks/text'
 
 module Spider; module I18n
 

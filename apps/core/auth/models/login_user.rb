@@ -6,6 +6,9 @@ module Spider; module Auth
         element :username, String, :required => true, :unique => true
         element :password, Password
 
+        def identifier
+            username
+        end
         
     end
     

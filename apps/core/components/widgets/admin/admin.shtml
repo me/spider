@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="admin.css" />
+    <tpl:asset type="css" src="css/admin.css" />
     <div class="heading">
 	    <div class="title">
     	    <h1>{ @title }</h1>

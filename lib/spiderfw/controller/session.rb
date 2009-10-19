@@ -46,6 +46,10 @@ module Spider
             @data[:_flash].reset if @data[:_flash]
         end
         
+        def delete
+            self.class.delete(@sid)
+        end
+        
         def generate_sid
             UUID.new.generate
         end

@@ -6,13 +6,19 @@ module Spider
             @widget = widget
             @attributes = widget.class.attributes
             @attributes.each do |k, params|
-                self[k] = params[:default] if params[:default]
+                if params[:default]
+                    if (params[:default].is_a?(Proc))
+                        self[k] = params[:default].call
+                    else
+                        self[k] = params[:default]
+                    end
+                end
             end
         end
         
         def []=(k, v)
             params = @attributes[k]
-            raise ArgumentError, "#{k} is not an allowed attribute for widget #{@widget_klass}" unless params
+            raise ArgumentError, "#{k} is not an allowed attribute for widget #{@widget}" unless params
             raise ArgumentError, "#{k} is not in the correct format" if params[:format] && v !=~ params[:format]
             if (params[:type])
                 case params[:type].name

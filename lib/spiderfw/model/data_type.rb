@@ -29,7 +29,7 @@ module Spider
                 @maps_to
             end
             
-            # Sets and/or returns a class the DataType will be converted to when loaded by the Mapper.
+            # Sets and/or returns a base type the DataType will be converted to when loaded by the Mapper.
             def maps_back_to(val=nil)
                 @maps_back_to = val if val
                 @maps_back_to

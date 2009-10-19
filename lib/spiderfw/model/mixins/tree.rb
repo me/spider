@@ -4,6 +4,7 @@ module Spider; module Model
         
         def self.included(model)
             model.extend(ClassMethods)
+            model.mapper_include(MapperMethods)
         end
         
         def tree_all(element)
@@ -43,26 +44,44 @@ module Spider; module Model
                element(attributes[:tree_left], Fixnum, :hidden => true)
                element(attributes[:tree_right], Fixnum, :hidden => true)
                element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true)
-               sequence(name)
+#               sequence(name)
+               qs_module ||= Module.new
+               
+               qs_module.module_eval do
+                   
+                   define_method("#{name}_roots") do
+                       qs = self.clone
+                       qs.condition[attributes[:reverse]] = nil
+                       qs
+                   end
+
+                   define_method("#{name}_leafs") do
+                       qs = self.clone
+                       qs.condition[attributes[:tree_left]] = QueryFuncs::Expression.new(":#{attributes[:tree_right]} - 1")
+                       qs
+                   end
+                   
+                   
+               end
+               @elements[name].attributes[:queryset_module] = qs_module
+               
+               def extend_queryset(qs)
+                   super
+                   @elements.each do |name, el|
+                       qs_module = el.attributes[:queryset_module]
+                       qs.extend(qs_module) if qs_module
+                   end
+               end
                
                (class << self; self; end).instance_eval do
                    
                    define_method("#{name}_roots") do
-                       element = self.elements[name]
-                       c = Condition.and
-                       c[element.reverse] = nil
-                       return find(c)
+                       QuerySet.autoloading(self).send("#{name}_roots")
                    end
                    
                    define_method("#{name}_leafs") do
-                       if mapper.type != :db
-                           raise MapperError, "The #{name}_leafs method is supported only for db storage"
-                       end
-                       element = self.elements[name]
-                       left_el = element.attributes[:tree_left]; right_el = element.attributes[:tree_right]
-                       left_field = mapper.schema.field(left_el); right_field = mapper.schema.field(right_el)
-                       sql = "SELECT * FROM #{mapper.schema.table} WHERE #{left_field} = #{right_field} - 1"
-                       return mapper.find_by_sql(sql)
+                       QuerySet.autoloading(self).send("#{name}_leafs")
+                      
                    end
                    
                    define_method("#{name}_all") do
@@ -98,43 +117,170 @@ module Spider; module Model
                    q.order_by(left_el)
                    return element.model.find(q)
                end
-
-               with_mapper do
-
-                   def after_save(obj, mode)
-                       super
-                       @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
-                           left_el = el.attributes[:tree_left]
-                           left = obj.get(left_el)
-                           if (!left)
-                               left = sequence_next(el.name)
-                               obj.set(left_el, left)
-                           end
-                           parent = obj.get(el.attributes[:reverse])
-                           rebuild_from = parent ? parent : obj
-                           tree_rebuild(el, rebuild_from, left)
-                       end
-                   end
+               
+               define_method("#{name}_append_first") do |new_child|
                    
-                   def tree_rebuild(tree_el, obj, left)
-                       left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
-                       right = left + 1
-                       children = obj.get(tree_el)
-                       if (children)
-                           children.each do |child|
-                               right = child.mapper.tree_rebuild(tree_el, child, right)
-                           end
-                       end
-                       obj.set(left_el, left)
-                       obj.set(right_el, right)
-                       do_update(obj)
-                       return right + 1
+               end
+               
+               define_method("#{name}_append_after") do |new_child, child|
+                   element = self.class.elements[name]
+                   left_el = element.attributes[:tree_left]
+                   right_el = element.attributes[:tree_right]
+                   parent_el = element.attributes[:reverse]
+                   if (child.get(left_el))
+                       
                    end
-
+               end
+               
+               define_method("#{name}_remove") do
                    
                end
 
            end
+            
+        end
+
+        module MapperMethods
+
+            def before_save(obj, mode)
+                @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
+                    if (mode == :update)
+                        tree_remove(el, obj)
+                    end
+                    parent = obj.get(el.attributes[:reverse])
+                    if (parent)
+                        tree_insert_node_under(el, obj, parent)
+                    else
+                        tree_insert_node(el, obj)
+                    end
+                end
+                super
+            end
+            
+            def before_delete(objects)
+                @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
+                    objects.each{ |obj| tree_remove(el, obj) }
+                end
+            end
+            
+            # def after_save(obj, mode)
+            #     super
+            #     debugger
+            #     @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
+            #         debugger
+            #         left_el = el.attributes[:tree_left]
+            #         left = obj.get(left_el)
+            #         if (!left)
+            #             left = sequence_next(el.name)
+            #             obj.set(left_el, left)
+            #         end
+            #         parent = obj.get(el.attributes[:reverse])
+            #         rebuild_from = parent ? parent : obj
+            #         tree_rebuild(el, rebuild_from, left)
+            #     end
+            # end
+            
+            def tree_rebuild(tree_el, obj, left)
+                left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
+                right = left + 1
+                children = obj.get(tree_el)
+                if (children)
+                    children.each do |child|
+                        right = child.mapper.tree_rebuild(tree_el, child, right)
+                    end
+                end
+                obj.set(left_el, left)
+                obj.set(right_el, right)
+                do_update(obj)
+                return right + 1
+            end
+            
+            def tree_insert_node(tree_el, obj, left=nil)
+                left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
+                left = max(right_el) + 1 unless left
+                right = tree_assign_values(tree_el, obj, left)
+                diff = right-left+1
+                condition = Condition.new.set(right_el, '>=', left)
+                bulk_update({right_el => QueryFuncs::Expression.new(":#{right_el}+#{diff}")}, condition)
+                condition = Condition.new.set(left_el, '>=', left)
+                bulk_update({left_el => QueryFuncs::Expression.new(":#{left_el}+#{diff}")}, condition)
+            end
+            
+            def tree_assign_values(tree_el, obj, left)
+                left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
+                cur = left+1
+                obj.get(tree_el).each do |child|
+                    cur = tree_assign_values(tree_el, child, cur)
+                end
+                obj.set(left_el, left)
+                obj.set(right_el, cur)
+            end
+            
+            def tree_insert_node_under(tree_el, obj, parent)
+                obj.set(tree_el.attributes[:reverse], parent)
+                tree_insert_node(tree_el, obj, parent.get(tree_el.attributes[:tree_right]))
+            end
+            
+            def tree_insert_node_first(tree_el, obj, parent)
+                obj.set(tree_el.attributes[:reverse], parent)
+                tree_insert_node(tree_el, obj, parent.get(tree_el.attributes[:tree_left])+1)
+            end
+            
+            def tree_insert_node_left(tree_el, obj, sibling)
+                obj.set(tree_el.attributes[:reverse], sibling.get(tree_el.attributes[:reverse]))
+                tree_insert_node(tree_el, obj, sibling.get(tree_el.attributes[:tree_left]))
+            end
+            
+            def tree_insert_node_right(tree_el, obj, sibling)
+                obj.set(tree_el.attributes[:reverse], sibling.get(tree_el.attributes[:reverse]))
+                tree_insert_node(tree_el, obj, sibling.get(tree_el.attributes[:tree_right]))
+            end
+            
+            def tree_remove(tree_el, obj)
+                left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
+                left = obj.get(left_el); right = obj.get(right_el)
+                return unless left && right
+                diff = right-left+1
+                condition = Condition.new.set(left_el, '>', right)
+                bulk_update({left_el => QueryFuncs::Expression.new(":#{left_el} - #{diff}")}, condition)
+                condition = Condition.new.set(right_el, '>', right)
+                bulk_update({right_el => QueryFuncs::Expression.new(":#{right_el} - #{diff}")}, condition)
+                def unset_tree_vals(obj, tree_el)
+                    left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
+                    obj.set(left_el, nil); obj.set(right_el, nil)
+                    obj.get(tree_el).each do |sub|
+                        unset_tree_vals(sub, tree_el)
+                    end
+                end
+                unset_tree_vals(obj, tree_el)
+            end
+            
+            def tree_delete(tree_el, obj)
+                tree_remove(tree_el, obj)
+                def delete_children(obj, tree_el)
+                    obj.get(tree_el).each do |child| 
+                        delete_children(child, tree_el)
+                    end
+                    obj.delete
+                end
+                delete_children(obj, tree_el)
+            end
+            
+            def tree_move_up_children(tree_el, obj)
+                left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
+                left = obj.get(left_el); right = obj.get(right_el)
+                bulk_update({
+                    :left_el => QueryFuncs::Expression.new(":#{left_el} - 1"),
+                    :right_el => QueryFuncs::Expression.new(":#{right_el} - 1")
+                }, Condition.new.set(left_el, 'between', [left, right]))
+                condition = Condition.new.set(right_el, '>', right)
+                bulk_update({:right_el => QueryFuncs::Expression.new(":#{right_el} - 2")}, condition)
+                condition = Condition.new.set(left_el, '>', right)
+                bulk_update({:left_el => QueryFuncs::Expression.new(":#{left_el} - 2")}, condition)
+            end
+            
+            
+            
             
         end
         

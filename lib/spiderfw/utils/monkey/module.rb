@@ -5,4 +5,8 @@ class Module #:nodoc:
         return false
     end
     
+    def parent_module(n=1)
+        return const_get_full(self.to_s.reverse.split('::', n+1)[n].reverse)
+    end
+    
 end

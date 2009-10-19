@@ -1,5 +1,6 @@
 require 'apps/messenger/models/email'
 
+
 module Spider
     
     module Messenger
@@ -35,17 +36,17 @@ module Spider
                         msg.save
                     else
                         msg.last_try = now
-                        msg.failed ||= 0
-                        msg.failed += 1
+                        msg.attempts ||= 0
+                        msg.attempts += 1
                         if (exc)
                             msg.backend_response = exc.to_s
                         else
                             msg.backend_response = res
                         end
-                        if (msg.failed >= Spider.conf.get("messenger.#{queue}.retries"))
+                        if (msg.attempts >= Spider.conf.get("messenger.#{queue}.retries"))
                             msg.next_try = nil
                         else
-                            msg.next_try = msg.last_try.to_local_time + (msg.failed * Spider.conf.get("messenger.#{queue}.retry_time") * 60)
+                            msg.next_try = msg.last_try.to_local_time + (msg.attempts * Spider.conf.get("messenger.#{queue}.retry_time") * 60)
                         end
                         msg.save
                     end
@@ -60,17 +61,17 @@ module Spider
             elsif(headers.is_a?(Array))
                 headers = headers.join("\n")
             end
-            headers = "To: #{to}\n"+headers unless headers =~ /^To/
-            headers = "From: #{from}\n"+headers unless headers =~ /^From/
+            headers = "To: #{to}\r\n"+headers unless headers =~ /^To/
+            headers = "From: #{from}\r\n"+headers unless headers =~ /^From/
             msg = Email.new(
-                :from => from, :to => to, :headers => headers, :body => body, 
-                :send_from => params[:send_from]
+                :from => from, :to => to, :headers => headers, :body => body
             )
-            msg.next_try = DateTime.now
+            msg.next_try = params[:send_from] || DateTime.now
             msg.save
             return msg
         end
         
+        # Actual SMTP send.
         def self.send_email(msg)
             require 'net/smtp'
             res = false
@@ -82,7 +83,7 @@ module Spider
               Spider.conf.get('messenger.smtp.password'),
               Spider.conf.get('messenger.smtp.auth_scheme')
             ) do |smtp|
-                msg_str = msg.headers+"\n"+msg.body
+                msg_str = msg.headers+"\r\n"+msg.body
                 res = smtp.send_message msg_str, msg.from, msg.to
             end
             return res.string

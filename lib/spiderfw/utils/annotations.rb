@@ -65,27 +65,26 @@ module Annotations
         def initialize(owner) 
             @owner = owner
             @annotations = {}
-            @pending_annotations = {}
-            @m_pending_annotations = {}
+            @pending_annotations = []
+            @m_pending_annotations = []
             @pending = @pending_annotations
         end
         
         def pending
-            r = @m_pending_annotations.merge(@pending_annotations)
-            a = 3
+            r = @m_pending_annotations + @pending_annotations
             return r
         end
         
         def clear_pending
-            @pending_annotations.each_key{ |k| @pending_annotations.delete(k) }
+            @pending_annotations.clear
         end
 
         def method_missing(name, *args)
-            @pending[name] = args
+            @pending << [name, args]
         end
 
         def annotate(method_name, *args)
-            @owner.annotations[method_name] = hash
+            @owner.annotations[method_name] = args
         end
         
         def single
@@ -102,6 +101,17 @@ module Annotations
 
 
     module ClassMethods
+        
+        def inherited(subclass)
+            if (@annotations)
+                @annotations.each do |method, vals|
+                    vals.each do |k, args|
+                        subclass.annotate(method, k, *args)
+                    end
+                end
+            end
+            super
+        end
         
         # Returns the @annotations Hash.
         def annotations
@@ -123,7 +133,7 @@ module Annotations
             @annotations ||= {}
             @annotations[name] ||= {}
             @annotator.pending.each do |key, args|
-                annotate(name, key, args)
+                annotate(name, key, *args)
             end
             @annotator.clear_pending
             # debugger

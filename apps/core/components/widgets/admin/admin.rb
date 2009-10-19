@@ -2,6 +2,18 @@ require 'apps/core/auth/_init.rb'
 
 module Spider; module Components
     
+    # This widget creates an administration page for models.
+    #
+    # Attributes:
+    # *:models*     Comma-separated list of model names
+    # *:title*
+    # *:logout_url* 
+    #
+    # Content:
+    # Takes the tags
+    # *admin:model*     A model to administer
+    # *admin:app*       Administer all models belonging to the app. Can have an 'except' attribute.
+    
     class Admin < Spider::Widget
         tag 'admin'
         
@@ -22,9 +34,9 @@ module Spider; module Components
                 crud = Crud.new(@request, @response)
                 crud.id = model.name.to_s.gsub('::', '_').downcase
                 crud.model = model
-                @widgets[:switcher].add('Gestione Dati', model.label_plural, crud)
+                @widgets[:switcher].add(model.label_plural, crud, 'Gestione Dati')
             end
-            if (@request.user)
+            if (@request.respond_to?(:user) && @request.user)
                 @scene.username = @request.user.to_s
             else
                 @scene.username = _("guest")
@@ -37,7 +49,7 @@ module Spider; module Components
             super
         end
         
-        def parse_content(doc)
+        def parse_runtime_content(doc, src_path)
             doc = super
             mods = []
             doc.search('admin:model').each do |mod|

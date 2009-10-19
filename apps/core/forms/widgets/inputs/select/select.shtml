@@ -1,6 +1,8 @@
-<select name="{ @name }" sp:attr-if="@multiple, 'multiple'">
+<select name="{ @value_param }" sp:attr-if="@multiple,multiple" class="">
+	<tpl:asset type="js" src="input.js" />
+	<tpl:asset type="js" src="select.js" />
     <option sp:if="@blank_option"> </option>
-    <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@selected[values[i]], 'selected'">
+    <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@selected[values[i]],selected">
         { @data[i].to_s }
     </option>
 </select>

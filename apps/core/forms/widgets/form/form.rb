@@ -1,5 +1,24 @@
 module Spider; module Forms
     
+    # Widget for managing forms.
+    #
+    # Attributes:
+    # *:model*  model to use
+    # *:elements*   array of elements to display
+    # *:widget_types*   hash of widget classes to use for inputs
+    # *:read_only*  array of read only elements
+    # *:disabled*   array of disabled elements (will not be shown)
+    # *:pk*     primary key element
+    # *:save_submit_text*   text for the save button when updating
+    # *:insert_submit_text* text for the save button when inserting
+    # *:show_submit_and_new*    bool, whether to show the submit and new button (default: true)
+    # *:show_submit_and_stay*   book, whether to show the submit and stay button (default: true)
+    # *:submit_and_new_text*    text for the save and insert new button
+    # *:submit_and_stay_text*   text for the submit and stay button
+    #
+    # Content:
+    # replaces <form:input id="element_name" /> tags with appropriate inputs
+    
     class Form < Spider::Widget
         tag 'form'
         is_attribute :form_action
@@ -8,17 +27,22 @@ module Spider; module Forms
         i_attribute :widget_types
         i_attribute :read_only
         i_attribute :disabled
-        attribute :save_submit_text, :default => _('Save')
-        attribute :insert_submit_text, :default => _('Insert')
-        is_attribute :show_submit_and_new, :default => true
-        is_attribute :show_submit_and_stay, :default => true
-        attribute :submit_and_new_text, :default => _('%s and insert new')
-        attribute :submit_and_stay_text, :default => _('%s and stay')
+        attribute :save_submit_text, :default => lambda{ _('Save') }
+        attribute :insert_submit_text, :default => lambda{ _('Insert') }
+        is_attribute :show_submit_and_new, :default => false
+        is_attribute :show_submit_and_stay, :default => false
+        is_attribute :show_additional_buttons, :default => false
+        attribute :submit_and_new_text, :default => lambda{ _('%s and insert new') }
+        attribute :submit_and_stay_text, :default => lambda{ _('%s and stay') }
         is_attr_accessor :pk
-        attr_to_scene :inputs, :names, :labels, :error, :errors, :save_errors, :sub_links
+        attr_to_scene :inputs, :names, :labels, :error, :errors, :sub_links
+        attribute :show_related, :type => TrueClass, :default => false
+        i_attribute :auto_redirect, :default => false
         attr_accessor :save_actions
         attr_accessor :fixed
+        attr_accessor :before_save, :after_save
         
+        attr_accessor :inputs
         attr_accessor :pk
         attr_reader :obj
         
@@ -26,28 +50,30 @@ module Spider; module Forms
             @inputs = {}
             @names = []
             @errors = {}
-            @save_errors = []
             @labels = {}
             @save_actions ||= {}
             @sub_links = {}
             @disabled = []
             @read_only = []
+            @requested_elements = []
 
         end
         
         def route_widget
             if (@action == :sub)
-                [:crud, @_action.split('/', 3)[2]]
+                [@crud.id, @_action.split('/', 3)[2]]
             end
         end
         
         def prepare(action='')
             @form_action = @request.path
             @pk ||= @_action_local
+            @pk ||= params['pk']
             @pk = nil if @pk == 'new'
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| debug("EL: #{e.strip.to_sym}"); @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
+                @requested_elements = @elements
             end
             @elements = @model.elements_array unless @elements
             @model.each_element do |el|
@@ -67,7 +93,7 @@ module Spider; module Forms
                 @disabled = @disabled.split(',').map{ |el| e.strip.to_sym }
             end
             @disabled ||= []
-            @data = params['data'] || {}
+#            @data = params['data'] || {}
             if @_action_rest
                 el_label, sub_rest = @_action_rest.split('/', 2)
                 sub_rest ||= ''
@@ -81,42 +107,56 @@ module Spider; module Forms
                 @action = :form
             end
             @scene.action = @action
+            if (@attributes[:show_additional_buttons])
+                @attributes[:show_submit_and_new] = true
+                @attributes[:show_submit_and_stay] = true
+            end
+            if (params['submit_and_new'])
+                @submit_action = 'submit_and_new'
+            elsif (params['submit_and_stay'])
+                @submit_action = 'submit_and_stay'
+            else
+                @submit_action = params['submit']
+            end
+            @obj ||= load
+            @scene.obj = @obj
+            init_widgets
+            # if (@submit_action)
+            # else
+            if @obj
+                @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
+                set_values(@obj) if @action == :form
+            end
+#            end
             super
         end
         
-        def prepare_widgets
+        def init_widgets
+            super
             if (@action == :sub)
-                @widgets[:crud] = Spider::Components::Crud.new(@request, @response)
-                @widgets[:crud].id = (@model.name.to_s+'_'+@sub_element.name.to_s).gsub('::', '_').downcase
-                @widgets[:crud].model = @sub_element.model
-                @scene.crud = @widgets[:crud]
+                @crud = Spider::Components::Crud.new(@request, @response)
+                @crud.id = "crud_#{@sub_element.name.to_s}"
+                @crud.model = @sub_element.model
+                add_widget(@crud)
+                @scene.crud = @crud
                 @obj = load
                 cond = {}
                 @model.primary_keys.each do |key|
                     cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
                 end
-                @widgets[:crud].fixed = cond
+                @crud.fixed = cond
             else
                 create_inputs
             end
-            super
+
         end
         
         def run
             Spider::Logger.debug("FORM EXECUTING")
-            if (params['submit_and_new'])
-                submit_action = 'submit_and_new'
-            elsif (params['submit_and_stay'])
-                submit_action = 'submit_and_stay'
-            else
-                submit_action = params['submit']
-            end
-            save(submit_action) if submit_action
-            @obj ||= load
+            save(@submit_action) if @submit_action
             if (@obj)
-                @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
+                
                 @scene.form_desc = @model.label.downcase+' '+ @obj.to_s
-                set_values(@obj) if @action == :form
                 if (@action == :sub)
                     
                 end
@@ -124,6 +164,7 @@ module Spider; module Forms
             else
                 @scene.submit_text = @attributes[:insert_submit_text]
             end
+            @scene.obj = obj
             @scene.submit_and_new_text = @attributes[:submit_and_new_text] % @scene.submit_text
             @scene.submit_and_stay_text = @attributes[:submit_and_stay_text] % @scene.submit_text
             @scene.submit_buttons = @save_actions.keys
@@ -133,7 +174,8 @@ module Spider; module Forms
         def create_inputs
             test_fixed = @model.new(@fixed) if @fixed
             @elements.each do |el|
-                next if el.hidden? || el.primary_key? || el.attributes[:local_pk] || @disabled.include?(el.name)
+                next if (el.hidden? && !@requested_elements.include?(el)) \
+                    || el.primary_key? || el.attributes[:local_pk] || @disabled.include?(el.name)
                 if @fixed
                     if (el.model?)
                         fixed_sub = test_fixed.get(el)
@@ -154,17 +196,23 @@ module Spider; module Forms
                     input_attributes = {:size => 10}
                 elsif (el.type == Spider::DataTypes::Text)
                     widget_type = TextArea
-                elsif (el.type == ::DateTime)
+                elsif (el.type == ::DateTime || el.type == ::Date || el.type == ::Time)
                     widget_type = DateTime
+                    input_attributes = {}
+                    input_attributes[:mode] = case el.type.name
+                    when 'DateTime' then :date_time
+                    when 'Date' then :date
+                    when 'Time' then :time
+                    end
                 elsif (el.type == Spider::DataTypes::Password)
                     widget_type = Password
                 elsif (el.type == Spider::DataTypes::Bool)
                     widget_type = Checkbox
                 elsif (el.model?)
                     if ([:choice, :multiple_choice].include?(el.association) && !el.extended?)
-                        widget_type = el.model.attributes[:estimated_size] && el.model.attributes[:estimated_size] > 100 ? 
+                        widget_type = el.type.attributes[:estimated_size] && el.type.attributes[:estimated_size] > 30 ? 
                             SearchSelect : Select
-                    elsif @pk && el.multiple?
+                    elsif @attributes[:show_related] && @pk && el.multiple?
                         @sub_links[@pk+'/'+el.label.downcase.gsub(/\s+/, '_')] = @labels[el.name]
                     end
                 end
@@ -173,7 +221,7 @@ module Spider; module Forms
                 debug("Created input for #{el.name}, #{input}")
                 if (input)
                     input.read_only if read_only?(el.name)
-                    input.id_path.insert(input.id_path.length-1, 'data')
+#                    input.id_path.insert(input.id_path.length-1, 'data')
                     @names << el.name
                     input.id = el.name
                     input.form = self
@@ -190,10 +238,11 @@ module Spider; module Forms
         
         def create_input(type, el)
             input = create_widget(type, el.name, @request, @response)
+            input.css_classes << "el-#{el.name}"
             case type.name
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?
-                input.model = el.type
+                input.model = el.type if input.respond_to?(:model)
             end
             return input
         end
@@ -206,10 +255,10 @@ module Spider; module Forms
         end
         
         def instantiate_obj
-            if (@pk)
+            if (@pk && !@pk.empty?)
                 parts = @pk.split(':')
                 h = {}
-                @model.primary_keys.each{ |k| h[k.name] = parts.shift}
+                @model.primary_keys.each{ |k| h[k.name] = parts.shift }
                 return @model.new(h)
             else
                 return @model.new
@@ -234,7 +283,7 @@ module Spider; module Forms
                 input = @inputs[element_name]
                 next unless input
                 next if input.read_only?
-                debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
+#                debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
                 if (input.error?)
                     @error = true
                     @errors[element_name] ||= []
@@ -251,28 +300,38 @@ module Spider; module Forms
 #                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
                 rescue FormatError => exc
 #                    debugger
-                    @error = true
-                    @errors[element_name] ||= []
-                    @errors[element_name] << exc.to_s
+                    add_error(exc, exc.message, element_name)
                 end
             end
             if (@fixed)
                 obj.no_autoload do
                     @fixed.each do |k, v| 
-                        obj.set(k, v)
+                        obj.set!(k, v)
                     end
                 end
             end
             if inputs_done && !@error
+                save_mode = obj.primary_keys_set? ? :update : :insert
+                before_save(obj, save_mode)
+                @before_save.call(obj, save_mode) if @before_save
                 begin
                     obj.save
                     debug("SAVED")
                     @saved = true
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
                 rescue => exc
-                    Spider::Logger.error(exc)
-                    @error = true
-                    @save_errors << exc.message
+                    if exc.is_a?(Spider::Model::MapperElementError)
+                        Spider::Logger.error(exc)
+                        exc_element =  exc.element.name
+                        add_error(exc, exc.message, exc_element)
+                    else
+                        raise
+                    end
+                end
+                @after_save.call(obj, save_mode) if @after_save
+                after_save(obj, save_mode)
+                if (@auto_redirect)
+                    redirect(@request.path)
                 end
             end
             if (action == 'submit_and_new')
@@ -280,6 +339,18 @@ module Spider; module Forms
             elsif (action == 'submit_and_stay')
                 @saved_and_stay = true
             end
+        end
+        
+        def before_save(obj, save_mode)
+        end
+        
+        def after_save(obj, save_mode)
+        end
+        
+        def add_error(exception, message, element_name=nil)
+            @error = true
+            @errors[element_name] ||= []
+            @errors[element_name] << message
         end
         
         def saved?
@@ -308,6 +379,27 @@ module Spider; module Forms
         
         def disable(*names)
             @disabled += names
+        end
+        
+        
+        def self.parse_content(doc)
+            runtime, overrides = super
+            overrides.each do |ov|
+                ov['search'] = '.fields' if (ov.name == 'tpl:inline-override')
+            end
+            return [runtime, overrides]
+        end
+        
+        def self.parse_override(el)
+            if (el.name == 'form:fields')
+                el.name = 'tpl:override-content'
+                el['search'] = '.fields'
+            end
+            el.search('form:input').each do |input|
+                new_input = "<sp:run obj=\"@inputs[:#{input['id']}]\" />"
+                input.swap(new_input)
+            end
+            return el
         end
         
         

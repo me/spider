@@ -1,5 +1,6 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:resource type="css" src="table.css" />
+    <tpl:asset type="css" src="css/table.css" />
+	<tpl:asset type="js" src="widgets/table.js" />
     <div sp:if="!@rows || @rows.length < 1" class="no_result">
         Nessun elemento
     </div>
@@ -13,7 +14,9 @@
         </tr>
         <tr sp:each_index="@rows |row_i|" class="row { (row_i%2==0) ? 'odd' : 'even' }">
             <td sp:each="@elements |element|">
-                { @rows[row_i][element] }
+                <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ @rows[row_i][element] }">
+                    { @rows[row_i][element] }
+                </a>
             </td>
         </tr>
         <tr class="paginator" sp:if="@paginate && @pages > 1">

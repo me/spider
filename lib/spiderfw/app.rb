@@ -1,4 +1,5 @@
 require 'spiderfw/controller/app_controller'
+require 'fileutils'
 
 module Spider
     
@@ -11,24 +12,32 @@ module Spider
                 
                 #@controller ||= :"Spider::AppController"
                 class << self
-                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path
+                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path, :models_path
                     attr_reader :short_name, :route_url, :label, :version
                     attr_reader :short_prefix
                     attr_reader :command
                     
                     def init
                         @short_name ||= Inflector.underscore(self.name).gsub('/', '_')
-                        @pub_path ||= @path+'/pub'
+                        @pub_path ||= @path+'/public'
                         @test_path ||= @path+'/test'
                         @setup_path ||= @path+'/setup'
+                        @models_path ||= @path+'/models'
                         @widgets_path ||= @path+'/widgets'
                         @views_path ||= @path+'/views'
+                        @tags_path ||= @path+'/tags'
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
+                        @version = Gem::Version.new(@version) unless @version.is_a?(Gem::Version)
+                        find_tags
                     end
                     
                     def request_url
                         Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
+                    end
+                    
+                    def pub_url
+                        request_url+'/public'
                     end
                     
                     def controller
@@ -41,23 +50,28 @@ module Spider
                         return const_get(@controller)
                     end
                     
-                    def models
+                    def models(container=nil)
+                        container ||= self
                         mods = []
-                        self.constants.each { |c| mods += get_models(const_get(c)) }
+                        container.constants.each do |c|
+                            mods += get_models(container.const_get(c))
+                        end
                         return mods
                     end
                     
                     def get_models(m)
-                        models = []
+                        ms = []
                         if m.respond_to?(:subclass_of?) && m.subclass_of?(Spider::Model::BaseModel)
-                             models << m
+                             ms << m
                              m.constants.each do |c|
                                  sub_mod = m.const_get(c)
                                  next if !sub_mod.subclass_of?(Spider::Model::BaseModel) || sub_mod.app != self
-                                 models += get_models(sub_mod)
+                                 ms += get_models(sub_mod)
                              end
+                         elsif (m.is_a?(Module) && !m.is_a?(Class))
+                             return models(m)
                          end
-                         return models
+                         return ms
                     end
                     
                     def controllers
@@ -89,6 +103,49 @@ module Spider
                             return @path[Spider.paths[:core_apps].length+1..-1]
                         end
                     end
+                    
+                    def find_tags
+                        return unless File.directory?(@tags_path)
+                        Dir.new(@tags_path).each do |entry|
+                            next if entry[0].chr == '.'
+                            next unless File.extname(entry) == '.erb'
+                            name = File.basename(entry, '.erb')
+                            klass = Spider::Tag.new_class(@tags_path+'/'+entry)
+                            const_set(Spider::Inflector.camelize(name).to_sym, klass)
+                            Spider::Logger.debug("REGISTERED TAG #{name}, #{klass}")
+                            register_tag(name, klass)
+                        end
+                    end
+
+                    def app
+                        self
+                    end
+                    
+                    def req(*list)
+                        list.each do |file|
+                            require @path+'/'+file
+                        end
+                    end
+                    
+                    def installed_version_path
+                         "#{Spider.paths[:var]}/apps/#{self.name}/installed_version"
+                    end
+                    
+                    def installed_version
+                        FileUtils.mkpath(File.dirname(installed_version_path))
+                        return unless File.exist?(installed_version_path)
+                        return Gem::Version.new(IO.read(installed_version_path))
+                    end
+                    
+                    def installed_version=(version)
+                        FileUtils.mkpath(File.dirname(installed_version_path))
+                        version = Gem::Version.new(version) unless version.is_a?(Gem::Version)
+                        File.open(installed_version_path, 'w') do |f|
+                            f << version.to_s
+                        end
+                    end
+                    
+                    
                 end
                 
                 # controllers = Spider::App::Controllers.clone

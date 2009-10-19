@@ -41,6 +41,7 @@ module Spider; module Model; module Storage; module Db
             13 => 'YEAR',
             14 => 'NEWDATE',
             16 => 'BIT',
+            246 => 'DECIMAL',
             247 => 'ENUM',
             248 => 'SET',
             249 => 'TINY_BLOB',
@@ -75,6 +76,7 @@ module Spider; module Model; module Storage; module Db
         def self.new_connection(host=nil, user=nil, passwd=nil, db=nil, port=nil, sock=nil, flag=nil)
             conn = ::Mysql.new(host, user, passwd, db, port, sock, flag)
             conn.autocommit(true)
+            conn.query("SET NAMES 'utf8'")
             return conn
         end
         
@@ -216,8 +218,11 @@ module Spider; module Model; module Storage; module Db
          def value_to_mapper(type, value)
              return unless value
              case type.name
-             when 'Date', 'DateTime'
-                 return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second)
+             when 'DateTime'
+                 @@time_offset ||= DateTime.now.offset
+                 return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second, @@time_offset)
+             when 'Date'
+                 return type.civil(value.year, value.month, value.day)
              end
              return super(type, value)
          end
@@ -270,10 +275,19 @@ module Spider; module Model; module Storage; module Db
                      type =  self.class.field_types[f.type]
                      length = f.length;
                      length /= 3 if (type == 'VARCHAR')
+                     scale = nil
+                     precision = f.decimals
+                     # FIXME
+                     if (type == 'DECIMAL')
+                         scale = f.decimals
+                         precision = length - scale
+                         length = 0
+                     end
                      col = {
                          :type => type,
                          :length => length,
-                         :precision => f.decimals
+                         :precision => precision,
+                         :scale => scale
                      }
                      flags = f.flags
                      self.class.field_flags.each do |flag_name, flag_val|

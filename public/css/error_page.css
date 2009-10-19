@@ -1,0 +1,83 @@
+/* @override http://localhost:8989/spider/public/css/error_page.css */
+
+body{
+	background-color: white;
+	padding-left: 15px;
+	padding-right: 15px;
+	font-family:"Lucida Grande","Bitstream Vera Sans",Helvetica,Verdana,Arial,sans-serif;
+}
+
+#header{
+	background-color: #b2b3a7;
+}
+
+h3.error_message{
+	font-size: 1.5em;
+}
+
+.error_description{
+}
+
+#footer{
+	margin-top: 25px;
+	background-color: #e6e6e6;
+	padding: 8px;
+	font-size: 0.8em;
+}
+
+#bottom_break{
+	margin-top: 20px;
+	border-top: 1px solid #cecece;
+	border-bottom: 0;
+}
+
+#debug{
+	margin-top: 20px;
+}
+
+#debug h4{
+	background-color: #fccc83;
+	padding: 3px;
+}
+
+#debug div{
+	margin-bottom: 10px;
+}
+
+#exception_message{
+	border: 1px solid #cacaca;
+	padding: 3px;
+	background-color: #f9f9dc;
+}
+
+
+#exception_backtrace ul{
+	padding-top: 15px;
+	padding-bottom: 15px;
+	padding-left: 45px;
+	border: 1px solid #cacaca;
+	font-size: .9em;
+	background-color: #f9f9dc;
+}
+
+#exception_backtrace li{
+	margin-bottom: 2px;
+}
+
+#exception_backtrace ul a{
+	color: #3b2122;
+}
+
+.var-name{
+	cursor: pointer;
+	text-decoration: underline;
+	color: #0f007f;
+}
+
+.var-value{
+	display: none;
+	background-color: #e3e3e3;
+	border: 1px solid #cecece;
+	padding: 4px;
+	margin-right: 25px;
+}

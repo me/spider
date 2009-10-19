@@ -1,3 +1,4 @@
+require 'spiderfw/model/mixins/state_machine'
 require 'spiderfw/model/element'
 require 'iconv'
 
@@ -52,6 +53,7 @@ module Spider; module Model
     class BaseModel
         include Spider::Logger
         include DataTypes
+        include StateMachine
         
         # The BaseModel class itself. Used when dealing with proxy objects.
         attr_reader :model
@@ -69,8 +71,6 @@ module Spider; module Model
             attr_reader :elements_order
             # An Hash of integrated models => corresponding integrated element name.
             attr_reader :integrated_models
-            # An Hash of extended models => element name of the extended model element
-            attr_reader :extended_models
             # An Hash of polymorphic models => polymorphic params
             attr_reader :polymorphic_models
             # An Array of named sequences.
@@ -202,7 +202,7 @@ module Spider; module Model
 
             orig_type = type
             assoc_type = nil
-            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:reverse] || \
+            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && (!attributes[:reverse] || \
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
                 (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?)))
@@ -276,10 +276,14 @@ module Spider; module Model
                 end
             end
             if (attributes[:lazy] == nil)
-                if (type.subclass_of?(BaseModel) && attributes[:multiple])
+                # if attributes[:primary_key]
+                #                     attributes[:lazy] = true
+                #                 els
+                if (type < BaseModel && attributes[:multiple])
                     # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = true
                 else
+                    attributes[:lazy_check_owner] = true if type < BaseModel
                     attributes[:lazy] = :default
                 end
             end
@@ -333,7 +337,8 @@ module Spider; module Model
                     end
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
-                elsif (element.model?)
+                end
+                if (!val && element.model? && element.multiple?)
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 val.set_parent(self, name) if element.model? && val
@@ -343,6 +348,7 @@ module Spider; module Model
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
@@ -374,11 +380,11 @@ module Spider; module Model
                     end
                 end
                 val = prepare_child(element.name, val)
-                old_val = instance_variable_get(ivar)
                 check(name, val)
-                @modified_elements[name] = true unless element.primary_key?
+                notify_observers(name, val)
+                old_val = instance_variable_get(ivar)
+                @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
-                notify_observers(name, old_val)
                 #extend_element(name)
             end
             
@@ -397,12 +403,12 @@ module Spider; module Model
         
         
         # Removes a defined element
-        #--
-        # TODO: remove getter and setter
         def self.remove_element(el)
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
+            remove_method(:"#{el}") rescue NameError
+            remove_method(:"#{el}=") rescue NameError
         end
             
         # Integrates an element: any call to the child object's elements will be passed to the child.
@@ -428,9 +434,10 @@ module Spider; module Model
             params[:except] ||= []
             model.each_element do |el|
                 next if params[:except].include?(el.name)
-                next if elements[el.name] # don't overwrite existing elements
+                next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
                 attributes = el.attributes.clone.merge({
-                    :integrated_from => elements[element_name]
+                    :integrated_from => elements[element_name],
+                    :integrated_from_element => el.name
                 })
                 attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
@@ -439,7 +446,8 @@ module Spider; module Model
                     attributes.delete(:add_multiple_reverse)
                 end
                 attributes.delete(:primary_key) unless (params[:keep_pks])
-                element(el.name, el.type, attributes)
+                name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
+                element(name, el.type, attributes)
             end
         end
         
@@ -523,7 +531,8 @@ module Spider; module Model
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
             attributes[:delete_cascade] = params[:delete_cascade]
             integrated = element(integrated_name, model, attributes)
-            integrate(integrated_name, :keep_pks => true)
+            integrate_options = {:keep_pks => true}.merge((params[:integrate_options] || {}))
+            integrate(integrated_name, integrate_options)
             model.elements_array.select{ |el| el.attributes[:local_pk] }.each{ |el| remove_element(el.name) }
 
             unless (params[:no_local_pk] || !elements_array.select{ |el| el.attributes[:local_pk] }.empty?)
@@ -691,6 +700,19 @@ module Spider; module Model
             return self
         end
         
+        # Returns true if the element with given name is associated with the passed
+        # association.
+        # This method should be used instead of querying the element's association directly,
+        # since subclasses and mixins may extend this method to provide association equivalence.
+        def self.element_association?(element_name, association)
+            return true if elements[element_name].association = association
+        end
+        
+        # An Hash of extended models => element name of the extended model element
+        def self.extended_models
+            @extended_models ||= {}
+        end
+        
         ##############################################################
         #   Storage, mapper and loading (Class methods)       #
         ##############################################################
@@ -849,6 +871,9 @@ module Spider; module Model
             mapper.count(condition)
         end
         
+        # Can be defined to provide functionality to this model's querysets.
+        def self.extend_queryset(qs)
+        end
         
         #################################################
         #   Instance methods                            #
@@ -867,14 +892,14 @@ module Spider; module Model
             @all_values_observers = []
             @_extra = {}
             @model = self.class
-            @all_values_observers << Proc.new do |element, old_value|
+            @all_values_observers << Proc.new do |element, new_value|
                 @_has_values = true
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
             end
             if (values)
                 if (values.is_a? Hash)
                     values.each do |key, val|
-                        set(key, val)
+                        set!(key, val)
                     end
                 elsif (values.is_a? BaseModel)
                     values.each_val do |name, val|
@@ -906,8 +931,8 @@ module Spider; module Model
                     val = QuerySet.static(element.model)
                 else
                     val = element.type.new
+                    val.autoload = autoload?
                 end
-                val.autoload = autoload?
             end       
             return prepare_child(name, val)
         end
@@ -1001,11 +1026,28 @@ module Spider; module Model
         # The element can be a symbol, or a dotted path String.
         # Will call the associated setter.
         #   cat.set('favorite_food.name', 'Salmon')
-        def set(element, value)
+        def set(element, value, options={})
             element = element.name if (element.class == Element)
             first, rest = element.to_s.split('.', 2)
-            return send(first).set(rest, value) if (rest)
+            if (rest)
+                first_val = send(first)
+                unless first_val
+                    if (options[:instantiate])
+                        first_val = instantiate_element(first.to_sym)
+                        set(first, first_val)
+                    else
+                        raise "Element #{first} is nil, can't set #{element}" 
+                    end
+                end
+                return first_val.set(rest, value, options)
+            end
             return send("#{element}=", value)
+        end
+        
+        # Sets an element, instantiating intermediate objects if needed
+        def set!(element, value, options={})
+            options[:instantiate] = true
+            set(element, value, options)
         end
         
         # Calls #get on element; whenever no getter responds, returns the extra data.
@@ -1050,10 +1092,16 @@ module Spider; module Model
                 case element.type.name
                 when 'Date', 'DateTime'
                     return nil if value.is_a?(String) && value.empty?
-                    begin
-                        value = element.type.parse(value) if value.is_a?(String)
-                    rescue ArgumentError => exc
-                        raise FormatError.new(element, value, _("'%s' is not a valid date"))
+                    parsed = nil
+                    if (value.is_a?(String))
+                        begin
+                            parsed = element.type.strptime(value, "%Y-%m-%dT%H:%M:%S") rescue parsed = nil
+                            parsed ||= element.type.lparse(value, :short) rescue parsed = nil
+                            parsed ||= element.type.parse(value)
+                        rescue ArgumentError => exc
+                            raise FormatError.new(element, value, _("'%s' is not a valid date"))
+                        end
+                        value = parsed
                     end
                 when 'String'
                 when 'Spider::DataTypes::Text'
@@ -1120,7 +1168,15 @@ module Spider; module Model
         def polymorphic_become(model)
             raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
             obj = model.new
-            obj.set(self.class.polymorphic_models[model][:through], self)
+            el = self.class.polymorphic_models[model][:through]
+            obj.set(el, self)
+            obj.element_loaded(el)
+            return obj
+        end
+        
+        def become(model)
+            return self if self.class == model
+            obj = polymorphic_become(model) rescue ModelException
             return obj
         end
         
@@ -1173,6 +1229,7 @@ module Spider; module Model
                 yield
                 self.autoload = prev_autoload
             end
+            return prev_autoload
         end
         
         # Sets autoload to :save_mode; elements will be autoloaded only one by one, so that
@@ -1185,6 +1242,7 @@ module Spider; module Model
                 yield
                 self.autoload = prev_autoload
             end
+            return prev_autoload
         end
             
         
@@ -1223,6 +1281,10 @@ module Spider; module Model
         # Returns an array of current primary key values
         def primary_keys
             self.class.primary_keys.map{ |k| get(k) }
+        end
+        
+        def keys_string
+            self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
         end
 
             
@@ -1373,10 +1435,34 @@ module Spider; module Model
             @all_values_observers << proc
         end
         
+        def observe_element(element_name, &proc)
+            @value_observers[element_name] ||= []
+            @value_observers[element_name] << proc
+        end
+        
+        def self.observer_all_values(&proc)
+            @all_values_observers << proc
+        end
+        
+        def self.observe_element(element_name, &proc)
+            self.value_observers[element_name] ||= []
+            @value_observers[element_name] << proc
+        end
+        
+        def self.value_observers
+            @value_observers ||= {}
+        end
+        
+        def self.all_values_observers
+            @all_values_observers ||= []
+        end
+        
+        
         # Calls the observers for element_name
-        def notify_observers(element_name, old_val) #:nodoc:
-            @value_observers[element_name].each { |proc| proc.call(self, element_name, old_val) } if (@value_observers[element_name])
-            @all_values_observers.each { |proc| proc.call(self, element_name, old_val) }
+        def notify_observers(element_name, new_val) #:nodoc:
+            (self.class.value_observers[element_name].to_a + @value_observers[element_name].to_a) \
+                .each { |proc| proc.call(self, element_name, new_val) }
+            (self.class.all_values_observers.to_a + @all_values_observers.to_a).each { |proc| proc.call(self, element_name, new_val) }
         end
         
         
@@ -1495,6 +1581,10 @@ module Spider; module Model
             end
         end
         
+        def remove_association(element, object)
+            mapper.delete_element_associations(self, element, object)
+        end
+        
         ##############################################################
         #   Method missing                                           #
         ##############################################################
@@ -1532,7 +1622,7 @@ module Spider; module Model
         # Descendant classes may well provide a better representation.
         def to_s
             self.class.each_element do |el|
-                if (el.type == String && !el.primary_key?)
+                if ((el.type == String || el.type == Text) && !el.primary_key?)
                     v = get(el)
                     return v ? v.to_s : ''
                 end
@@ -1691,6 +1781,151 @@ module Spider; module Model
                 h[name] = get(name)
             end
             return h
+        end
+        
+        # Returns a yaml representation of the object. Will try to autoload all elements, unless autoload is false;
+        # foreign keys will be expressed as an array if multiple, as a single primary key value otherwise
+        def to_yaml
+            require 'yaml'
+            #return YAML::dump(self)
+            h = {}
+            def obj_pks(obj, klass)
+                unless obj
+                    return klass.primary_keys.length > 1 ? [] : nil
+                end
+                pks = obj.primary_keys
+                return pks[0] if pks.length == 1
+                return pks
+            end 
+            self.class.elements_array.each do |el|
+                if (el.model?)
+                    obj = get(el)
+                    if (el.multiple?)
+                        h[el.name] = obj.map_array{ |o| obj_pks(o, el.model) }
+                    else
+                        h[el.name] = obj_pks(obj, el.model)
+                    end
+                else
+                    h[el.name] = get(el)
+                end
+            end
+            return YAML::dump(h)
+        end
+        
+        def self.from_yaml(yaml)
+            h = YAML::load(yaml)
+            obj = self.static
+            h.each do |key, value|
+                el = elements[key.to_sym]
+                if (el.multiple?)
+                    el_obj = el.model.static
+                    el.model.primary_keys.each do |pk|
+                        el_obj.set(pk, value.unshift)
+                    end
+                    obj.set(el, el_obj)
+                else
+                    obj.set(el, value)
+                end
+            end
+            return obj
+        end
+        
+        def self.transaction
+            yield
+        end
+        
+        def self.prepare_to_code
+            modules = self.name.split('::')[0..-2]
+            included = (self.included_modules - Spider::Model::BaseModel.included_modules).select do |m|
+                m.name !~ /^#{Regexp.quote(self.name)}/
+            end
+            local_name = self.name.split('::')[-1]
+            superklass = self.superclass.name
+            elements = []
+            remove_elements = []
+            self.elements_array.each do |el|
+                next if el.integrated?
+                next if (el.reverse && el.model.elements[el.reverse] && \
+                    (el.model.elements[el.reverse].attributes[:add_reverse] || \
+                    el.model.elements[el.reverse].attributes[:add_multiple_reverse]))
+                method = case el.attributes[:association]
+                when :many
+                    :many
+                when :choice
+                    :choice
+                when :multiple_choice
+                    :multiple_choice
+                when :tree
+                    :tree
+                else
+                    :element
+                end
+                type = el.type
+                attributes = el.attributes.clone
+                if (method == :many || method == :multiple_choice)
+                    attributes.delete(:multiple)
+                end
+                attributes.delete(:association) if method != :element
+                if (method == :tree)
+                    delete_attrs = [:queryset_module, :multiple]
+                    delete_attrs.each{ |a| attributes.delete(a) }
+                    remove_elements += [attributes[:reverse], attributes[:tree_left], attributes[:tree_right], attributes[:tree_depth]]
+                    type = nil
+                end
+                elements << {
+                    :name => el.name,
+                    :type => type,
+                    :attributes => attributes,
+                    :method => method
+                }
+            end
+            elements.reject!{ |el| remove_elements.include?(el[:name]) }
+            return {
+                :modules => modules,
+                :included => included,
+                :elements => elements,
+                :local_name => local_name,
+                :superclass => superklass,
+                :use_storage => @use_storage,
+                :additional_code => []
+            }
+        end
+        
+        def self.to_code
+            c = prepare_to_code
+            str = ""
+            indent = 0
+            append = lambda do |val|
+                str += " "*indent
+                str += val
+                str
+            end
+            str += c[:modules].map{ |m| "module #{m}" }.join('; ') + "\n"
+            str += "\n"
+            indent = 4
+            append.call "class #{c[:local_name]} < #{c[:superclass]}\n"
+            indent += 4
+            c[:included].each do |i|
+                append.call "include #{i.name}\n"
+            end
+            str += "\n"
+            c[:elements].each do |el|
+                append.call("#{el[:method].to_s} #{el[:name].inspect}")
+                str += ", #{el[:type]}" if el[:type]
+                str += ", #{el[:attributes].inspect}\n" if el[:attributes] && !el[:attributes].empty?
+            end
+            str += "\n"
+            append.call "use_storage '#{c[:use_storage]}'\n" if c[:use_storage]
+            c[:additional_code].each do |block|
+                block.each_line do |line|
+                    append.call line
+                end
+                str += "\n"
+            end
+            indent -= 4
+            append.call("end\n")
+            str += c[:modules].map{ "end" }.join(';')
+            return str
         end
         
     end

@@ -1,7 +1,7 @@
 module Spider
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
-        :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode }
+        :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode || $SPIDER_RUNMODE}
     )
     
     # Storage
@@ -26,7 +26,12 @@ module Spider
     
     # Templates
     config_option 'template.cache.disable', _("Refresh template cache every time"), { :default => false }
-    config_option 'template.safe', _("Run templates in safe mode"), { :default => false }
+    config_option 'template.cache.reload_on_restart', _("Refresh template cache when server restarts"), { :default => true }
+    config_option 'template.cache.no_check', _("Never recompile templates"), { :default => true }
+    config_option 'template.cache.check_files', _("Check on every request if templates are changed"), { :default => true }
+    
+    
+    #config_option 'template.safe', _("Run templates in safe mode"), { :default => false }
     
     # Model
     
@@ -41,9 +46,11 @@ module Spider
     config_option 'storages.x.encoding', _("Encoding the DB uses"), :type => String
     
     config_option 'debugger.start', _("Start the debugger")
+    config_option 'profiling.enable', _("Enable on-request profiling")
+    config_option 'request.mutex', _("Respond to requests sequencially"), :default => false
     
     config_option 'locale', _("The locale to use") do |val|
-        Spider.locale = val
+        Spider.locale = Locale.new(val)
     end
     config_option 'i18n.rails_path', _("Path where rails-style locales are found"), :default => lambda{ Spider.paths[:root]+'/locales' }
     config_option 'i18n.default_locale', _("Fallback locale"), :default => 'en'
@@ -51,7 +58,7 @@ module Spider
     config_option 'runner.sleep', _("Sleep time for the periodic runner"), :default => 10
     
     config_option 'session.store', _("Where to store the session"), :default => 'memory', :choices => ['memory', 'file', 'memcached']
-    config_option('session.life', _("Lifetime in seconds of the sessions"), :default => 1800, :type => Fixnum)
+    config_option('session.life', _("Lifetime in seconds of the sessions"), :default => 3600, :type => Fixnum)
     config_option('session.purge_check', _("Number of seconds to wait before session purge check"), :default => 10, :type => Fixnum)
     config_option 'session.file.path', _("The folder where to store file sessions"), :default => lambda{ return Spider.paths[:var]+'/sessions' }
     
@@ -66,7 +73,7 @@ module Spider
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
     
     config_option 'debug.console.level', _("Level of debug output to console"), :default => :INFO,
-        :process => lambda{ |opt| opt && opt != 'false' ? opt.upcase.to_sym : false }
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
     config_option 'log.errors', _("Log errors to file"), :default => true
     config_option 'log.debug.level', _("Log level to use for debug file (false for no debug)"), :default => false,
         :choices => [false, :DEBUG, :INFO],
@@ -81,6 +88,8 @@ module Spider
     config_option 'orgs.x.city', _("Name of the city")
     config_option 'orgs.x.common_name', _("Common name (e.g. domain) of the organization")
     config_option 'orgs.x.email', _("Main e-mail address of the organization")
+    config_option 'orgs.x.auto_from_email', _("Email address used as 'From' for automatic e-mails"),
+        :default => lambda{ |name| Spider.conf.get("orgs.#{name}.email") }
     config_option 'orgs.x.organizational_unit', _("Organizational Unit (e.g. department)")
     config_option 'orgs.x.pub_key', _("Path to the public key (defaults to config/certs/org_name/public.pem)"),
         :default => lambda{ |name| Spider.paths[:certs]+'/'+name+'/public.pem'}
@@ -97,6 +106,13 @@ module Spider
         'state' => 'provincia',
         'organizational_unit' => 'unita_organizzativa'
     }
+    
+    config_option 'site.admin.name', _("Name of the site administrator")
+    config_option 'site.admin.email', _("Email of the site administrator")
+    
+    config_option 'devel.trace.extended', _("Use ruby-debug to provide extended traces"), :default => true
+    config_option 'devel.trace.show_locals', _("Show locals in debug traces"), :default => true
+    config_option 'devel.trace.show_instance_variables', _("Show locals in debug traces"), :default => true
     
     
 end

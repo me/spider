@@ -2,7 +2,7 @@ require 'spiderfw/model/model_hash'
 
 module Spider; module Model
     
-    # The Condition object is a ModelHash, and as such contains key-value pairs:
+    # The Condition behaves like a ModelHash, and as such contains key-value pairs:
     # a simple equality condition can be set with
     #   condition[:element_name] = value
     # The Condition object also holds comparisons: a comparison different from equality can be set with
@@ -15,7 +15,7 @@ module Spider; module Model
     # The Condition object, like the Request, doesn't hold a reference to a model; so no check will be made
     # that the conditions elements are meaningful.
     
-    class Condition < ModelHash
+    class Condition < Hash
         # The top level conjunction for the Condition (:or or :and; new Conditions are initialized with :or)
         attr_accessor :conjunction
         # Polymorph model: used to tell the mapper the condition is on a subclass of the queried model.
@@ -76,13 +76,13 @@ module Spider; module Model
             return c
         end
         
-        # Instantiates a new Condition, with :or conjunction.
+        # Instantiates a new Condition, with :and conjunction.
         # If given a Hash, will set all keys = values.
         # If given multiple params, will convert each to a Condition if needed, and append them
         # to the returned instance.
         # If a block is given, it will be processed by #parse_block
         def initialize(*params, &proc)
-            @conjunction = :or
+            @conjunction = :and
             @comparisons = {}
             @subconditions = []
             params.reject!{ |p| p.nil? }
@@ -158,6 +158,8 @@ module Spider; module Model
             end
             field = field.to_s
             parts = field.split('.', 2)
+            parts[0] = parts[0].to_sym
+            field = field.to_sym unless parts[1]
             if (parts[1])
                 hash_set(parts[0], get_deep_obj()) unless self[parts[0]]
                 self[parts[0]].set(parts[1], comparison, value)
@@ -167,7 +169,7 @@ module Spider; module Model
                 @subconditions << c
             else
                 hash_set(field, value)
-                @comparisons[field.to_sym] = comparison
+                @comparisons[field] = comparison
             end
             return self
         end
@@ -175,6 +177,12 @@ module Spider; module Model
         # Sets an equality comparison.
         def []=(key, value)
             set(key, '=', value)
+        end
+        
+        def [](key)
+            # TODO: deep
+            key = key.name if key.class == Element
+            super(key.to_sym)
         end
         
         # Adds a range condition. This creates a subcondition with >= and <= conditions.
@@ -225,7 +233,7 @@ module Spider; module Model
         # Returns the conjunction with another condition.
         # If this condition already has the required conjunction, the other will be added as a subcondition;
         # otherwise, a new condition will be created and both will be added to it.
-        def conj(conjunction, other)
+        def conj(conjunction, other=nil, &proc)
             self.conjunction = conjunction if (!self.conjunction)
             if (self.conjunction == conjunction)
                 c = self
@@ -234,6 +242,9 @@ module Spider; module Model
                 c.conjunction = conjunction
                 c << self
             end
+            if (!other && proc)
+                other = Condition.new(&proc)
+            end
             c << other
             other.conjunct = true
             return c
@@ -241,15 +252,15 @@ module Spider; module Model
         
         
         # Joins the condition to another with an "or" conjunction. See #conj.
-        def or(other)
-            return conj(:or, other)
+        def or(other=nil, &proc)
+            return conj(:or, other, &proc)
         end
         alias :| :or
         alias :OR :or
         
         # Joins the condition to another with an "and" conjunction. See #conj.
-        def and(other)
-            return conj(:and, other)
+        def and(other=nil, &proc)
+            return conj(:and, other, &proc)
         end
         alias :& :and
         alias :AND :and

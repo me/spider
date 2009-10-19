@@ -75,6 +75,7 @@ module Spider; module Model
                else
                    parts = [l, :asc]
                end
+               raise "Order elements must be strings or symbols" unless parts[0].is_a?(String) || parts[0].is_a?(Symbol)
                @order << [parts[0], parts[1]]
            end
            return self
@@ -92,11 +93,7 @@ module Spider; module Model
        # If given an argument, will use it as a Condition. If given a block, will use it on the Condition.
        def where(condition=nil, &proc)
            condition = Condition.new(&proc) unless (condition)
-           if (condition.class == String)
-               @condition << condition
-           else
-               @condition = condition
-           end
+           @condition << condition
            return self
        end
        
@@ -104,6 +101,10 @@ module Spider; module Model
        def with_polymorph(type, request=nil)
            query = self.class.new(query) unless query.is_a?(self.class)
            @polymorphs << type
+           unless request
+               request = Request.new
+               type.primary_keys.each{ |k| request[k.name] = true }
+           end
            @request.with_polymorphs(type, request)
            return self
        end
@@ -111,6 +112,10 @@ module Spider; module Model
        # Requests only polymorphs. (see Request#only_polymorphs).
        def only_polymorphs
            @request.only_polymorphs
+       end
+       
+       def with_superclass
+           @request.with_superclass
        end
        
        ##############################

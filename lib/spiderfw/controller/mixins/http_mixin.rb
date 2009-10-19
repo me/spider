@@ -2,6 +2,7 @@ require 'base64'
 require 'uuid'
 require 'digest/md5'
 require 'macaddr'
+require 'spiderfw/http/http'
 
 module Spider; module ControllerMixins
     
@@ -30,12 +31,24 @@ module Spider; module ControllerMixins
             return url
         end
         
+        # Returns the http path needed to call the current controller & action.
+        # Reverses any proxy mappings to the Controller#request_path.
         def request_path
             HTTPMixin.reverse_proxy_mapping(super)
         end
         
+        # Returns the request_path prefixed with http:// and the current host.
         def request_url
             'http://'+@request.env['HTTP_HOST']+request_path
+        end
+        
+        # Returns the request_url with query params, if any
+        def request_full_url
+            url = request_url
+            if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
+                url += '?'+@request.env['QUERY_STRING']
+            end
+            return url
         end
         
         def self.output_charset(val)
@@ -47,13 +60,13 @@ module Spider; module ControllerMixins
             @response.headers["Content-Type"] = "#{ct};charset=#{output_charset}"
         end
         
-        # for widgets
-
-        
         def before(action='', *arguments)
+            return super if self.is_a?(Spider::Widget)
+             # FIXME: the Spider::Widget check
+            # is needed because with _wt the widget executes without action
             # Redirect to url + slash if controller is called without action
             dest = HTTPMixin.reverse_proxy_mapping(@request.env['PATH_INFO'])
-            if (action == '' && dest[-1].chr != '/')
+            if (action == '' && dest[-1].chr != '/' && !self.is_a?(Spider::Widget))
                 dest = dest += '/'
                 if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
                     dest += '?'+@request.env['QUERY_STRING']
@@ -64,13 +77,19 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
-            if (exc.is_a?(HTTPStatus))
+            if (exc.is_a?(Spider::Controller::NotFound))
+                @response.status = Spider::HTTP::NOT_FOUND
+                error("Not found: #{exc.path}")
+            elsif (exc.is_a?(Spider::Controller::BadRequest))
+                @response.status = Spider::HTTP::BAD_REQUEST
+            elsif (exc.is_a?(Spider::Controller::Forbidden))
+                @response.status = Spider::HTTP::FORBIDDEN
+            elsif (exc.is_a?(HTTPStatus))
                 @response.status = exc.code
-                done
-                #raise
             else
-                super
+                @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
             end
+            super
         end
         
         def challenge_basic_auth()

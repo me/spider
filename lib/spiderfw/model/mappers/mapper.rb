@@ -92,6 +92,13 @@ module Spider; module Model
             raise MapperError, "Unimplemented"
         end
         
+        # Returns true if information to find the given element is accessible to the mapper, or to an integrated model's mapper.
+        # (see for example DbMapper#someone_have_references?)
+        def someone_have_references?(element)
+            raise MapperError, "Unimplemented"
+        end
+        
+        
         ##############################################################
         #   Save (insert and update)                                 #
         ##############################################################
@@ -135,7 +142,8 @@ module Spider; module Model
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-                obj.get(el).save if obj.element_modified?(el) && obj.get(el).mapper.class.write?
+                sub_obj = obj.get(el)
+                sub_obj.save if sub_obj && sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
         end
         
@@ -147,14 +155,25 @@ module Spider; module Model
         def before_update(obj)
         end
         
+        # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
+        def before_delete(objects)
+        end
+        
         # Called after a succesful save. 'mode' can be :insert or :update.
         def after_save(obj, mode)
-            save_associations(obj)
             obj.reset_modified_elements
+            save_associations(obj)
+            
+        end
+        
+        # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
+        def after_delete(objects)
         end
         
         # Saves the object to the storage.
         def save(obj, request=nil)
+            prev_autoload = obj.autoload?
+            obj.save_mode
             if (@model.extended_models)
                 is_insert = false
                 # Load local primary keys if they exist
@@ -181,6 +200,7 @@ module Spider; module Model
                 do_insert(obj)
             end
             after_save(obj, save_mode)
+            obj.autoload = prev_autoload
         end
 
         # Elements that are associated to this one externally.
@@ -196,45 +216,87 @@ module Spider; module Model
         end
         
         # Deletes all associations from the given object to the element.
-        def delete_element_associations(obj, element)
+        def delete_element_associations(obj, element, associated=nil)
             if (element.attributes[:junction])
-                element.mapper.delete({element.attributes[:reverse] => obj.primary_keys})
+                condition = {element.attributes[:reverse] => obj.primary_keys}
+                condition[element.attributes[:junction_their_element]] = associated if associated
+                element.mapper.delete(condition)
             else
-                associated = obj.get(element)
-                if (element.multiple? && element.owned?)
+                if (element.multiple?)
                     condition = Condition.and
-                    associated.each do |child|
-                        condition_row = Condition.or
-                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
-                        condition << condition_row
+                    if (associated)
+                        condition = associated.keys_to_condition
+                    else
+                        condition[element.reverse] = obj
                     end
-                    element.mapper.delete(condition)
+                    # associated.each do |child|
+                    #     condition_row = Condition.or
+                    #     element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
+                    #     condition << condition_row
+                    # end
+                    if (element.owned?)
+                        element.mapper.delete(condition)
+                    else
+                        element.mapper.bulk_update({element.reverse => nil}, condition)
+                    end
                 end
             end
         end
         
         # Saves the associations from the given object to the element.
         def save_element_associations(obj, element)
-            delete_element_associations(obj, element)
+            our_element = element.attributes[:reverse]
+            val = obj.get(element)
             if (element.attributes[:junction])
-                val = obj.get(element)
-                if (val.is_a?(QuerySet) && val.model == element.type) # construct the junction
-                    qs = QuerySet.static(element.model, val.map{ |el_obj|
-                        {element.attributes[:reverse] => obj, element.attributes[:junction_their_element] => el_obj}
-                    })
-                    val = qs
-                elsif (val.is_a?(QuerySet))
-                    val.no_autoload do
-                        val.each do |row|
-                            row.set(element.attributes[:reverse], obj)
-                        end
+                their_element = element.attributes[:junction_their_element]
+                if (val.model != element.model) # dereferenced junction
+                    current = obj.get_new
+                    current_val = current.get(element)
+                    condition = Condition.and
+#                    debugger
+                    current_val.each do |row|
+                        next if val.include?(row)
+                        condition_row = Condition.or
+                        condition_row[their_element] = row
+                        condition << condition_row
+                    end
+                    unless condition.empty?
+                        condition[our_element] = obj
+                        element.model.mapper.delete(condition)
+                    end
+                    val.each do |row|
+                        next if current_val.include?(row)
+                        junction = element.model.new({ our_element => obj, their_element => row })
+                        junction.insert
+                    end                    
+                else
+                    condition = Condition.and
+                    condition[our_element] = obj
+                    val.each do |row|
+                        next unless row_id = row.get(element.attributes[:junction_id])
+                        condition.set(:id, '<>', row_id)
+                    end
+                    element.model.mapper.delete(condition)
+                    val.set(our_element, obj)
+                    val.save
+                end
+            else
+                if (element.multiple?)
+                    condition = Condition.and
+                    condition[our_element] = obj
+                    val.each do |row|
+                        condition_row = Condition.or
+                        element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', row.get(el))}
+                        condition << condition_row
+                    end
+                    if (element.owned?)
+                        element.mapper.delete(condition)
+                    else
+                        element.mapper.bulk_update({our_element => nil}, condition)
                     end
                 end
-                val.insert
-            else
-                associated = obj.get(element)
-                associated.set(element.reverse, obj)
-                associated.save
+                val.set(our_element, obj)
+                val.save
             end
         end
         
@@ -247,16 +309,20 @@ module Spider; module Model
         
         # Inserts the object in the storage.
         def insert(obj)
+            prev_autoload = obj.save_mode()
             before_save(obj, :insert)
             do_insert(obj)
             after_save(obj, :insert)
+            obj.autoload = prev_autoload
         end
         
         # Updates the object in the storage.
         def update(obj)
+            prev_autoload = obj.save_mode()
             before_save(obj, :update)
             do_update(obj)
             after_save(obj, :update)
+            obj.autoload = prev_autoload
         end
         
         # FIXME: remove?
@@ -276,8 +342,10 @@ module Spider; module Model
             end
             
             storage.start_transaction
+            curr = nil
             if (obj_or_condition.is_a?(BaseModel))
                 condition = prepare_delete_condition(obj_or_condition)
+                curr = QuerySet.new(@model, obj_or_condition)
             elsif (obj_or_condition.is_a?(QuerySet))
                 qs = obj_or_condition
                 condition = Condition.or
@@ -288,12 +356,13 @@ module Spider; module Model
             Spider::Logger.debug("Deleting with condition:")
             Spider::Logger.debug(condition)
             prepare_query_condition(condition)
-            cascade = @model.elements_array.select{ |el| el.attributes[:delete_cascade] }
+            cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
             assocs = association_elements.select do |el|
                 !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
             end
+            curr = @model.where(condition) unless curr
+            before_delete(curr)
             unless cascade.empty? && assocs.empty?
-                curr = find(Query.new(condition))
                 curr.each do |curr_obj|
                     cascade.each do |el|
                         el.model.mapper.delete(curr_obj.get(el))
@@ -304,6 +373,7 @@ module Spider; module Model
                 end
             end
             do_delete(condition, force)
+            after_delete(curr)
             storage.commit
         end
         
@@ -369,51 +439,64 @@ module Spider; module Model
             set = nil
             Spider::Model.with_identity_mapper do |im|
 #                im.put(query_set)
-                if (@model.attributes[:condition])
-                    query.condition = Condition.and(query.condition, @model.attributes[:condition])
-                end
-                @model.primary_keys.each{ |key| query.request[key] = true}
-                expand_request(query.request) unless options[:no_expand_request]
-                query = prepare_query(query, query_set)
-                query.request.total_rows = true unless query.request.total_rows == false
-                result = fetch(query)
+                query_set.update_loaded_elements if query_set
                 set = query_set || QuerySet.new(@model)
                 was_loaded = set.loaded
                 set.loaded = true
                 set.index_by(*@model.primary_keys)
                 set.last_query = query
-                if !result || result.empty?
-                    set.each_current do |obj|
-                        query.request.keys.each do |element_name|
-                            obj.set_loaded_value(element_name, nil) unless @model.elements[element_name].integrated?
+                if (query.request.with_superclass? && @model.superclass < BaseModel)
+                    return find_with_superclass(query, set, options)
+                end
+                
+                if (@model.attributes[:condition])
+                    query.condition = Condition.and(query.condition, @model.attributes[:condition])
+                end
+                keys_loaded = true
+                @model.primary_keys.each do |key|
+                    unless set.element_loaded?(key)
+                        keys_loaded = false
+                        break
+                    end
+                end
+                do_fetch = true
+                if (keys_loaded)
+                    do_fetch = false
+                    query.request.each_key do |key|
+                        if (have_references?(key))
+                            do_fetch = true
+                            break
                         end
                     end
-                    return set
                 end
-                set.total_rows = result.total_rows if (!was_loaded)
-                result.each do |row|
-                    obj =  map(query.request, row, set.model)
-                    next unless obj
-                    search = {} 
-                    @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
-                    obj_res = set.find(search)  # FIXME: find a better way
-                    if (obj_res && obj_res[0])
-                        obj_res[0].merge!(obj)
-                        obj.loaded_elements.each{ |name, bool| set.element_loaded(name) }
-                    else
-                        set << obj
+                if (do_fetch)
+                    @model.primary_keys.each{ |key| query.request[key] = true}
+                    expand_request(query.request, set) unless options[:no_expand_request]
+                    query = prepare_query(query, query_set)
+                    query.request.total_rows = true unless query.request.total_rows == false
+                    result = fetch(query)
+                    if !result || result.empty?
+                        set.each_current do |obj|
+                            query.request.keys.each do |element_name|
+                                el = @model.elements[element_name]
+                                next if el.integrated? || @model.extended_models[el.model]
+                                obj.set_loaded_value(element_name, nil) 
+                            end
+                        end
+                        return set
                     end
-                    @raw_data[obj.object_id] = row
+                    set.total_rows = result.total_rows if (!was_loaded)
+                    result.each do |row|
+                        obj =  map(query.request, row, set.model)
+                        next unless obj
+                        merge_object(set, obj)
+                        @raw_data[obj.object_id] = row
+                    end
                 end
+                set = get_external(set, query)
 #                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
 
-                set = get_external(set, query)
-                # FIXME: avoid the repetition
-                set.each_current do |obj|
-                    query.request.keys.each do |element_name|
-                        obj.set_loaded_value(element_name, nil) unless obj.element_loaded?(element_name) || @model.elements[element_name].integrated?
-                    end
-                end
+               
                 # if (delay_put)
                 #     set.no_autoload(false) do
                 #         set.each_index do |i|
@@ -422,6 +505,38 @@ module Spider; module Model
                 #         end
                 #     end
                 # end
+            end
+            return set
+        end
+        
+        
+        def merge_object(set, obj) # :nodoc:
+            search = {} 
+            @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
+            obj_res = set.find(search)  # FIXME: find a better way
+            if (obj_res && obj_res[0])
+                obj_res[0].merge!(obj)
+                obj.loaded_elements.each{ |name, bool| set.element_loaded(name) }
+            else
+                set << obj
+            end
+        end
+        
+        def find_with_superclass(query, set=nil, options={}) # :nodoc:
+            q = query.clone
+            polym_request = Request.new
+            polym_condition = Condition.new
+            query.request.keys.each do |el_name|
+                if (!@model.superclass.has_element?(el_name))
+                    polym_request[el_name] = true
+                    query.request.delete(el_name)
+                end
+            end
+            q.with_polymorph(@model, polym_request)
+            res = @model.superclass.mapper.find(q)
+            res.change_model(@model)
+            res.each do |obj|
+                merge_object(set, obj)
             end
             return set
         end
@@ -459,6 +574,7 @@ module Spider; module Model
                    get_integrated[element.integrated_from] ||= Request.new
                    get_integrated[element.integrated_from][element.integrated_from_element] = query.request[element_name]
                 elsif element.model?
+                    next if query.request[element_name] == true && someone_have_references?(element)
                     sub_query = Query.new
                     sub_query.request = ( query.request[element_name].class == Request ) ? query.request[element_name] : nil
                     sub_query.condition = element.attributes[:condition] if element.attributes[:condition]
@@ -553,9 +669,41 @@ module Spider; module Model
         ##############################################################
 
         def prepare_query(query, obj=nil)
+            if (query.request.polymorphs?)
+                conds = split_condition_polymorphs(query.condition, query.request.polymorphs.keys) 
+                conds.each{ |polym, c| query.condition << c }
+            end
             prepare_query_request(query.request, obj)
             prepare_query_condition(query.condition)
             return query
+        end
+        
+        def split_condition_polymorphs(condition, polymorphs)
+            conditions = {}
+            condition.each_with_comparison do |el, val, comp|
+                if (!@model.has_element?(el))
+                    polymorphs.each do |polym|
+                        if (polym.has_element?(el))
+                            conditions[polym] ||= Condition.new
+                            conditions[polym].polymorph = polym
+                            conditions[polym].set(el, comp, val)
+                            condition.delete(el)
+                        end
+                    end
+                end
+            end
+            condition.subconditions.each do |sub|
+                res = split_condition_polymorphs(sub, polymorphs)
+                polymorphs.each do |polym|
+                    next unless res[polym]
+                    if (!conditions[polym])
+                        conditions[polym] = res[polym]
+                    else
+                        conditions[polym] << res[polym]
+                    end
+                end
+            end
+            return conditions
         end
         
         
@@ -589,6 +737,9 @@ module Spider; module Model
             @model.elements.each do |name, element|
                 next if (obj && obj.element_loaded?(name))
                 if (element.lazy_groups && (lazy_groups - element.lazy_groups).length < lazy_groups.length)
+                    if (element.attributes[:lazy_check_owner])
+                        next unless have_references?(name)
+                    end
                     request.request(name)
                 end
             end
@@ -691,6 +842,14 @@ module Spider; module Model
         
     end
     
+    ##############################################################
+    #   Aggregates                                               #
+    ##############################################################
+    
+    def max(element, condition=nil)
+        raise "Unimplemented"
+    end
+    
     
     ##############################################################
     #   Exceptions                                               #
@@ -721,10 +880,10 @@ module Spider; module Model
             @msg
         end
         def message
-            self.class.name.to_s + " " + _(self.class.msg) % @element.label
+            _(self.class.msg) % @element.label
         end
         def to_s
-            message
+            self.class.name.to_s + " " + message
         end
     end
     

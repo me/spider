@@ -55,6 +55,18 @@ module Spider
                     File.unlink(path) if File.exist?(path) && (File.mtime(path) + life < Time.now)
                 end
             end
+            
+            def delete(sid)
+                dir = Spider.conf.get('session.file.path')
+                return unless File.exist?(dir+'/'+sid)
+                @sync.lock(Sync::EX)
+                f = File.new(dir+'/'+sid)
+                f.flock(File::LOCK_EX)
+                File.unlink(dir+'/'+sid)
+                f.flock(File::LOCK_UN)
+                f.close
+                @sync.lock(Sync::UN)
+            end
                 
             
         end

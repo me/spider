@@ -4,17 +4,23 @@ module Spider
         
         def self.parse_element(el, allowed_blocks=nil, template=nil)
             return nil if (el.class == ::Hpricot::BogusETag)
+            block = get_block_type(el)
+            return nil unless (!allowed_blocks || allowed_blocks.include?(block))
+            return const_get(block).new(el, template, allowed_blocks)
+        end
+        
+        def self.get_block_type(el, skip_attributes=false)
             if (el.class == ::Hpricot::Text)
                 block = :Text
             elsif (el.class == ::Hpricot::Comment)
                 block = :Comment
-            elsif (el.attributes['sp:if'])
+            elsif (!skip_attributes && (el.attributes['sp:if'] || el.attributes['sp:run-if']))
                 block = :If
-            elsif (el.attributes['sp:tag-if'])
+            elsif (!skip_attributes && el.attributes['sp:tag-if'])
                 block = :TagIf
-            elsif (el.attributes['sp:attr-if'])
+            elsif (!skip_attributes && el.attributes['sp:attr-if'])
                 block = :AttrIf
-            elsif (el.attributes['sp:each'] || el.attributes['sp:each_index'])
+            elsif (!skip_attributes && (el.attributes['sp:each'] || el.attributes['sp:each_index']))
                 block = :Each
             elsif (el.name == 'sp:render')
                 block = :Render
@@ -28,16 +34,17 @@ module Spider
                 block = :Debugger
             elsif (Spider::Template.registered?(el.name))
                 klass = Spider::Template.get_registered_class(el.name)
-                if (klass.subclass_of?(::Spider::Widget))
+                if (klass < ::Spider::Widget)
                     block = :Widget
+                elsif (klass < Spider::Tag)
+                    block = :Tag
                 else
                     Spider.logger.error("Could not parse #{el.name} tag")
                 end
             else
                 block = :HTML
             end
-            return nil unless (!allowed_blocks || allowed_blocks.include?(block))
-            return const_get(block).new(el, template, allowed_blocks)
+            return block
         end
         
         class Block
@@ -62,12 +69,12 @@ module Spider
                 return content_blocks
             end
             
-            def compile_content(c='', init='')
+            def compile_content(c='', init='', options={})
                 c ||= ""
                 init ||= ""
                 blocks = parse_content(@el)
                 blocks.each do |block|
-                    compiled = block.compile
+                    compiled = block.compile(options)
                     next unless compiled
                     # if (compiled.run_code =~ /nil/)
                     #     Spider::Logger.debug("NIL BLOCK")
@@ -90,7 +97,7 @@ module Spider
                 return res
             end
             
-            def vars_to_scene(str, container='self')
+            def self.vars_to_scene(str, container='self')
                 res = ""
                 scanner = ::StringScanner.new(str)
                 pos = 0
@@ -102,6 +109,10 @@ module Spider
                 end
                 res += scanner.rest
                 return res
+            end
+            
+            def vars_to_scene(str, container='self')
+                self.class.vars_to_scene(str, container)
             end
             
             def scan_vars(str, &block)
@@ -121,7 +132,7 @@ module Spider
                 @el
             end
             
-            def var_to_scene(var, container='self')
+            def self.var_to_scene(var, container='self')
                 first, rest = var.split('.', 2)
                 if (first =~ /([^\[]+)(\[.+)/)
                     var_name = $1
@@ -137,6 +148,10 @@ module Spider
                 scene_var += array_rest if (array_rest)
                 scene_var += '.'+rest if (rest)
                 return scene_var
+            end
+            
+            def var_to_scene(var, container='self')
+                self.class.var_to_scene(var, container)
             end
             
         end
@@ -164,6 +179,7 @@ require 'spiderfw/templates/blocks/attr_if'
 require 'spiderfw/templates/blocks/render'
 require 'spiderfw/templates/blocks/yield'
 require 'spiderfw/templates/blocks/pass'
+require 'spiderfw/templates/blocks/tag'
 require 'spiderfw/templates/blocks/widget'
 require 'spiderfw/templates/blocks/run'
 require 'spiderfw/templates/blocks/debugger'

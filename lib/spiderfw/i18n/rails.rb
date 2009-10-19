@@ -30,7 +30,7 @@ module Spider; module I18n
 
 
         def find_locale(locale)
-            try = locale
+            try = locale.to_s
             while (try)
                 extensions = ['yml', 'rb']
                 extensions.each do |ext|
@@ -60,6 +60,28 @@ module Spider; module I18n
             format.gsub!(/%B/, l["date.month_names"][object.mon])
             format.gsub!(/%p/, l["time.#{object.hour < 12 ? :am : :pm}"]) if object.respond_to? :hour
             object.strftime(format)
+        end
+        
+        # FIXME: add extended format handling like in localize
+        def parse_date_time(locale, string, format = :default, options={})
+            l = @locale_data
+            type = object.respond_to?(:sec) ? 'time' : 'date'
+            formats = l["#{type}.formats"]
+            format = formats[format.to_s] if formats && formats[format.to_s]
+            raise "Format #{format} not found" unless format
+
+            format = format.to_s.dup
+            if (options[:return] == :datetime)
+                klass = DateTime
+            elsif (options[:return] == :date)
+                klass = Date
+            end
+            object.strptime(format)
+        end
+
+        
+        def time_ago_in_words(from_time, include_seconds = false)
+          distance_of_time_in_words(from_time, Time.now, include_seconds)
         end
         
     end

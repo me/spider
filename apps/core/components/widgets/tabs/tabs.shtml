@@ -1,2 +1,2 @@
-<sp:template extend="SPIDER/apps/core/components/widgets/menu/menu.shtml">
-</sp:template>
+<tpl:extend src="SPIDER/apps/core/components/widgets/menu/menu.shtml">
+</tpl:extend>

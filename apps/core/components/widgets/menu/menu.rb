@@ -10,7 +10,7 @@ module Spider; module Components
             @sections = {}
         end
         
-        def add(section, label, target)
+        def add(label, target, section=nil)
             @sections[section] ||= []
             @sections[section] << [label, target]
         end

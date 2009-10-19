@@ -23,31 +23,56 @@ module Spider; module Auth
             @response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         end
         
+        __.html
         def index
             @scene.redirect = @request.params['redirect'] if (@request.params['redirect'])
             @scene.unauthorized_msg = @request.session.flash[:unauthorized_exception].message if @request.session.flash[:unauthorized_exception] && @request.session.flash[:unauthorized_exception].message != 'Spider::Auth::Unauthorized'
+            @scene.message = @request.session.flash[:login_message] if @request.session.flash[:login_message]
             render('login')
         end
         
+        def authenticate
+            get_user
+        end
+        
+        def get_user
+            return self.class.user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
+        end
+        
+        __.html
         def do_login
-            user = self.class.user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
+            user = authenticate
             if (user)
                 user.save_to_session(@request.session)
-                if (@request.params['redirect'] && !@request.params['redirect'].empty?)
-                    redir_to = @request.params['redirect']
-                    redirect(redir_to)
-                elsif(self.default_redirect)
-                    redirect(self.default_redirect)
-                else
+                on_success(user)
+                unless success_redirect
                     $out << "Loggato"
                 end
             else
                 @scene.failed_login = true
+                @response.status = 401
                 @scene.login = @request.params['login']
                 index
             end
         end
         
+        def on_success(user)
+        end
+        
+        def success_redirect
+            if (@request.params['redirect'] && !@request.params['redirect'].empty?)
+                redir_to = @request.params['redirect']
+                redirect(redir_to, Spider::HTTP::SEE_OTHER)
+                return true
+            elsif(self.default_redirect)
+                redirect(self.default_redirect)
+                return true
+            else
+                return false
+            end
+        end
+        
+        __.html
         def logout
             @request.session[:auth] = nil
             @scene.did_logout = true
