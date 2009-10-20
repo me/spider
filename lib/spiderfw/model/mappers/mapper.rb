@@ -166,6 +166,10 @@ module Spider; module Model
             
         end
         
+        # Hook called after a succesful save: the object is not in save mode.
+        def save_done(obj, mode)
+        end
+        
         # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
         def after_delete(objects)
         end
@@ -201,6 +205,11 @@ module Spider; module Model
             end
             after_save(obj, save_mode)
             obj.autoload = prev_autoload
+            unless @doing_save_done
+                @doing_save_done = true
+                save_done(obj, save_mode) 
+            end
+            @doing_save_done = false
         end
 
         # Elements that are associated to this one externally.
