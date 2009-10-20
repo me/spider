@@ -1850,6 +1850,43 @@ module Spider; module Model
             yield
         end
         
+        def self.dump_element(el)
+            method = case el.attributes[:association]
+            when :many
+                :many
+            when :choice
+                :choice
+            when :multiple_choice
+                :multiple_choice
+            when :tree
+                :tree
+            else
+                :element
+            end
+            type = el.type
+            attributes = el.attributes.clone
+            if (method == :many || method == :multiple_choice)
+                attributes.delete(:multiple)
+            end
+            attributes.delete(:association) if method != :element
+            if (attributes[:association_type])
+                attributes[:through] = attributes[:association_type]
+                attributes.delete(:association_type)
+            end
+            if (method == :tree)
+                delete_attrs = [:queryset_module, :multiple]
+                delete_attrs.each{ |a| attributes.delete(a) }
+                remove_elements += [attributes[:reverse], attributes[:tree_left], attributes[:tree_right], attributes[:tree_depth]]
+                type = nil
+            end
+            return {
+                :name => el.name,
+                :type => type,
+                :attributes => attributes,
+                :method => method
+            }
+        end
+        
         def self.prepare_to_code
             modules = self.name.split('::')[0..-2]
             included = (self.included_modules - Spider::Model::BaseModel.included_modules).select do |m|
@@ -1864,36 +1901,9 @@ module Spider; module Model
                 next if (el.reverse && el.model.elements[el.reverse] && \
                     (el.model.elements[el.reverse].attributes[:add_reverse] || \
                     el.model.elements[el.reverse].attributes[:add_multiple_reverse]))
-                method = case el.attributes[:association]
-                when :many
-                    :many
-                when :choice
-                    :choice
-                when :multiple_choice
-                    :multiple_choice
-                when :tree
-                    :tree
-                else
-                    :element
-                end
-                type = el.type
-                attributes = el.attributes.clone
-                if (method == :many || method == :multiple_choice)
-                    attributes.delete(:multiple)
-                end
-                attributes.delete(:association) if method != :element
-                if (method == :tree)
-                    delete_attrs = [:queryset_module, :multiple]
-                    delete_attrs.each{ |a| attributes.delete(a) }
-                    remove_elements += [attributes[:reverse], attributes[:tree_left], attributes[:tree_right], attributes[:tree_depth]]
-                    type = nil
-                end
-                elements << {
-                    :name => el.name,
-                    :type => type,
-                    :attributes => attributes,
-                    :method => method
-                }
+                el_hash = dump_element(el)
+                return nil unless el_hash
+                elements << el_hash
             end
             elements.reject!{ |el| remove_elements.include?(el[:name]) }
             return {
