@@ -1801,7 +1801,7 @@ module Spider; module Model
         
         # Returns a yaml representation of the object. Will try to autoload all elements, unless autoload is false;
         # foreign keys will be expressed as an array if multiple, as a single primary key value otherwise
-        def to_yaml
+        def to_yaml(params)
             require 'yaml'
             #return YAML::dump(self)
             h = {}
@@ -1814,6 +1814,7 @@ module Spider; module Model
                 return pks
             end 
             self.class.elements_array.each do |el|
+                next if params[:except] && params[:except].include?(el.name)
                 if (el.model?)
                     obj = get(el)
                     if (el.multiple?)
