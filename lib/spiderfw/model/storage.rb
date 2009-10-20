@@ -6,7 +6,14 @@ module Spider; module Model
         def self.get_storage(type, url)
             case type
             when 'db'
-                adapter = url.match(/^(.+?):\/\//)[1]
+                matches = url.match(/^(.+?):\/\/(.+)/)
+                adapter = matches[1]
+                rest = matches[2]
+                if (adapter =~ /(.+):(.+)/)
+                    connector = $1
+                    adapter = $2
+                    url = "#{adapter}://#{rest}"
+                end
                 case adapter
                 when 'sqlite'
                     storage = Db::SQLite.new(url)
@@ -15,6 +22,13 @@ module Spider; module Model
                 when 'mysql'
                     storage = Db::Mysql.new(url)
                 end
+                if (connector)
+                    case connector
+                    when 'odbc'
+                        storage.extend(Db::Connectors::ODBC)
+                    end
+                end
+                return storage
             end
         end
         
@@ -24,6 +38,9 @@ module Spider; module Model
         end
         
         class StorageException < RuntimeError
+        end
+        
+        class DuplicateKey < StorageException
         end
         
         ###############################
