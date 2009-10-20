@@ -457,7 +457,7 @@ module Spider; module Model
                 })
                 attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
-                    attributes[:reverse] = add_rev
+                    attributes[:reverse] = add_rev[:name]
                     attributes.delete(:add_reverse)
                     attributes.delete(:add_multiple_reverse)
                 end
@@ -687,6 +687,7 @@ module Spider; module Model
 
         # Yields each element in order.
         def self.each_element
+            return unless @elements_order
             @elements_order.each do |name|
                 yield elements[name]
             end
