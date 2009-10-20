@@ -84,8 +84,9 @@ module Spider; module Model
             # FIXME: might need to clone every element
             @subclasses ||= []
             @subclasses << subclass
-            subclass.instance_variable_set("@elements", @elements.clone) if @elements
-            subclass.instance_variable_set("@elements_order", @elements_order.clone) if @elements_order
+            each_element do |el|
+                subclass.add_element(el.clone)
+            end
             subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
         end
@@ -399,6 +400,13 @@ module Spider; module Model
             end
             return @elements[name]
 
+        end
+        
+        def self.add_element(el)
+            @elements ||= {}
+            @elements[el.name] = el
+            @elements_order ||= []
+            @elements_order << el.name
         end
         
         

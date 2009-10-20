@@ -183,6 +183,10 @@ module Spider; module Model
             return attributes[:lazy].is_a?(Array) ? attributes[:lazy] : [attributes[:lazy]]
         end
         
+        def clone
+            self.class.new(@name, @type, @attributes.clone)
+        end
+        
         # def queryset
         #     return nil unless model?
         #     set_model = @attributes[:queryset_model] ? @attributes[:queryset_model] : type
