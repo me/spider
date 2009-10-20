@@ -184,7 +184,11 @@ module Spider; module Model; module Storage; module Db
                 end
             rescue => exc
                 disconnect
-                raise exc
+                if (exc.message =~ /Duplicate entry/)
+                    raise Spider::Model::Storage::DuplicateKey
+                else
+                    raise exc
+                end
             ensure
                 disconnect if @conn && !in_transaction?
             end
