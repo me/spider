@@ -54,7 +54,10 @@ module Spider
                         container ||= self
                         mods = []
                         container.constants.each do |c|
-                            mods += get_models(container.const_get(c))
+                            begin
+                                mods += get_models(container.const_get(c))
+                            rescue LoadError
+                            end
                         end
                         return mods
                     end
@@ -66,6 +69,7 @@ module Spider
                              m.constants.each do |c|
                                  sub_mod = m.const_get(c)
                                  next if !sub_mod.subclass_of?(Spider::Model::BaseModel) || sub_mod.app != self
+                                 next if sub_mod == m
                                  ms += get_models(sub_mod)
                              end
                          elsif (m.is_a?(Module) && !m.is_a?(Class))
