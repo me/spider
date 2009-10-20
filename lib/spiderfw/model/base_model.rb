@@ -169,6 +169,7 @@ module Spider; module Model
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
         # See also Element.
         def self.element(name, type, attributes={}, &proc)
+            name = name.to_sym
             @elements ||= {}
             @elements_order ||= []
             if type.class == Class
@@ -226,11 +227,18 @@ module Spider; module Model
                 end
                 attributes[:junction] = true
                 attributes[:junction_id] ||= :id
-                self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
+                if (attributes[:junction_our_name])
+                    self_name = attributes[:junction_our_name]
+                else
+                    self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
+                end
                 attributes[:reverse] = self_name
-                other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
-                other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
-                attributes[:junction_their_element] = other_name
+                unless attributes[:junction_their_element]
+                    other_name = Spider::Inflector.underscore(orig_type.short_name == self.short_name ? orig_type.name : orig_type.short_name).gsub('/', '_').downcase.to_sym
+                    other_name = :"#{other_name}_ref" if (orig_type.elements[other_name])
+                    attributes[:junction_their_element] = other_name
+                end
+                other_name = attributes[:junction_their_element]
                 if (create_junction)
                     assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel))
                     assoc_type.attributes[:sub_model] = self
