@@ -204,10 +204,10 @@ module Spider; module Model
 
             orig_type = type
             assoc_type = nil
-            if (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && (!attributes[:reverse] || \
+            if (attributes[:junction] || (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && \
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
-                (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?)))
+               (attributes[:has_single_reverse] == false || !attributes[:reverse] ||  (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?))))
                 attributes[:anonymous_model] = true
                 attributes[:owned] = true unless attributes[:owned] != nil
                 first_model = self.first_definer(name)
@@ -226,7 +226,7 @@ module Spider; module Model
                     end
                 end
                 attributes[:junction] = true
-                attributes[:junction_id] ||= :id
+                attributes[:junction_id] = :id unless attributes.has_key?(:junction_id)
                 if (attributes[:junction_our_name])
                     self_name = attributes[:junction_our_name]
                 else
@@ -662,13 +662,13 @@ module Spider; module Model
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
-            @label || self.name
+            @label || self.name || ''
         end
         
         # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
-            @label_plural || self.name
+            @label_plural || self.name || ''
         end
         
         ########################################################
@@ -1853,6 +1853,7 @@ module Spider; module Model
         end
         
         def self.dump_element(el)
+            remove_elements = []
             method = case el.attributes[:association]
             when :many
                 :many
@@ -1872,7 +1873,7 @@ module Spider; module Model
             end
             attributes.delete(:association) if method != :element
             if (attributes[:association_type])
-                attributes[:through] = attributes[:association_type]
+                attributes[:through] = attributes[:association_type] unless attributes[:anonymous_model]
                 attributes.delete(:association_type)
             end
             if (method == :tree)
@@ -1885,7 +1886,8 @@ module Spider; module Model
                 :name => el.name,
                 :type => type,
                 :attributes => attributes,
-                :method => method
+                :method => method,
+                :remove_elements => remove_elements
             }
         end
         
@@ -1906,6 +1908,7 @@ module Spider; module Model
                 el_hash = dump_element(el)
                 return nil unless el_hash
                 elements << el_hash
+                remove_elements += el_hash[:remove_elements]
             end
             elements.reject!{ |el| remove_elements.include?(el[:name]) }
             return {
@@ -1919,7 +1922,7 @@ module Spider; module Model
             }
         end
         
-        def self.to_code
+        def self.to_code(options={})
             c = prepare_to_code
             str = ""
             indent = 0
