@@ -55,24 +55,24 @@
 		prepareBranches: function(settings) {
 			if (!settings.prerendered) {
 				// mark last tree items
-				this.filter(":last-child:not(ul)").addClass(CLASSES.last);
+				this.filter(":last-child:not(ul,ol)").addClass(CLASSES.last);
 				// collapse whole tree, or only those marked as closed, anyway except those marked as open
-				this.filter((settings.collapsed ? "" : "." + CLASSES.closed) + ":not(." + CLASSES.open + ")").find(">ul").hide();
+				this.filter((settings.collapsed ? "" : "." + CLASSES.closed) + ":not(." + CLASSES.open + ")").find(">.sublist >ul, >.sublist >ol").hide();
 			}
 			// return all items with sublists
-			return this.filter(":has(>ul)");
+			return this.filter(":has(>.sublist >ul:not(:empty),>.sublist >ol:not(:empty))");
 		},
 		applyClasses: function(settings, toggler) {
-			// this.filter(":has(>ul):not(:has(>a))").find(">span").click(function(event) {
+			// this.filter(":has(>"+settings.ulTag+"):not(:has(>a))").find(">span").click(function(event) {
 			// 	toggler.apply($(this).next());
 			// }).add( $("a", this) ).hoverClass();
 			
 			if (!settings.prerendered) {
 				// handle closed ones first
-				this.filter(":has(>ul)").each(function(){
+				this.filter(":has(>.sublist >ul:not(:empty),.sublist >ol:not(:empty))").each(function(){
 					var $this = $(this);
-					var ul = $('>ul', this);
-					if (ul.css('display') == 'none' || ul.find('>li').length == 0){
+					var ul = $('>.sublist >ul:not(:empty),>.sublist >ol:not(:empty)', this);
+					if (ul.css('display') == 'none'){
 						$this.addClass(CLASSES.expandable)
 							.replaceClass(CLASSES.last, CLASSES.lastExpandable);
 					}
@@ -147,7 +147,7 @@
 					.swapClass( CLASSES.collapsable, CLASSES.expandable )
 					.swapClass( CLASSES.lastCollapsable, CLASSES.lastExpandable )
 					// find child lists
-					.find( ">ul" )
+					.find( ">.sublist >ul,>.sublist >ol" )
 					// toggle them
 					.heightToggle( settings.animated, settings.toggle );
 				if ( settings.unique ) {
@@ -160,7 +160,7 @@
 						.end()
 						.replaceClass( CLASSES.collapsable, CLASSES.expandable )
 						.replaceClass( CLASSES.lastCollapsable, CLASSES.lastExpandable )
-						.find( ">ul" )
+						.find( ">.sublist >ul,>.sublist >ol" )
 						.heightHide( settings.animated, settings.toggle );
 				}
 			}
@@ -171,7 +171,7 @@
 				}
 				var data = [];
 				branches.each(function(i, e) {
-					data[i] = $(e).is(":has(>ul:visible)") ? 1 : 0;
+					data[i] = $(e).is(":has(>ul:visible,>ol:visible)") ? 1 : 0;
 				});
 				$.cookie(settings.cookieId, data.join("") );
 			}
@@ -181,13 +181,14 @@
 				if ( stored ) {
 					var data = stored.split("");
 					branches.each(function(i, e) {
-						$(e).find(">ul")[ parseInt(data[i]) ? "show" : "hide" ]();
+						$(e).find(">ul,>ol")[ parseInt(data[i], 10) ? "show" : "hide" ]();
 					});
 				}
 			}
 			
 			// add treeview class to activate styles
 			this.addClass("treeview");
+			this.addClass("treeview-famfamfam");
 			
 			// prepare branches and find all tree items with child lists
 			var branches = this.find("li").prepareBranches(settings);
@@ -206,7 +207,7 @@
 			case "location":
 				var current = this.find("a").filter(function() { return this.href.toLowerCase() == location.href.toLowerCase(); });
 				if ( current.length ) {
-					current.addClass("selected").parents("ul, li").add( current.next() ).show();
+					current.addClass("selected").parents("ul, ol, li").add( current.next() ).show();
 				}
 				break;
 			}
