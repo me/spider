@@ -157,7 +157,7 @@ module Spider; module Forms
             save(@submit_action) if @submit_action
             if (@obj)
                 
-                @scene.form_desc = @model.label.downcase+' '+ @obj.to_s
+                @scene.form_desc = @model.label.downcase+' '+ (@obj.to_s || '')
                 if (@action == :sub)
                     
                 end
