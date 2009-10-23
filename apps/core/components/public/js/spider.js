@@ -154,7 +154,8 @@ Spider.Widget = Class.extend({
 		var cls = '.model-'+Spider.modelToCSS(model);
 		droppableOptions = $.extend({
 			accept: cls+' .dataobject',
-			hoverClass: 'drophover'
+			hoverClass: 'drophover',
+			tolerance: 'pointer'
 		}, droppableOptions);
 		acceptOptions = $.extend({
 			el: this.el
@@ -412,7 +413,7 @@ $.fn.spiderWidget = function(){
 
 $.fn.parentWidget = function(){
 	var par = this;
-	while (par && !par.is('.widget')){
+	while (par && par.length > 0 && !par.is('.widget')){
 		par = par.parent();
 	}
 	if (!par) return null;
@@ -422,24 +423,25 @@ $.fn.parentWidget = function(){
 $.fn.getDataObjectKey = function(){
 	var doParent = null;
 	var par = this;
-	while (par && !par.is('.dataobject')){
+	while (par && par.length > 0 && !par.is('.dataobject')){
 		par = par.parent();
 	}
 	if (!par) return null;
-	return $('.dataobject-key', par).text();
+	return $('>.dataobject-key', par).text();
 };
 
 $.fn.getDataModel = function(){
 	var par = this;
-	while (par && !par.is('.model')){
+	while (par && par.length > 0 && !par.is('.model')){
 		par = par.parent();
 	}
 	if (!par) return null;
-	var cl = this.attr('class');
+	var cl = par.attr('class');
+	if (!cl) return null;
     var cl_parts = cl.split(' ');
     for (var i=0; i < cl_parts.length; i++){
 		if (cl_parts[i].substr(0, 6) == 'model-'){
-			return cl_parts[i].substr(6);
+			return cl_parts[i].substr(6).replace(/-/g, '::');;
 		}
     }
 };
@@ -461,3 +463,5 @@ Spider.newHTML = function(el){
 Spider.modelToCSS = function(name){
 	return name.split('::').join('-');
 };
+
+
