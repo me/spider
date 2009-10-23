@@ -281,6 +281,7 @@ module Spider; module Model
                 else
                     condition = Condition.and
                     condition[our_element] = obj
+                    raise "Can't save without a junction id" unless element.attributes[:junction_id]
                     val.each do |row|
                         next unless row_id = row.get(element.attributes[:junction_id])
                         condition.set(:id, '<>', row_id)
@@ -760,7 +761,7 @@ module Spider; module Model
         def prepare_query_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.each_with_comparison do |k, v, c|
-                raise MapperError, "Condition for nonexistent element #{k}" unless element = model.elements[k]
+                raise MapperError, "Condition for nonexistent element #{k} on model #{model}" unless element = model.elements[k]
                 if (element.integrated?)
                     condition.delete(k)
                     integrated_from = element.integrated_from
