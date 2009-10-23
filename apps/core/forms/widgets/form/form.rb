@@ -73,7 +73,7 @@ module Spider; module Forms
             @pk = nil if @pk == 'new'
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
-                @elements = @elements.split(',').map{ |e| debug(@model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
+                @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
                 @requested_elements = @elements
             end
             @elements = @model.elements_array unless @elements
