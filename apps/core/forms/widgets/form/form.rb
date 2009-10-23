@@ -35,7 +35,7 @@ module Spider; module Forms
         attribute :submit_and_new_text, :default => lambda{ _('%s and insert new') }
         attribute :submit_and_stay_text, :default => lambda{ _('%s and stay') }
         is_attr_accessor :pk
-        attr_to_scene :inputs, :names, :labels, :error, :errors, :sub_links
+        attr_to_scene :inputs, :names, :hidden_inputs, :labels, :error, :errors, :sub_links
         attribute :show_related, :type => TrueClass, :default => false
         i_attribute :auto_redirect, :default => false
         attr_accessor :save_actions
@@ -49,6 +49,7 @@ module Spider; module Forms
         def init
             @inputs = {}
             @names = []
+            @hidden_inputs = []
             @errors = {}
             @labels = {}
             @save_actions ||= {}
@@ -222,7 +223,11 @@ module Spider; module Forms
                 if (input)
                     input.read_only if read_only?(el.name)
 #                    input.id_path.insert(input.id_path.length-1, 'data')
-                    @names << el.name
+                    if (input.is_a?(Hidden))
+                        @hidden_inputs << input
+                    else
+                        @names << el.name
+                    end
                     input.id = el.name
                     input.form = self
 #                    input.name = '_w'+param_name(input.id_path[0..-2]+['data']+input.id_path[-1..-1])
