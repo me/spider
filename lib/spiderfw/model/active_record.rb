@@ -117,15 +117,19 @@ module Spider; module Model
                     else
                         association = :many
                         options[:multiple] = true
-                        reverse_multiple = false
                             
                         # unless options[:reverse]
                         #     options[:add_reverse] = ar.send(:undecorated_table_name, ar.name)
                         # end
                         options[:has_single_reverse] = true
                     end
+                    options[:association] = association
+                    if (reflection.options[:polymorphic])
+                        self.element(name, Fixnum, options)
+                        @ar_schema[:columns][name] = reflection.primary_key_name
+                        next
+                    end
                     begin
-                        
                         if (reflection.through_reflection)
                             klass = reflection.through_reflection.klass
 
@@ -134,7 +138,7 @@ module Spider; module Model
                                 if (r_refl.klass == ar && r_refl.primary_key_name == reflection.primary_key_name)
                                     options[:junction_their_element] = r_name
                                 elsif(r_refl.klass == reflection.klass && r_refl.primary_key_name == reflection.association_foreign_key)
-                                    options[:junction_our_element] = r_name
+                                    options[:junction_our_name] = r_name
                                 end
                             end
                             assoc_type = klass.spider_model
@@ -142,8 +146,49 @@ module Spider; module Model
                             options[:association_type] = assoc_type
                             type = reflection.klass.spider_model
                             options[:junction_id] = :id
+                            options.delete(:has_single_reverse)
+                        elsif (reflection.options[:join_table])
+                            klass = reflection.klass
+                            type = klass.spider_model
+                            junction_model_name = Spider::Inflector.camelize([ar.name.to_s, klass.name.to_s].sort.join('_')).to_sym
+                            pm = self.parent_module
+                            self_name = ar.name.downcase.to_sym
+                            other_name = klass.name.downcase.to_sym
+                            options[:junction_their_element] = other_name
+                            options[:junction_our_name] = self_name
+                            options[:junction] = true
+                            options[:reverse] = self_name
+                            if (pm.const_defined?(junction_model_name))
+                                junction_mod = pm.const_get(junction_model_name)
+                            else
+                                junction_mod = Class.new(Spider::Model::BaseModel)
+                                pm.const_set(junction_model_name, junction_mod)
+                                
+                                junction_mod.attributes[:sub_model] = ar.spider_model
+                                junction_mod.element(self_name, ar.spider_model, :hidden => true, :reverse => name, :primary_key => true) 
+                                junction_mod.element(other_name, type, :primary_key => true)
+                                junction_mod.ar_defined = true
+                            end
+                            unless junction_mod.is_a?(ActiveRecordModel)
+                                junction_mod.instance_eval do
+                                    include ActiveRecordModel
+                                end
+                            end
+                            junction_mod.instance_variable_set("@ar_schema", {
+                                :table => reflection.options[:join_table],
+                                :columns => {
+                                    self_name => "#{ar.name.downcase}_id",
+                                    other_name => "#{klass.name.downcase}_id"
+                                }
+                            })
+                            options[:through] = junction_mod
+                            options[:association_type] = junction_mod
+                            options[:junction_id] = :id
+                            options.delete(:has_single_reverse)
+                            #junction_mod.integrate(other_name, :hidden => true, :no_pks => true)
                         else
                             klass = reflection.klass
+                            type = klass.spider_model
                         end
                         klass.reflections.each do |r_name, r_refl|
                             begin
@@ -158,13 +203,16 @@ module Spider; module Model
                         #$stderr << exc.inspect+"\n"
                         next
                     end
-                    options[:association] = association
+
                     next unless type
+                    next if options[:junction]  && (!options[:junction_their_element] || !options[:junction_our_name])
                     self.element(name, type, options)
-                    if (reflection.table_name == ar.table_name)
-                        @ar_schema[:columns][name] = reflection.association_foreign_key
-                    elsif (!(reflection.macro == :has_many || reflection.through_reflection))
-                        @ar_schema[:columns][name] = reflection.primary_key_name
+                    unless reflection.options[:join_table]
+                        if (reflection.table_name == ar.table_name)
+                            @ar_schema[:columns][name] = reflection.association_foreign_key
+                        elsif (!(reflection.macro == :has_many || reflection.through_reflection))
+                            @ar_schema[:columns][name] = reflection.primary_key_name
+                        end
                     end
                 end
                 if (tree_options)
