@@ -170,7 +170,7 @@ module Spider; module ControllerMixins
             else
                 template = init_template(path, scene, options)
             end
-            template.exec
+            template.do_widgets_before
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layouts = options[:layout] || @layout
                 chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
