@@ -91,6 +91,16 @@ module Spider; module Model
                        end
                        return qs
                    end
+                   
+               end
+               
+               define_method("#{name}_leaf?") do
+                   element = self.class.elements[name]
+                   left_el = element.attributes[:tree_left]
+                   right_el = element.attributes[:tree_right]
+                   left = get(left_el)
+                   right = get(right_el)
+                   return left == (right - 1)
                end
 
                
@@ -130,10 +140,6 @@ module Spider; module Model
                    if (child.get(left_el))
                        
                    end
-               end
-               
-               define_method("#{name}_remove") do
-                   
                end
 
            end
