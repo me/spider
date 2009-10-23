@@ -126,7 +126,7 @@ module Spider; module Model
                     options[:association] = association
                     if (reflection.options[:polymorphic])
                         self.element(name, Fixnum, options)
-                        @ar_schema[:columns][name] = reflection.primary_key_name
+                        @ar_schema[:columns][name] = reflection.primary_key_name.to_s
                         next
                     end
                     begin
@@ -211,7 +211,7 @@ module Spider; module Model
                         if (reflection.table_name == ar.table_name)
                             @ar_schema[:columns][name] = reflection.association_foreign_key
                         elsif (!(reflection.macro == :has_many || reflection.through_reflection))
-                            @ar_schema[:columns][name] = reflection.primary_key_name
+                            @ar_schema[:columns][name] = reflection.primary_key_name.to_s
                         end
                     end
                 end
