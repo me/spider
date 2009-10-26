@@ -130,6 +130,7 @@ module Spider; module Forms
             end
 #            end
             super
+            save(@submit_action) if @submit_action
         end
         
         def init_widgets
@@ -149,12 +150,10 @@ module Spider; module Forms
             else
                 create_inputs
             end
-
         end
         
         def run
             Spider::Logger.debug("FORM EXECUTING")
-            save(@submit_action) if @submit_action
             if (@obj)
                 
                 @scene.form_desc = @model.label.downcase+' '+ (@obj.to_s || '')
@@ -248,6 +247,7 @@ module Spider; module Forms
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?
                 input.model = el.type if input.respond_to?(:model)
+                input.condition = el.condition if el.condition
             end
             return input
         end
