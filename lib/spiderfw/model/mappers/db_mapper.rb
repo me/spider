@@ -362,7 +362,7 @@ module Spider; module Model; module Mappers
                     end
                     # FIXME: move to get_join
                     join = {
-                        :type => :left_outer,
+                        :type => :left,
                         :from => @schema.table,
                         :to => model.mapper.schema.table,
                         :keys => join_fields
@@ -424,7 +424,7 @@ module Spider; module Model; module Mappers
         # * remaining_condition: part of the condition which can't be passed to the storage
         #--
         # TODO: better name for :values
-        def prepare_condition(condition)
+        def prepare_condition(condition, options={})
             # FIXME: move to mapper
             model = condition.polymorph ? condition.polymorph : @model
             model_schema = model.mapper.schema
@@ -457,6 +457,8 @@ module Spider; module Model; module Mappers
             remaining_condition = Condition.new # TODO: implement
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
+            # FIXME: the allow_left_joins hack will probably not work in the general case
+            cond[:allow_left_joins] = options[:allow_left_joins] || {}
             condition.each_with_comparison do |k, v, comp|
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
@@ -466,25 +468,35 @@ module Spider; module Model; module Mappers
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
                             field = model_schema.qualified_foreign_key_field(element.name, el_k)
-                            op = el_comp ? el_comp : '='
+                            el_comp ||= '='
+                            op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
+                            if (el_v.nil? && el_comp == '=')
+                                cond[:allow_left_joins][element.model] = true
+                            end
                         end
                         cond[:values] << element_cond
                     else
                         if (element.storage == model.mapper.storage)
+                            join_type = cond[:allow_left_joins][element.model] ? :left : :inner
+                            sub_join = model.mapper.get_join(element, join_type)
+                            joins << sub_join
                             element.model.mapper.prepare_query_condition(v)
-                            element_condition, element_joins = element.mapper.prepare_condition(v)
-                            joins += element_joins
-                            joins << model.mapper.get_join(element)
-                            cond[:values] << element_condition
+                            
+                            sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :allow_left_joins => cond[:allow_left_joins])
+                            sub_condition[:table] = sub_join[:as] if sub_join[:as]
+                            joins += sub_joins
+                            
+                            cond[:values] << sub_condition
+                            cond[:allow_left_joins].merge!(sub_condition[:allow_left_joins])
                         else
                            remaining_condition ||= Condition.new
                            remaining_condition.set(k, comp, v)
                         end
                     end
                 elsif(model_schema.field(element.name))
-                    field = model_schema.qualified_field(element.name)
+                    field = model_schema.qualified_field(element.name, options[:table])
                     op = comp ? comp : '='
                     if (v.is_a?(Spider::QueryFuncs::Expression))
                         v_joins = prepare_expression(v)
@@ -499,7 +511,7 @@ module Spider; module Model; module Mappers
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub)
+                sub_res = self.prepare_condition(sub, :allow_left_joins => cond[:allow_left_joins])
                 cond[:values] << sub_res[0]
                 joins += sub_res[1]
                 remaining_condition += sub_res[2]
@@ -515,7 +527,7 @@ module Spider; module Model; module Mappers
         #     :keys => hash of key pairs,
         #     :condition => join condition
         #   }
-        def get_join(element)
+        def get_join(element, join_type = :inner)
             return unless element.model?
             Spider::Logger.debug("Getting join for model #{@model} to element #{element}")
             Spider::Logger.debug(@model.primary_keys.map{|k| k.name})
@@ -538,12 +550,17 @@ module Spider; module Model; module Mappers
                 if (element.condition)
                     condition, condition_joins, condition_remaining = element.mapper.prepare_condition(element.condition)
                 end
+                as = nil
+                if (element.model == @model)
+                    as = "#{schema.table}_#{element.name}"
+                end
                 join = {
-                    :type => :inner,
+                    :type => join_type,
                     :from => schema.table,
                     :to => element.mapper.schema.table,
                     :keys => keys,
-                    :condition => condition
+                    :condition => condition,
+                    :as => as
                 }
             elsif (element.has_single_reverse? && element.mapper.schema.has_foreign_fields?(element.reverse)) # n/1 <-> n
                 Spider::Logger.debug("JOIN B from #{@model} to #{element.name}")

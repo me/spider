@@ -472,7 +472,7 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for DB joins.
         def sql_joins(joins)
             types = {
-                :inner => 'INNER', :outer => 'OUTER', :left_outer => 'LEFT OUTER', :right_outer => 'RIGHT OUTER'
+                :inner => 'INNER', :outer => 'OUTER', :left => 'LEFT OUTER', :right => 'RIGHT OUTER'
             }
             values = []
             sql = joins.map{ |join|
@@ -482,7 +482,10 @@ module Spider; module Model; module Storage; module Db
                     sql_on += " and #{condition_sql}"
                     values += condition_values
                 end
-                "#{types[join[:type]]} JOIN #{join[:to]} ON (#{sql_on})"
+                j = "#{types[join[:type]]} JOIN #{join[:to]}"
+                j += " #{join[:as]}" if join[:as]
+                j += " ON (#{sql_on})"
+                j
             }.join(" ")
             return [sql, values]
         end
