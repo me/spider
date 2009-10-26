@@ -450,6 +450,9 @@ module Spider
             when 'devel'
                 init_debug
             end
+            if (mode != 'production')
+                Spider.paths[:var] += "/#{mode}"
+            end
         end
         
         def init_debug
