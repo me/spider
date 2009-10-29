@@ -607,23 +607,16 @@ module Spider; module Model
         # Loads an external element, according to query, and merges the result into an object or QuerySet.
         def get_external_element(element, query, objects)
             Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
-            if (have_references?(element))
-                return load_element(objects, element)
-            end
-            sub_request = Request.new
-            @model.primary_keys.each{ |key| sub_request[key.name] = true }
-            sub_request[element.attributes[:reverse]] = true
-            condition = Condition.or
+            return load_element(objects, element) if (have_references?(element))
+            return nil if objects.empty?
             index_by = []
             @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
-            
-#             if (@model.primary_keys.length == 1)
-#                 pk = @model.primary_keys[0]
-#                 a = objects.map{ |o| o.get(pk) }
-# #                debugger
-#                 condition["#{element.attributes[:reverse]}.#{pk.name}"] = a
-#             else
-            seen_conditions = {}
+            result = objects.element_queryset(element).index_by(*index_by)
+            @model.primary_keys.each{ |key| result.request[key.name] = true }
+            result.request[element.attributes[:reverse]] = true
+            result.load
+            return associate_external(element, objects, result)
+        end
             objects.each_current do |obj|
 #                if (@model.primary_keys.length == 1)
 #                    condition
