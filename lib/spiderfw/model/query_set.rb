@@ -557,6 +557,16 @@ module Spider; module Model
             
         end
         
+        def to_a
+            self.map{ |row| row }
+        end
+        
+        def map_current
+            a = []
+            each_current{ |row| a << yield(row) }
+            a
+        end
+        
         # Returns an array of Hashes, with each value of the object is converted to string.
         def to_flat_array
             map do |obj|
