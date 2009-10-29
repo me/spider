@@ -160,6 +160,7 @@ module Spider; module Model
         # :hidden::                   (bool) a hint that the element shouldn't be shown by the UI
         # :computed_from::            (array of symbols) the element is not mapped; its value is computed
         #                             by the class from the given elements.
+        # :unmapped::                 (bool) the element is not mapped.
         # :check::                    (a Proc, or a Regexp, or a Hash of messages => Regexp|Proc). See #check
         # :through::                  (a BaseModel subclass) model representing the many to many relationship.
         # :read_only::                (bool) hint to the UI that the element should not be user modifiable.
@@ -199,6 +200,9 @@ module Spider; module Model
                 if (!attributes[:integrated_from_element])
                     attributes[:integrated_from_element] = name
                 end
+            end
+            if (attributes[:condition] && !attributes[:condition].is_a?(Condition))
+                attributes[:condition] = Condition.new(attributes[:condition])
             end
 
 
@@ -406,6 +410,7 @@ module Spider; module Model
                     sub.elements_order << name
                 end
             end
+            element_defined(@elements[name])
             return @elements[name]
 
         end
@@ -425,6 +430,20 @@ module Spider; module Model
             @elements_order.delete(el)
             remove_method(:"#{el}") rescue NameError
             remove_method(:"#{el}=") rescue NameError
+        end
+        
+        def self.element_defined(el)
+            if (@on_element_defined && @on_element_defined[el.name])
+                @on_element_defined[el.name].each do |proc|
+                    proc.call(el)
+                end
+            end
+        end
+        
+        def self.on_element_defined(el_name, &proc)
+            @on_element_defined ||= {}
+            @on_element_defined[el_name] ||= []
+            @on_element_defined[el_name] << proc
         end
             
         # Integrates an element: any call to the child object's elements will be passed to the child.
@@ -495,6 +514,29 @@ module Spider; module Model
         def self.multiple_choice(name, type, attributes={}, &proc)
             attributes[:association] = :multiple_choice
             many(name, type, attributes, &proc)
+        end
+        
+        def self.element_query(name, element_name, attributes={})
+            orig_element = self.elements[element_name]
+            set_el_query = lambda do
+                orig_element = self.elements[element_name]
+                attributes = attributes.merge(orig_element.attributes)
+                attributes[:unmapped] = true
+                attributes[:element_query] = element_name
+                attributes[:association] = :element_query
+                attributes[:lazy] = true
+                if (orig_element.attributes[:condition])
+                    cond = orig_element.attributes[:condition].clone
+                    cond = cond.and(attributes[:condition]) if attributes[:condition]
+                    attributes[:condition] = cond
+                end
+                element(name, orig_element.type, attributes)
+            end
+            if (orig_element)
+                set_el_query.call
+            else
+                on_element_defined(element_name, &set_el_query)
+            end
         end
         
         
@@ -974,7 +1016,7 @@ module Spider; module Model
                         end 
                     end
                 end
-                obj.identity_mapper = self.identity_mapper
+                obj.identity_mapper = self.identity_mapper if obj.respond_to?(:identity_mapper)
                 if (element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
                 end
@@ -1104,7 +1146,7 @@ module Spider; module Model
                     value.attributes[a] = element.attributes[a]
                 end
             elsif element.model?
-                value.autoload(autoload?, true) if value
+                value.autoload(autoload?, true) if value && value.respond_to?(:autolad)
             else
                 case element.type.name
                 when 'Date', 'DateTime'
@@ -1321,11 +1363,13 @@ module Spider; module Model
                 element.attributes[:computed_from].each{ |el| return false unless element_has_value?(el) }
                 return true
             end
-            if (!mapper.mapped?(element))
-                return send("#{element_name}?") if (respond_to?("#{element_name}?"))
-                return get(element) == nil ? false : true if (!mapper.mapped?(element))
-            end
-            return instance_variable_get(:"@#{element_name}") == nil ? false : true
+            ivar = instance_variable_get(:"@#{element_name}")
+            return ivar == nil ? false : true
+            # FIXME: is this needed?
+            # if (!mapper.mapped?(element)
+            #     return send("#{element_name}?") if (respond_to?("#{element_name}?"))
+            #     return get(element) == nil ? false : true if (!mapper.mapped?(element))
+            # end
         end
 
         # Returns true if the element value has been modified since instantiating or loading

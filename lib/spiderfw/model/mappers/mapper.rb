@@ -262,7 +262,6 @@ module Spider; module Model
                     current = obj.get_new
                     current_val = current.get(element)
                     condition = Condition.and
-#                    debugger
                     current_val.each do |row|
                         next if val.include?(row)
                         condition_row = Condition.or
@@ -577,7 +576,7 @@ module Spider; module Model
             get_integrated = {}
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
-                next unless element && mapped?(element)
+                next unless element && (mapped?(element) || element.attributes[:element_query])
                 next if objects.element_loaded?(element_name)
                 next unless element.reverse # FIXME
                 if element.integrated?
