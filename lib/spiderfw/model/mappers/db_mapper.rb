@@ -740,34 +740,7 @@ module Spider; module Model; module Mappers
                 value = type.from_value(value)
             end
             return value
-        end
-        
-        ##############################################################
-        #   External elements                                        #
-        ##############################################################
-        
-        # Given the results of a query for an element, and a set of objects, associates
-        # the result with the corresponding objects.
-        def associate_external(element, objects, result)
-            result.reindex
-            objects.element_loaded(element.name)
-            objects.each_current do |obj|
-                search_params = {}
-                @model.primary_keys.each do |key|
-                    field = @schema.field(key.name)
-                    search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key) #@raw_data[obj.object_id][field] # FIXME: right or wrong?
-                end
-                sub_res = result.find(search_params)
-                sub_res.each do |sub_obj|
-                    sub_obj.set_loaded_value(element.attributes[:reverse], obj)
-                end
-                sub_res = sub_res[0] if !element.multiple?
-                sub_res.loadable = false if sub_res.respond_to?(:loadable=)
-                obj.set_loaded_value(element, sub_res)
-            end
-            return objects
-        end
-        
+        end        
         
         ##############################################################
         #   Primary keys                                             #

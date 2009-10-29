@@ -617,30 +617,27 @@ module Spider; module Model
             result.load
             return associate_external(element, objects, result)
         end
+        
+        # Given the results of a query for an element, and a set of objects, associates
+        # the result with the corresponding objects.
+        def associate_external(element, objects, result)
+            result.reindex
+            objects.element_loaded(element.name)
             objects.each_current do |obj|
-#                if (@model.primary_keys.length == 1)
-#                    condition
-#                else
-                condition_row = Condition.and
+                search_params = {}
                 @model.primary_keys.each do |key|
-                    condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
+                    field = @schema.field(key.name)
+                    search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                 end
-                condition << condition_row unless seen_conditions[condition_row]
-                seen_conditions[condition_row] = true
-#                end
-            end
-            seen_conditions = nil
-#            end
-            unless condition.empty?                
-                if (element.condition)
-                    condition = Condition.and(condition, element.condition)
+                sub_res = result.find(search_params)
+                sub_res.each do |sub_obj|
+                    sub_obj.set_loaded_value(element.attributes[:reverse], obj)
                 end
-                result = QuerySet.new(element.model).index_by(*index_by)
-                result = result.mapper.find(Query.new(condition, sub_request), result)
-                result.loaded = true
-                return associate_external(element, objects, result)
+                sub_res = sub_res[0] if !element.multiple?
+                sub_res.loadable = false if sub_res.respond_to?(:loadable=)
+                obj.set_loaded_value(element, sub_res)
             end
-            return nil
+            return objects
         end
         
         # Returns the siblings, if any, of the object, in its ancestor QuerySet.
