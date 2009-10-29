@@ -582,9 +582,25 @@ module Spider; module Model
             self.map{ |o| o.to_s }.join(', ')
         end
         
-        def method_missing(method, *args, &proc)     
+        def method_missing(method, *args, &proc)
+            el = @model.elements[method]
+            if (el && el.model? && el.reverse)
+                return element_queryset(el)
+            end
             return @query.send(method, *args, &proc) if @query.respond_to?(method)
             return super
+        end
+        
+        def element_queryset(el)
+            el = @model.elements[el] if el.is_a?(Symbol)
+            condition = el.condition
+            if (el.attributes[:element_query])
+                el = @model.elements[el.attributes[:element_query]]
+            end
+            cond = Spider::Model::Condition.new
+            cond[el.reverse] = self.map_current{ |row| row }
+            cond = cond.and(condition) if (condition)
+            return self.class.new(el.model, Query.new(cond))
         end
         
         # Given a dotted path, will return an array of all objects reachable by that path
