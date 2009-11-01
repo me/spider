@@ -681,6 +681,10 @@ module Spider; module Model
             @sequences ||= []
         end
         
+        # Does nothing. This method is to keep note of elements created in other models.
+        def self._added_elements(&proc)
+        end
+        
         #####################################################
         #   Methods returning information about the model   #
         #####################################################
