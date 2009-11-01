@@ -151,9 +151,14 @@ Spider.Widget = Class.extend({
 	},
 	
 	acceptDataObject: function(model, acceptOptions, droppableOptions){
-		var cls = '.model-'+Spider.modelToCSS(model);
+        if (!model.push) model = [model];
+        var cls = "";
+        for (var i=0; i<model.length; i++){
+            if (cls) cls += ', ';
+            cls += '.model-'+Spider.modelToCSS(model[i])+' .dataobject';
+        }
 		droppableOptions = $.extend({
-			accept: cls+' .dataobject',
+			accept: cls,
 			hoverClass: 'drophover',
 			tolerance: 'pointer'
 		}, droppableOptions);
