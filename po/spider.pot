@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-10-14 12:57+0200\n"
+"POT-Creation-Date: 2009-10-27 14:38+0100\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -288,208 +288,216 @@ msgstr ""
 msgid "Start the debugger"
 msgstr ""
 
+#: lib/spiderfw/config/options/spider.rb:49
+msgid "Enable on-request profiling"
+msgstr ""
+
 #: lib/spiderfw/config/options/spider.rb:50
+msgid "Respond to requests sequentially"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:52
 msgid "The locale to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:53
+#: lib/spiderfw/config/options/spider.rb:55
 msgid "Path where rails-style locales are found"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:54
+#: lib/spiderfw/config/options/spider.rb:56
 msgid "Fallback locale"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:56
+#: lib/spiderfw/config/options/spider.rb:58
 msgid "Sleep time for the periodic runner"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:58
+#: lib/spiderfw/config/options/spider.rb:60
 msgid "Where to store the session"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:59
+#: lib/spiderfw/config/options/spider.rb:61
 msgid "Lifetime in seconds of the sessions"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:60
+#: lib/spiderfw/config/options/spider.rb:62
 msgid "Number of seconds to wait before session purge check"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:61
+#: lib/spiderfw/config/options/spider.rb:63
 msgid "The folder where to store file sessions"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:63
+#: lib/spiderfw/config/options/spider.rb:65
 msgid "Which shared store to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:65
+#: lib/spiderfw/config/options/spider.rb:67
 msgid "Life in seconds of HTTP Digest Authentication nonces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:67
+#: lib/spiderfw/config/options/spider.rb:69
 msgid "Automatically send headers on first output (breaks the debugger)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:68
+#: lib/spiderfw/config/options/spider.rb:70
 msgid "Redirect standard output to the browser"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:69
+#: lib/spiderfw/config/options/spider.rb:71
 msgid ""
 "If the request is proxyied, the urls used to reach spider, with the "
 "corresponding paths called by the proxy"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:71
+#: lib/spiderfw/config/options/spider.rb:73
 msgid "The charset to use for http requests"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:73
+#: lib/spiderfw/config/options/spider.rb:75
 msgid "Level of debug output to console"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:75
+#: lib/spiderfw/config/options/spider.rb:77
 msgid "Log errors to file"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:76
+#: lib/spiderfw/config/options/spider.rb:78
 msgid "Log level to use for debug file (false for no debug)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:82
+#: lib/spiderfw/config/options/spider.rb:84
 msgid "A list of organizations"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:83
+#: lib/spiderfw/config/options/spider.rb:85
 msgid "Descriptive name of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:84
+#: lib/spiderfw/config/options/spider.rb:86
 msgid "Country code of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:85
+#: lib/spiderfw/config/options/spider.rb:87
 msgid "State of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:86
+#: lib/spiderfw/config/options/spider.rb:88
 msgid "Name of the city"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:87
+#: lib/spiderfw/config/options/spider.rb:89
 msgid "Common name (e.g. domain) of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:88
+#: lib/spiderfw/config/options/spider.rb:90
 msgid "Main e-mail address of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:89
+#: lib/spiderfw/config/options/spider.rb:91
 msgid "Email address used as 'From' for automatic e-mails"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:91
+#: lib/spiderfw/config/options/spider.rb:93
 msgid "Organizational Unit (e.g. department)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:92
+#: lib/spiderfw/config/options/spider.rb:94
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:94
+#: lib/spiderfw/config/options/spider.rb:96
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:96
+#: lib/spiderfw/config/options/spider.rb:98
 msgid ""
 "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:108
+#: lib/spiderfw/config/options/spider.rb:110
 msgid "Name of the site administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:109
+#: lib/spiderfw/config/options/spider.rb:111
 msgid "Email of the site administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:111
+#: lib/spiderfw/config/options/spider.rb:113
 msgid "Use ruby-debug to provide extended traces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:112
-#: lib/spiderfw/config/options/spider.rb:113
+#: lib/spiderfw/config/options/spider.rb:114
+#: lib/spiderfw/config/options/spider.rb:115
 msgid "Show locals in debug traces"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:217
+#: lib/spiderfw/controller/mixins/visual.rb:220
 msgid "Page not found"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:224
+#: lib/spiderfw/controller/mixins/visual.rb:227
 msgid "An error occurred"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:91 lib/spiderfw/i18n/i18n.rb:97
+#: lib/spiderfw/i18n/i18n.rb:92 lib/spiderfw/i18n/i18n.rb:98
 msgid "less than a minute"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:91 lib/spiderfw/i18n/i18n.rb:98
+#: lib/spiderfw/i18n/i18n.rb:92 lib/spiderfw/i18n/i18n.rb:99
 msgid "1 minute"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:93 lib/spiderfw/i18n/i18n.rb:94
-#: lib/spiderfw/i18n/i18n.rb:95
+#: lib/spiderfw/i18n/i18n.rb:94 lib/spiderfw/i18n/i18n.rb:95
+#: lib/spiderfw/i18n/i18n.rb:96
 msgid "less than %s seconds"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:96
+#: lib/spiderfw/i18n/i18n.rb:97
 msgid "half a minute"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:101
+#: lib/spiderfw/i18n/i18n.rb:102
 msgid "%s minutes"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:102
+#: lib/spiderfw/i18n/i18n.rb:103
 msgid "about 1 hour"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:103
+#: lib/spiderfw/i18n/i18n.rb:104
 msgid "about %d hours"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:104
+#: lib/spiderfw/i18n/i18n.rb:105
 msgid "1 day"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:105
+#: lib/spiderfw/i18n/i18n.rb:106
 msgid "%d days"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:106
+#: lib/spiderfw/i18n/i18n.rb:107
 msgid "about 1 month"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:107
+#: lib/spiderfw/i18n/i18n.rb:108
 msgid "%d months"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:108
+#: lib/spiderfw/i18n/i18n.rb:109
 msgid "about 1 year"
 msgstr ""
 
-#: lib/spiderfw/i18n/i18n.rb:109
+#: lib/spiderfw/i18n/i18n.rb:110
 msgid "over %d years"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1102
+#: lib/spiderfw/model/base_model.rb:1119
 msgid "'%s' is not a valid date"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1154
+#: lib/spiderfw/model/base_model.rb:1171
 msgid "'%s' is not in the correct format"
 msgstr ""
 
@@ -497,11 +505,11 @@ msgstr ""
 msgid "%s is not a valid e-mail address"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:892
+#: lib/spiderfw/model/mappers/mapper.rb:902
 msgid "Element %s is required"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:896
+#: lib/spiderfw/model/mappers/mapper.rb:906
 msgid "Another item with the same %s is already present"
 msgstr ""
 
@@ -509,13 +517,19 @@ msgstr ""
 msgid "We are sorry, but the required page was not found"
 msgstr ""
 
-#: views/errors/error.layout.shtml:19
+#: views/errors/error.layout.shtml:20
 msgid ""
 "If you need to contact the administrator to provide additional information, "
 "you may send an e-mail to"
 msgstr ""
 
 #: views/errors/error.layout.shtml:24
+msgid ""
+"The identifier of this error is %s. Please refer to it when requesting "
+"assistance."
+msgstr ""
+
+#: views/errors/error.layout.shtml:29
 msgid "Debug information"
 msgstr ""
 
