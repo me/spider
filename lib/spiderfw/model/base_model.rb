@@ -1925,6 +1925,7 @@ module Spider; module Model
                 attributes[:through] = attributes[:association_type] unless attributes[:anonymous_model]
                 attributes.delete(:association_type)
             end
+            attributes.delete(:lazy) if attributes[:lazy] == :default
             if (method == :tree)
                 delete_attrs = [:queryset_module, :multiple]
                 delete_attrs.each{ |a| attributes.delete(a) }
@@ -1963,6 +1964,7 @@ module Spider; module Model
             return {
                 :modules => modules,
                 :included => included,
+                :attributes => self.attributes,
                 :elements => elements,
                 :local_name => local_name,
                 :superclass => superklass,
@@ -1988,11 +1990,14 @@ module Spider; module Model
             c[:included].each do |i|
                 append.call "include #{i.name}\n"
             end
+            c[:attributes].each do |k, v|
+                append.call "attribute :#{k}, #{v.inspect}"
+            end
             str += "\n"
             c[:elements].each do |el|
                 append.call("#{el[:method].to_s} #{el[:name].inspect}")
                 str += ", #{el[:type]}" if el[:type]
-                str += ", #{el[:attributes].inspect}\n" if el[:attributes] && !el[:attributes].empty?
+                str += ", #{el[:attributes].inspect[1..-2]}\n" if el[:attributes] && !el[:attributes].empty?
             end
             str += "\n"
             append.call "use_storage '#{c[:use_storage]}'\n" if c[:use_storage]
