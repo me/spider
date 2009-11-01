@@ -54,7 +54,7 @@ module Spider; module Model
         
         # True if the element defines an association to another model.
         def model?
-            @is_model ||= (type.respond_to?(:mapper) || association_type)
+            @is_model ||= (type < Spider::Model::BaseModel || association_type)
         end
         
         # True if the element is integrated from another one. (See also BaseModel#integrate).
