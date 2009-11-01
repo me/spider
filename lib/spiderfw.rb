@@ -109,6 +109,11 @@ module Spider
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
+            @startup_done = true
+        end
+        
+        def startup_done?
+            @startup_done
         end
         
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
