@@ -257,6 +257,7 @@ module Spider; module Model
                         assoc_type.class_eval(&proc)
                     end
                 end
+                attributes[:keep_junction] = true if (attributes[:through] && attributes[:keep_junction] != false)
                 attributes[:association_type] = assoc_type
             end
             
