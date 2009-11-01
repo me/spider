@@ -585,6 +585,7 @@ module Spider
             if (@parent && @parent.respond_to?(:scene) && @parent.scene)
                 scene._parent = @parent.scene
             end
+            scene.extend(WidgetScene)
             return scene
         end
         
@@ -617,6 +618,14 @@ module Spider
             @widget_procs[first.to_sym] << {:target => rest, :proc => proc }
         end
             
+        
+    end
+    
+    module WidgetScene
+        
+        def widget_action(name, *params)
+            "#{self[:request][:path]}?_wt=#{self[:widget][:id_path].join('/')}&_we=#{name}"+(params.map{|p| "&_wp[]=#{p}"}).join('')
+        end
         
     end
     
