@@ -296,6 +296,14 @@ module Spider; module Model
             return true
         end
         
+        def eql?(other)
+            self == other
+        end
+        
+        def hash
+            ([self.keys, self.values, @comparisons.values, @polymorph] + @subconditions.map{ |s| s.hash}).hash
+        end
+        
         # Removes duplicate subcondtions.
         def uniq!
             @subconditions.uniq!
