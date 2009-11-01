@@ -170,20 +170,20 @@ module Spider; module Components
         end
         
         def create_requested_sublist(sbl, row, cnt)
-            sl = sbl.clone
-            if (sl['element'])
-                el = @model.elements[sl['element'].to_sym]
+            attributes = sbl.attributes.clone
+            if (attributes['element'])
+                el = @model.elements[attributes['element'].to_sym]
                 #next unless el # may be ok if the query is polymorphic
                 # if (sl['tree'] && el && el.attributes[:reverse])
                 #     sub = el.model.send("#{sl['tree']}_roots")
                 #     sub.condition[el.attributes[:reverse]] = row
                 # else
-                sub = row.get(sl['element'].to_sym)
+                sub = row.get(attributes['element'].to_sym)
 #                end
             end
-            el_name = sl['element']
-            sl.delete('element')
-            sl = create_sublist("sublist_#{cnt}_#{sl['id']}", sl)
+            el_name = attributes['element']
+            attributes.delete('element')
+            sl = create_sublist("sublist_#{cnt}_#{attributes['id']}", attributes)
             if (el && el.model != @model)
                 sl.attributes[:model] = el.model
                 sl.attributes[:dereference_junction] = nil unless attributes['dereference_junction']
@@ -192,6 +192,7 @@ module Spider; module Components
                 sl.attributes[:element] = el
                 sl.attributes[:parent_obj] = row
             end
+            sl.parse_runtime_content_xml("<sp:widget-content>#{sbl.innerHTML}</sp:widget-content>")
             sl.queryset = sub
             sl.css_classes << "sublist_#{el_name}"
             @sublists[cnt] ||= []
@@ -226,11 +227,14 @@ module Spider; module Components
         end
 
         def parse_runtime_content(doc, src_path='')
-            doc.search('sublist').each do |sl|
+            doc = super
+            return doc if doc.children.empty?
+            doc.root.children_of_type('sublist').each do |sl|
                 raise ArgumentError, "Sublist of #{@id} does not have an id" unless sl['id']
                 @requested_sublists ||= []
-                @requested_sublists << sl.attributes
+                @requested_sublists << sl
             end
+            return doc.root
         end
 
         __.json
