@@ -138,7 +138,10 @@ module Spider; module Model
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
                     obj.instantiate_element(el) unless obj.get(el)
-                    obj.get(el).save if (obj.element_modified?(el) || !obj.primary_keys_set?) && obj.get(el).mapper.class.write?
+                    unless sub = obj.get(el)
+                        raise "Object #{obj} is missing its superclass object for model #{m} (element #{el.name})"
+                    end
+                    sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
