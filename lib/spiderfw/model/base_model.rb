@@ -341,8 +341,8 @@ module Spider; module Model
                     return nil
                 end
                 if element_has_value?(name) || element_loaded?(name)
-                    val = instance_variable_get(ivar) 
-                    val.set_parent(self, name) if val && element.model?
+                    val = instance_variable_get(ivar)
+                    val.set_parent(self, name) if val && element.model? && !val._parent # FIXME!!!
                     return val
                 end
 
@@ -359,7 +359,7 @@ module Spider; module Model
                 if (!val && element.model? && element.multiple?)
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
-                val.set_parent(self, name) if element.model? && val
+                val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
                 return val
             end
 
