@@ -16,7 +16,7 @@ module Spider; module Model
         # The element type, as per the second argument passed to the Model::BaseModel.element method.
         # This may be different from #model.
         def type
-            return @type
+            @type
         end
         
         # The actual model used to represent the association. Will return the #association_type or the #type.
@@ -34,7 +34,7 @@ module Spider; module Model
         # many to many relationships, unless one is supplied with the :through attribute. This will be set
         # for n <-> n relationships, and will be nil otherwise.
         def association_type
-            @attributes[:association_type]
+            @association_type ||= @attributes[:association_type]
         end
         
         # True if the element defines a 1|n -> n association.
@@ -54,7 +54,8 @@ module Spider; module Model
         
         # True if the element defines an association to another model.
         def model?
-            @is_model ||= (type < Spider::Model::BaseModel || association_type)
+            return @is_model if @is_model != nil
+            @is_model = (type < Spider::Model::BaseModel || association_type)
         end
         
         # True if the element is integrated from another one. (See also BaseModel#integrate).
@@ -72,7 +73,8 @@ module Spider; module Model
         #   Person.elements[:street].integrated_from => :address
         #   Person.elements[:street].integrated_from_element => :street 
         def integrated?
-            @attributes[:integrated_from]
+            return @is_integrated if @is_integrated != nil
+            @is_integrated = @attributes[:integrated_from]
         end
         
         # If the element is integrated, the element from which it is taken. See also #integrated?.
@@ -86,9 +88,9 @@ module Spider; module Model
             @attributes[:integrated_from_element]
         end
         
-        # True if the element is a primary key.        
+        # True if the element is a primary key.
         def primary_key?
-            @attributes[:primary_key]
+            @primary_key ||= @attributes[:primary_key]
         end
         
         # True if the element is read only.
