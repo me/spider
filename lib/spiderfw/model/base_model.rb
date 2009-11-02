@@ -309,6 +309,10 @@ module Spider; module Model
             else
                 @elements_order << name
             end
+            @primary_keys ||= []
+            if attributes[:primary_key] && !@primary_keys.include?(@elements[name])
+                @primary_keys << @elements[name] 
+            end
             
             # class element getter
             unless respond_to?(name)
@@ -421,6 +425,10 @@ module Spider; module Model
             @elements[el.name] = el
             @elements_order ||= []
             @elements_order << el.name
+            @primary_keys ||= []
+            if el.attributes[:primary_key] && !@primary_keys.include?(el)
+                @primary_keys << el
+            end
         end
         
         
@@ -429,6 +437,7 @@ module Spider; module Model
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
+            @primary_keys.delete_if{ |pk| pk.name == el}
             remove_method(:"#{el}") rescue NameError
             remove_method(:"#{el}=") rescue NameError
         end
@@ -578,6 +587,7 @@ module Spider; module Model
                 @elements_order = []
             end
             primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks])
+            model.primary_keys.each{ |k| remove_element(k) }
             integrated_name = params[:name]
             if (!integrated_name)
                 integrated_name = (self.parent_module == model.parent_module) ? model.short_name : model.name
@@ -747,7 +757,7 @@ module Spider; module Model
         
         # An array of elements with primary_key attribute set.
         def self.primary_keys
-            elements.values.select{|el| el.attributes[:primary_key]}
+            @primary_keys
         end
         
         # Returns the model actually defining element_name; that could be the model
