@@ -73,6 +73,11 @@ module Spider; module Model
             @objects[klass].delete(pks)
             @pks.delete(obj_id)
         end
+        
+        def reset
+            @objects = {}
+            @pks = {}
+        end
 
         
     end
