@@ -396,6 +396,7 @@ module Spider; module Model
         def load
             return self unless loadable?
             @objects = []
+            @index_lookup.each_key{ |k| @index_lookup[k] = {} }
             @loaded = false
             @loaded_elements = {}
             return load_next if @fetch_window && !@query.offset
