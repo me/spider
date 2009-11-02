@@ -1393,7 +1393,7 @@ module Spider; module Model
             set_mod = @modified_elements[element.name]
             return set_mod if set_mod
             if (element.integrated?)
-                return element_modified?(element) unless integrated = get_no_load(element.integrated_from)
+                return false unless integrated = get_no_load(element.integrated_from)
                 return integrated.element_modified?(element.integrated_from_element)
             end
             if element_has_value?(element) && (val = get(element)).respond_to?(:modified?)
