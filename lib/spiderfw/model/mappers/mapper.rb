@@ -165,7 +165,7 @@ module Spider; module Model
         # Called after a succesful save. 'mode' can be :insert or :update.
         def after_save(obj, mode)
             obj.reset_modified_elements
-            save_associations(obj)
+            save_associations(obj, mode)
             
         end
         
@@ -221,9 +221,9 @@ module Spider; module Model
         end
         
         # Saves object associations.
-        def save_associations(obj)
+        def save_associations(obj, mode)
             association_elements.select{ |el| obj.element_has_value?(el) }.each do |el|
-                save_element_associations(obj, el)
+                save_element_associations(obj, el, mode)
             end
         end
         
@@ -256,39 +256,43 @@ module Spider; module Model
         end
         
         # Saves the associations from the given object to the element.
-        def save_element_associations(obj, element)
+        def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
             if (element.attributes[:junction])
                 their_element = element.attributes[:junction_their_element]
                 if (val.model != element.model) # dereferenced junction
-                    current = obj.get_new
-                    current_val = current.get(element)
-                    condition = Condition.and
-                    current_val.each do |row|
-                        next if val.include?(row)
-                        condition_row = Condition.or
-                        condition_row[their_element] = row
-                        condition << condition_row
-                    end
-                    unless condition.empty?
-                        condition[our_element] = obj
-                        element.model.mapper.delete(condition)
+                    unless (mode == :insert)
+                        current = obj.get_new
+                        current_val = current.get(element)
+                        condition = Condition.and
+                        current_val.each do |row|
+                            next if val.include?(row)
+                            condition_row = Condition.or
+                            condition_row[their_element] = row
+                            condition << condition_row
+                        end
+                        unless condition.empty?
+                            condition[our_element] = obj
+                            element.model.mapper.delete(condition)
+                        end
                     end
                     val.each do |row|
-                        next if current_val.include?(row)
+                        next if current_val && current_val.include?(row)
                         junction = element.model.new({ our_element => obj, their_element => row })
                         junction.insert
                     end                    
                 else
-                    condition = Condition.and
-                    condition[our_element] = obj
-                    raise "Can't save without a junction id" unless element.attributes[:junction_id]
-                    val.each do |row|
-                        next unless row_id = row.get(element.attributes[:junction_id])
-                        condition.set(:id, '<>', row_id)
+                    unless mode == :insert
+                        condition = Condition.and
+                        condition[our_element] = obj
+                        raise "Can't save without a junction id" unless element.attributes[:junction_id]
+                        val.each do |row|
+                            next unless row_id = row.get(element.attributes[:junction_id])
+                            condition.set(:id, '<>', row_id)
+                        end
+                        element.model.mapper.delete(condition)
                     end
-                    element.model.mapper.delete(condition)
                     val.set(our_element, obj)
                     val.save
                 end
