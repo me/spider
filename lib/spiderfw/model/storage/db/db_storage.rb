@@ -36,6 +36,7 @@ module Spider; module Model; module Storage; module Db
 
             # Returns a new connection. Must be implemented by the subclasses; args are implementation specific.
             def new_connection(*args)
+                raise "Unimplemented"
             end
             
             # Returns a connection, drawing from the pool or instantiating a new one.
@@ -59,7 +60,7 @@ module Spider; module Model; module Storage; module Db
                             if @connections[args].length <= max_connections
                                 begin
                                     conn = new_connection(*args)
-                                    @connections[args] << conn
+                                    @connections[args] << conn if conn
                                 rescue => exc
                                     connect_exception = exc
                                     keep_trying = false
@@ -365,6 +366,10 @@ module Spider; module Model; module Storage; module Db
             return sql, bind_vars
         end
         
+        def total_rows
+            @total_rows
+        end
+        
         # Returns the SQL for select keys.
         def sql_keys(query)
             query[:keys].join(',')
@@ -411,6 +416,7 @@ module Spider; module Model; module Storage; module Db
             bind_vars = []
             mapped = condition[:values].map do |v|
                 if (v.is_a? Hash) # subconditions
+                    # FIXME: optimize removing recursion
                     sql, vals = sql_condition({:condition => v})
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
@@ -716,6 +722,11 @@ module Spider; module Model; module Storage; module Db
         # Returns a description of the table as currently present in the DB.
         def describe_table(table)
             raise "Unimplemented"
+        end
+        
+        # Post processes column information retrieved from current DB.
+        def parse_db_column(col)
+            col
         end
         
         ##############################################################

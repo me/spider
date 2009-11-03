@@ -1,3 +1,5 @@
+require 'spiderfw/model/storage/db/connectors/odbc'
+
 module Spider; module Model
     
     module Storage
@@ -16,18 +18,29 @@ module Spider; module Model
                 end
                 case adapter
                 when 'sqlite'
-                    storage = Db::SQLite.new(url)
+                    class_name = :SQLite
                 when 'oci8'
-                    storage = Db::OCI8.new(url)
+                    class_name = :OCI8
                 when 'mysql'
-                    storage = Db::Mysql.new(url)
+                    class_name = :Mysql
+                when 'mssql'
+                    class_name = :MSSQL
                 end
+                klass = Db.const_get(class_name)
                 if (connector)
                     case connector
                     when 'odbc'
-                        storage.extend(Db::Connectors::ODBC)
+                        conn_mod = :ODBC
+                    end
+                    conn_class = "#{conn_mod}#{class_name}"
+                    if Db.const_defined?(conn_class)
+                        klass = Db.const_get(conn_class)
+                    else
+                        klass = Db.const_set(conn_class, Class.new(klass))
+                        klass.instance_eval{ include Db::Connectors.const_get(conn_mod)}
                     end
                 end
+                storage = klass.new(url)
                 return storage
             end
         end
@@ -52,3 +65,5 @@ module Spider; module Model
     end
     
 end; end
+
+require 'spiderfw/model/storage/db/db'
