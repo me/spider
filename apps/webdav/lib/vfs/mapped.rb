@@ -73,7 +73,7 @@ module Spider; module WebDAV; module VFS
         def rm(path)
             vfs, rest = get(path)
             return vfs.rm(rest) if rest
-            return @entries.delete[path]
+            return @entries.delete(path)
         end
 
         def cp(src, dst, recursive=true)
@@ -202,6 +202,10 @@ module Spider; module WebDAV; module VFS
 
         def touch(dummy_path)
             File.new(@real_path, 'w').close
+        end
+        
+        def rm
+            File.unlink(@real_path)
         end
 
     end

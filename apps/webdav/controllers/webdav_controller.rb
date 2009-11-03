@@ -51,7 +51,10 @@ module Spider; module WebDAV
         end
         
         def execute(action='', *arguments)
-            path = normalize_path(action)
+            path = action
+            path += ".#{@request.format}" if @request.format
+            path = normalize_path(path)
+            Spider.logger.debug("WEBDAV "+ @request.env['REQUEST_METHOD']+" "+path);
             case @request.env['REQUEST_METHOD']
             when 'OPTIONS'
                 do_OPTIONS
@@ -61,6 +64,8 @@ module Spider; module WebDAV
                 do_PUT(path)
             when 'PROPFIND'
                 do_PROPFIND(path)
+            when 'PROPPATCH'
+                do_PROPPATCH(path)
             when 'LOCK'
                 do_LOCK(path)
             when 'UNLOCK'
@@ -109,6 +114,7 @@ module Spider; module WebDAV
         end
         
         def do_PUT(path)
+            vfs.touch(path)
     		check_lock(path)
 
     		if @request.env['RANGE']
@@ -191,7 +197,7 @@ module Spider; module WebDAV
     	
     	def do_PROPPATCH(path)
 
-    		if not vfs.exist?(path)
+    		if not vfs.exists?(path)
     			raise NotFound.new(path)
     		end
 
@@ -231,85 +237,105 @@ module Spider; module WebDAV
     		}
     		@response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
     		@response.status = Spider::HTTP::WEBDAV_MULTI_STATUS
-    		$out << build_multistat([[request_uri, *ret]]).to_s
+    		m = build_multistat([[request_uri, *ret]]).to_s
+    		debug("PROPPATCH RESPONSE: #{m}")
+    		$out << m
     		
     	end
     	
-    	def do_LOCK(path)
-    		raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
-            
+        def do_LOCK(path)
+            raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
+
             body_str = @request.read_body
             debug("LOCK REQUEST:")
             debug(body_str)
-    		begin
-    			req_doc = REXML::Document.new body_str
-    		rescue REXML::ParseException
-    			raise BadRequest
-    		end
+#
+            if not vfs.exists?(path)
+                #vfs.touch(path)
+                #debug("CREATED #{path}")
+                raise NotFound.new(vfs.map_path(path))
+            end
+            begin
+                req_doc = REXML::Document.new body_str
+            rescue REXML::ParseException
+                raise BadRequest
+            end
 
-    		if body_str.empty?
-    			# Could be a lock refresh
-    			matches = parse_if_header
+            if body_str.empty?
+                # Could be a lock refresh
+                matches = parse_if_header
 
-    			matches.each do |match|
-    				res = match[0].empty? ? path : match[0]
+                matches.each do |match|
+                    res = match[0].empty? ? path : match[0]
 
                     locks = vfs.locked?(res)
+                    debug "locks:"
+                    debug locks
                     if (locks)                        
-        				locks.each do |lock|
-        					vfs.refresh(lock) if if_match(lock, [res, match[1]])
-        				end
-    				end
-    			end
-
-    			raise HTTPStatus.NO_CONTENT
-    		else
-    			ns = {""=>"DAV:"}
-    			item = REXML::XPath.first(req_doc, "/lockinfo", ns)
-
-    			raise BadRequest unless item
-    			depth = @request.env['HTTP_DEPTH'] =~ /^infinite$/i ? 'infinite' : 0
-    			scope = (v = REXML::XPath.first(item, 'lockscope/*', ns)) && v.name
-    			type = (v = REXML::XPath.first(item, 'locktype/*', ns)) && v.name
-    			#owner = REXML::XPath.first(item, 'owner/*', ns)
-    			owner = REXML::XPath.first(item, 'owner')
-			if (owner)
-    			    owner = owner.elements.size > 0 ? owner.elements[1] : owner.text
-                        else
-			    owner = ""
+                        locks.each do |lock|
+                            vfs.refresh(lock) if if_match(lock, [res, match[1]])
                         end
+                    end
+                end
+
+                raise HTTPStatus.NO_CONTENT
+            else
+                ns = {""=>"DAV:"}
+                item = REXML::XPath.first(req_doc, "/lockinfo", ns)
+                debug("ITEM:")
+                debug(item)
+
+                raise BadRequest unless item
+                depth = @request.env['HTTP_DEPTH'] =~ /^infinite$/i ? 'infinite' : 0
+                scope = (v = REXML::XPath.first(item, 'lockscope/*', ns)) && v.name
+                type = (v = REXML::XPath.first(item, 'locktype/*', ns)) && v.name
+                owner = REXML::XPath.first(item, 'owner/*', ns)
+                debug("OWNER: #{owner}")
+                #	owner = REXML::XPath.first(item, 'owner')
+                if (owner)
+                    owner = owner.elements.size > 0 ? owner.elements[1] : owner.text
+                else
+                    owner = ""
+                end
                 if (request_timeout = @request.env['HTTP_TIMEOUT'])
                     timeout_parts = request_timeout.split(/,\s+/)
                     timeout = timeout_parts[0]
                 end
-                    
-                
-    			# Try to lock the resource
-    			lock = vfs.lock(path, :depth => depth, :scope => scope, :type => type, :owner => owner, :uid => @request.user_id)
-    			lock.timeout = timeout if (timeout)
+                debug("TIMEOUT: #{timeout}")
+
+
+                # Try to lock the resource
+                lock = vfs.lock(path, :depth => depth, :scope => scope, :type => type, :owner => owner, :uid => @request.user_id)
+                lock.timeout = timeout if (lock && timeout)
+                debug("CREATED LOCK:")
+                debug(lock)
                 if not lock
-    			    @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'	
-    			    @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS	
-    				$out << build_multistat([[request_uri, elem_status(Spider::HTTP::WEBDAV_LOCKED)]]).to_s
-    				done
-    			end
-    			
+                    @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'	
+                    @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS	
+                    m = build_multistat([[request_uri, elem_status(Spider::HTTP::WEBDAV_LOCKED)]]).to_s
+                    debug("MULTISTAT: #{m}")
+                    $out << m
+                    done
+                end
+
                 @response.headers['Lock-Token'] = "<opaquelocktoken:#{lock.token}>" if lock
 
-    			# Respond with propfinding the lockdiscovery property
-    			# FIXME: cleanup, the code is repeated from propfind_response
-    			propstat = get_propstat(path, ['lockdiscovery'])
-    			prop = REXML::XPath.first(propstat, 'D:prop')
-    			prop.attributes['xmlns:D'] = 'DAV:'
-    			resp = REXML::Document.new << prop
-    			@response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
+                # Respond with propfinding the lockdiscovery property
+                # FIXME: cleanup, the code is repeated from propfind_response
+                propstat = get_propstat(path, ['lockdiscovery'])
+                Spider.logger.debug("--PROPSTAT:")
+                Spider.logger.debug(propstat[0].to_s)
+                prop = REXML::XPath.first(propstat, 'D:prop')
+                prop.attributes['xmlns:D'] = 'DAV:'
+                resp = REXML::Document.new << prop
+                @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'
                 @response.status = Spider::HTTP::OK
                 debug("LOCK RESPONSE:")
                 debug(resp.to_s)
                 $out << resp.to_s
-    			
-    		end
-    	end
+
+            end
+        end
 
     	def do_UNLOCK(path)
     		raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
@@ -462,11 +488,11 @@ module Spider; module WebDAV
     					    raise Spider::Controller::NotFound.new(e.file)
 					    end
     					pe << prop_el if prop_el
-    				rescue Spider::ControllerMixins::HTTPMixin::HTTPStatus, Spider::Controller::NotFound => e
+    				rescue Spider::ControllerMixins::HTTPMixin::HTTPStatus, Spider::Controller::NotFound, Errno::ENOENT => e
     					# FIXME: add to errstat
     					ps = REXML::Element.new("D:propstat")
     					ps << gen_element('D:prop', gen_element("D:#{pname}"))
-    					if (e.is_a?(Spider::Controller::NotFound))
+    					if (e.is_a?(Spider::Controller::NotFound) || e.is_a?(Errno::ENOENT))
     					    ps << elem_status(Spider::HTTP::NOT_FOUND)
 					    else
     					    ps << elem_status(e.code, e.status_message)
@@ -483,7 +509,8 @@ module Spider; module WebDAV
 #    		    debugger
     			propstat.elements << elem_status(Spider::HTTP::INTERNAL_SERVER_ERROR)
     		end
-
+            Spider.logger.debug("PROPSTATS:")
+            Spider.logger.debug(propstats)
     		propstats
     	end
     	
@@ -820,6 +847,9 @@ module Spider; module WebDAV
     	end
         
         
+    end
+    
+    class Unsupported < RuntimeError
     end
     
     

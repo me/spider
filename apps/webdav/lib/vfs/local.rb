@@ -10,7 +10,7 @@ module Spider; module WebDAV; module VFS
 			def initialize(vfs, filename)
 				super
                 
-				@stat = File.lstat(@filename)
+				@stat = File.exist?(@filename) ? File.lstat(@filename) : OpenStruct.new
 			end
 			
 			def ctime
@@ -55,7 +55,9 @@ module Spider; module WebDAV; module VFS
         end
 
         def stream(path, acc)
-            File.open(map_path(path), acc){ |f| yield f } 
+            full_path = map_path(path)
+            File.touch(full_path) unless File.exist?(full_path)
+            File.open(full_path, acc){ |f| yield f } 
         end
         
         def directory?(path)
