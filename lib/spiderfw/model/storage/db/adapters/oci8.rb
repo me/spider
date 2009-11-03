@@ -443,6 +443,7 @@ module Spider; module Model; module Storage; module Db
         
         def initialize(type)
             @type = type
+            @type = Fixnum if @type == TrueClass || @type == FalseClass
         end
         
         def to_s
