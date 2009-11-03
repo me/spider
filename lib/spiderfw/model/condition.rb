@@ -148,6 +148,9 @@ module Spider; module Model
         
         # Sets a comparison.
         def set(field, comparison, value)
+            if (value.is_a?(QuerySet))
+                value = value.to_a
+            end
             if (value.is_a?(Array))
                 or_cond = self.class.or
                 value.uniq.each do |v|
@@ -291,6 +294,14 @@ module Spider; module Model
             return false unless @polymorph == other.polymorph
             return false unless @conjunction == other.conjunction
             return true
+        end
+        
+        def eql?(other)
+            self == other
+        end
+        
+        def hash
+            ([self.keys, self.values, @comparisons.values, @polymorph] + @subconditions.map{ |s| s.hash}).hash
         end
         
         # Removes duplicate subcondtions.

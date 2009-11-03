@@ -1,0 +1,3 @@
+<sp:template>
+    <input type="hidden" name="{ @name }" value="{ @value }">
+</sp:template>

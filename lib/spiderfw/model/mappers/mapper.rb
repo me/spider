@@ -138,7 +138,10 @@ module Spider; module Model
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
                     obj.instantiate_element(el) unless obj.get(el)
-                    obj.get(el).save if (obj.element_modified?(el) || !obj.primary_keys_set?) && obj.get(el).mapper.class.write?
+                    unless sub = obj.get(el)
+                        raise "Object #{obj} is missing its superclass object for model #{m} (element #{el.name})"
+                    end
+                    sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
@@ -162,8 +165,12 @@ module Spider; module Model
         # Called after a succesful save. 'mode' can be :insert or :update.
         def after_save(obj, mode)
             obj.reset_modified_elements
-            save_associations(obj)
+            save_associations(obj, mode)
             
+        end
+        
+        # Hook called after a succesful save: the object is not in save mode.
+        def save_done(obj, mode)
         end
         
         # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
@@ -201,6 +208,11 @@ module Spider; module Model
             end
             after_save(obj, save_mode)
             obj.autoload = prev_autoload
+            unless @doing_save_done
+                @doing_save_done = true
+                save_done(obj, save_mode) 
+            end
+            @doing_save_done = false
         end
 
         # Elements that are associated to this one externally.
@@ -209,9 +221,9 @@ module Spider; module Model
         end
         
         # Saves object associations.
-        def save_associations(obj)
+        def save_associations(obj, mode)
             association_elements.select{ |el| obj.element_has_value?(el) }.each do |el|
-                save_element_associations(obj, el)
+                save_element_associations(obj, el, mode)
             end
         end
         
@@ -244,39 +256,43 @@ module Spider; module Model
         end
         
         # Saves the associations from the given object to the element.
-        def save_element_associations(obj, element)
+        def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
             if (element.attributes[:junction])
                 their_element = element.attributes[:junction_their_element]
                 if (val.model != element.model) # dereferenced junction
-                    current = obj.get_new
-                    current_val = current.get(element)
-                    condition = Condition.and
-#                    debugger
-                    current_val.each do |row|
-                        next if val.include?(row)
-                        condition_row = Condition.or
-                        condition_row[their_element] = row
-                        condition << condition_row
-                    end
-                    unless condition.empty?
-                        condition[our_element] = obj
-                        element.model.mapper.delete(condition)
+                    unless (mode == :insert)
+                        current = obj.get_new
+                        current_val = current.get(element)
+                        condition = Condition.and
+                        current_val.each do |row|
+                            next if val.include?(row)
+                            condition_row = Condition.or
+                            condition_row[their_element] = row
+                            condition << condition_row
+                        end
+                        unless condition.empty?
+                            condition[our_element] = obj
+                            element.model.mapper.delete(condition)
+                        end
                     end
                     val.each do |row|
-                        next if current_val.include?(row)
+                        next if current_val && current_val.include?(row)
                         junction = element.model.new({ our_element => obj, their_element => row })
                         junction.insert
                     end                    
                 else
-                    condition = Condition.and
-                    condition[our_element] = obj
-                    val.each do |row|
-                        next unless row_id = row.get(element.attributes[:junction_id])
-                        condition.set(:id, '<>', row_id)
+                    unless mode == :insert
+                        condition = Condition.and
+                        condition[our_element] = obj
+                        raise "Can't save without a junction id" unless element.attributes[:junction_id]
+                        val.each do |row|
+                            next unless row_id = row.get(element.attributes[:junction_id])
+                            condition.set(:id, '<>', row_id)
+                        end
+                        element.model.mapper.delete(condition)
                     end
-                    element.model.mapper.delete(condition)
                     val.set(our_element, obj)
                     val.save
                 end
@@ -567,7 +583,7 @@ module Spider; module Model
             get_integrated = {}
             query.request.each_key do |element_name|
                 element = @model.elements[element_name]
-                next unless element && mapped?(element)
+                next unless element && (mapped?(element) || element.attributes[:element_query])
                 next if objects.element_loaded?(element_name)
                 next unless element.reverse # FIXME
                 if element.integrated?
@@ -597,47 +613,37 @@ module Spider; module Model
         # Loads an external element, according to query, and merges the result into an object or QuerySet.
         def get_external_element(element, query, objects)
             Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
-            if (have_references?(element))
-                return load_element(objects, element)
-            end
-            sub_request = Request.new
-            @model.primary_keys.each{ |key| sub_request[key.name] = true }
-            sub_request[element.attributes[:reverse]] = true
-            condition = Condition.or
+            return load_element(objects, element) if (have_references?(element))
+            return nil if objects.empty?
             index_by = []
             @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
-            
-#             if (@model.primary_keys.length == 1)
-#                 pk = @model.primary_keys[0]
-#                 a = objects.map{ |o| o.get(pk) }
-# #                debugger
-#                 condition["#{element.attributes[:reverse]}.#{pk.name}"] = a
-#             else
-            seen_conditions = {}
+            result = objects.element_queryset(element).index_by(*index_by)
+            @model.primary_keys.each{ |key| result.request[key.name] = true }
+            result.request[element.attributes[:reverse]] = true
+            result.load
+            return associate_external(element, objects, result)
+        end
+        
+        # Given the results of a query for an element, and a set of objects, associates
+        # the result with the corresponding objects.
+        def associate_external(element, objects, result)
+            result.reindex
+            objects.element_loaded(element.name)
             objects.each_current do |obj|
-#                if (@model.primary_keys.length == 1)
-#                    condition
-#                else
-                condition_row = Condition.and
+                search_params = {}
                 @model.primary_keys.each do |key|
-                    condition_row["#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
+                    field = @schema.field(key.name)
+                    search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                 end
-                condition << condition_row unless seen_conditions[condition_row]
-                seen_conditions[condition_row] = true
-#                end
-            end
-            seen_conditions = nil
-#            end
-            unless condition.empty?                
-                if (element.condition)
-                    condition = Condition.and(condition, element.condition)
+                sub_res = result.find(search_params)
+                sub_res.each do |sub_obj|
+                    sub_obj.set_loaded_value(element.attributes[:reverse], obj)
                 end
-                result = QuerySet.new(element.model).index_by(*index_by)
-                result = result.mapper.find(Query.new(condition, sub_request), result)
-                result.loaded = true
-                return associate_external(element, objects, result)
+                sub_res = sub_res[0] if !element.multiple?
+                sub_res.loadable = false if sub_res.respond_to?(:loadable=)
+                obj.set_loaded_value(element, sub_res)
             end
-            return nil
+            return objects
         end
         
         # Returns the siblings, if any, of the object, in its ancestor QuerySet.
@@ -751,7 +757,7 @@ module Spider; module Model
         def prepare_query_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.each_with_comparison do |k, v, c|
-                raise MapperError, "Condition for nonexistent element #{k}" unless element = model.elements[k]
+                raise MapperError, "Condition for nonexistent element #{k} on model #{model}" unless element = model.elements[k]
                 if (element.integrated?)
                     condition.delete(k)
                     integrated_from = element.integrated_from

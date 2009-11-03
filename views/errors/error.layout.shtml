@@ -16,8 +16,13 @@
             <sp:yield />
         </div>
 		<div id="footer">
-			_(If you need to contact the administrator to provide additional information, you may send an e-mail to) 
-			<a href="mailto:{ @admin_email }?subject={ @email_subject }">{ @admin_email }</a>.
+			<div id="contact">
+				_(If you need to contact the administrator to provide additional information, you may send an e-mail to) 
+				<a href="mailto:{ @admin_email }?subject={ @email_subject }">{ @admin_email }</a>.
+			</div>
+			<div id="exc_uuid" sp:if="@exception_uuid">
+				_(The identifier of this error is %s. Please refer to it when requesting assistance.) % @exception_uuid
+			</div>
 		</div>
 		<hr id="bottom_break">
 		<div id="debug" sp:if="@devel">

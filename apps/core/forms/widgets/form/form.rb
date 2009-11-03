@@ -35,7 +35,7 @@ module Spider; module Forms
         attribute :submit_and_new_text, :default => lambda{ _('%s and insert new') }
         attribute :submit_and_stay_text, :default => lambda{ _('%s and stay') }
         is_attr_accessor :pk
-        attr_to_scene :inputs, :names, :labels, :error, :errors, :sub_links
+        attr_to_scene :inputs, :names, :hidden_inputs, :labels, :error, :errors, :sub_links
         attribute :show_related, :type => TrueClass, :default => false
         i_attribute :auto_redirect, :default => false
         attr_accessor :save_actions
@@ -49,6 +49,7 @@ module Spider; module Forms
         def init
             @inputs = {}
             @names = []
+            @hidden_inputs = []
             @errors = {}
             @labels = {}
             @save_actions ||= {}
@@ -72,7 +73,7 @@ module Spider; module Forms
             @pk = nil if @pk == 'new'
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
-                @elements = @elements.split(',').map{ |e| debug("EL: #{e.strip.to_sym}"); @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
+                @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
                 @requested_elements = @elements
             end
             @elements = @model.elements_array unless @elements
@@ -129,6 +130,7 @@ module Spider; module Forms
             end
 #            end
             super
+            save(@submit_action) if @submit_action
         end
         
         def init_widgets
@@ -148,15 +150,13 @@ module Spider; module Forms
             else
                 create_inputs
             end
-
         end
         
         def run
             Spider::Logger.debug("FORM EXECUTING")
-            save(@submit_action) if @submit_action
             if (@obj)
                 
-                @scene.form_desc = @model.label.downcase+' '+ @obj.to_s
+                @scene.form_desc = @model.label.downcase+' '+ (@obj.to_s || '')
                 if (@action == :sub)
                     
                 end
@@ -222,7 +222,11 @@ module Spider; module Forms
                 if (input)
                     input.read_only if read_only?(el.name)
 #                    input.id_path.insert(input.id_path.length-1, 'data')
-                    @names << el.name
+                    if (input.is_a?(Hidden))
+                        @hidden_inputs << input
+                    else
+                        @names << el.name
+                    end
                     input.id = el.name
                     input.form = self
 #                    input.name = '_w'+param_name(input.id_path[0..-2]+['data']+input.id_path[-1..-1])
@@ -243,6 +247,7 @@ module Spider; module Forms
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?
                 input.model = el.type if input.respond_to?(:model)
+                input.condition = el.condition if el.condition
             end
             return input
         end

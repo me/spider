@@ -60,9 +60,23 @@ module Spider; module Model
                     existent.merge!(obj)
                     return existent
                 else
-                    return @objects[obj.class][pks] = obj
+                    @objects[obj.class][pks] = obj
+                    @pks[obj.object_id] = pks
+                    return obj
                 end
             end
+        end
+        
+        def delete(klass, obj_id)
+            pks = @pks[obj_id]
+            return unless pks && @objects[klass]
+            @objects[klass].delete(pks)
+            @pks.delete(obj_id)
+        end
+        
+        def reset
+            @objects = {}
+            @pks = {}
         end
 
         

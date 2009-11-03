@@ -33,7 +33,7 @@ module Spider; module Model
                         end
                         new_val ||= max(name, cond) + 1
                         if (!old)
-                            move_down_list(name, new_val+1, nil, cond)
+                            move_up_list(name, new_val, nil, cond)
                         else
                             if (new_val < old)
                                 move_up_list(name, new_val, old-1, cond)

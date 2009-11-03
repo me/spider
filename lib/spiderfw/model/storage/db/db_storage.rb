@@ -225,6 +225,7 @@ module Spider; module Model; module Storage; module Db
             return name
         end
         
+        
         # Returns the db type corresponding to an element type.
         def column_type(type, attributes)
             case type.name
@@ -471,7 +472,7 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for DB joins.
         def sql_joins(joins)
             types = {
-                :inner => 'INNER', :outer => 'OUTER', :left_outer => 'LEFT OUTER', :right_outer => 'RIGHT OUTER'
+                :inner => 'INNER', :outer => 'OUTER', :left => 'LEFT OUTER', :right => 'RIGHT OUTER'
             }
             values = []
             sql = joins.map{ |join|
@@ -481,7 +482,10 @@ module Spider; module Model; module Storage; module Db
                     sql_on += " and #{condition_sql}"
                     values += condition_values
                 end
-                "#{types[join[:type]]} JOIN #{join[:to]} ON (#{sql_on})"
+                j = "#{types[join[:type]]} JOIN #{join[:to]}"
+                j += " #{join[:as]}" if join[:as]
+                j += " ON (#{sql_on})"
+                j
             }.join(" ")
             return [sql, values]
         end
@@ -730,7 +734,39 @@ module Spider; module Model; module Storage; module Db
             end
             return sql, values
         end
+        
+        ##############################################################
+        #   Reflection                                               #
+        ##############################################################
             
+            
+        def reflect_column(table, column_name, column_attributes)
+            column_type = column_attributes[:type]
+            el_type = nil
+            el_attributes = {}
+            case column_type
+            when 'TEXT'
+                el_type = String
+            when 'LONGTEXT'
+                el_type = Text
+            when 'INT'
+                if (column_attributes[:length] == 1)
+                    el_type = Spider::DataTypes::Bool
+                else
+                    el_type = Fixnum
+                end
+            when 'REAL'
+                el_type = Float
+            when 'DECIMAL'
+                el_type = BigDecimal
+            when 'DATE'
+                el_type = DateTime
+            when 'BLOB'
+                el_type = Spider::DataTypes::Binary
+            end
+            return el_type, el_attributes
+            
+        end
             
         
     end
