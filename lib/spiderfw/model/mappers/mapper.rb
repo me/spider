@@ -181,7 +181,7 @@ module Spider; module Model
         def save(obj, request=nil)
             prev_autoload = obj.autoload?
             obj.save_mode
-            if (@model.extended_models)
+            if (@model.extended_models && !@model.extended_models.empty?)
                 is_insert = false
                 # Load local primary keys if they exist
                 # FIXME: load without cloning?
