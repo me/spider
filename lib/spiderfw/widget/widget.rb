@@ -3,6 +3,7 @@ require 'spiderfw/templates/template'
 require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/widget/widget_attributes'
 require 'spiderfw/controller/mixins/http_mixin'
+require 'spiderfw/widget/widget_plugin'
 
 module Spider
     
@@ -20,6 +21,7 @@ module Spider
         
         class << self
             attr_reader :attributes, :scene_attributes
+            cattr_reader :tag_name, :plugins
             
             def inherited(subclass)
                 subclass.instance_variable_set(:@attributes, attributes.clone)
@@ -71,6 +73,7 @@ module Spider
             
             def tag(name)
                 self.app.register_tag(name, self)
+                @tag_name ||= name
             end
             
             def register_tag(name)
@@ -140,19 +143,29 @@ module Spider
             # - an array of overrides (as Hpricot nodes)
             def parse_content(doc)
                 overrides = []
+                plugins = []
                 to_del = []
                 doc.root.each_child do |child|
                     if child.respond_to?(:name)
                         namespace, short_name = child.name.split(':', 2)
-                        next unless namespace == 'tpl'
-                        next unless Spider::Template.override_tags.include?(short_name) || self.override_tags.include?(child.name)
-                        overrides << child unless child.is_a?(Hpricot::BogusETag)
+                        if (namespace == 'tpl' && (Spider::Template.override_tags.include?(short_name) || self.override_tags.include?(child.name)))
+                            overrides << child unless child.is_a?(Hpricot::BogusETag)
+                        end
+                        if (child.name == 'sp:plugin')
+                            plugins << child
+                        end
                     end
                 end
                 overrides.each do |ovr|
                     parse_override(ovr)
                 end
                 Hpricot::Elements[*overrides].remove
+                plugins.each do |plugin|
+                    name = plugin['name']
+                    mod = self.plugin(name)
+                    next unless mod
+                    overrides += mod.get_overrides
+                end
                 return [doc.to_s, overrides]
             end
             
@@ -165,6 +178,16 @@ module Spider
             # An array of custom tags that will be processed at compile time by the widget.
             def override_tags
                 return []
+            end
+            
+            def add_plugin(name, mod)
+                @plugins ||= {}
+                @plugins[name] = mod
+            end
+            
+            def plugin(name)
+                return nil unless @plugins
+                @plugins[name]
             end
             
         end
@@ -491,6 +514,19 @@ module Spider
         end
         
         def parse_runtime_content(doc, src_path=nil)
+            # doc.search('sp:plugin').each do |plugin|
+            #     name = plugin['name']
+            #     mod = self.class.plugin(name)
+            #     next unless mod
+            #     (class <<self; self; end).instance_eval do
+            #         debugger
+            #         include mod
+            #     end
+            #     shadow = (class <<self; self; end)
+            #     
+            #     debugger
+            #     a = 3
+            # end
             attributes = doc.search('sp:attribute')
             attributes.each do |a|
                 name = a.attributes['name'].to_sym
