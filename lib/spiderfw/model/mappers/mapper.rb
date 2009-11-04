@@ -455,6 +455,7 @@ module Spider; module Model
             set = nil
             Spider::Model.with_identity_mapper do |im|
 #                im.put(query_set)
+                # FIXME!!! probably need to update loaded elements, but it's extremely slow
                 query_set.update_loaded_elements if query_set
                 set = query_set || QuerySet.new(@model)
                 was_loaded = set.loaded
@@ -627,7 +628,7 @@ module Spider; module Model
         # Given the results of a query for an element, and a set of objects, associates
         # the result with the corresponding objects.
         def associate_external(element, objects, result)
-            result.reindex
+#            result.reindex
             objects.element_loaded(element.name)
             objects.each_current do |obj|
                 search_params = {}
@@ -756,6 +757,7 @@ module Spider; module Model
         # FIXME: better name, move somewhere else
         def prepare_query_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
+            condition.simplify
             condition.each_with_comparison do |k, v, c|
                 raise MapperError, "Condition for nonexistent element #{k} on model #{model}" unless element = model.elements[k]
                 if (element.integrated?)
@@ -779,7 +781,7 @@ module Spider; module Model
             condition.subconditions.each do |sub|
                 prepare_query_condition(sub)
             end
-            condition.simplify
+            return condition
         end
         
         # Returns task dependecies for the UnitOfWork. May be implemented by subclasses.
