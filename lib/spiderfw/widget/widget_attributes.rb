@@ -26,7 +26,7 @@ module Spider
                     v = v.to_s
                 when 'Symbol'
                     v = v.to_sym
-                when 'TrueClass', 'FalseClass'
+                when 'TrueClass', 'FalseClass', 'Spider::DataTypes::Bool'
                     v = v.to_s == 'false' ? false : true
                 when 'Fixnum'
                     v = v.to_i

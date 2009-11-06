@@ -3,8 +3,6 @@ Spider.defineWidget('Spider.Components.List', {
 	autoInit: '.wdgt-Spider-Components-List:not(.sublist)',
     
     startup: function(){
-        var options = {};
-		
     },
 
 	ready: function(){
@@ -27,24 +25,26 @@ Spider.defineWidget('Spider.Components.List', {
     
     makeSortable: function(){
         var options = {
-			items: 'li',
+			items: '>li',
             helper: function(e,item) {
 				return $("<div class='treeview-helper'>"+item.find("span.desc").html()+"</div>");
 			},
-			update: this.handleSort.bind(this)
+			handle: '> span.desc',
+			update: this.handleSort.bind(this),
+			receive: this.handleReceive.bind(this)
 		};
         if (this.el.hasClass('tree')){
             options = $.extend(options, {
     			//revert: true,
     			sortIndication: {
     				down: function(item) {
-    					item.css("border-top", "1px dotted black");
+						item.before($('<li id="list-sort-indicator" />'));
     				},
     				up: function(item) {
-    					item.css("border-bottom", "1px dotted black");
+						item.after($('<li id="list-sort-indicator" />'));
     				},
     				remove: function(item) {
-    					item.css("border-bottom", "0px").css("border-top", "0px");
+						$('#list-sort-indicator').remove();
     				}
     			},
     			start: function(e, ui) {
@@ -62,14 +62,14 @@ Spider.defineWidget('Spider.Components.List', {
                 accept: "li",
                 hoverClass: "drop",
                 tolerance: "pointer",
-                greedy: true,
-                drop: this.handleTreeDrop.bind(this),
-                over: function(e,ui) {
-                    ui.helper.css("outline", "1px dotted green");
-                },
-                out: function(e,ui) {
-                    ui.helper.css("outline", "1px dotted red");
-                }
+//                greedy: true,
+                drop: this.handleTreeDrop.bind(this)
+                // over: function(e,ui) {
+                //     ui.helper.css("outline", "1px dotted green");
+                // },
+                // out: function(e,ui) {
+                //     ui.helper.css("outline", "1px dotted red");
+                // }
             });
         }
         else{
@@ -78,14 +78,26 @@ Spider.defineWidget('Spider.Components.List', {
     },
     
     handleSort: function(e, ui){
+		if (ui.sender) return; // handled by handleReceive
         var item = ui.item;
-        var cnt = 0;
-        $('> li', this.listEl).each(function(){
-            cnt++;
-            if (this == item.get(0)) return false;
-        });
-        this.remote('sort', this.getSortItemId(item), cnt);
+        var pos = this.findLiPosition(item);
+		if (pos == -1) return;
+		if (this.listEl.data('sortable').fromOutside){ // hack to work around strange jquery ui behaviour...
+			return this.acceptFromSender(null, ui.item, pos);
+		}
+		this.remote('sort', this.getSortItemId(item), pos);
     },
+
+
+	handleReceive: function(e, ui){
+		if (ui.sender == ui.item){
+			// the item is received from a draggable, not from a list. For some reason the receiver is not
+			// yet ready to find the position; will call acceptFromSender from handleSort.
+			return;
+		}
+		var pos = this.findLiPosition(ui.item);
+		return this.acceptFromSender(ui.sender, ui.item, pos);
+	},
     
     handleTreeUpdate: function(e, ui){
         var parentId = this.getItemId(ui.item.parents('li.tree').eq(0));
@@ -105,18 +117,45 @@ Spider.defineWidget('Spider.Components.List', {
         subUl.append(ui.draggable);
 		var parentId = this.getItemId($(e.target).parents('li.tree').eq(0));
 		var prevId = null;
-		//this.remote('tree_sort', this.getItemId(ui.draggable), parentId, prevId);
+		this.remote('tree_sort', this.getItemId(ui.draggable), parentId, prevId);
 		return false;
     },
+
+	acceptFromSender: function(sender, item, pos){
+		console.error("Accept from sender must be implemented by the widget instance");
+	},
     
     getItemId: function(li){
         return $('> .dataobject-key', li).text();
     },
 
+	getItemById: function(id){
+		var found = null;
+		var self = this;
+		$('>li', this.listEl).each(function(){
+			if (self.getItemId(this) == id){
+				found = $(this);
+				return false;
+			}
+		});
+		return found;
+	},
+
 	getSortItemId: function(li){
 		var k = $('> .sort-key', li);
 		if (k.length > 0) return k.text();
-		return getItemId(li);
+		return this.getItemId(li);
+	},
+	
+	findLiPosition: function(item){
+		var cnt = 1;
+		var li = $('> li', this.listEl);
+        li.each(function(){
+            if (this == item.get(0)) return false;
+            cnt++;
+        });
+		if (cnt > li.length) return -1; // the row was dropped outside
+		return cnt;
 	},
     
     sortResult: function(res){
@@ -167,6 +206,7 @@ Spider.defineWidget('Spider.Components.List', {
 			e.preventDefault();
 			var form = $W(form_path);
 			form.el.appendTo($(this).parents('.listItem').eq(0));
+			form.el.show();
 			form.reload({pk: $(this).getDataObjectKey()}, function(){
 				var widget = this;
 				$('.buttons', this.el).append(
@@ -191,10 +231,4 @@ Spider.defineWidget('Spider.Components.List', {
     
     
     
-});
-
-$(document).ready(function(){
-    $('.wdgt-Spider-Components-List:not(.sublist)').each(function(){
-        var widget = Spider.Widget.initFromEl($(this));
-    });
 });

@@ -105,6 +105,7 @@ module Spider; module HTTP
     class WEBrickServlet < ::WEBrick::HTTPServlet::AbstractServlet
 
         def service(request, response)
+            Spider.request_started
             env = prepare_env(request)
             controller_request = WEBrickRequest.new(env)
             controller_request.server = WEBrick

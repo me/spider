@@ -35,8 +35,8 @@ module Spider; module Forms
             end
             did_set_value = false
             @model = const_get_full(@model) if @model.is_a?(String)
-            @data = @model.all
             if (params['text'] && !params['text'].empty?)
+                @data = @model.all
                 @scene.text_query = params['text']
                 cond = search_condition(params['text'])
                 @data.condition = @data.condition.and(cond)
@@ -89,6 +89,9 @@ module Spider; module Forms
         def set_or_add_value(vals)
             vals = [vals] unless vals.is_a?(Array)
             vals.each do |val|
+                unless val.is_a?(@model)
+                    val = @model.new(val)
+                end
                 if (@multiple)
                     self.value ||= Spider::Model::QuerySet.new(@model)
                     self.value << val

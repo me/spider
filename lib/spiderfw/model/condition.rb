@@ -148,6 +148,9 @@ module Spider; module Model
         
         # Sets a comparison.
         def set(field, comparison, value)
+            if (value.is_a?(QuerySet))
+                value = value.to_a
+            end
             if (value.is_a?(Array))
                 or_cond = self.class.or
                 value.uniq.each do |v|
@@ -233,7 +236,7 @@ module Spider; module Model
         # Returns the conjunction with another condition.
         # If this condition already has the required conjunction, the other will be added as a subcondition;
         # otherwise, a new condition will be created and both will be added to it.
-        def conj(conjunction, other)
+        def conj(conjunction, other=nil, &proc)
             self.conjunction = conjunction if (!self.conjunction)
             if (self.conjunction == conjunction)
                 c = self
@@ -242,6 +245,9 @@ module Spider; module Model
                 c.conjunction = conjunction
                 c << self
             end
+            if (!other && proc)
+                other = Condition.new(&proc)
+            end
             c << other
             other.conjunct = true
             return c
@@ -249,15 +255,15 @@ module Spider; module Model
         
         
         # Joins the condition to another with an "or" conjunction. See #conj.
-        def or(other)
-            return conj(:or, other)
+        def or(other=nil, &proc)
+            return conj(:or, other, &proc)
         end
         alias :| :or
         alias :OR :or
         
         # Joins the condition to another with an "and" conjunction. See #conj.
-        def and(other)
-            return conj(:and, other)
+        def and(other=nil, &proc)
+            return conj(:and, other, &proc)
         end
         alias :& :and
         alias :AND :and
@@ -288,6 +294,14 @@ module Spider; module Model
             return false unless @polymorph == other.polymorph
             return false unless @conjunction == other.conjunction
             return true
+        end
+        
+        def eql?(other)
+            self == other
+        end
+        
+        def hash
+            ([self.keys, self.values, @comparisons.values, @polymorph] + @subconditions.map{ |s| s.hash}).hash
         end
         
         # Removes duplicate subcondtions.

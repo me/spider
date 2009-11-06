@@ -15,6 +15,9 @@
 	<div sp:if="@action == :form">
 		<form action="{ @form_action }" method="POST" sp:attr-if="@enctype,enctype,@enctype">
 			<input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
+			<sp:pass sp:each="@hidden_inputs |input|">
+				<sp:run obj="input" />
+			</sp:pass>
 			<div class="fields">
 				<forms:element_row sp:each="@names |element|" element="element" error_condition="@errors[element]" />
 			</div>

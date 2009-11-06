@@ -1,3 +1,5 @@
+require 'spiderfw/model/storage/db/connectors/odbc'
+
 module Spider; module Model
     
     module Storage
@@ -6,15 +8,40 @@ module Spider; module Model
         def self.get_storage(type, url)
             case type
             when 'db'
-                adapter = url.match(/^(.+?):\/\//)[1]
+                matches = url.match(/^(.+?):\/\/(.+)/)
+                adapter = matches[1]
+                rest = matches[2]
+                if (adapter =~ /(.+):(.+)/)
+                    connector = $1
+                    adapter = $2
+                    url = "#{adapter}://#{rest}"
+                end
                 case adapter
                 when 'sqlite'
-                    storage = Db::SQLite.new(url)
+                    class_name = :SQLite
                 when 'oci8'
-                    storage = Db::OCI8.new(url)
+                    class_name = :OCI8
                 when 'mysql'
-                    storage = Db::Mysql.new(url)
+                    class_name = :Mysql
+                when 'mssql'
+                    class_name = :MSSQL
                 end
+                klass = Db.const_get(class_name)
+                if (connector)
+                    case connector
+                    when 'odbc'
+                        conn_mod = :ODBC
+                    end
+                    conn_class = "#{conn_mod}#{class_name}"
+                    if Db.const_defined?(conn_class)
+                        klass = Db.const_get(conn_class)
+                    else
+                        klass = Db.const_set(conn_class, Class.new(klass))
+                        klass.instance_eval{ include Db::Connectors.const_get(conn_mod)}
+                    end
+                end
+                storage = klass.new(url)
+                return storage
             end
         end
         
@@ -26,6 +53,9 @@ module Spider; module Model
         class StorageException < RuntimeError
         end
         
+        class DuplicateKey < StorageException
+        end
+        
         ###############################
         #   Autoload                  #
         ###############################
@@ -35,3 +65,5 @@ module Spider; module Model
     end
     
 end; end
+
+require 'spiderfw/model/storage/db/db'

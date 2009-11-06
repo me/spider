@@ -27,6 +27,7 @@ module Spider
         attr_reader :overrides, :path, :subtemplates, :widgets
         
         @@registered = {}
+        @@widget_plugins = {}
         @@namespaces = {}
         @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
         @@overrides = ['content', 'override', 'override-content', 'override-attr', 'append-attr',
@@ -71,7 +72,7 @@ module Spider
             def register(tag, symbol_or_class)
                 @@registered[tag] = symbol_or_class
             end
-            
+                        
             # Returns an hash of registered tags.
             def registered
                 @@registered

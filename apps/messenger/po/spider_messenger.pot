@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Messenger 0.1\n"
-"POT-Creation-Date: 2009-10-07 19:34+0200\n"
+"POT-Creation-Date: 2009-10-27 14:38+0100\n"
 "PO-Revision-Date: 2009-06-30 16:44+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"

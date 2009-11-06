@@ -17,11 +17,16 @@ module Spider; module Components
         is_attribute :is_child
         is_attribute :paginate, :type => Fixnum, :default => false
         is_attribute :searchable, :type => Spider::DataTypes::Bool
+        # Display message if list is empty
         attribute :show_empty, :type => Spider::DataTypes::Bool
+        # Display empty <ul></ul> (default: false)
+        is_attribute :show_empty_list, :type => Spider::DataTypes::Bool
         i_attribute :dereference_junction
         i_attribute :dereference_sort, :type => Spider::DataTypes::Bool, :default => false
         i_attribute :dereference_delete, :type => Spider::DataTypes::Bool, :default => true
         is_attribute :list_tag, :default => 'ul'
+        i_attribute :element
+        i_attribute :parent_obj
 
         def widget_init(action='')
             super
@@ -38,7 +43,7 @@ module Spider; module Components
 
         def prepare
             @scene.start_list_tag = "<#{@list_tag}>"
-            @scene.close_list_tag = "</#{@close_list_tag}>"
+            @scene.close_list_tag = "</#{@list_tag}>"
             @sublists = []
             if (@sub_elements && @sub_elements.is_a?(String))
                 @sub_elements = @sub_elements.split(/,\s+/).map{ |el| el.to_sym }
@@ -58,11 +63,17 @@ module Spider; module Components
             if (params['delete'])
                 delete(params['delete'])
             end
-            css_model = @dereference_junction ? @model.elements[@dereference_junction.to_sym].model : @model
+            @dereference_junction = @dereference_junction.to_sym if @dereference_junction
+            css_model = @dereference_junction ? @model.elements[@dereference_junction].model : @model
             @scene.model_class = css_model_class(css_model)
+            
+            @css_classes << 'sortable' if @sortable
+            @css_classes << 'collapsable' if @collapsable
+            @css_classes << 'collapsed' if @collapsed
+            @css_classes << 'sublist' if @attributes[:is_child]
+            @css_classes << 'tree' if @attributes[:tree]
+            @scene.show_empty = @attributes[:show_empty]
             if (!@lines && @queryset)
-                @lines = []
-                cnt = 0
                 if (@attributes[:paginate])
                     @queryset.offset = @offset
                     @queryset.limit = @attributes[:paginate]
@@ -76,10 +87,31 @@ module Spider; module Components
                     @scene.search_query = @search_query.to_s
                     @queryset.condition.and(@queryset.model.free_query_condition(@search_query))
                 end
+            end
+            if (@widget_target)
+                first, rest = @widget_target.split('/', 2)
+                if first =~ /sublist_(\d+)_(.+)/
+                    cnt = $1.to_i
+                    sublist_id = $2
+                    found = @requested_sublists.select{ |sbl| sbl['id'] == sublist_id }[0]
+                    row = @queryset[cnt]
+                    if (@dereference_junction)
+                        row = row.get(@dereference_junction)
+                    end
+                    create_requested_sublist(found, row, cnt) if (found)
+                end
+            end
+            super
+        end
+        
+        def run
+            if (!@lines && @queryset)
+                @lines = []
+                cnt = 0
                 @queryset.each do |row|
                     if (@dereference_junction)
                         dr_keys = keys_string(row)
-                        row = row.get(@dereference_junction.to_sym)
+                        row = row.get(@dereference_junction)
                     end
                     @keys << keys_string(row)
                     if (@dereference_junction && !@dereference_sort)
@@ -90,9 +122,13 @@ module Spider; module Components
                     cnt2 = 0
                     if @tree && row.get(@tree).length > 0
                         sl = create_sublist("sublist_#{cnt}_#{cnt2+=1}")
+                        if (@dereference_junction && @model.elements[@tree].model == @model.elements[@dereference_junction].model)
+                            sl.attributes[:dereference_junction] = nil
+                        end
                         sl.queryset = row.get(@tree)
                         @sublists[cnt] ||= []
                         @sublists[cnt] << sl
+                        sl.run
                     end
                     @sub_elements.each do |el|
                         sub = row.get(el)
@@ -100,26 +136,11 @@ module Spider; module Components
                         sl.queryset = sub
                         @sublists[cnt] ||= []
                         @sublists[cnt] << sl
+                        sl.run
                     end
                     @requested_sublists.each do |sbl|
-                        sl = sbl.clone
-                        if (sl['element'])
-                            el = @model.elements[sl['element'].to_sym]
-                            #next unless el # may be ok if the query is polymorphic
-                            if (sl['tree'] && el && el.attributes[:reverse])
-                                sub = el.model.send("#{sl['tree']}_roots")
-                                sub.condition[el.attributes[:reverse]] = row
-                            else
-                                sub = row.get(sl['element'].to_sym)
-                            end
-                        end
-                        el_name = sl['element']
-                        sl.delete('element')
-                        sl = create_sublist("sublist_#{cnt}_#{el_name}", sl)
-                        sl.queryset = sub
-                        sl.css_classes << "sublist_#{el_name}"
-                        @sublists[cnt] ||= []
-                        @sublists[cnt] << sl
+                        sl = create_requested_sublist(sbl, row, cnt)
+                        sl.run
                     end
                     @values << row
                     @lines << format_line(row)
@@ -146,27 +167,54 @@ module Spider; module Components
                     @scene.delete_link += "?_w#{param_name(self)}[delete]="
                 end
             end
-            @css_classes << 'sortable' if @sortable
-            @css_classes << 'collapsable' if @collapsable
-            @css_classes << 'collapsed' if @collapsed
-            @css_classes << 'sublist' if @attributes[:is_child]
-            @css_classes << 'tree' if @attributes[:tree]
-            @scene.show_empty = @attributes[:show_empty]
-            super
+        end
+        
+        def create_requested_sublist(sbl, row, cnt)
+            attributes = sbl.attributes.clone
+            if (attributes['element'])
+                el = @model.elements[attributes['element'].to_sym]
+                #next unless el # may be ok if the query is polymorphic
+                # if (sl['tree'] && el && el.attributes[:reverse])
+                #     sub = el.model.send("#{sl['tree']}_roots")
+                #     sub.condition[el.attributes[:reverse]] = row
+                # else
+                sub = row.get(attributes['element'].to_sym)
+#                end
+            end
+            el_name = attributes['element']
+            attributes.delete('element')
+            sl = create_sublist("sublist_#{cnt}_#{attributes['id']}", attributes)
+            if (el && el.model != @model)
+                sl.attributes[:model] = el.model
+                sl.attributes[:dereference_junction] = nil unless attributes['dereference_junction']
+            end
+            if (el)
+                sl.attributes[:element] = el
+                sl.attributes[:parent_obj] = row
+            end
+            sl.parse_runtime_content_xml("<sp:widget-content>#{sbl.innerHTML}</sp:widget-content>")
+            sl.queryset = sub
+            sl.css_classes << "sublist_#{el_name}"
+            @sublists[cnt] ||= []
+            @sublists[cnt] << sl
+            return sl
         end
 
         def create_sublist(name, attributes = {})
             w = create_widget(self.class, name, @request, @response)
-
+            if (attributes['inherit_template'] && @template)
+                w.template = @template
+            end
             w.attributes[:tree] = @tree
             w.attributes[:actions] = @actions
             w.attributes[:is_child] = true
-            attributes.each do |key, val|
-                w.attributes[key.to_sym] = val if w.class.attribute?(key)
-            end
             @attributes.each do |key, val|
                 w.attributes[key.to_sym] = val
             end
+            attributes.each do |key, val|
+                w.attributes[key.to_sym] = val if w.class.attribute?(key)
+            end
+            w.widget_before
             return w
         end
 
@@ -179,10 +227,14 @@ module Spider; module Components
         end
 
         def parse_runtime_content(doc, src_path='')
-            doc.search('sublist').each do |sl|
+            doc = super
+            return doc if doc.children.empty?
+            doc.root.children_of_type('sublist').each do |sl|
+                raise ArgumentError, "Sublist of #{@id} does not have an id" unless sl['id']
                 @requested_sublists ||= []
-                @requested_sublists << sl.attributes
+                @requested_sublists << sl
             end
+            return doc.root
         end
 
         __.json
@@ -202,7 +254,13 @@ module Spider; module Components
             obj = @model.new(id)
             parent = @model.new(parent_id) if parent_id && !parent_id.empty?
             prev = @model.new(prev_id) if prev_id && !prev_id.empty?
-            raise "No parent or prev given" unless parent || prev
+            unless parent || prev
+                if (@parent_obj.class == @model)
+                    parent = @parent_obj
+                else
+                    raise "No parent or prev given" 
+                end
+            end
             tree_el = @model.elements[@tree]
             obj_parent = obj.get(tree_el.attributes[:reverse])
 #            if (obj_parent)

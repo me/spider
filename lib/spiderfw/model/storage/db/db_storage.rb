@@ -36,6 +36,7 @@ module Spider; module Model; module Storage; module Db
 
             # Returns a new connection. Must be implemented by the subclasses; args are implementation specific.
             def new_connection(*args)
+                raise "Unimplemented"
             end
             
             # Returns a connection, drawing from the pool or instantiating a new one.
@@ -59,7 +60,7 @@ module Spider; module Model; module Storage; module Db
                             if @connections[args].length <= max_connections
                                 begin
                                     conn = new_connection(*args)
-                                    @connections[args] << conn
+                                    @connections[args] << conn if conn
                                 rescue => exc
                                     connect_exception = exc
                                     keep_trying = false
@@ -225,6 +226,7 @@ module Spider; module Model; module Storage; module Db
             return name
         end
         
+        
         # Returns the db type corresponding to an element type.
         def column_type(type, attributes)
             case type.name
@@ -364,6 +366,10 @@ module Spider; module Model; module Storage; module Db
             return sql, bind_vars
         end
         
+        def total_rows
+            @total_rows
+        end
+        
         # Returns the SQL for select keys.
         def sql_keys(query)
             query[:keys].join(',')
@@ -410,6 +416,7 @@ module Spider; module Model; module Storage; module Db
             bind_vars = []
             mapped = condition[:values].map do |v|
                 if (v.is_a? Hash) # subconditions
+                    # FIXME: optimize removing recursion
                     sql, vals = sql_condition({:condition => v})
                     bind_vars += vals
                     !sql.empty? ? "(#{sql})" : nil
@@ -471,7 +478,7 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for DB joins.
         def sql_joins(joins)
             types = {
-                :inner => 'INNER', :outer => 'OUTER', :left_outer => 'LEFT OUTER', :right_outer => 'RIGHT OUTER'
+                :inner => 'INNER', :outer => 'OUTER', :left => 'LEFT OUTER', :right => 'RIGHT OUTER'
             }
             values = []
             sql = joins.map{ |join|
@@ -481,7 +488,10 @@ module Spider; module Model; module Storage; module Db
                     sql_on += " and #{condition_sql}"
                     values += condition_values
                 end
-                "#{types[join[:type]]} JOIN #{join[:to]} ON (#{sql_on})"
+                j = "#{types[join[:type]]} JOIN #{join[:to]}"
+                j += " #{join[:as]}" if join[:as]
+                j += " ON (#{sql_on})"
+                j
             }.join(" ")
             return [sql, values]
         end
@@ -714,6 +724,11 @@ module Spider; module Model; module Storage; module Db
             raise "Unimplemented"
         end
         
+        # Post processes column information retrieved from current DB.
+        def parse_db_column(col)
+            col
+        end
+        
         ##############################################################
         #   Aggregates                                               #
         ##############################################################
@@ -730,7 +745,39 @@ module Spider; module Model; module Storage; module Db
             end
             return sql, values
         end
+        
+        ##############################################################
+        #   Reflection                                               #
+        ##############################################################
             
+            
+        def reflect_column(table, column_name, column_attributes)
+            column_type = column_attributes[:type]
+            el_type = nil
+            el_attributes = {}
+            case column_type
+            when 'TEXT'
+                el_type = String
+            when 'LONGTEXT'
+                el_type = Text
+            when 'INT'
+                if (column_attributes[:length] == 1)
+                    el_type = Spider::DataTypes::Bool
+                else
+                    el_type = Fixnum
+                end
+            when 'REAL'
+                el_type = Float
+            when 'DECIMAL'
+                el_type = BigDecimal
+            when 'DATE'
+                el_type = DateTime
+            when 'BLOB'
+                el_type = Spider::DataTypes::Binary
+            end
+            return el_type, el_attributes
+            
+        end
             
         
     end

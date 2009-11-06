@@ -31,7 +31,7 @@ module Spider
             def const_missing(name)
                 unless @options[:reload_models]
                     local = "#{self.app.models_path}/#{Inflector.underscore(name)}.rb"
-                    local_ext = "#{self.app.models_path}/_#{Inflector.underscore(name)}.rb"
+                    local_ext = "#{self.app.models_path}/extended/#{Inflector.underscore(name)}.rb"
                 end
                 if (local && File.exist?(local))
                     require local

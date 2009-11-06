@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2009-10-07 19:34+0200\n"
-"PO-Revision-Date: 2009-10-05 19:25+0100\n"
+"POT-Creation-Date: 2009-10-27 14:36+0100\n"
+"PO-Revision-Date: 2009-10-27 14:39+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -68,17 +68,12 @@ msgid "Create a new application"
 msgstr "Crea un'applicazione vuota"
 
 #: lib/spiderfw/cmd/commands/init.rb:15
-msgid ""
-"The path where to create the app (defaults to the app folder under the "
-"current path)"
-msgstr ""
-"Il percorso dove creare l'applicazione (di default la cartella app nel "
-"percorso corrente)"
+msgid "The path where to create the app (defaults to the app folder under the current path)"
+msgstr "Il percorso dove creare l'applicazione (di default la cartella app nel percorso corrente)"
 
 #: lib/spiderfw/cmd/commands/init.rb:19
 msgid "The module name; by default, the app name will be camelized"
-msgstr ""
-"Il nome del modulo; di default, il nome dell'applicazione sarà cammellizzato"
+msgstr "Il nome del modulo; di default, il nome dell'applicazione sarà cammellizzato"
 
 #: lib/spiderfw/cmd/commands/init.rb:33
 msgid "Create an installation"
@@ -86,76 +81,7 @@ msgstr "Crea un'installazione"
 
 #: lib/spiderfw/cmd/commands/init.rb:36
 msgid "The path where to create the installation (defaults to the path)"
-msgstr ""
-"Il percorso dove creare l'installazione (di default il percorso corrente)"
-
-#: lib/spiderfw/cmd/commands/model.rb:6
-msgid "Manage models"
-msgstr "Gestisci i modelli"
-
-#: lib/spiderfw/cmd/commands/model.rb:11
-msgid "Sync models"
-msgstr "Sincronizza i modelli"
-
-#: lib/spiderfw/cmd/commands/model.rb:13
-msgid "Force syncing"
-msgstr "Forza la sincronizzazione"
-
-#: lib/spiderfw/cmd/commands/model.rb:16
-msgid "Drop unused columns"
-msgstr "Esegui il drop delle colonne inutilizzate"
-
-#: lib/spiderfw/cmd/commands/model.rb:17
-msgid "Drop unused tables"
-msgstr "Esegui il drop delle tabelle inutilizzate"
-
-#: lib/spiderfw/cmd/commands/model.rb:21
-msgid "Update current sequences to max db value"
-msgstr "Aggiorna le sequenze esistenti al max in db"
-
-#: lib/spiderfw/cmd/commands/model.rb:24
-msgid "Process also non managed models"
-msgstr "Processa anche i modelli non gestiti"
-
-#: lib/spiderfw/cmd/commands/model.rb:63
-msgid ""
-"The following tables are about to be dropped: \n"
-"%s"
-msgstr ""
-"Le segenti tabelle stanno per essere cancellate: \n"
-"%s"
-
-#: lib/spiderfw/cmd/commands/model.rb:64
-msgid "Continue? yes/NO: "
-msgstr "Continuare? sì/NO"
-
-#: lib/spiderfw/cmd/commands/model.rb:66 lib/spiderfw/cmd/commands/model.rb:69
-msgid "yes"
-msgstr "sì"
-
-#: lib/spiderfw/cmd/commands/model.rb:67
-msgid "no"
-msgstr "no"
-
-#: lib/spiderfw/cmd/commands/model.rb:78
-msgid "Unable to modify the following fields:"
-msgstr "Impossibile modificare i seguenti campi:"
-
-#: lib/spiderfw/cmd/commands/model.rb:80
-msgid "(use -f to force)"
-msgstr "(usa -f per forzare)"
-
-#: lib/spiderfw/cmd/commands/model.rb:86
-msgid "Dump models"
-msgstr "Esegui il dump dei modelli"
-
-#: lib/spiderfw/cmd/commands/model.rb:88
-msgid "Overwrite existing files"
-msgstr "Sovrascrivi file esistenti"
-
-#: lib/spiderfw/cmd/commands/model.rb:91
-msgid "Specify dump path"
-msgstr "Specifica percorso per il dump"
+msgstr "Il percorso dove creare l'installazione (di default il percorso corrente)"
 
 #: lib/spiderfw/cmd/commands/setup.rb:8
 msgid "Setup an application"
@@ -203,9 +129,7 @@ msgstr "Stacca il processo server dalla console"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:29
 msgid "Serve each request spawning a CGI subprocess. Useful in developement."
-msgstr ""
-"Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo "
-"sviluppo."
+msgstr "Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo sviluppo."
 
 #: lib/spiderfw/cmd/commands/webserver.rb:32
 msgid "Listen to SSL requests"
@@ -226,6 +150,75 @@ msgstr "Utilizzo il webserver %s"
 #: lib/spiderfw/cmd/commands/webserver.rb:44
 msgid "Listening on port %s"
 msgstr "In ascolto sulla porta %s"
+
+#: lib/spiderfw/cmd/commands/model.rb:6
+msgid "Manage models"
+msgstr "Gestisci i modelli"
+
+#: lib/spiderfw/cmd/commands/model.rb:11
+msgid "Sync models"
+msgstr "Sincronizza i modelli"
+
+#: lib/spiderfw/cmd/commands/model.rb:13
+msgid "Force syncing"
+msgstr "Forza la sincronizzazione"
+
+#: lib/spiderfw/cmd/commands/model.rb:16
+msgid "Drop unused columns"
+msgstr "Esegui il drop delle colonne inutilizzate"
+
+#: lib/spiderfw/cmd/commands/model.rb:17
+msgid "Drop unused tables"
+msgstr "Esegui il drop delle tabelle inutilizzate"
+
+#: lib/spiderfw/cmd/commands/model.rb:21
+msgid "Update current sequences to max db value"
+msgstr "Aggiorna le sequenze esistenti al max in db"
+
+#: lib/spiderfw/cmd/commands/model.rb:24
+msgid "Process also non managed models"
+msgstr "Processa anche i modelli non gestiti"
+
+#: lib/spiderfw/cmd/commands/model.rb:63
+msgid ""
+"The following tables are about to be dropped: \n"
+"%s"
+msgstr ""
+"Le segenti tabelle stanno per essere cancellate: \n"
+"%s"
+
+#: lib/spiderfw/cmd/commands/model.rb:64
+msgid "Continue? yes/NO: "
+msgstr "Continuare? sì/NO"
+
+#: lib/spiderfw/cmd/commands/model.rb:66
+#: lib/spiderfw/cmd/commands/model.rb:69
+msgid "yes"
+msgstr "sì"
+
+#: lib/spiderfw/cmd/commands/model.rb:67
+msgid "no"
+msgstr "no"
+
+#: lib/spiderfw/cmd/commands/model.rb:78
+msgid "Unable to modify the following fields:"
+msgstr "Impossibile modificare i seguenti campi:"
+
+#: lib/spiderfw/cmd/commands/model.rb:80
+msgid "(use -f to force)"
+msgstr "(usa -f per forzare)"
+
+#: lib/spiderfw/cmd/commands/model.rb:86
+msgid "Dump models"
+msgstr "Esegui il dump dei modelli"
+
+#: lib/spiderfw/cmd/commands/model.rb:88
+msgid "Overwrite existing files"
+msgstr "Sovrascrivi file esistenti"
+
+#: lib/spiderfw/cmd/commands/model.rb:91
+msgid "Specify dump path"
+msgstr "Specifica percorso per il dump"
 
 #: lib/spiderfw/config/configuration.rb:85
 msgid "%s is not a configuration option"
@@ -260,190 +253,251 @@ msgid "Refresh template cache every time"
 msgstr "Aggiorna la cache dei template a ogni richiesta"
 
 #: lib/spiderfw/config/options/spider.rb:29
-msgid "Run templates in safe mode"
-msgstr "Esegui i template in modalità sicura"
+msgid "Refresh template cache when server restarts"
+msgstr "Aggiorna la cache dei template quando il server viene riavviato"
 
-#: lib/spiderfw/config/options/spider.rb:33
+#: lib/spiderfw/config/options/spider.rb:30
+msgid "Never recompile templates"
+msgstr "Non ricompilare mai i template"
+
+#: lib/spiderfw/config/options/spider.rb:31
+msgid "Check on every request if templates are changed"
+msgstr "Controlla a ogni richiesta se i template sono cambiati"
+
+#: lib/spiderfw/config/options/spider.rb:38
 msgid "How many connections to open to a db"
 msgstr "Quante connessioni al db aprire"
 
-#: lib/spiderfw/config/options/spider.rb:35
+#: lib/spiderfw/config/options/spider.rb:40
 msgid "Replace bound variables in debug sql"
 msgstr "Sostituisci le bound variables nell'sql di debug"
 
-#: lib/spiderfw/config/options/spider.rb:39
+#: lib/spiderfw/config/options/spider.rb:44
 msgid "A list of named storages"
 msgstr "Una lista di archivi con nome"
 
-#: lib/spiderfw/config/options/spider.rb:40
+#: lib/spiderfw/config/options/spider.rb:45
 msgid "Connection url to the storage"
 msgstr "Url di connessione all'archivio"
 
-#: lib/spiderfw/config/options/spider.rb:41
+#: lib/spiderfw/config/options/spider.rb:46
 msgid "Encoding the DB uses"
 msgstr "La codifica utilizzata dal DB"
 
-#: lib/spiderfw/config/options/spider.rb:43
+#: lib/spiderfw/config/options/spider.rb:48
 msgid "Start the debugger"
 msgstr "Avvia il debugger"
 
-#: lib/spiderfw/config/options/spider.rb:45
+#: lib/spiderfw/config/options/spider.rb:49
+msgid "Enable on-request profiling"
+msgstr "Abilita profiling su richiesta"
+
+#: lib/spiderfw/config/options/spider.rb:50
+msgid "Respond to requests sequencially"
+msgstr "Rispondi alle richieste in maniera sequenziale"
+
+#: lib/spiderfw/config/options/spider.rb:52
 msgid "The locale to use"
 msgstr "Il locale da utilizzare"
 
-#: lib/spiderfw/config/options/spider.rb:48
+#: lib/spiderfw/config/options/spider.rb:55
 msgid "Path where rails-style locales are found"
 msgstr "Percorso dove si trovano il locale in formato rails"
 
-#: lib/spiderfw/config/options/spider.rb:49
+#: lib/spiderfw/config/options/spider.rb:56
 msgid "Fallback locale"
 msgstr "Locale di default"
 
-#: lib/spiderfw/config/options/spider.rb:51
+#: lib/spiderfw/config/options/spider.rb:58
 msgid "Sleep time for the periodic runner"
 msgstr "Tempo di sleep per il runner periodico"
 
-#: lib/spiderfw/config/options/spider.rb:53
+#: lib/spiderfw/config/options/spider.rb:60
 msgid "Where to store the session"
 msgstr "Dove salvare la sessione"
 
-#: lib/spiderfw/config/options/spider.rb:54
+#: lib/spiderfw/config/options/spider.rb:61
 msgid "Lifetime in seconds of the sessions"
 msgstr "Vita in secondi delle sessioni"
 
-#: lib/spiderfw/config/options/spider.rb:55
+#: lib/spiderfw/config/options/spider.rb:62
 msgid "Number of seconds to wait before session purge check"
 msgstr "Numero di secondi da aspettare prima di un controllo di pulizia"
 
-#: lib/spiderfw/config/options/spider.rb:56
+#: lib/spiderfw/config/options/spider.rb:63
 msgid "The folder where to store file sessions"
 msgstr "La cartella dove salvare le sessioni"
 
-#: lib/spiderfw/config/options/spider.rb:58
+#: lib/spiderfw/config/options/spider.rb:65
 msgid "Which shared store to use"
 msgstr "Che tipo di shared store usare"
 
-#: lib/spiderfw/config/options/spider.rb:60
+#: lib/spiderfw/config/options/spider.rb:67
 msgid "Life in seconds of HTTP Digest Authentication nonces"
 msgstr "Vita in secondi dei nonce per l'Autenticazione HTTP Digest"
 
-#: lib/spiderfw/config/options/spider.rb:62
+#: lib/spiderfw/config/options/spider.rb:69
 msgid "Automatically send headers on first output (breaks the debugger)"
-msgstr ""
-"Invia automaticamente i header al primo output (interferisce con il debugger)"
+msgstr "Invia automaticamente i header al primo output (interferisce con il debugger)"
 
-#: lib/spiderfw/config/options/spider.rb:63
+#: lib/spiderfw/config/options/spider.rb:70
 msgid "Redirect standard output to the browser"
 msgstr "Ridirigi lo standard output al browser"
 
-#: lib/spiderfw/config/options/spider.rb:64
-msgid ""
-"If the request is proxyied, the urls used to reach spider, with the "
-"corresponding paths called by the proxy"
-msgstr ""
-"Se la richiesta è passata attraverso un proxy, gli url usati per raggiungere "
-"spider, con i corrispondenti percorsi chiamati dal proxy"
+#: lib/spiderfw/config/options/spider.rb:71
+msgid "If the request is proxyied, the urls used to reach spider, with the corresponding paths called by the proxy"
+msgstr "Se la richiesta è passata attraverso un proxy, gli url usati per raggiungere spider, con i corrispondenti percorsi chiamati dal proxy"
 
-#: lib/spiderfw/config/options/spider.rb:66
+#: lib/spiderfw/config/options/spider.rb:73
 msgid "The charset to use for http requests"
 msgstr "Charset da usare per le richieste http"
 
-#: lib/spiderfw/config/options/spider.rb:68
+#: lib/spiderfw/config/options/spider.rb:75
 msgid "Level of debug output to console"
 msgstr "Livello di debug da inviare in console"
 
-#: lib/spiderfw/config/options/spider.rb:70
+#: lib/spiderfw/config/options/spider.rb:77
 msgid "Log errors to file"
 msgstr "Logga gli errori su file"
 
-#: lib/spiderfw/config/options/spider.rb:71
+#: lib/spiderfw/config/options/spider.rb:78
 msgid "Log level to use for debug file (false for no debug)"
-msgstr ""
-"Livello di log da usare per il file di debug (false per disabilitare il "
-"debug)"
+msgstr "Livello di log da usare per il file di debug (false per disabilitare il debug)"
 
-#: lib/spiderfw/config/options/spider.rb:77
+#: lib/spiderfw/config/options/spider.rb:84
 msgid "A list of organizations"
 msgstr "Una lista di organizzazioni"
 
-#: lib/spiderfw/config/options/spider.rb:78
+#: lib/spiderfw/config/options/spider.rb:85
 msgid "Descriptive name of the organization"
 msgstr "Nome descrittivo dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:79
+#: lib/spiderfw/config/options/spider.rb:86
 msgid "Country code of the organization"
 msgstr "Codice nazione dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:80
+#: lib/spiderfw/config/options/spider.rb:87
 msgid "State of the organization"
 msgstr "Provincia dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:81
+#: lib/spiderfw/config/options/spider.rb:88
 msgid "Name of the city"
 msgstr "Nome della città"
 
-#: lib/spiderfw/config/options/spider.rb:82
+#: lib/spiderfw/config/options/spider.rb:89
 msgid "Common name (e.g. domain) of the organization"
 msgstr "Common name (p.es. il dominio) dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:83
+#: lib/spiderfw/config/options/spider.rb:90
 msgid "Main e-mail address of the organization"
 msgstr "Indirizzo e-mail principale dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:84
+#: lib/spiderfw/config/options/spider.rb:91
 msgid "Email address used as 'From' for automatic e-mails"
 msgstr "Indirizzo Email utilizzato come 'From' per le e-mail automatiche"
 
-#: lib/spiderfw/config/options/spider.rb:86
+#: lib/spiderfw/config/options/spider.rb:93
 msgid "Organizational Unit (e.g. department)"
 msgstr "Unità Organizzativa (p.es. il dipartimento)"
 
-#: lib/spiderfw/config/options/spider.rb:87
+#: lib/spiderfw/config/options/spider.rb:94
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
-msgstr ""
-"Percorso della chiave pubblica (di default config/certs/nome_org/public.pem)"
+msgstr "Percorso della chiave pubblica (di default config/certs/nome_org/public.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:89
+#: lib/spiderfw/config/options/spider.rb:96
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr "Percorso del certificato (di default config/certs/nome_org/cert.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:91
-msgid ""
-"Path to the private key (defaults to config/certs/org_name/private/key.pem)"
-msgstr ""
-"Percorso della chiave privata (di default config/certs/nome_org/private/key."
-"pem)"
+#: lib/spiderfw/config/options/spider.rb:98
+msgid "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
+msgstr "Percorso della chiave privata (di default config/certs/nome_org/private/key.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:103
+#: lib/spiderfw/config/options/spider.rb:110
 msgid "Name of the site administrator"
 msgstr "Nome dell'amministratore del sito"
 
-#: lib/spiderfw/config/options/spider.rb:104
+#: lib/spiderfw/config/options/spider.rb:111
 msgid "Email of the site administrator"
 msgstr "Indirizzo e-mail dell'amministratore del sito"
 
-#: lib/spiderfw/config/options/spider.rb:106
+#: lib/spiderfw/config/options/spider.rb:113
 msgid "Use ruby-debug to provide extended traces"
 msgstr "Usa ruby-debug per creare trace estesi"
 
-#: lib/spiderfw/config/options/spider.rb:107
-#: lib/spiderfw/config/options/spider.rb:108
+#: lib/spiderfw/config/options/spider.rb:114
+#: lib/spiderfw/config/options/spider.rb:115
 msgid "Show locals in debug traces"
 msgstr "Mostra le variabili locali nei trace"
 
-#: lib/spiderfw/controller/mixins/visual.rb:231
+#: lib/spiderfw/controller/mixins/visual.rb:220
 msgid "Page not found"
 msgstr "Pagina non trovata"
 
-#: lib/spiderfw/controller/mixins/visual.rb:238
+#: lib/spiderfw/controller/mixins/visual.rb:227
 msgid "An error occurred"
 msgstr "Si è verificato un errore"
 
-#: lib/spiderfw/model/base_model.rb:1097
+#: lib/spiderfw/i18n/i18n.rb:92
+#: lib/spiderfw/i18n/i18n.rb:98
+msgid "less than a minute"
+msgstr "meno di un minuto"
+
+#: lib/spiderfw/i18n/i18n.rb:92
+#: lib/spiderfw/i18n/i18n.rb:99
+msgid "1 minute"
+msgstr "1 minuto"
+
+#: lib/spiderfw/i18n/i18n.rb:94
+#: lib/spiderfw/i18n/i18n.rb:95
+#: lib/spiderfw/i18n/i18n.rb:96
+msgid "less than %s seconds"
+msgstr "meno di %s secondi"
+
+#: lib/spiderfw/i18n/i18n.rb:97
+msgid "half a minute"
+msgstr "mezzo minuto"
+
+#: lib/spiderfw/i18n/i18n.rb:102
+msgid "%s minutes"
+msgstr "%s minuti"
+
+#: lib/spiderfw/i18n/i18n.rb:103
+msgid "about 1 hour"
+msgstr "circa 1 ora"
+
+#: lib/spiderfw/i18n/i18n.rb:104
+msgid "about %d hours"
+msgstr "circa %d ore"
+
+#: lib/spiderfw/i18n/i18n.rb:105
+msgid "1 day"
+msgstr "1 giorno"
+
+#: lib/spiderfw/i18n/i18n.rb:106
+msgid "%d days"
+msgstr "%d giorni"
+
+#: lib/spiderfw/i18n/i18n.rb:107
+msgid "about 1 month"
+msgstr "circa 1 mese"
+
+#: lib/spiderfw/i18n/i18n.rb:108
+msgid "%d months"
+msgstr "%d mesi"
+
+#: lib/spiderfw/i18n/i18n.rb:109
+msgid "about 1 year"
+msgstr "circa 1 anno"
+
+#: lib/spiderfw/i18n/i18n.rb:110
+msgid "over %d years"
+msgstr "più di %d anni"
+
+#: lib/spiderfw/model/base_model.rb:1119
 msgid "'%s' is not a valid date"
 msgstr "%s non è una data valida"
 
-#: lib/spiderfw/model/base_model.rb:1147
+#: lib/spiderfw/model/base_model.rb:1171
 msgid "'%s' is not in the correct format"
 msgstr "%s non è nel formato corretto"
 
@@ -451,11 +505,11 @@ msgstr "%s non è nel formato corretto"
 msgid "%s is not a valid e-mail address"
 msgstr "%s non è un indirizzo e-mail valido"
 
-#: lib/spiderfw/model/mappers/mapper.rb:893
+#: lib/spiderfw/model/mappers/mapper.rb:902
 msgid "Element %s is required"
 msgstr "L'elemento %s è obbligatorio"
 
-#: lib/spiderfw/model/mappers/mapper.rb:897
+#: lib/spiderfw/model/mappers/mapper.rb:906
 msgid "Another item with the same %s is already present"
 msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 
@@ -463,22 +517,19 @@ msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 msgid "We are sorry, but the required page was not found"
 msgstr "Siamo spiacenti, la pagina richiesta non è stata trovata"
 
-#: views/errors/error.layout.shtml:19
-msgid ""
-"If you need to contact the administrator to provide additional information, "
-"you may send an e-mail to"
-msgstr ""
-"Per contattare l'amministratore e fornire informazioni aggiuntive, è "
-"possibile inviare un'e-mail a"
+#: views/errors/error.layout.shtml:20
+msgid "If you need to contact the administrator to provide additional information, you may send an e-mail to"
+msgstr "Per contattare l'amministratore e fornire informazioni aggiuntive, è possibile inviare un'e-mail a"
 
 #: views/errors/error.layout.shtml:24
+msgid "The identifier of this error is %s. Please refer to it when requesting assistance."
+msgstr "L'identificatore dell'errore è %s. Per favore, fare riferimento a questo identificatore se si richiede assistenza."
+
+#: views/errors/error.layout.shtml:29
 msgid "Debug information"
 msgstr "Informazioni di debug"
 
 #: views/errors/error_generic.shtml:4
-msgid ""
-"We are sorry, an error occurred. The administrator of the site has been "
-"notified"
-msgstr ""
-"Siamo spiacenti, si è verificato un errore. L'amministratore del sito è "
-"stato informato"
+msgid "We are sorry, an error occurred. The administrator of the site has been notified"
+msgstr "Siamo spiacenti, si è verificato un errore. L'amministratore del sito è stato informato"
+

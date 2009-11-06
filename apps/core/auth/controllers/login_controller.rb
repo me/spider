@@ -44,6 +44,7 @@ module Spider; module Auth
             user = authenticate
             if (user)
                 user.save_to_session(@request.session)
+                on_success(user)
                 unless success_redirect
                     $out << "Loggato"
                 end
@@ -53,6 +54,9 @@ module Spider; module Auth
                 @scene.login = @request.params['login']
                 index
             end
+        end
+        
+        def on_success(user)
         end
         
         def success_redirect

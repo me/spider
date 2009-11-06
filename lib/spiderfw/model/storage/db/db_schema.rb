@@ -60,9 +60,10 @@ module Spider; module Model; module Storage; module Db
         end
 
         # Returns the column for element_name, prefixed with the table name.
-        def qualified_field(element_name)
+        def qualified_field(element_name, qualifier=nil)
             raise SchemaException, "No DB field defined for element #{element_name}" unless f = field(element_name)
-            return @table + '.' + f
+            qualifier ||= @table
+            return qualifier + '.' + f
         end
 
         # Returns the defined foreign key column for given element and primary key

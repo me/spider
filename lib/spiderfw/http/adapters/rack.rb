@@ -64,6 +64,7 @@ module Spider; module HTTP
     class RackApplication
 
         def call(env)
+            Spider.request_started
             env = prepare_env(env)
             controller_request = RackRequest.new(env)
             controller_request.server = RackApplication

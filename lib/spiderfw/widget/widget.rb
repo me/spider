@@ -3,6 +3,7 @@ require 'spiderfw/templates/template'
 require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/widget/widget_attributes'
 require 'spiderfw/controller/mixins/http_mixin'
+require 'spiderfw/widget/widget_plugin'
 
 module Spider
     
@@ -12,6 +13,7 @@ module Spider
         attr_accessor :parent
         attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
         attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
+        attr_accessor :active
         
         @@common_attributes = {
             :id => {}
@@ -19,6 +21,7 @@ module Spider
         
         class << self
             attr_reader :attributes, :scene_attributes
+            cattr_reader :tag_name, :plugins
             
             def inherited(subclass)
                 subclass.instance_variable_set(:@attributes, attributes.clone)
@@ -70,6 +73,7 @@ module Spider
             
             def tag(name)
                 self.app.register_tag(name, self)
+                @tag_name ||= name
             end
             
             def register_tag(name)
@@ -139,19 +143,29 @@ module Spider
             # - an array of overrides (as Hpricot nodes)
             def parse_content(doc)
                 overrides = []
+                plugins = []
                 to_del = []
                 doc.root.each_child do |child|
                     if child.respond_to?(:name)
                         namespace, short_name = child.name.split(':', 2)
-                        next unless namespace == 'tpl'
-                        next unless Spider::Template.override_tags.include?(short_name) || self.override_tags.include?(child.name)
-                        overrides << child unless child.is_a?(Hpricot::BogusETag)
+                        if (namespace == 'tpl' && (Spider::Template.override_tags.include?(short_name) || self.override_tags.include?(child.name)))
+                            overrides << child unless child.is_a?(Hpricot::BogusETag)
+                        end
+                        if (child.name == 'sp:plugin')
+                            plugins << child
+                        end
                     end
                 end
                 overrides.each do |ovr|
                     parse_override(ovr)
                 end
                 Hpricot::Elements[*overrides].remove
+                plugins.each do |plugin|
+                    name = plugin['name']
+                    mod = self.plugin(name)
+                    next unless mod
+                    overrides += mod.get_overrides
+                end
                 return [doc.to_s, overrides]
             end
             
@@ -164,6 +178,16 @@ module Spider
             # An array of custom tags that will be processed at compile time by the widget.
             def override_tags
                 return []
+            end
+            
+            def add_plugin(name, mod)
+                @plugins ||= {}
+                @plugins[name] = mod
+            end
+            
+            def plugin(name)
+                return nil unless @plugins
+                @plugins[name]
             end
             
         end
@@ -229,15 +253,24 @@ module Spider
         end
         
         def before(action='')
+            Spider.logger.debug("Widget #{self} before(#{action})")
             widget_init(action)
             init_widgets unless @init_widgets_done
             super
         end
         
         def widget_before(action='')
+            return unless active?
+            Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
             prepare
             @before_done = true
+        end
+        
+        
+        def active?
+            return @active unless @active.nil?
+            @active = (!@request.params['_wt'] || @target_mode)
         end
         
         def before_done?
@@ -306,7 +339,9 @@ module Spider
             @template.widgets.each do |name, w|
                 add_widget(w)
             end
-            @widgets.each{ |id, w| w.parent = self }
+            @widgets.each do |id, w| 
+                w.parent = self
+            end
             @init_widgets_done = true
         end
         
@@ -376,6 +411,7 @@ module Spider
         end
         
         def execute(action='', *params)
+            Spider.logger.debug("Widget #{self} executing #{action}")
             widget_execute = @request.params['_we']
             if (@is_target)
                 if (widget_execute)
@@ -390,7 +426,7 @@ module Spider
                 @_widget.target_mode = true
                 @_widget.widget_target = rest
                 @_widget.is_target = true unless rest
-                set_dispatched_object_attributes(@_widget, widget_execute)
+                @_widget.set_action(widget_execute)
                 @_widget.before(rest, *params)
                 @_widget.execute(rest, *params)
             else
@@ -441,6 +477,8 @@ module Spider
         
         def add_widget(widget)
             widget.id_path = @id_path + [widget.id]
+            widget.parent = self
+            widget.active = true if @is_target || @active
             @widgets[widget.id.to_sym] = widget
             if (@widgets_runtime_content[widget.id.to_sym])
                 @widgets_runtime_content[widget.id.to_sym].each do |content|
@@ -476,6 +514,19 @@ module Spider
         end
         
         def parse_runtime_content(doc, src_path=nil)
+            # doc.search('sp:plugin').each do |plugin|
+            #     name = plugin['name']
+            #     mod = self.class.plugin(name)
+            #     next unless mod
+            #     (class <<self; self; end).instance_eval do
+            #         debugger
+            #         include mod
+            #     end
+            #     shadow = (class <<self; self; end)
+            #     
+            #     debugger
+            #     a = 3
+            # end
             attributes = doc.search('sp:attribute')
             attributes.each do |a|
                 name = a.attributes['name'].to_sym
@@ -570,6 +621,7 @@ module Spider
             if (@parent && @parent.respond_to?(:scene) && @parent.scene)
                 scene._parent = @parent.scene
             end
+            scene.extend(WidgetScene)
             return scene
         end
         
@@ -587,6 +639,10 @@ module Spider
             super + ", id: #{@id}"
         end
         
+        def to_s
+            super + ", id: #{@id}"
+        end
+        
         def find_widget(name)
             @widgets[name.to_sym] || super
         end
@@ -598,6 +654,14 @@ module Spider
             @widget_procs[first.to_sym] << {:target => rest, :proc => proc }
         end
             
+        
+    end
+    
+    module WidgetScene
+        
+        def widget_action(name, *params)
+            "#{self[:request][:path]}?_wt=#{self[:widget][:id_path].join('/')}&_we=#{name}"+(params.map{|p| "&_wp[]=#{p}"}).join('')
+        end
         
     end
     

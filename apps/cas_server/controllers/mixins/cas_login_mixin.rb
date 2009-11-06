@@ -265,6 +265,7 @@ module Spider; module CASServer
                 @extra_attributes = t.ticket_granting_ticket.extra_attributes || {}
             end
 
+            Spider::Logger.error(@error) if @error
             @response.status = response_status_from_error(@error) if @error
             xm = response_xml
             xm.cas(:serviceResponse, 'xmlns:cas' => 'http://www.yale.edu/tp/cas') do

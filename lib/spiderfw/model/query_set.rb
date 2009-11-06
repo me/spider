@@ -328,8 +328,10 @@ module Spider; module Model
         def each
             self.each_index do |i|
                 obj = @objects[i]
+                prev_parent = obj._parent
                 obj.set_parent(self, nil)
                 yield obj
+                obj.set_parent(prev_parent, nil)
             end
         end
 
@@ -394,6 +396,7 @@ module Spider; module Model
         def load
             return self unless loadable?
             @objects = []
+            @index_lookup.each_key{ |k| @index_lookup[k] = {} }
             @loaded = false
             @loaded_elements = {}
             return load_next if @fetch_window && !@query.offset
@@ -557,6 +560,16 @@ module Spider; module Model
             
         end
         
+        def to_a
+            self.map{ |row| row }
+        end
+        
+        def map_current
+            a = []
+            each_current{ |row| a << yield(row) }
+            a
+        end
+        
         # Returns an array of Hashes, with each value of the object is converted to string.
         def to_flat_array
             map do |obj|
@@ -572,9 +585,25 @@ module Spider; module Model
             self.map{ |o| o.to_s }.join(', ')
         end
         
-        def method_missing(method, *args, &proc)     
+        def method_missing(method, *args, &proc)
+            el = @model.elements[method]
+            if (el && el.model? && el.reverse)
+                return element_queryset(el)
+            end
             return @query.send(method, *args, &proc) if @query.respond_to?(method)
             return super
+        end
+        
+        def element_queryset(el)
+            el = @model.elements[el] if el.is_a?(Symbol)
+            condition = el.condition
+            if (el.attributes[:element_query])
+                el = @model.elements[el.attributes[:element_query]]
+            end
+            cond = Spider::Model::Condition.new
+            cond[el.reverse] = self.map_current{ |row| row }
+            cond = cond.and(condition) if (condition)
+            return self.class.new(el.model, Query.new(cond))
         end
         
         # Given a dotted path, will return an array of all objects reachable by that path

@@ -70,10 +70,12 @@ module Spider; module ControllerMixins
             if (format_params.is_a?(Hash) && format_params[:template])
                 @template ||= init_template(format_params[:template])
                 widget_target = @request.params['_wt']
+                widget_execute = @request.params['_we']
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
                     @_widget = find_widget(first)
                     @_widget.is_target = true unless rest
+                    @_widget.set_action(widget_execute) if widget_execute
                     @_widget.target_mode = true
                     @_widget.widget_target = rest
                     @template.do_widgets_before
@@ -168,7 +170,7 @@ module Spider; module ControllerMixins
             else
                 template = init_template(path, scene, options)
             end
-            template.exec
+            template.do_widgets_before
             unless (@_partial_render) # TODO: implement or remove
                 chosen_layouts = options[:layout] || @layout
                 chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
@@ -208,9 +210,10 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
+            exc.uuid = UUID.new.generate if exc.respond_to?(:uuid=)
             format = self.class.output_format(:error) || :html
             return super unless format == :html
-            return unless action_target?
+            return super unless action_target?
             output_format_headers(format)
             if (exc.is_a?(Spider::Controller::NotFound))
                 error_page = '404'
@@ -223,6 +226,12 @@ module Spider; module ControllerMixins
                 end
                 @scene.error_msg = _("An error occurred")
                 @scene.email_subject = @scene.error_msg
+            end
+            
+            if (exc.respond_to?(:uuid))
+                exc.extend(UUIDExceptionMessage)
+                @scene.exception_uuid = exc.uuid
+                @scene.email_subject += " (#{exc.uuid})"
             end
             @scene.admin_email = Spider.conf.get('site.admin.email')
             if (Spider.runmode == 'devel')

@@ -151,10 +151,16 @@ Spider.Widget = Class.extend({
 	},
 	
 	acceptDataObject: function(model, acceptOptions, droppableOptions){
-		var cls = '.model-'+Spider.modelToCSS(model);
+        if (!model.push) model = [model];
+        var cls = "";
+        for (var i=0; i<model.length; i++){
+            if (cls) cls += ', ';
+            cls += '.model-'+Spider.modelToCSS(model[i])+' .dataobject';
+        }
 		droppableOptions = $.extend({
-			accept: cls+' .dataobject',
-			hoverClass: 'drophover'
+			accept: cls,
+			hoverClass: 'drophover',
+			tolerance: 'pointer'
 		}, droppableOptions);
 		acceptOptions = $.extend({
 			el: this.el
@@ -337,7 +343,7 @@ Spider.Controller = Class.extend({
 		if (urlParts[1]) url += "&"+urlParts[1];
 		if (params){
 			for (var key in params){
-				url += '&'+widget.paramName(key)+this.paramToQuery(params[key]);
+				url += '&'+this.paramToQuery(params[key], widget.paramName(key));
 			}
 		}
 		widget.setLoading();
@@ -348,7 +354,7 @@ Spider.Controller = Class.extend({
 			success: function(res){
 				widget.replaceHTML(res);
 				widget.removeLoading();
-				widget.el.effect('highlight', {}, 700);
+				//widget.el.effect('highlight', {}, 700);
 				if (callback) callback.apply(widget);
 			}
 		});
@@ -412,7 +418,7 @@ $.fn.spiderWidget = function(){
 
 $.fn.parentWidget = function(){
 	var par = this;
-	while (par && !par.is('.widget')){
+	while (par && par.length > 0 && !par.is('.widget')){
 		par = par.parent();
 	}
 	if (!par) return null;
@@ -422,24 +428,25 @@ $.fn.parentWidget = function(){
 $.fn.getDataObjectKey = function(){
 	var doParent = null;
 	var par = this;
-	while (par && !par.is('.dataobject')){
+	while (par && par.length > 0 && !par.is('.dataobject')){
 		par = par.parent();
 	}
 	if (!par) return null;
-	return $('.dataobject-key', par).text();
+	return $('>.dataobject-key', par).text();
 };
 
 $.fn.getDataModel = function(){
 	var par = this;
-	while (par && !par.is('.model')){
+	while (par && par.length > 0 && !par.is('.model')){
 		par = par.parent();
 	}
 	if (!par) return null;
-	var cl = this.attr('class');
+	var cl = par.attr('class');
+	if (!cl) return null;
     var cl_parts = cl.split(' ');
     for (var i=0; i < cl_parts.length; i++){
 		if (cl_parts[i].substr(0, 6) == 'model-'){
-			return cl_parts[i].substr(6);
+			return cl_parts[i].substr(6).replace(/-/g, '::');;
 		}
     }
 };
@@ -461,3 +468,5 @@ Spider.newHTML = function(el){
 Spider.modelToCSS = function(name){
 	return name.split('::').join('-');
 };
+
+

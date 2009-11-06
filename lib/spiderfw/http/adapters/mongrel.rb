@@ -94,6 +94,7 @@ module Spider; module HTTP
         end
         
         def process(request, response)
+            Spider.request_started
             @server.request_received
             path = request.params['REQUEST_PATH']
             env = normalize_request(request.params.clone)
