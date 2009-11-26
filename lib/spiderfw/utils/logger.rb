@@ -17,7 +17,7 @@ module Spider
             # Open a new logger.
             def open(dest, level= :WARN)
                 @loggers ||= {}
-                logger = ::Logger.new(dest)
+                logger = ::Logger.new(dest, Spider.conf.get('log.rotate.age'), Spider.conf.get('log.rotate.size'))
                 logger.level = ::Logger.const_get(level)
                 @loggers[dest] = logger
             end
