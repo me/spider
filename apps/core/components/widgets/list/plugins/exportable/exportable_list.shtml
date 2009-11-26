@@ -1,0 +1,5 @@
+<sp:plugin>
+	<tpl:prepend search="#list">
+		<a href="{ widget_action('export_to_csv') }">Export to csv</a>
+	</tpl:prepend>
+</sp:plugin>
