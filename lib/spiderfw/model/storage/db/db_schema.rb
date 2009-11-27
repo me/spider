@@ -61,7 +61,7 @@ module Spider; module Model; module Storage; module Db
 
         # Returns the column for element_name, prefixed with the table name.
         def qualified_field(element_name, qualifier=nil)
-            raise SchemaException, "No DB field defined for element #{element_name}" unless f = field(element_name)
+            raise SchemaException, "No DB field defined in table #{@table} for element #{element_name}" unless f = field(element_name)
             qualifier ||= @table
             return qualifier + '.' + f
         end
