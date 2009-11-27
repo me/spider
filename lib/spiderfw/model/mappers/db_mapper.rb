@@ -659,14 +659,15 @@ module Spider; module Model; module Mappers
                     fields << [field, direction]
                 else
                     el_joins, el_model, el = get_deep_join(order_element)
-		    if (el.model?)
-		        el.model.primary_keys.each do |pk|
-			    fields << [el.model.mapper.schema.qualified_field(pk.name), direction]
-			end
-	            else
+                    if (el.model?)
+                        # FIXME: integrated elements
+                        el.model.primary_keys.each do |pk|
+                            fields << [el.model.mapper.schema.qualified_field(pk.name), direction]
+                        end
+                    else
                         field = el_model.mapper.schema.qualified_field(el.name)
                         fields << [field, direction]
-	            end
+                    end
                     joins += el_joins
                 end
             end
