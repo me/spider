@@ -329,9 +329,10 @@ module Spider; module Model
             self.each_index do |i|
                 obj = @objects[i]
                 prev_parent = obj._parent
+                prev_parent_element = obj._parent_element
                 obj.set_parent(self, nil)
                 yield obj
-                obj.set_parent(prev_parent, nil)
+                obj.set_parent(prev_parent, prev_parent_element)
             end
         end
 
