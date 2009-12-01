@@ -213,7 +213,7 @@ module Spider; module ControllerMixins
         def try_rescue(exc)
             exc.uuid = UUID.new.generate if exc.respond_to?(:uuid=)
             format = self.class.output_format(:error) || :html
-            return super unless format == :html
+            return super unless @executed_format == :html
             return super unless action_target?
             output_format_headers(format)
             if (exc.is_a?(Spider::Controller::NotFound))

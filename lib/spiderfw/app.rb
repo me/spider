@@ -28,7 +28,7 @@ module Spider
                         @tags_path ||= @path+'/tags'
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
-                        @version = Gem::Version.new(@version) unless @version.is_a?(Gem::Version)
+                        @version = Gem::Version.new(@version.to_s) unless @version.is_a?(Gem::Version)
                         find_tags
                     end
                     
