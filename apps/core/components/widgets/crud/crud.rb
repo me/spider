@@ -26,6 +26,35 @@ module Spider; module Components
             end
             super
             transient_session[:table_params] = @widgets[:table].params if (@widgets[:table])
+            
+            if (@action == :table)
+                if params['do_delete'] && params['selected'] && params['selected'].length > 0
+                    delete_rows
+                    flash[:deleted] = true
+                    return redirect(widget_request_path)
+                elsif params['delete'] && params['selected']
+                    @scene.ask_delete = true
+                    rows = []
+                    descs = @model.find({ @model.primary_keys[0].name => params['selected'].keys[0..9]})
+                    descs.each { |obj| rows << obj.to_s }
+                    total = params['selected'].keys.length
+                    rows << "Altri #{total - 10}" if total > 10
+                    @widgets[:ask_delete].scene.rows_to_del = rows
+                end
+            elsif (@action == :form)
+           #     debugger
+                if (@widgets[:form].saved?)
+                    flash[:saved] = true
+                    if (@widgets[:form].saved_and_new?)
+                        redirect(widget_request_path+'/new')
+                    elsif (@widgets[:form].saved_and_stay?)
+                        redirect(widget_request_path+'/'+@widgets[:form].pk)
+                    else
+                        redirect(widget_request_path)
+                    end
+                end
+            end
+            
         end
         
         def prepare_widgets
@@ -65,45 +94,19 @@ module Spider; module Components
                 @widgets[:ask_delete].add_action('_w'+param_name(self)+'[delete_cancel]', _("Cancel"))
                 @widgets[:ask_delete].add_action('_w'+param_name(self)+'[do_delete]', _('Ok'))
             end
+            
             super
+            
         end
         
-        
-        def run
-            super
-            if (@action == :table)
-                if params['do_delete'] && params['selected'] && params['selected'].length > 0
-                    delete_rows
-                    flash[:deleted] = true
-                    return redirect(widget_request_path)
-                elsif params['delete'] && params['selected']
-                    @scene.ask_delete = true
-                    rows = []
-                    descs = @model.find({ @model.primary_keys[0].name => params['selected'].keys[0..9]})
-                    descs.each { |obj| rows << obj.to_s }
-                    total = params['selected'].keys.length
-                    rows << "Altri #{total - 10}" if total > 10
-                    @widgets[:ask_delete].scene.rows_to_del = rows
+        def after_widget(id)
+            if (id == :table)
+                links = {}
+                table_rows = @widgets[:table].scene.data
+                table_rows.each_index do |i|
+                    links[i] = "#{widget_request_path}/#{table_rows[i][@key_element]}"
                 end
-                if (@widgets[:table])
-                    links = {}
-                    table_rows = @widgets[:table].scene.data
-                    table_rows.each_index do |i|
-                        links[i] = "#{widget_request_path}/#{table_rows[i][@key_element]}"
-                    end
-                    @widgets[:table].scene.links_to_form = links
-                end
-            elsif (@action == :form)
-                if (@widgets[:form].saved?)
-                    flash[:saved] = true
-                    if (@widgets[:form].saved_and_new?)
-                        redirect(widget_request_path+'/new')
-                    elsif (@widgets[:form].saved_and_stay?)
-                        redirect(widget_request_path+'/'+@widgets[:form].pk)
-                    else
-                        redirect(widget_request_path)
-                    end
-                end
+                @widgets[:table].scene.links_to_form = links
             end
         end
         
