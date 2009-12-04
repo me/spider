@@ -68,7 +68,7 @@ module Spider; module ControllerMixins
             super(action, *params)
             return unless format_params.is_a?(Hash)
             if (format_params.is_a?(Hash) && format_params[:template])
-                @template ||= init_template(format_params[:template])
+                @template ||= init_template
                 widget_target = @request.params['_wt']
                 widget_execute = @request.params['_we']
                 if (widget_target)
