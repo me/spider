@@ -195,6 +195,11 @@ module Spider; module ControllerMixins
             @template.find_widget(name)
         end
         
+        # Callback executed after child widgets are run. Useful to postprocess widgets data.
+        # id is the child widget id, as a symbol.
+        def after_widget(id)
+        end
+        
         
         
         def dispatched_object(route)
