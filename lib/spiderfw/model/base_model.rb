@@ -814,11 +814,11 @@ module Spider; module Model
         end
         
         # Like #with_mapper, but will mixin the block only if the mapper matches params.
-        #--
-        # FIXME:
+        # Possible params are:
+        # - a String, matching the class' use_storage
         def self.with_mapper_for(*params, &proc)
-            @mapper_procs ||= []
-            @mapper_procs << proc
+            @mapper_procs_for ||= []
+            @mapper_procs_for << [params, proc]
         end
         
         # Sets the url or the name of the storage to use
@@ -873,6 +873,13 @@ module Spider; module Model
             end
             if (@mapper_procs)
                 @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
+            end
+            if (@mapper_procs_for)
+                @mapper_procs_for.each do |params, proc|
+                    if (params.length == 0 && params[0].class == String)
+                        mapper.instance_eval(&proc) if (self.class.use_storage == params[0])
+                    end
+                end
             end
             if (@mapper_procs_subclass)
                 @mapper_procs_subclass.each{ |proc| mapper.instance_eval(&proc) }
