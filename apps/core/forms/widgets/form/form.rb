@@ -388,7 +388,12 @@ module Spider; module Forms
         
         
         def self.parse_content(doc)
-            runtime, overrides = super
+            overrides = []
+            overrides += doc.search('form:fields').to_a
+            doc.search('form:fields').remove
+            overrides.each{ |o| parse_override(o) }
+            runtime, soverrides = super(doc)
+            overrides += soverrides
             overrides.each do |ov|
                 ov['search'] = '.fields' if (ov.name == 'tpl:inline-override')
             end
@@ -396,6 +401,7 @@ module Spider; module Forms
         end
         
         def self.parse_override(el)
+            debugger
             if (el.name == 'form:fields')
                 el.name = 'tpl:override-content'
                 el['search'] = '.fields'
