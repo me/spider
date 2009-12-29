@@ -278,7 +278,6 @@ module Spider; module Forms
             obj = instantiate_obj
             obj.save_mode
             @save_actions[action].call(obj) if (action && @save_actions[action])
-            @error = false
             inputs_done = true
             @elements.each do |el|
                 break unless inputs_done
