@@ -876,8 +876,8 @@ module Spider; module Model
             end
             if (@mapper_procs_for)
                 @mapper_procs_for.each do |params, proc|
-                    if (params.length == 0 && params[0].class == String)
-                        mapper.instance_eval(&proc) if (self.class.use_storage == params[0])
+                    if (params.length == 1 && params[0].class == String)
+                        mapper.instance_eval(&proc) if (self.use_storage == params[0])
                     end
                 end
             end
