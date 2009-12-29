@@ -57,7 +57,7 @@ module Spider; module Forms
             @disabled = []
             @read_only = []
             @requested_elements = []
-
+            @obj = nil
         end
         
         def route_widget
@@ -344,6 +344,7 @@ module Spider; module Forms
             elsif (action == 'submit_and_stay')
                 @saved_and_stay = true
             end
+            @obj = obj
         end
         
         def before_save(obj, save_mode)
