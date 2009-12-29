@@ -401,7 +401,6 @@ module Spider; module Forms
         end
         
         def self.parse_override(el)
-            debugger
             if (el.name == 'form:fields')
                 el.name = 'tpl:override-content'
                 el['search'] = '.fields'
