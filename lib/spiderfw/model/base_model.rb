@@ -1432,6 +1432,11 @@ module Spider; module Model
             return false
         end
         
+        def in_storage?
+            return false unless primary_keys_set?
+            return self.class.load(primary_keys_hash)
+        end
+        
         # Given elements are set as modified
         def set_modified(request) #:nodoc:
             request.each do |key, val| # FIXME: go deep
@@ -1494,6 +1499,13 @@ module Spider; module Model
         # Returns a new instance with the same primary keys
         def get_new
             obj = self.class.new
+            self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            return obj
+        end
+        
+        # Returns a new static instance with the same primary keys
+        def get_new_static
+            obj = self.class.static
             self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
             return obj
         end
