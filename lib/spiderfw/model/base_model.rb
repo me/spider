@@ -1370,6 +1370,8 @@ module Spider; module Model
             self.class.primary_keys.each{ |k| h[k.name] = get(k) }
             h
         end
+        
+        # Returns a string with the primary keys joined by ','
         def keys_string
             self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
         end
