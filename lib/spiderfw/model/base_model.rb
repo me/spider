@@ -1364,6 +1364,12 @@ module Spider; module Model
             self.class.primary_keys.map{ |k| get(k) }
         end
         
+        # Returns an hash of primary keys names and values
+        def primary_keys_hash
+            h = {}
+            self.class.primary_keys.each{ |k| h[k.name] = get(k) }
+            h
+        end
         def keys_string
             self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
         end
