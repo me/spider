@@ -1,4 +1,4 @@
-require 'apps/<%= app_path %>/controllers/<%= app_name %>.rb'<% tab = (modules.length > 1) ? "    " : "" %><%= "\n" if (modules.length > 1) %>
+require 'apps/<%= app_path %>/controllers/<%= app_name %>_controller.rb'<% tab = (modules.length > 1) ? "    " : "" %><%= "\n" if (modules.length > 1) %>
 <%= modules[0..-2].inject(""){ |s, mod| s+= "; " if (s.length > 0); s+="module #{mod}"}+"\n" if (modules.length > 1)%>
 <%=tab%>module <%=modules[-1]%>
 <%=tab%>    @description = ""
