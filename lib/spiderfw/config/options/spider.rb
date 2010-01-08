@@ -57,7 +57,7 @@ module Spider
  
     config_option 'runner.sleep', _("Sleep time for the periodic runner"), :default => 10
     
-    config_option 'session.store', _("Where to store the session"), :default => 'memory', :choices => ['memory', 'file', 'memcached']
+    config_option 'session.store', _("Where to store the session"), :default => 'file', :choices => ['memory', 'file', 'memcached']
     config_option('session.life', _("Lifetime in seconds of the sessions"), :default => 3600, :type => Fixnum)
     config_option('session.purge_check', _("Number of seconds to wait before session purge check"), :default => 10, :type => Fixnum)
     config_option 'session.file.path', _("The folder where to store file sessions"), :default => lambda{ return Spider.paths[:var]+'/sessions' }
