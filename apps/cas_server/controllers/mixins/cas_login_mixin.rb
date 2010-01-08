@@ -79,6 +79,11 @@ module Spider; module CASServer
             end
             user = super
             return nil unless user
+            cas_user_authenticated(user)
+            return user
+        end
+        
+        def cas_user_authenticated(user)
             extra_attributes = cas_user_attributes(user)
             tgt = generate_ticket_granting_ticket(user.identifier, extra_attributes)
             if Spider.conf.get('cas.expire_sessions')
@@ -111,11 +116,13 @@ module Spider; module CASServer
                     @message = {:type => 'mistake', :message => _("The target service your browser supplied appears to be invalid. Please contact your system administrator for help.")}
                 end
             end
-            return user
         end
         
         __.html
         def login
+            if (@request.user)
+                return cas_user_authenticated(@request.user)
+            end 
             index
         end
 
