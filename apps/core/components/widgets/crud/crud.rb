@@ -14,7 +14,7 @@ module Spider; module Components
         end
         
         def prepare(action='')
-            @action = (@_action_local && (@_action_local =~ /\d+/ || @_action_local == 'new')) ? :form : :table
+            @action = (@_action_local && !@_action_local.empty?) ? :form : :table
             @_pass_action = (@action == :form) ? @_action : nil
             @scene.saved = flash[:saved]
             if (params['delete_cancel'])
