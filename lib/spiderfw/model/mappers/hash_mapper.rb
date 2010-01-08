@@ -57,9 +57,14 @@ module Spider; module Model; module Mappers
                     row[key] < value
                 when '<>'
                     row[key] != value
-                when 'like'
+                when 'like', 'ilike'
+                    check_value = row[key]
+                    if (comp == 'ilike')
+                        value.upcase!
+                        check_value.upcase!
+                    end
                     test_re = Regexp.new(Regexp.quote(value).gsub('%', '.+'))
-                    row[key] =~ test_re
+                    check_value =~ test_re
                 end
                 if (test) 
                     return true if (condition.conjunction == :or)
