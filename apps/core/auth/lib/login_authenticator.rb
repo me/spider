@@ -14,7 +14,7 @@ module Spider; module Auth
         module ClassMethods
             
             def authenticate_login(params)
-                user = self.find(:username => params[:username])[0]
+                user = self.load(:username => params[:username])
                 return nil unless user
                 return nil unless user.password && Spider::DataTypes::Password.check_match(user.password, params[:password])
                 return user
