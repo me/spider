@@ -308,7 +308,7 @@ module Spider; module Model; module Storage; module Db
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
                     begin
-                        value = Iconv.conv('utf-8//IGNORE', enc, value) if value
+                        value = Iconv.conv('utf-8//IGNORE', enc, value.to_s+' ')[0..-2] if value
                     rescue Iconv::InvalidCharacter
                         value = ''
                     end
@@ -324,7 +324,7 @@ module Spider; module Model; module Storage; module Db
                 enc = @configuration['encoding']
                 if (enc && enc.downcase != 'utf-8')
                     begin
-                        value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s)
+                        value = Iconv.conv(enc+'//IGNORE', 'utf-8', value.to_s+' ')[0..-2]
                     rescue Iconv::InvalidCharacter
                         value = ''
                     end
