@@ -987,6 +987,10 @@ module Spider; module Model
                     values.each_val do |name, val|
                         set(name, val) if self.class.has_element?(name)
                     end
+                elsif (values.is_a? Array)
+                    self.class.primary_keys.each_index do |i|
+                        set(self.class.primary_keys[i], values[i])
+                    end
                  # Single unset key, single value
                 elsif ((empty_keys = self.class.primary_keys.select{ |key| !element_has_value?(key) }).length == 1)
                     set(empty_keys[0], values)
