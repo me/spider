@@ -14,6 +14,13 @@ module Spider
         end
         
         class Unauthorized < SecurityError
+            attr_accessor :user
+            
+            def initialize(msg, user=nil)
+                super msg
+                @user = user if user
+            end
+            
         end
     end
 end
