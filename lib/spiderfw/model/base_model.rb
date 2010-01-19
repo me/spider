@@ -1366,7 +1366,9 @@ module Spider; module Model
         
         # Returns an array of current primary key values
         def primary_keys
-            self.class.primary_keys.map{ |k| get(k) }
+            self.class.primary_keys.map{ |k|
+                k.model? ? get(k).primary_keys : get(k)
+            }
         end
         
         # Returns an hash of primary keys names and values

@@ -117,7 +117,7 @@ module Spider
         def write_cache(template_path, compiled_template)
             full_path = get_location(template_path)
             FileUtils.mkpath(full_path)
-            lock_file = File.new(full_path)
+            lock_file = File.new(full_path+'/lock', 'w')
             lock_file.flock(File::LOCK_EX)
             write_compiled_template(compiled_template, full_path)
             modified = compiled_template.collect_mtimes
