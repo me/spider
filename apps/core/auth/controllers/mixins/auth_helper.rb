@@ -4,6 +4,9 @@ module Spider; module Auth
 
         def self.included(mod)
             mod.extend(ClassMethods)
+            if mod.respond_to?(:define_annotation)
+                mod.define_annotation(:require_user) { |k, m, params| k.require_user(params, :only => m) }
+            end
         end
         
         def before(action='', *arguments)
