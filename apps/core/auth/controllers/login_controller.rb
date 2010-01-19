@@ -6,12 +6,16 @@ module Spider; module Auth
         include HTTPMixin
         include Visual
         
-        def self.user
-            LoginUser
-        end
-        
         def self.default_redirect
             nil
+        end
+        
+        def self.users=(val)
+            @user_classes = val
+        end
+        
+        def self.users
+            @user_classes ||= [Spider::Auth::SuperUser]
         end
         
         def default_redirect
@@ -25,8 +29,9 @@ module Spider; module Auth
         
         __.html
         def index
+            exception = @request.session.flash[:unauthorized_exception]
             @scene.redirect = @request.params['redirect'] if (@request.params['redirect'])
-            @scene.unauthorized_msg = @request.session.flash[:unauthorized_exception].message if @request.session.flash[:unauthorized_exception] && @request.session.flash[:unauthorized_exception].message != 'Spider::Auth::Unauthorized'
+            @scene.unauthorized_msg = exception.message if exception && exception.message != 'Spider::Auth::Unauthorized'
             @scene.message = @request.session.flash[:login_message] if @request.session.flash[:login_message]
             render('login')
         end
@@ -36,7 +41,10 @@ module Spider; module Auth
         end
         
         def get_user
-            return self.class.user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
+            self.class.users.each do |user|
+                u = user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
+                return u if u
+            end
         end
         
         __.html

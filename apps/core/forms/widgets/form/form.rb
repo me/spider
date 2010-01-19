@@ -147,6 +147,12 @@ module Spider; module Forms
                     cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
                 end
                 @crud.fixed = cond
+                sub_elements = []
+                #sub_elements += @sub_element.model.primary_keys.map{ |k| k.name }
+                @sub_element.model.elements_array.each do |el|
+                    sub_elements << el.name unless el.integrated? || el.model == @model
+                end
+                @crud.attributes[:table_elements] = sub_elements
             else
                 create_inputs
             end

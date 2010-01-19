@@ -310,19 +310,26 @@ module Spider; module Model; module Mappers
             end
             order, order_joins = prepare_order(query)
             joins += order_joins if order_joins
+            seen_fields = {}
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
                 if (!element.model?)
                     field = schema.qualified_field(el)
-                    keys << field
-                    types[field] = map_type(element.type)
+                    unless seen_fields[field]
+                        keys << field
+                        types[field] = map_type(element.type)
+                        seen_fields[field] = true
+                    end
                 elsif (!element.multiple?)
                     if (schema.has_foreign_fields?(el))
                         element.model.primary_keys.each do |key|
                             field = schema.qualified_foreign_key_field(el, key.name)
-                            keys << field
-                            types[field]  = map_type(key.type)
+                            unless seen_fields[field]
+                                keys << field
+                                types[field]  = map_type(key.type)
+                                seen_fields[field] = true
+                            end
                         end
                     end
                     sub_request = query.request[element.name]

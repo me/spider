@@ -61,7 +61,7 @@ module Spider; module ControllerMixins
             format_params = @executed_format_params
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
-            elsif (format_params.is_a?(Array) && format_params[:params])
+            elsif (format_params.is_a?(Hash) && format_params[:params])
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end

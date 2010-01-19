@@ -23,6 +23,10 @@ module Spider; module Model
             end
         end
         
+        def length
+          @model_tasks.keys.length
+        end
+        
         # def dump(model, model_server)
         #     collect_dependencies(model)
         #     tasks = tsort

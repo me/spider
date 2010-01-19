@@ -40,20 +40,23 @@ module Annotations
 
     def self.included(klass)
         klass.extend(ClassMethods)
-        if (klass.is_a?(Module))
+        unless klass.is_a?(Class)
             klass.instance_eval do
-                def included(klass)
+                alias annotations_original_append_features append_features
+                def append_features(kl)
+                    result = annotations_original_append_features(kl)
                     if (@defined_annotations)
                         @defined_annotations.each do |name, proc|
-                            klass.define_annotation(name, &proc)
+                            kl.define_annotation(name, &proc)
                         end
                     end
                     @annotations.each do |method, vals|
                         vals.each do |k, args|
-                            klass.annotate(method, k, *args)
+                            args = [args] unless args.is_a?(Array)
+                            kl.annotate(method, k, *args)
                         end
                     end
-                    super
+                    result
                 end
             end
         end

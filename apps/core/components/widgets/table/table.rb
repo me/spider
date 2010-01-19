@@ -3,7 +3,10 @@ module Spider; module Components
     class Table < Spider::Widget
         tag 'table'
  
-        is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
+        is_attribute :elements, :process => lambda{ |v|
+            return v.split(',').map{ |v| v.strip.to_sym } if v.is_a?(String)
+            v
+        }
         i_attribute :num_elements, :default => 7, :type => Fixnum
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
@@ -54,10 +57,12 @@ module Spider; module Components
             cnt = 1
             @model.elements_array.each do |el|
                 break if cnt > @num_elements
-                next if el.attributes[:integrated_model]
-                next if el.multiple? && el.association != :multiple_choice
-                next if el.type == Spider::DataTypes::Password
-                next if el.hidden?
+                unless el.name == @link_el
+                    next if el.attributes[:integrated_model]
+                    next if el.multiple? && el.association != :multiple_choice
+                    next if el.type == Spider::DataTypes::Password
+                    next if el.hidden?
+                end
                 cnt += 1
                 els << el.name
             end
