@@ -3,7 +3,10 @@ module Spider; module Components
     class Table < Spider::Widget
         tag 'table'
  
-        is_attribute :elements, :process => lambda{ |v| v.split(',').map{ |v| v.strip.to_sym } }
+        is_attribute :elements, :process => lambda{ |v|
+            return v.split(',').map{ |v| v.strip.to_sym } if v.is_a?(String)
+            v
+        }
         i_attribute :num_elements, :default => 7, :type => Fixnum
         attribute :row_limit, :type => Fixnum, :default => 15
         attribute :paginate, :type => TrueClass, :default => true
