@@ -37,7 +37,9 @@ module Spider; module Auth
                 next unless action_match
                 user = nil
                 unauthorized_exception = nil
+                requested_class = nil
                 klasses.each do |klass|
+                    requested_class = klass
                     user = klass.restore_from_session(@request.session)
                     if user
                         @request.security[:users] << user
@@ -47,7 +49,7 @@ module Spider; module Auth
                             begin
                                 c = params[:check].call(user)
                                 user = nil unless c == true
-                                raise Unauthorized.new(c) if c.is_a?(String)
+                                raise Unauthorized.new(c, requested_class) if c.is_a?(String)
                             rescue => exc
                                 user = nil
                                 unauthorized_exception = exc
@@ -58,7 +60,7 @@ module Spider; module Auth
                     end
                 end
                 unless user
-                    raise unauthorized_exception ? unauthorized_exception : Unauthorized
+                    raise (unauthorized_exception ? unauthorized_exception : Unauthorized).new(_("Please login first"), requested_class)
                 end
                 @request.user = user
             end
