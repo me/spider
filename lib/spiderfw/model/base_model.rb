@@ -893,7 +893,7 @@ module Spider; module Model
         # See #self.where for parameter syntax
         def self.find(*params, &proc)
             qs = self.where(*params, &proc)
-            return qs.empty? ? qs : nil
+            return qs.empty? ? nil : qs
         end
         
         # Executes #self.where, returning the first result.
