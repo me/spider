@@ -57,10 +57,12 @@ module Spider; module Components
             cnt = 1
             @model.elements_array.each do |el|
                 break if cnt > @num_elements
-                next if el.attributes[:integrated_model]
-                next if el.multiple? && el.association != :multiple_choice
-                next if el.type == Spider::DataTypes::Password
-                next if el.hidden?
+                unless el.name == @link_el
+                    next if el.attributes[:integrated_model]
+                    next if el.multiple? && el.association != :multiple_choice
+                    next if el.type == Spider::DataTypes::Password
+                    next if el.hidden?
+                end
                 cnt += 1
                 els << el.name
             end
