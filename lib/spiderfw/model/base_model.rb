@@ -407,7 +407,8 @@ module Spider; module Model
             end
             
             if (attributes[:integrate])
-                integrate(name, attributes[:integrate])
+                integrate_params = attributes[:integrate].is_a?(Hash) ? attributes[:integrate] : {}
+                integrate(name, integrate_params)
             end
             if (@subclasses)
                 @subclasses.each do |sub|
