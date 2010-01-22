@@ -2,7 +2,7 @@
     
     class <%= module_name %>Controller < Spider::AppController
         
-        layout '<%= app_name %>.layout'
+        layout '<%= app_name %>'
     
         def index
             @scene.msg = 'Hello!'

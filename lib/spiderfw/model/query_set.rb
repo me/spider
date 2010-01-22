@@ -204,7 +204,7 @@ module Spider; module Model
         
         # Checks contained objects' loaded elements.
         def update_loaded_elements
-            return if empty?
+            return if currently_empty?
             f_loaded = {}
             self.each_current do |obj|
                 @loaded_elements.each do |el|
@@ -272,6 +272,11 @@ module Spider; module Model
         
         # True if no objects were fetched (yet).
         def empty?
+            load unless @loaded || !autoload?
+            @objects.empty?
+        end
+        
+        def currently_empty?
             @objects.empty?
         end
         
@@ -329,9 +334,10 @@ module Spider; module Model
             self.each_index do |i|
                 obj = @objects[i]
                 prev_parent = obj._parent
+                prev_parent_element = obj._parent_element
                 obj.set_parent(self, nil)
                 yield obj
-                obj.set_parent(prev_parent, nil)
+                obj.set_parent(prev_parent, prev_parent_element)
             end
         end
 
@@ -511,6 +517,14 @@ module Spider; module Model
         # Returns an array with the results of calling #BaseModel.to_hash_array on each object.
         def to_hash_array
             return self.map{ |obj| obj.to_hash }
+        end
+        
+        def to_indexed_hash(element)
+            hash = {}
+            self.each do |row|
+                hash[row.get(element)] = row
+            end
+            hash
         end
         
         # Prints an ASCII table

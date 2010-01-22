@@ -47,14 +47,14 @@ module Spider; module CASServer
                     $LOG.error("This is a gateway request but no service parameter was given!")
                     @scene.cas_message = {
                         :type => 'mistake', 
-                        :message => "The server cannot fulfill this gateway request because no service parameter was given."
+                        :message => _("The server cannot fulfill this gateway request because no service parameter was given.")
                     }
                 end
             rescue URI::InvalidURIError
                 $LOG.error("The service '#{@service}' is not a valid URI!")
                 @scene.cas_message = {
                     :type => 'mistake', 
-                    :message => "The target service your browser supplied appears to be invalid. Please contact your system administrator for help."
+                    :message => _("The target service your browser supplied appears to be invalid. Please contact your system administrator for help.")
                 }
             end
             @scene.cas_service = @service
@@ -67,14 +67,24 @@ module Spider; module CASServer
             return xm
         end
         
+        def cas_user_attributes(user)
+            return user.user_attributes(:cas) if user.respond_to?(:user_attributes)
+            return {}
+        end
+        
         def authenticate
             if error = validate_login_ticket(@request.params['lt'])
                 @scene.message = error
                 return nil
             end
-            user = get_user
+            user = super
             return nil unless user
-            extra_attributes = user.user_attributes
+            cas_user_authenticated(user)
+            return user
+        end
+        
+        def cas_user_authenticated(user)
+            extra_attributes = cas_user_attributes(user)
             tgt = generate_ticket_granting_ticket(user.identifier, extra_attributes)
             if Spider.conf.get('cas.expire_sessions')
                 expires = Time.now + Spider.conf.get('cas.ticket_granting_ticket_expiry')
@@ -93,7 +103,7 @@ module Spider; module CASServer
             $LOG.debug("Ticket granting cookie '#{@response.cookies[:tgt].inspect}' granted to '#{user.identifier.inspect}'. #{expiry_info}")
             if @service.nil? || @service.empty?
                 $LOG.info("Successfully authenticated user '#{user.identifier}' at '#{tgt.client_hostname}'. No service param was given, so we will not redirect.")
-                @scene.cas_message = {:type => 'confirmation', :message => "You have successfully logged in."}
+                @scene.cas_message = {:type => 'confirmation', :message => _("You have successfully logged in.")}
             else
                 @st = generate_service_ticket(@service, user.identifier, tgt)
                 begin
@@ -103,14 +113,16 @@ module Spider; module CASServer
                     return redirect(service_with_ticket, 303) # response code 303 means "See Other" (see Appendix B in CAS Protocol spec)
                 rescue URI::InvalidURIError
                     $LOG.error("The service '#{@service}' is not a valid URI!")
-                    @message = {:type => 'mistake', :message => "The target service your browser supplied appears to be invalid. Please contact your system administrator for help."}
+                    @message = {:type => 'mistake', :message => _("The target service your browser supplied appears to be invalid. Please contact your system administrator for help.")}
                 end
             end
-            return user
         end
         
         __.html
         def login
+            if (@request.user)
+                return cas_user_authenticated(@request.user)
+            end 
             index
         end
 
@@ -158,8 +170,8 @@ module Spider; module CASServer
             else
                 $LOG.warn("User tried to log out without a valid ticket-granting ticket")
             end
-            @scene.cas_message = {:type => 'confirmation', :message => "You have successfully logged out."}
-            @scene.cas_message[:message] << " Please click on the following link to continue:" if @continue_url
+            @scene.cas_message = {:type => 'confirmation', :message => _("You have successfully logged out.")}
+            @scene.cas_message[:message] << _(" Please click on the following link to continue:") if @continue_url
             @scene.continue_url = @continue_url
             if (@gateway && @service)
                 redirect(@service, 303)

@@ -247,9 +247,9 @@ module Spider; module Model
                     assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel))
                     assoc_type.attributes[:sub_model] = self
                     assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true)
-                    assoc_type.element(self_name, self, :hidden => true, :reverse => name) # FIXME: must check if reverse exists?
+                    assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice) # FIXME: must check if reverse exists?
                     # FIXME! fix in case of clashes with existent elements
-                    assoc_type.element(other_name, orig_type)
+                    assoc_type.element(other_name, orig_type, :association => :choice)
                     assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
                     if (proc)                                   #        to be hidden, but the integrated el instead
                         attributes[:extended] = true
@@ -407,7 +407,8 @@ module Spider; module Model
             end
             
             if (attributes[:integrate])
-                integrate(name, attributes[:integrate])
+                integrate_params = attributes[:integrate].is_a?(Hash) ? attributes[:integrate] : {}
+                integrate(name, integrate_params)
             end
             if (@subclasses)
                 @subclasses.each do |sub|
@@ -814,11 +815,11 @@ module Spider; module Model
         end
         
         # Like #with_mapper, but will mixin the block only if the mapper matches params.
-        #--
-        # FIXME:
+        # Possible params are:
+        # - a String, matching the class' use_storage
         def self.with_mapper_for(*params, &proc)
-            @mapper_procs ||= []
-            @mapper_procs << proc
+            @mapper_procs_for ||= []
+            @mapper_procs_for << [params, proc]
         end
         
         # Sets the url or the name of the storage to use
@@ -874,6 +875,13 @@ module Spider; module Model
             if (@mapper_procs)
                 @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
             end
+            if (@mapper_procs_for)
+                @mapper_procs_for.each do |params, proc|
+                    if (params.length == 1 && params[0].class == String)
+                        mapper.instance_eval(&proc) if (self.use_storage == params[0])
+                    end
+                end
+            end
             if (@mapper_procs_subclass)
                 @mapper_procs_subclass.each{ |proc| mapper.instance_eval(&proc) }
             end
@@ -885,7 +893,7 @@ module Spider; module Model
         # See #self.where for parameter syntax
         def self.find(*params, &proc)
             qs = self.where(*params, &proc)
-            return qs.empty? ? qs : nil
+            return qs.empty? ? nil : qs
         end
         
         # Executes #self.where, returning the first result.
@@ -978,6 +986,10 @@ module Spider; module Model
                 elsif (values.is_a? BaseModel)
                     values.each_val do |name, val|
                         set(name, val) if self.class.has_element?(name)
+                    end
+                elsif (values.is_a? Array)
+                    self.class.primary_keys.each_index do |i|
+                        set(self.class.primary_keys[i], values[i])
                     end
                  # Single unset key, single value
                 elsif ((empty_keys = self.class.primary_keys.select{ |key| !element_has_value?(key) }).length == 1)
@@ -1354,9 +1366,19 @@ module Spider; module Model
         
         # Returns an array of current primary key values
         def primary_keys
-            self.class.primary_keys.map{ |k| get(k) }
+            self.class.primary_keys.map{ |k|
+                k.model? ? get(k).primary_keys : get(k)
+            }
         end
         
+        # Returns an hash of primary keys names and values
+        def primary_keys_hash
+            h = {}
+            self.class.primary_keys.each{ |k| h[k.name] = get(k) }
+            h
+        end
+        
+        # Returns a string with the primary keys joined by ','
         def keys_string
             self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
         end
@@ -1417,6 +1439,11 @@ module Spider; module Model
                 return true if get(el).modified?
             end
             return false
+        end
+        
+        def in_storage?
+            return false unless primary_keys_set?
+            return self.class.load(primary_keys_hash)
         end
         
         # Given elements are set as modified
@@ -1481,6 +1508,13 @@ module Spider; module Model
         # Returns a new instance with the same primary keys
         def get_new
             obj = self.class.new
+            self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            return obj
+        end
+        
+        # Returns a new static instance with the same primary keys
+        def get_new_static
+            obj = self.class.static
             self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
             return obj
         end

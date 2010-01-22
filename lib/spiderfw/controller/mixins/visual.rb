@@ -61,19 +61,20 @@ module Spider; module ControllerMixins
             format_params = @executed_format_params
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
-            elsif (format_params.is_a?(Array) && format_params[:params])
+            elsif (format_params.is_a?(Hash) && format_params[:params])
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end
             super(action, *params)
             return unless format_params.is_a?(Hash)
             if (format_params.is_a?(Hash) && format_params[:template])
-                @template ||= init_template(format_params[:template])
+                @template ||= init_template
                 widget_target = @request.params['_wt']
                 widget_execute = @request.params['_we']
                 if (widget_target)
                     first, rest = widget_target.split('/', 2)
                     @_widget = find_widget(first)
+                    raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
                     @_widget.is_target = true unless rest
                     @_widget.set_action(widget_execute) if widget_execute
                     @_widget.target_mode = true
@@ -194,6 +195,11 @@ module Spider; module ControllerMixins
             @template.find_widget(name)
         end
         
+        # Callback executed after child widgets are run. Useful to postprocess widgets data.
+        # id is the child widget id, as a symbol.
+        def after_widget(id)
+        end
+        
         
         
         def dispatched_object(route)
@@ -212,7 +218,7 @@ module Spider; module ControllerMixins
         def try_rescue(exc)
             exc.uuid = UUID.new.generate if exc.respond_to?(:uuid=)
             format = self.class.output_format(:error) || :html
-            return super unless format == :html
+            return super unless @executed_format == :html
             return super unless action_target?
             output_format_headers(format)
             if (exc.is_a?(Spider::Controller::NotFound))

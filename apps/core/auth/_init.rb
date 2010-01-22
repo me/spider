@@ -14,6 +14,13 @@ module Spider
         end
         
         class Unauthorized < SecurityError
+            attr_accessor :user
+            
+            def initialize(msg, user=nil)
+                super msg
+                @user = user if user
+            end
+            
         end
     end
 end
@@ -26,6 +33,7 @@ require 'apps/core/auth/models/mixins/authentication_tracking'
 require 'apps/core/auth/models/user'
 require 'apps/core/auth/models/login_user'
 require 'apps/core/auth/models/digest_user'
+require 'apps/core/auth/models/super_user'
 require 'apps/core/auth/controllers/login_controller'
 require 'apps/core/auth/controllers/mixins/auth_helper'
 require 'apps/core/auth/controllers/mixins/http_basic_auth'

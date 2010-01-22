@@ -2,7 +2,7 @@ runmode: 'devel'
 template.cache.disable: true
 client.text_editor: 'textmate'
 locale: 'it'
-session.store: 'memory'
+session.store: 'file'
 
 #set devel:
 storages:

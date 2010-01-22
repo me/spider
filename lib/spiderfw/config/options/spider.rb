@@ -57,7 +57,7 @@ module Spider
  
     config_option 'runner.sleep', _("Sleep time for the periodic runner"), :default => 10
     
-    config_option 'session.store', _("Where to store the session"), :default => 'memory', :choices => ['memory', 'file', 'memcached']
+    config_option 'session.store', _("Where to store the session"), :default => 'file', :choices => ['memory', 'file', 'memcached']
     config_option('session.life', _("Lifetime in seconds of the sessions"), :default => 3600, :type => Fixnum)
     config_option('session.purge_check', _("Number of seconds to wait before session purge check"), :default => 10, :type => Fixnum)
     config_option 'session.file.path', _("The folder where to store file sessions"), :default => lambda{ return Spider.paths[:var]+'/sessions' }
@@ -77,7 +77,9 @@ module Spider
     config_option 'log.errors', _("Log errors to file"), :default => true
     config_option 'log.debug.level', _("Log level to use for debug file (false for no debug)"), :default => false,
         :choices => [false, :DEBUG, :INFO],
-        :process => lambda{ |opt| opt && opt != 'false' ? opt.upcase.to_sym : false }
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
+    config_option 'log.rotate.age', _("Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"), :default => 'daily'
+    config_option 'log.rotate.size', _("Maximum logfile size (only applies when log.rotate.age is a number)"), :default => 1048576
 #                    :process => lambda{ |v| v.upcase }
 
 

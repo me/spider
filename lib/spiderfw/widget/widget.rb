@@ -385,6 +385,9 @@ module Spider
             @widgets.each do |wname, w|
                 w.run
             end
+            if (@parent)
+                @parent.after_widget(@id.to_sym)
+            end
             @did_run = true
         end
         
