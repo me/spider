@@ -455,7 +455,7 @@ module Spider; module Model; module Mappers
                         end
                     elsif (element.model.primary_keys.length == 1 )
                         new_v = Condition.new
-                        if (have_references?(element.name))
+                        if (model.mapper.have_references?(element.name))
                             new_v.set(element.model.primary_keys[0].name, comp, v)
                         else
                             new_v.set(element.reverse, comp, v)
@@ -478,7 +478,7 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
