@@ -504,7 +504,7 @@ module Spider; module Model
                     end
                     set.total_rows = result.total_rows if (!was_loaded)
                     result.each do |row|
-                        obj =  map(query.request, row, set.model)
+                        obj =  map(query.request, row, @model) # set.model ?!?
                         next unless obj
                         merge_object(set, obj)
                         @raw_data[obj.object_id] = row
