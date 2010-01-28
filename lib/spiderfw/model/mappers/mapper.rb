@@ -687,8 +687,10 @@ module Spider; module Model
         
         def split_condition_polymorphs(condition, polymorphs)
             conditions = {}
+            return conditions if condition.polymorph && polymorphs.include?(condition.polymorph)
+            model = condition.polymorph ? condition.polymorph : @model
             condition.each_with_comparison do |el, val, comp|
-                if (!@model.has_element?(el))
+                if (!model.has_element?(el))
                     polymorphs.each do |polym|
                         if (polym.has_element?(el))
                             conditions[polym] ||= Condition.new
