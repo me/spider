@@ -771,10 +771,10 @@ module Spider; module Model
                 end
                 if (element.type < Spider::DataType && !v.is_a?(element.type))
                     condition.delete(k)
-                    condition[k] = element.type.from_value(v)
+                    condition.set(k, c, element.type.from_value(v))
                 elsif element.type == DateTime && v && !v.is_a?(Date)
                     condition.delete(k)
-                    condition[k] = DateTime.parse(v)
+                    condition.set(k, c, DateTime.parse(v))
                 end
                     
             end
