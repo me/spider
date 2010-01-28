@@ -196,11 +196,17 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         # Implements the Mapper#count method doing a count SQL query.
-        def count(condition)
-            q = Query.new(condition, @model.primary_keys)
+        def count(condition_or_query)
+            if (condition_or_query.is_a?(Query))
+                q = condition_or_query.clone
+            else
+                q = Query.new(condition_or_query, @model.primary_keys) 
+            end
             prepare_query(q)
             storage_query = prepare_select(q)
             storage_query[:query_type] = :count
+            storage_query.delete(:order)
+            storage_query.delete(:limit)
             return @storage.query(storage_query)
         end
         
