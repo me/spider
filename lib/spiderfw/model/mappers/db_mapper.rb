@@ -348,9 +348,11 @@ module Spider; module Model; module Mappers
                     # end
                 end
             end
-            if (query.request.polymorphs?)
+            if (query.request.polymorphs? || !query.condition.polymorphs.empty?)
                 only_conditions = {:conj => 'or', :values => []} if (query.request.only_polymorphs?)
-                query.request.polymorphs.each do |model, polym_request|
+                polymorphs = (query.request.polymorphs.keys + query.condition.polymorphs).uniq
+                polymorphs.each do |model|
+                    polym_request = query.request.polymorphs[model] || Request.new
                     extension_element = model.extended_models[@model]
                     model.mapper.prepare_query_request(polym_request)
                     polym_request.reject!{|k, v| 

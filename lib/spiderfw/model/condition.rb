@@ -332,6 +332,12 @@ module Spider; module Model
             @subconditions.uniq!
             return self
         end
+        
+        def polymorphs
+            pol = []
+            pol << @polymorph if @polymorph
+            return pol + @subconditions.inject([]){ |arr, s| arr += s.polymorphs }
+        end
     
     end
     
