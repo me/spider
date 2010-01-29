@@ -307,6 +307,7 @@ module Spider; module Model; module Mappers
             condition, joins = prepare_condition(query.condition)
             elements = query.request.keys.select{ |k| mapped?(k) }
             keys = []
+            primary_keys = []
             types = {}
             if (query.limit && query.order.empty?)
                 @model.primary_keys.each do |key|
@@ -324,6 +325,7 @@ module Spider; module Model; module Mappers
                     field = schema.qualified_field(el)
                     unless seen_fields[field]
                         keys << field
+                        primary_keys << field if element.primary_key?
                         types[field] = map_type(element.type)
                         seen_fields[field] = true
                     end
@@ -398,6 +400,7 @@ module Spider; module Model; module Mappers
             return {
                 :query_type => :select,
                 :keys => keys,
+                :primary_keys => primary_keys,
                 :types => types,
                 :tables => tables,
                 :condition => condition,
