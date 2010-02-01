@@ -42,6 +42,10 @@ module Spider; module ControllerMixins
             'http://'+@request.env['HTTP_HOST']+request_path
         end
         
+        def https_request_url
+            'https://'+@request.env['HTTP_HOST']+request_path
+        end
+        
         # Returns the request_url with query params, if any
         def request_full_url
             url = request_url

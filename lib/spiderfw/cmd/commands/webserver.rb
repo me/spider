@@ -43,15 +43,29 @@ class WebServerCommand < CmdParse::Command
             puts _("Using webserver %s") % @server_name if $verbose
             puts _("Listening on port %s") % @port if $verbose
             server = Spider::HTTP.const_get(servers[@server_name]).new
+            ssl_server = nil
             start = lambda{
+                Spider.startup
+                
                 thread = Thread.new do
                     server.start(:port => @port, :cgi => @cgi)
                 end
                 if (@ssl)
+                    @ssl_cert ||= Spider.conf.get('orgs.default.cert')
+                    @ssl_key ||= Spider.conf.get('orgs.default.private_key')
                     ssl_thread = Thread.new do
-                        server.start(:port => @ssl, :ssl => true)
+                        ssl_server = Spider::HTTP.const_get(servers[@server_name]).new
+                        ssl_server.start(:port => @ssl, :ssl => true, :ssl_cert => @ssl_cert, :ssl_private_key => @ssl_key)
                     end
                 end
+                do_shutdown = lambda{
+                    server.shutdown
+                    ssl_server.shutdown if ssl_server
+                    Spider.shutdown
+                }
+                trap('TERM', &do_shutdown)
+                trap('INT', &do_shutdown)
+                
                 thread.join
                 ssl_thread.join if ssl_thread
             }
