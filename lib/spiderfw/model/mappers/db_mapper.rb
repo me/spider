@@ -196,11 +196,17 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         # Implements the Mapper#count method doing a count SQL query.
-        def count(condition)
-            q = Query.new(condition, @model.primary_keys)
+        def count(condition_or_query)
+            if (condition_or_query.is_a?(Query))
+                q = condition_or_query.clone
+            else
+                q = Query.new(condition_or_query, @model.primary_keys) 
+            end
             prepare_query(q)
             storage_query = prepare_select(q)
             storage_query[:query_type] = :count
+            storage_query.delete(:order)
+            storage_query.delete(:limit)
             return @storage.query(storage_query)
         end
         
@@ -301,6 +307,7 @@ module Spider; module Model; module Mappers
             condition, joins = prepare_condition(query.condition)
             elements = query.request.keys.select{ |k| mapped?(k) }
             keys = []
+            primary_keys = []
             types = {}
             if (query.limit && query.order.empty?)
                 @model.primary_keys.each do |key|
@@ -318,6 +325,7 @@ module Spider; module Model; module Mappers
                     field = schema.qualified_field(el)
                     unless seen_fields[field]
                         keys << field
+                        primary_keys << field if element.primary_key?
                         types[field] = map_type(element.type)
                         seen_fields[field] = true
                     end
@@ -342,9 +350,11 @@ module Spider; module Model; module Mappers
                     # end
                 end
             end
-            if (query.request.polymorphs?)
+            if (query.request.polymorphs? || !query.condition.polymorphs.empty?)
                 only_conditions = {:conj => 'or', :values => []} if (query.request.only_polymorphs?)
-                query.request.polymorphs.each do |model, polym_request|
+                polymorphs = (query.request.polymorphs.keys + query.condition.polymorphs).uniq
+                polymorphs.each do |model|
+                    polym_request = query.request.polymorphs[model] || Request.new
                     extension_element = model.extended_models[@model]
                     model.mapper.prepare_query_request(polym_request)
                     polym_request.reject!{|k, v| 
@@ -390,6 +400,7 @@ module Spider; module Model; module Mappers
             return {
                 :query_type => :select,
                 :keys => keys,
+                :primary_keys => primary_keys,
                 :types => types,
                 :tables => tables,
                 :condition => condition,
@@ -447,7 +458,7 @@ module Spider; module Model; module Mappers
                         end
                     elsif (element.model.primary_keys.length == 1 )
                         new_v = Condition.new
-                        if (have_references?(element.name))
+                        if (model.mapper.have_references?(element.name))
                             new_v.set(element.model.primary_keys[0].name, comp, v)
                         else
                             new_v.set(element.reverse, comp, v)
@@ -470,7 +481,7 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|

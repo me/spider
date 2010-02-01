@@ -134,7 +134,7 @@ module Spider; module CASServer
             @response.cookies.delete('tgt') # FIXME
             if tgt
                 TicketGrantingTicket.transaction do
-                    pgts = ProxyGrantingTicket.find('service_ticket.username' => tgt.username)
+                    pgts = ProxyGrantingTicket.where('service_ticket.username' => tgt.username)
                     pgts.each do |pgt|
                         pgt.delete
                     end
