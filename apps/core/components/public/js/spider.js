@@ -65,8 +65,16 @@ Spider.Widget = Class.extend({
 		this.el.html(el.html());
 		this.update();
 		this.ready();
-		this.applyReady();
 		Spider.newHTML(this.el);
+		this.applyReady();
+		
+	},
+	
+	replaceEl: function(el){
+		this.el = el;
+		this.update();
+		this.ready();
+		this.applyReady();
 	},
 	
 	paramName: function(key){
@@ -207,7 +215,11 @@ Spider.Widget = Class.extend({
 Spider.Widget.initFromEl = function(el){
 	if (!el || !el.attr('id')) return;
     var path = Spider.Widget.pathFromId(el.attr('id'));
-	if (Spider.widgets[path]) return Spider.widgets[path];
+	if (Spider.widgets[path]){
+		var widget = Spider.widgets[path];
+		widget.replaceEl(el);
+		return widget;
+	} 
     var cl = el.attr('class');
     var cl_parts = cl.split(' ');
     var w_cl = null;
