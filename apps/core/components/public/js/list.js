@@ -1,6 +1,6 @@
 Spider.defineWidget('Spider.Components.List', {
 	
-	autoInit: '.wdgt-Spider-Components-List:not(.sublist)',
+	autoInit: '.wdgt-Spider-Components-List',
     
     startup: function(){
     },
