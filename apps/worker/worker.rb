@@ -90,7 +90,7 @@ module Spider
                     trap('TERM') { app_shutdown }
                     trap('INT') { app_shutdown }
                     start.call
-                    @runner.join
+                    @runner.join if @runner
                 end
                 Process.detach(forked) if (options[:detach])
                 @runner = nil
