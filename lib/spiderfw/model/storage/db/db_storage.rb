@@ -380,7 +380,7 @@ module Spider; module Model; module Storage; module Db
         def sql_tables(query)
             values = []
             sql = query[:tables].map{ |table|
-                str = table
+                str = table.name
                 if (query[:joins] && query[:joins][table])
                     join_str, join_values = sql_tables_join(query, table)
                     str += " "+join_str
@@ -482,7 +482,7 @@ module Spider; module Model; module Storage; module Db
             }
             values = []
             sql = joins.map{ |join|
-                sql_on = join[:keys].map{ |from_f, to_f| "#{join[:from]}.#{from_f} = #{join[:to]}.#{to_f}"}.join(' AND ')
+                sql_on = join[:keys].map{ |from_f, to_f| "#{from_f} = #{to_f}"}.join(' AND ')
                 if (join[:condition])
                     condition_sql, condition_values = sql_condition({:condition => join[:condition]})
                     sql_on += " and #{condition_sql}"
