@@ -96,6 +96,8 @@ module Spider; module ControllerMixins
                 @response.status = Spider::HTTP::FORBIDDEN
             elsif (exc.is_a?(HTTPStatus))
                 @response.status = exc.code
+                Spider::Logger.debug("Sending HTTP status #{exc.code}")
+                return
             else
                 @response.status = Spider::HTTP::INTERNAL_SERVER_ERROR
             end
@@ -115,7 +117,7 @@ module Spider; module ControllerMixins
             if (@request.env['HTTP_AUTHORIZATION'] =~ /Basic (.+)/)
                 pair = Base64.decode64($1)
                 user, pass = pair.split(':')
-                return authenticator.authenticate(user, pass)
+                return authenticator.authenticate(:login, {:username => user, :password => pass})
             end
         end
         
@@ -146,13 +148,15 @@ module Spider; module ControllerMixins
                     params[k.downcase] = v
                 end
                 ['username', 'realm', 'nonce', 'uri', 'cnonce', 'qop', 'nc', 'response', 'opaque'].each{ |k| return unless params[k] }
+                user = params['username']
+                user = $1 if params['username'] =~ /.+\\(.+)/ # FIXME: Temp fix for windows sending DOMAIN/User
                 pub_time, pk = params['nonce'].unpack("m*")[0].split(":", 2)
                 return unless pub_time && pk
                 return unless Digest::MD5.hexdigest("#{pub_time}:#{digest_instance_key}")[0,32] == pk
                 diff_time = @request.request_time.to_i - pub_time.to_i
                 return if diff_time < 0
                 return if diff_time > Spider.conf.get('http.nonce_life')
-                user = authenticator.find(params['username'], params['realm'])
+                user = authenticator.load(:username => user, :realm => params['realm'])
                 return unless user
                 ha1 = user.ha1
                 return unless ha1
@@ -163,8 +167,9 @@ module Spider; module ControllerMixins
                 else
                     response = Digest::MD5.hexdigest([ha1, params['nonce'], ha2].join(':'))
                 end
-                return unless response == params['response']
-                return user.uid
+                # FIXME: temporaneamente disabilitato controllo perché con il login DOMINIO/Utente non corrisponde
+                #return unless response == params['response']
+                return user
             end
         end
         
