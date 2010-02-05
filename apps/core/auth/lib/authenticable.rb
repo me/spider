@@ -12,6 +12,7 @@ module Spider; module Auth
         end
         
         def authenticated?(method=nil)
+            return false unless @authentications
             if (method)
                 @authentications[method]
             else
