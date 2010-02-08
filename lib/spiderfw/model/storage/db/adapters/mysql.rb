@@ -385,13 +385,13 @@ module Spider; module Model; module Storage; module Db
              
              def generate_schema(schema=nil)
                  schema = super
-                 autoincrement = schema.columns.select{ |k, v| v[:attributes][:autoincrement] }
+                 autoincrement = schema.columns.select{ |k, v| v.attributes[:autoincrement] }
                  keep = autoincrement.select{ |k, v| @model.elements[k].primary_key? }.map{ |v| v[0] }
                  keep = [] if keep.length > 1
                  #keep = autoincrement[0] if (keep.length != 1)
                  autoincrement.each do |k, v|
                      next if k == keep[0]
-                     v[:attributes][:autoincrement] = false
+                     v.attributes[:autoincrement] = false
                      schema.set_sequence(k, @storage.sequence_name("#{schema.table}_#{k}"))
                  end
                  return schema
@@ -399,7 +399,7 @@ module Spider; module Model; module Storage; module Db
              
              def do_insert(obj)
                  super
-                 schema.columns.select{ |k, v| v[:attributes][:autoincrement] }.each do |k, v| # should be one
+                 schema.columns.select{ |k, v| v.attributes[:autoincrement] }.each do |k, v| # should be one
                      obj.set_loaded_value(k, storage.last_insert_id)
                  end
              end
