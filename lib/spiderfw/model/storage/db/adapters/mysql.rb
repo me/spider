@@ -272,6 +272,7 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
+             primary_keys = []
              connection do |c|
                  res = c.query("select * from #{table} where 1=0")
                  fields = res.fetch_fields
@@ -298,9 +299,10 @@ module Spider; module Model; module Storage; module Db
                          col[flag_name] = (flags & flag_val == 0) ? false : true
                      end
                      columns[f.name] = col
+                     primary_keys << f.name if f.is_pri_key?
                  end
              end
-             return {:columns => columns}
+             return {:columns => columns, :primary_keys => primary_keys}
          end
 
          def table_exists?(table)
