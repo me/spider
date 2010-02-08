@@ -127,16 +127,16 @@ module Spider; module Model; module Storage; module Db
         #   }}
         def get_schemas
             schemas = {}
-            schemas[@table] = {:columns => {}, :attributes => {}}
+            schemas[@table.name] = {:columns => {}, :attributes => {}}
             @columns.each do |element, column|
-                schemas[@table][:columns][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
+                schemas[@table.name][:columns][column.name] = {:type => column.type, :attributes => column.attributes}
             end
             @foreign_keys.each_key do |element|
                 @foreign_keys[element].each do |key, column|
-                    schemas[@table][:columns][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
+                    schemas[@table.name][:columns][column.name] = {:type => column.type, :attributes => column.attributes}
                 end
             end
-            schemas[@table][:attributes][:primary_key] = @primary_key
+            schemas[@table.name][:attributes][:primary_keys] = primary_keys.map{ |k| k.name }
             return schemas
         end
         

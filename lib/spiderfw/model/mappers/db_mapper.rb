@@ -907,7 +907,7 @@ module Spider; module Model; module Mappers
                             unless column
                                 column_name = element.attributes[:db_column_name] || @storage.column_name("#{element.name}_#{key.name}")
                                 column_attributes = @storage.column_attributes(key_type, key_attributes)
-                                column = Field.new(schema.table, column_name, column_name, column_attributes)
+                                column = Field.new(schema.table, column_name, column_type, column_attributes)
                             end
                             column.type ||= column_type
                             column.primary_key = true if (element.primary_key? || integrated_pks.include?([element.name, key.name]))
@@ -951,7 +951,7 @@ module Spider; module Model; module Mappers
                 # sequences.merge!(el.model.mapper.schema.sequences)
             end
             schema_description.each do |table_name, table_schema|
-                table_attributes = {:primary_key => table_schema[:attributes][:primary_key]}
+                table_attributes = {:primary_keys => table_schema[:attributes][:primary_keys]}
                 if @storage.table_exists?(table_name)
                     alter_table(table_name, table_schema[:columns], table_attributes, force)
                 else
@@ -1016,8 +1016,8 @@ module Spider; module Model; module Mappers
                     add_fields << field_hash
                 else
                     type = fields[field][:type]
-                    attributes = fields[field][:attributes]
-                    attributes ||= {}
+                    field_attributes = fields[field][:attributes]
+                    field_attributes ||= {}
                     if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
                         Spider.logger.debug("DIFFERENT: #{field}")
                         Spider.logger.debug(current_fields[field])
@@ -1031,8 +1031,8 @@ module Spider; module Model; module Mappers
                 raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
             end
             alter_attributes = {}
-            if (current[:primary_key] != attributes[:primary_key])
-                alter_attributes[:primary_key] = attributes[:primary_key]
+            if (current[:primary_keys] != attributes[:primary_keys])
+                alter_attributes[:primary_keys] = attributes[:primary_keys]
             end
             @storage.alter_table({
                 :table => name,

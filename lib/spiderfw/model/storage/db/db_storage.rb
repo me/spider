@@ -590,9 +590,9 @@ module Spider; module Model; module Storage; module Db
                 name, type, attributes = field
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
-            if (alter_attributes[:primary_key])
-                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current && current[:attributes][:primary_key])
-                sqls << "ALTER TABLE #{table_name} ADD PRIMARY KEY "+alter_attributes[:primary_key].join(', ')
+            if (alter_attributes[:primary_keys])
+                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current && current[:attributes][:primary_keys])
+                sqls << "ALTER TABLE #{table_name} ADD PRIMARY KEY ("+alter_attributes[:primary_keys].join(', ')+")"
             end
             return sqls
         end
