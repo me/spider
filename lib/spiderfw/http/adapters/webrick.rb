@@ -27,10 +27,13 @@ module Spider; module HTTP
                 :BindAddress    => opts[:host]
             }
             if (opts[:ssl])
+                require 'webrick/https'
+                require 'openssl'
                 options[:SSLEnable] = true
                 options[:SSLVerifyClient] = ::OpenSSL::SSL::VERIFY_NONE
-                options[:SSLCertificate] = opts[:ssl_cert]
-                options[:SSLPrivateKey] = opts[:ssl_private_key]
+                options[:SSLCertificate] = OpenSSL::X509::Certificate.new(File.open(opts[:ssl_cert]).read)
+                options[:SSLPrivateKey] = OpenSSL::PKey::RSA.new(File.open(opts[:ssl_private_key]).read)
+#                options[:SSLCertName] = [ [ "CN",WEBrick::Utils::getservername ] ]
             end
             @server = ::WEBrick::HTTPServer.new(options)
             @server.mount("/", WEBrickServlet)

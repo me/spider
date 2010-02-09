@@ -14,15 +14,15 @@ module Spider; module WebDAV; module VFS
 			end
 			
 			def ctime
-				@stat.ctime
+				@stat.ctime || Time.now
 			end
 			
 			def mtime
-				@stat.mtime
+				@stat.mtime || Time.now
 			end
 			
 			def etag
-				sprintf('%x-%x-%x', @stat.ino, @stat.size, @stat.mtime.to_i)
+				sprintf('%x-%x-%x', @stat.ino, self.size, self.mtime.to_i)
 			end
 			
 			def content_type

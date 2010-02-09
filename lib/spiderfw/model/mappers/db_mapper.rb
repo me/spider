@@ -5,6 +5,7 @@ require 'fileutils'
 module Spider; module Model; module Mappers
 
     class DbMapper < Spider::Model::Mapper
+        include Spider::Model::Storage::Db
 
         def initialize(model, storage)
             super
@@ -196,11 +197,17 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         # Implements the Mapper#count method doing a count SQL query.
-        def count(condition)
-            q = Query.new(condition, @model.primary_keys)
+        def count(condition_or_query)
+            if (condition_or_query.is_a?(Query))
+                q = condition_or_query.clone
+            else
+                q = Query.new(condition_or_query, @model.primary_keys) 
+            end
             prepare_query(q)
             storage_query = prepare_select(q)
             storage_query[:query_type] = :count
+            storage_query.delete(:order)
+            storage_query.delete(:limit)
             return @storage.query(storage_query)
         end
         
@@ -238,12 +245,12 @@ module Spider; module Model; module Mappers
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
                 result_value = nil
-                next if !element || element.integrated?
+                next if !element || element.integrated? || !have_references?(element)
                 if (element.model? && schema.has_foreign_fields?(element.name))
                     pks = {}
                     keys_set = true
                     element.model.primary_keys.each do |key| 
-                        key_val = result[schema.foreign_key_field(element_name, key.name)]
+                        key_val = result[schema.foreign_key_field(element_name, key.name).name]
                         keys_set = false unless key_val
                         pks[key.name] = map_back_value(key.type, key_val)
                     end
@@ -253,7 +260,7 @@ module Spider; module Model; module Mappers
                         # null keys, nothing to set
 #                    end
                 elsif !element.model?
-                    data[element_name] = map_back_value(element.type, result[schema.field(element_name)])
+                    data[element_name] = map_back_value(element.type, result[schema.field(element_name).name])
                 end
             end
             begin
@@ -269,7 +276,7 @@ module Spider; module Model; module Mappers
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
                     polym_request.keys.each do |element_name|
-                        field = model.mapper.schema.field(element_name)
+                        field = model.mapper.schema.field(element_name).name
                         res_field = "#{model.mapper.schema.table}_#{field}"
                         polym_result[field] = result[res_field] if result[res_field]
                     end
@@ -301,6 +308,7 @@ module Spider; module Model; module Mappers
             condition, joins = prepare_condition(query.condition)
             elements = query.request.keys.select{ |k| mapped?(k) }
             keys = []
+            primary_keys = []
             types = {}
             if (query.limit && query.order.empty?)
                 @model.primary_keys.each do |key|
@@ -315,20 +323,19 @@ module Spider; module Model; module Mappers
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
                 if (!element.model?)
-                    field = schema.qualified_field(el)
-                    unless seen_fields[field]
+                    field = schema.field(el)
+                    unless seen_fields[field.name]
                         keys << field
-                        types[field] = map_type(element.type)
-                        seen_fields[field] = true
+                        primary_keys << field if element.primary_key?
+                        seen_fields[field.name] = true
                     end
                 elsif (!element.multiple?)
                     if (schema.has_foreign_fields?(el))
                         element.model.primary_keys.each do |key|
-                            field = schema.qualified_foreign_key_field(el, key.name)
-                            unless seen_fields[field]
+                            field = schema.foreign_key_field(el, key.name)
+                            unless seen_fields[field.name]
                                 keys << field
-                                types[field]  = map_type(key.type)
-                                seen_fields[field] = true
+                                seen_fields[field.name] = true
                             end
                         end
                     end
@@ -342,9 +349,11 @@ module Spider; module Model; module Mappers
                     # end
                 end
             end
-            if (query.request.polymorphs?)
+            if (query.request.polymorphs? || !query.condition.polymorphs.empty?)
                 only_conditions = {:conj => 'or', :values => []} if (query.request.only_polymorphs?)
-                query.request.polymorphs.each do |model, polym_request|
+                polymorphs = (query.request.polymorphs.keys + query.condition.polymorphs).uniq
+                polymorphs.each do |model|
+                    polym_request = query.request.polymorphs[model] || Request.new
                     extension_element = model.extended_models[@model]
                     model.mapper.prepare_query_request(polym_request)
                     polym_request.reject!{|k, v| 
@@ -390,7 +399,7 @@ module Spider; module Model; module Mappers
             return {
                 :query_type => :select,
                 :keys => keys,
-                :types => types,
+                :primary_keys => primary_keys,
                 :tables => tables,
                 :condition => condition,
                 :joins => joins,
@@ -447,7 +456,7 @@ module Spider; module Model; module Mappers
                         end
                     elsif (element.model.primary_keys.length == 1 )
                         new_v = Condition.new
-                        if (have_references?(element.name))
+                        if (model.mapper.have_references?(element.name))
                             new_v.set(element.model.primary_keys[0].name, comp, v)
                         else
                             new_v.set(element.reverse, comp, v)
@@ -470,7 +479,7 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
@@ -660,7 +669,7 @@ module Spider; module Model; module Mappers
                         el_joins, el_model, el = get_deep_join(el_name)
                         joins += el_joins
                         owner_func.mapper_fields ||= {}
-                        owner_func.mapper_fields[el.name] = el_model.mapper.schema.qualified_field(el.name)
+                        owner_func.mapper_fields[el.name] = el_model.mapper.schema.field(el.name)
                     end
                     field = storage.function(order_element)
                     fields << [field, direction]
@@ -669,10 +678,10 @@ module Spider; module Model; module Mappers
                     if (el.model?)
                         # FIXME: integrated elements
                         el.model.primary_keys.each do |pk|
-                            fields << [el.model.mapper.schema.qualified_field(pk.name), direction]
+                            fields << [el.model.mapper.schema.field(pk.name), direction]
                         end
                     else
-                        field = el_model.mapper.schema.qualified_field(el.name)
+                        field = el_model.mapper.schema.field(el.name)
                         fields << [field, direction]
                     end
                     joins += el_joins
@@ -825,7 +834,7 @@ module Spider; module Model; module Mappers
         def get_schema
             schema = @model.superclass.mapper.get_schema() if (@model.attributes[:inherit_storage])
             if (@schema_define_proc)
-                schema =  Spider::Model::Storage::Db::DbSchema.new
+                schema =  DbSchema.new
                 schema.instance_eval(&@schema_define_proc)
             end
             schema = generate_schema(schema)
@@ -838,11 +847,10 @@ module Spider; module Model; module Mappers
         # Autogenerates schema. Returns a DbSchema.
         def generate_schema(schema=nil)
             had_schema = schema ? true : false
-            schema ||= Spider::Model::Storage::Db::DbSchema.new
+            schema ||= DbSchema.new
             n = @model.name.sub('::Models', '')
             n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
             schema.table ||= @model.attributes[:db_table] || @storage.table_name(n)
-            primary_key_columns = []
             integrated_pks = []
             @model.each_element do |element|
                 if element.integrated?
@@ -855,9 +863,9 @@ module Spider; module Model; module Mappers
                 next if had_schema && schema.pass[element.name]
                 next if element.attributes[:added_reverse] && element.has_single_reverse?
                 if (!element.model?)
-                    current_column = schema.columns[element.name] || {}
+                    column = schema.columns[element.name]
                     storage_type = Spider::Model.base_type(element.type)
-                    db_attributes = current_column[:attributes]
+                    db_attributes = column.attributes if column
                     if (!db_attributes || db_attributes.empty?)
                         db_attributes = @storage.column_attributes(storage_type, element.attributes)
                         db_attributes.merge(element.attributes[:db]) if (element.attributes[:db]) 
@@ -865,14 +873,15 @@ module Spider; module Model; module Mappers
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
                         end
                     end
-                    column_name = current_column[:name] || element.attributes[:db_column_name] || @storage.column_name(element.name)
-                    column_type = current_column[:type] || element.attributes[:db_column_type] || @storage.column_type(storage_type, element.attributes)
-                    schema.set_column(element.name,
-                        :name => column_name,
-                        :type => column_type,
-                        :attributes => db_attributes
-                    )
-                    primary_key_columns << column_name if element.primary_key?
+                    column_type = element.attributes[:db_column_type] || @storage.column_type(storage_type, element.attributes)
+                    unless column
+                        column_name = element.attributes[:db_column_name] || @storage.column_name(element.name)
+                        column = Field.new(schema.table, column_name, column_type)
+                    end
+                    column.type ||= column_type
+                    column.attributes = db_attributes                        
+                    column.primary_key = true if element.primary_key?
+                    schema.set_column(element.name, column)
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
                     if (!element.multiple?) # 1/n <-> 1
                         current_schema = schema.foreign_keys[element.name] || {}
@@ -893,30 +902,20 @@ module Spider; module Model; module Mappers
                                 :length => key_attributes[:length],
                                 :precision => key_attributes[:precision]
                             }
-                            current = current_schema[key.name] || {}
-                            c_name = element.attributes[:db_column_name]
-                            # if (element.attributes[:integrated_model] && element.model == @model.superclass && 
-                            #                                 @model.elements[key.name].integrated_from.name == element.name)
-                            #                                 c_name = @storage.column_name(key.name)
-                            #                             else
-                            c_name ||= @storage.column_name("#{element.name}_#{key.name}")
-                            # end
-                            column_name = current[:name] || c_name
-                            column_type = current[:type] || element.attributes[:db_column_type] || @storage.column_type(key_type, key_attributes)
-                            column_attributes = current[:attributes] || @storage.column_attributes(key_type, key_attributes)
-                            schema.set_foreign_key(element.name, key.name, 
-                                :name => column_name,
-                                :type => column_type,
-                                :attributes => column_attributes
-                            )
-                            if (element.primary_key? || integrated_pks.include?([element.name, key.name]))
-                                primary_key_columns << column_name
+                            column = current_schema[key.name]
+                            column_type = element.attributes[:db_column_type] || @storage.column_type(key_type, key_attributes)
+                            unless column
+                                column_name = element.attributes[:db_column_name] || @storage.column_name("#{element.name}_#{key.name}")
+                                column_attributes = @storage.column_attributes(key_type, key_attributes)
+                                column = Field.new(schema.table, column_name, column_name, column_attributes)
                             end
+                            column.type ||= column_type
+                            column.primary_key = true if (element.primary_key? || integrated_pks.include?([element.name, key.name]))
+                            schema.set_foreign_key(element.name, key.name, column)
                         end
                     end
                 end
             end
-            schema.set_primary_key(primary_key_columns) if primary_key_columns.length > 0
             @model.sequences.each do |name|
                 schema.set_sequence(name, @storage.sequence_name("#{schema.table}_#{name}"))
             end
@@ -971,7 +970,7 @@ module Spider; module Model; module Mappers
                     next if seen[db_name]
                     if storage.sequence_exists?(db_name)
                         if (options[:update_sequences])
-                            sql = "SELECT MAX(#{schema.field(element_name)}) AS M FROM #{sequence_table}"
+                            sql = "SELECT MAX(#{schema.field(element_name).name}) AS M FROM #{sequence_table}"
                             res = @storage.execute(sql)
                             max = res[0]['M'].to_i
                             storage.update_sequence(db_name, max+1)

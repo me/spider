@@ -6,7 +6,7 @@ module Spider; module Auth
         include HTTP
         
         def before(action='', *arguments)
-            if (uid = check_digest_auth(DigestAuthenticator.new))
+            if (uid = check_digest_auth(Spider::Auth::DigestUser))
                 @request.session['uid'] = uid
                 Spider::Auth.current_user = uid
             end

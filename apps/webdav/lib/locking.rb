@@ -168,6 +168,8 @@ module Locking
 	
 	def unlock(resource, token, uid = nil)
 		locks = locked?(resource)
+		Spider::Logger.debug("UNLOCKING #{resource} WITH TOKEN #{token} AND UID #{uid}")
+		Spider::Logger.debug(locks)
 		match = nil
 
 		if locks
@@ -179,6 +181,7 @@ module Locking
 			end
 		end
 		
+		Spider::Logger.error("NO MATCH FOR UNLOCK!") unless match
 		return false unless match
 		locks.delete(match)
 		

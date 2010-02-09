@@ -45,6 +45,7 @@ module Spider; module Auth
                 u = user.authenticate(:login, :username => @request.params['login'], :password => @request.params['password'])
                 return u if u
             end
+            return nil
         end
         
         __.html

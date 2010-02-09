@@ -504,7 +504,7 @@ module Spider; module Model
                     end
                     set.total_rows = result.total_rows if (!was_loaded)
                     result.each do |row|
-                        obj =  map(query.request, row, set.model)
+                        obj =  map(query.request, row, @model) # set.model ?!?
                         next unless obj
                         merge_object(set, obj)
                         @raw_data[obj.object_id] = row
@@ -687,8 +687,10 @@ module Spider; module Model
         
         def split_condition_polymorphs(condition, polymorphs)
             conditions = {}
+            return conditions if condition.polymorph && polymorphs.include?(condition.polymorph)
+            model = condition.polymorph ? condition.polymorph : @model
             condition.each_with_comparison do |el, val, comp|
-                if (!@model.has_element?(el))
+                if (!model.has_element?(el))
                     polymorphs.each do |polym|
                         if (polym.has_element?(el))
                             conditions[polym] ||= Condition.new
@@ -771,10 +773,10 @@ module Spider; module Model
                 end
                 if (element.type < Spider::DataType && !v.is_a?(element.type))
                     condition.delete(k)
-                    condition[k] = element.type.from_value(v)
+                    condition.set(k, c, element.type.from_value(v))
                 elsif element.type == DateTime && v && !v.is_a?(Date)
                     condition.delete(k)
-                    condition[k] = DateTime.parse(v)
+                    condition.set(k, c, DateTime.parse(v))
                 end
                     
             end

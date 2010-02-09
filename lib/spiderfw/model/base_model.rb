@@ -536,6 +536,8 @@ module Spider; module Model
                 attributes[:element_query] = element_name
                 attributes[:association] = :element_query
                 attributes[:lazy] = true
+                attributes.delete(:add_reverse)
+                attributes.delete(:add_multiple_reverse)
                 if (orig_element.attributes[:condition])
                     cond = orig_element.attributes[:condition].clone
                     cond = cond.and(attributes[:condition]) if attributes[:condition]

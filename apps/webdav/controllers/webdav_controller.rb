@@ -311,11 +311,14 @@ module Spider; module WebDAV
                 debug(lock)
                 if not lock
                     @response.headers["Content-Type"] = 'text/xml; charset="utf-8"'	
-                    @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS	
-                    m = build_multistat([[request_uri, elem_status(Spider::HTTP::WEBDAV_LOCKED)]]).to_s
-                    debug("MULTISTAT: #{m}")
-                    $out << m
+                    @response.status = Spider::HTTP::WEBDAV_LOCKED
                     done
+                                        # 
+                                        # @response.status = Spider::HTTP::WEBDAV_MULTI_STATUS  
+                                        # m = build_multistat([[request_uri, elem_status(Spider::HTTP::WEBDAV_LOCKED)]]).to_s
+                                        # debug("MULTISTAT: #{m}")
+                                        # $out << m
+                                        # done
                 end
 
                 @response.headers['Lock-Token'] = "<opaquelocktoken:#{lock.token}>" if lock
@@ -340,13 +343,14 @@ module Spider; module WebDAV
     	def do_UNLOCK(path)
     		raise HTTPStatus.NOT_IMPLEMENTED unless vfs.locking?
 
-    		if not @request.env['HTTP_LOCK_TOKEN'] =~ /<opaquelocktoken:(.*)>/
+    		unless (@request.env['HTTP_LOCK_TOKEN'] =~ /<opaquelocktoken:(.*)>/) || (@request.env['HTTP_LOCK_TOKEN'] =~ /opaquelocktoken:(.*)/)
     			raise BadRequest
     		end
 
     		if vfs.unlock(path, $1, @request.user_id)
     			raise HTTPStatus.NO_CONTENT
     		else
+    		    Spider::Logger.error("UNLOCK OF #{path} FAILED!!!")
     			raise Forbidden
     		end
     	end
@@ -556,14 +560,16 @@ module Spider; module WebDAV
     	end
 
     	def get_prop_dav_creationdate(file, props)
-    		gen_element "D:creationdate", props.ctime.xmlschema
+    	    cd = props.ctime ? props.ctime.xmlschema : (Time.now).xmlschema
+    		gen_element "D:creationdate", cd
     	end
 
     	def get_prop_dav_getlastmodified(file, props)
+    	    mtime = props.mtime || Time.now
     		if @request.env['HTTP_USER_AGENT'] and @request.env['HTTP_USER_AGENT'] =~ /gvfs/
-    			d = props.mtime.xmlschema
+    			d = mtime.xmlschema
     		else
-    			d = props.mtime.httpdate
+    			d = mtime.httpdate
     		end
 
     		gen_element "D:getlastmodified", d

@@ -222,15 +222,15 @@ module Spider; module Model; module Storage; module Db
                      #       i = query[:keys].length < 1
                      #   end
                      transformed = "O#{replace_cnt += 1}"
-                     replaced_fields[field] = transformed
+                     replaced_fields[field.to_s] = transformed
+                     if (field.type == 'CLOB')
+                         field = "CAST(#{field} as varchar2(100))"
+                     end
                      query[:keys] << "#{field} AS #{transformed}"
                  end
              end
              keys = sql_keys(query)
              order = sql_order(query)
-             if (query[:limit])
-                 keys += ", row_number() over (order by #{order}) oci8_row_num"
-             end
              tables_sql, tables_values = sql_tables(query)
              sql = "SELECT #{keys} FROM #{tables_sql} "
              bind_vars += tables_values
@@ -250,7 +250,16 @@ module Spider; module Model; module Storage; module Db
                  replaced_fields.each do |f, repl|
                      order = order.gsub(f, repl)
                  end
-                 sql = "SELECT * FROM (#{sql}) WHERE #{limit} order by #{order}"
+                 if (!query[:joins].empty?)
+                     pk_sql = query[:primary_keys].join(', ')
+                     distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
+                     distinct_sql += " WHERE #{where}" if where && !where.empty?
+                     data_sql = "SELECT #{keys} FROM #{query[:tables].join(',')} WHERE #{pk_sql} IN (#{distinct_sql}) order by #{order}"
+                 else
+                     data_sql = "#{sql} order by #{order}"
+                 end
+                 count_sql = "SELECT /*+ FIRST_ROWS(n) */ a.*, ROWNUM oci8_row_num FROM (#{data_sql}) a"
+                 sql = "SELECT * FROM (#{count_sql}) WHERE #{limit}"
              else
                  sql += "ORDER BY #{order} " if order && !order.empty?
              end
