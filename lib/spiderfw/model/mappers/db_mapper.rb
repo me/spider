@@ -368,7 +368,7 @@ module Spider; module Model; module Mappers
                     end
                     only_conditions[:values] << polym_only if query.request.only_polymorphs?
                     polym_select = model.mapper.prepare_select(Query.new(nil, polym_request)) # FIXME!
-                    polym_select[:keys].map!{ |key| "#{key} AS #{key.name.gsub('.', '_')}"}
+                    polym_select[:keys].map!{ |key| "#{key} AS #{key.to_s.gsub('.', '_')}"}
                     keys += polym_select[:keys]
                     join_fields = {}
                     @model.primary_keys.each do |key|
