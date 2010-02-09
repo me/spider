@@ -23,6 +23,7 @@ module Spider; module Model; module Storage; module Db
             @junction_tables = {}
             @sequences = {}
             @pass = {}
+            @foreign_key_constraints = []
         end
         
         # Returns the main table name.
@@ -103,6 +104,11 @@ module Spider; module Model; module Storage; module Db
             @foreign_keys[element_name][element_key] = field
         end
         
+        def set_foreign_key_constraint(name, table, keys, options={})
+            @foreign_key_constraints << ForeignKeyConstraint.new(name, table, keys, options)
+        end
+        
+        
         # Sets the db name for a named sequence.
         def set_sequence(name, db_name)
             @sequences[name] = db_name
@@ -137,6 +143,7 @@ module Spider; module Model; module Storage; module Db
                 end
             end
             schemas[@table.name][:attributes][:primary_keys] = primary_keys.map{ |k| k.name }
+            schemas[@table.name][:attributes][:foreign_key_constraints] = @foreign_key_constraints
             return schemas
         end
         
@@ -174,7 +181,7 @@ module Spider; module Model; module Storage; module Db
         
         def initialize(table, name, type, attributes={})
             @table = table
-            @name = name
+            @name = name.to_s
             @type = type
             @attributes = attributes
             @table.add_field(self)
@@ -195,7 +202,25 @@ module Spider; module Model; module Storage; module Db
             "#{@table.name}.#{@name}"
         end
         
+    end
+    
+    class ForeignKeyConstraint
+        attr_reader :name, :table, :fields, :options
         
+        def initialize(name, table, fields, options={})
+            @name = name.to_s
+            @table = table
+            @fields = fields
+            @options = options
+        end
+        
+        def ==(other)
+            other.table == @table && other.fields == @fields && other.options == @options
+        end
+        
+        def eq?(other)
+            self ==  other
+        end
         
     end
     

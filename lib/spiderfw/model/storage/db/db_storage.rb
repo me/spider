@@ -590,12 +590,27 @@ module Spider; module Model; module Storage; module Db
                 name, type, attributes = field
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
-            if (alter_attributes[:primary_keys])
-                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (current && current[:attributes][:primary_keys])
+            if (alter_attributes[:primary_keys] && !alter_attributes[:primary_keys].empty?)
+                sqls << "ALTER #{table_name} DROP PRIMARY KEY" if (!current[:primary_keys].empty? && current[:primary_keys] != alter_attributes[:primary_keys])
                 sqls << "ALTER TABLE #{table_name} ADD PRIMARY KEY ("+alter_attributes[:primary_keys].join(', ')+")"
+            end
+            cur_fkc = current && current[:foreign_key_constraints] ? current[:foreign_key_constraints] : []
+            alter_attributes[:foreign_key_constraints] ||= []
+            cur_fkc.each do |fkc|
+                next if alter_attributes[:foreign_key_constraints].include?(fkc)
+                sqls << "ALTER TABLE #{table_name} DROP FOREIGN KEY FK_#{fkc.name}"
+            end
+            if (alter_attributes[:foreign_key_constraints])
+                alter_attributes[:foreign_key_constraints].each do |fkc|
+                    next if cur_fkc.include?(fkc)
+                    sql = "ALTER TABLE #{table_name} ADD CONSTRAINT FK_#{fkc.name} FOREIGN KEY (#{fkc.fields.keys.join(',')}) "
+                    sql += "REFERENCES #{fkc.table} (#{fkc.fields.values.join(',')})"
+                    sqls << sql
+                end
             end
             return sqls
         end
+        
         
         # Executes a create table structured description.
         def create_table(create)

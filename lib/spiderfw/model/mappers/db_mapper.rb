@@ -885,6 +885,7 @@ module Spider; module Model; module Mappers
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
                     if (!element.multiple?) # 1/n <-> 1
                         current_schema = schema.foreign_keys[element.name] || {}
+                        foreign_key_constraints = {}
                         element.type.primary_keys.each do |key|
                             if key.model? # fixme: only works with single primary key model (after the first)
                                 curr_key = key
@@ -913,6 +914,7 @@ module Spider; module Model; module Mappers
                             column.primary_key = true if (element.primary_key? || integrated_pks.include?([element.name, key.name]))
                             schema.set_foreign_key(element.name, key.name, column)
                         end
+
                     end
                 end
             end
@@ -922,6 +924,28 @@ module Spider; module Model; module Mappers
             return schema
         end
         
+        def compute_foreign_key_constraints
+            @model.each_element do |element|
+                foreign_key_constraints = {}
+                next if element.integrated?
+                next unless mapped?(element)
+                next if element.attributes[:added_reverse] && element.has_single_reverse?
+                next unless element.model?
+                next if element.multiple?
+                next unless element.type.mapper.storage == @storage
+                element.type.primary_keys.each do |key|
+                    column =  self.schema.foreign_key_field(element.name, key.name)
+                    column_name = column.name
+                    foreign_key_constraints[column_name] = key.integrated? ? \
+                    element.type.mapper.schema.foreign_key_field(key.integrated_from.name, key.integrated_from_element).name : \
+                    element.type.mapper.schema.column(key.name).name
+                end
+                unless foreign_key_constraints.empty?
+                    self.schema.set_foreign_key_constraint("#{schema.table.name}_#{element.name}", element.type.mapper.schema.table.name, foreign_key_constraints)
+                end
+            end
+        end
+
         # Returns an array of all keys, "dereferencing" model keys.
         def collect_real_keys(element, path=[]) # :nodoc:
             real_keys = []
@@ -937,6 +961,7 @@ module Spider; module Model; module Mappers
 
         # Modifies the storage according to the schema.
         def sync_schema(force=false, options={})
+            compute_foreign_key_constraints
             schema_description = schema.get_schemas
             sequences = {}
             sequences[schema.table] = schema.sequences
@@ -951,7 +976,10 @@ module Spider; module Model; module Mappers
                 # sequences.merge!(el.model.mapper.schema.sequences)
             end
             schema_description.each do |table_name, table_schema|
-                table_attributes = {:primary_keys => table_schema[:attributes][:primary_keys]}
+                table_attributes = {
+                    :primary_keys => table_schema[:attributes][:primary_keys],
+                    :foreign_key_constraints => table_schema[:attributes][:foreign_key_constraints]
+                }
                 if @storage.table_exists?(table_name)
                     alter_table(table_name, table_schema[:columns], table_attributes, force)
                 else
@@ -1034,12 +1062,17 @@ module Spider; module Model; module Mappers
             if (current[:primary_keys] != attributes[:primary_keys])
                 alter_attributes[:primary_keys] = attributes[:primary_keys]
             end
+            if (attributes[:foreign_key_constraints])
+                
+            end
+            alter_attributes[:foreign_key_constraints] = attributes[:foreign_key_constraints]
             @storage.alter_table({
                 :table => name,
                 :add_fields => add_fields,
                 :alter_fields => alter_fields,
                 :all_fields => all_fields,
-                :attributes => alter_attributes
+                :attributes => alter_attributes,
+                :current => current
             })
         end
         

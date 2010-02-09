@@ -273,6 +273,7 @@ module Spider; module Model; module Storage; module Db
          def describe_table(table)
              columns = {}
              primary_keys = []
+             foreign_keys = []
              connection do |c|
                  res = c.query("select * from #{table} where 1=0")
                  fields = res.fetch_fields
@@ -300,9 +301,23 @@ module Spider; module Model; module Storage; module Db
                      end
                      columns[f.name] = col
                      primary_keys << f.name if f.is_pri_key?
+                 end                 
+                 res = c.query("select * from INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE constraint_schema = '#{@db_name}' and table_name = '#{table}'")
+                 while h = res.fetch_hash
+                     fk_table = h['REFERENCED_TABLE_NAME']
+                     if fk_table
+                         fk_fields1 = h['COLUMN_NAME'].split(',')
+                         fk_fields2 = h['REFERENCED_COLUMN_NAME'].split(',')
+                         fk_name = h['CONSTRAINT_NAME']
+                         fk_name = $1 if fk_name =~ /^FK_(.+)/
+                         fk_fields = {}
+                         fk_fields1.each_index{ |i| fk_fields[fk_fields1[i]] = fk_fields2[i] }
+                         foreign_keys << ForeignKeyConstraint.new(fk_name, fk_table, fk_fields)
+                     end
                  end
+                 
              end
-             return {:columns => columns, :primary_keys => primary_keys}
+             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
          end
 
          def table_exists?(table)
