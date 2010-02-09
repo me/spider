@@ -968,6 +968,7 @@ module Spider; module Model; module Mappers
 
             @model.elements_array.select{ |el| el.attributes[:anonymous_model] }.each do |el|
                 next if el.model.mapper.class != self.class
+                el.model.mapper.compute_foreign_key_constraints
                 schema_description.merge!(el.model.mapper.schema.get_schemas)
                 sequences[el.model.mapper.schema.table] ||= {}
                 sequences[el.model.mapper.schema.table].merge!(el.model.mapper.schema.sequences)
