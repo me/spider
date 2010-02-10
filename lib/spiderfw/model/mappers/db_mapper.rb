@@ -319,6 +319,14 @@ module Spider; module Model; module Mappers
             order, order_joins = prepare_order(query)
             joins += order_joins if order_joins
             seen_fields = {}
+            model_pks = []
+            @model.primary_keys.each do |pk|
+                if (pk.integrated?)
+                    model_pks << pk.integrated_from.name
+                else
+                    model_pks << pk.name
+                end
+            end
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
@@ -326,7 +334,7 @@ module Spider; module Model; module Mappers
                     field = schema.field(el)
                     unless seen_fields[field.name]
                         keys << field
-                        primary_keys << field if element.primary_key?
+                        primary_keys << field if model_pks.include?(el)
                         seen_fields[field.name] = true
                     end
                 elsif (!element.multiple?)
@@ -335,6 +343,7 @@ module Spider; module Model; module Mappers
                             field = schema.foreign_key_field(el, key.name)
                             unless seen_fields[field.name]
                                 keys << field
+                                primary_keys << field if model_pks.include?(el)
                                 seen_fields[field.name] = true
                             end
                         end
