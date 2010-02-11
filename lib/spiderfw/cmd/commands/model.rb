@@ -26,6 +26,7 @@ class ModelCommand < CmdParse::Command
         
         sync_cmd.set_execution_block do |req_models|
             require 'spiderfw'
+            require 'spiderfw/model/mappers/db_mapper'
             req_models || []
             unsafe_fields = {}
             req_models = Spider.apps.values if (req_models.empty?)
@@ -65,7 +66,6 @@ class ModelCommand < CmdParse::Command
                         r = STDIN.gets.chomp.downcase
                         yes_chr = _("yes")[0].chr
                         no_chr = _("no")[0].chr
-                        debugger
                         if (r == _("yes") || (yes_chr != no_chr && r == yes_chr)) 
                             Spider::Model.sync_schema(mod, true, :no_sync => true, :drop_tables => @drop_tables)
                         end
