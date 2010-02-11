@@ -37,7 +37,7 @@ module Spider; module Model; module Storage; module Db
         def get_connection
             Thread.current[:db_connections] ||= {}
             if conn = Thread.current[:db_connections][@connection_params]
-                 Spider.logger.debug("DB Pool (#{Thread.current}): returning thread connection")
+                 # Spider.logger.debug("DB Pool (#{Thread.current}): returning thread connection")
                 @free_connections.delete(conn)
                 conn
             else
@@ -47,10 +47,10 @@ module Spider; module Model; module Storage; module Db
         
         def checkout
             @connection_mutex.synchronize do
-                Spider.logger.debug("DB Pool (#{Thread.current}): checkout (max: #{@max_size})")
+                # Spider.logger.debug("DB Pool (#{Thread.current}): checkout (max: #{@max_size})")
                 1.upto(@retry) do
                     if @free_connections.empty?
-                        Spider.logger.debug("DB Pool (#{Thread.current}): no free connection")
+                        # Spider.logger.debug("DB Pool (#{Thread.current}): no free connection")
                         if @connections.length < @max_size
                             create_new_connection
                         else
@@ -59,11 +59,11 @@ module Spider; module Model; module Storage; module Db
                             end
                         end
                     else
-                        Spider.logger.debug("DB Pool (#{Thread.current}): had free connection")
+                        # Spider.logger.debug("DB Pool (#{Thread.current}): had free connection")
                     end
                     conn = @free_connections.pop
                     if @provider.connection_alive?(conn)
-                        Spider.logger.debug("DB Pool (#{Thread.current}): returning #{conn} (#{@free_connections.length} free)")
+                        # Spider.logger.debug("DB Pool (#{Thread.current}): returning #{conn} (#{@free_connections.length} free)")
                         return conn
                     else
                         remove(conn)
@@ -74,7 +74,7 @@ module Spider; module Model; module Storage; module Db
         
         def release(conn)
             @connection_mutex.synchronize do
-                Spider.logger.debug("DB Pool (#{Thread.current}): releasing #{conn}")
+                # Spider.logger.debug("DB Pool (#{Thread.current}): releasing #{conn}")
                 @free_connections << conn
                 @queue.signal
                 Thread.current[:db_connections].delete(@connection_params)
