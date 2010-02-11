@@ -22,6 +22,7 @@ class ModelCommand < CmdParse::Command
                 @update_sequences = true
             }
             opt.on("--non-managed", _("Process also non managed models"), "-m"){ |m| @non_managed = true}
+            opt.on("--no-fk-constraints", _("Don't create foreign key constraints"), "-c"){ |c| @no_fkc = true }
         end
         
         sync_cmd.set_execution_block do |req_models|
@@ -52,7 +53,7 @@ class ModelCommand < CmdParse::Command
                 models.each do |model|
                     begin
                         Spider::Model.sync_schema(model, @force, 
-                        :drop_fields => @drop, :update_sequences => @update_sequences)
+                        :drop_fields => @drop, :update_sequences => @update_sequences, :no_foreign_key_constraints => @no_fkc)
                     rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
                         unsafe_fields[model] = exc.fields
                     end 
