@@ -26,7 +26,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
             
         end
         
-        def disconnect
+        def release
             begin
                 @conn.autocommit = true if @conn
                 super
@@ -60,12 +60,12 @@ module Spider; module Model; module Storage; module Db; module Connectors
         
         def commit
             @conn.commit if @conn
-            disconnect
+            release
         end
         
         def rollback
             @conn.rollback
-            disconnect
+            release
         end
         
         def execute(sql, *bind_vars)
@@ -109,11 +109,11 @@ module Spider; module Model; module Storage; module Db; module Connectors
                     return res
                 end
             rescue => exc
-                disconnect
+                release
                 raise exc
             ensure
                 @stmt.drop if @stmt
-                disconnect if @conn && !in_transaction?
+                release if @conn && !in_transaction?
             end
          end
          
