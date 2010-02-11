@@ -207,6 +207,24 @@ module Spider; module Model; module Storage; module Db
          #   SQL methods                                              #
          ##############################################################
          
+         def sql_drop_primary_key(table_name)
+             constraint_name = nil
+             connection do |conn|
+                 res = conn.exec("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS cons, user_cons_columns cols 
+                                    WHERE cons.constraint_type = 'P'
+                                    AND cons.constraint_name = cols.constraint_name
+                                    AND cols.table_name = '#{table_name}'")
+                 if h = res.fetch_hash
+                     constraint_name = h['CONSTRAINT_NAME']
+                 end
+             end
+             "ALTER TABLE #{table_name} DROP CONSTRAINT #{constraint_name}"
+         end
+         
+         def sql_drop_foreign_key(table_name, key_name)
+             "ALTER TABLE #{table_name} DROP CONSTRAINT #{key_name}"
+         end
+         
          
          def sql_select(query)
              @bind_cnt = 0
@@ -375,30 +393,36 @@ module Spider; module Model; module Storage; module Db
                      col.delete(:length) if (col[:precision])
                      columns[c.name] = col
                  end
-                 res = conn.exec("SELECT cols.table_name, cols.column_name, cols.position, cons.status, cons.owner
+                 res = conn.exec("SELECT cols.table_name, cols.COLUMN_NAME, cols.position, cons.status, cons.owner
                  FROM user_constraints cons, user_cons_columns cols
                  WHERE cons.constraint_type = 'P'
                  AND cons.constraint_name = cols.constraint_name
                  AND cols.table_name = '#{table}'")
                  while h = res.fetch_hash
-                     primary_keys << h['column_name']
+                     primary_keys << h['COLUMN_NAME']
                  end
-                 res = conn.exec("SELECT cons.constraint_name, cols.table_name as table, cols.column_name as column,
-                 cons.table_name as referenced_table, cons.column_name as referenced_column
-                 FROM user_constraints cons, user_cons_columns cols
-                 WHERE cons.constraint_type = 'R'
-                 AND cons.constraint_name = cols.constraint_name
-                 AND cols.table_name = '#{table}'")
+                 res = conn.exec("SELECT cons.constraint_name as CONSTRAINT_NAME, cols.column_name as REFERENCED_COLUMN,
+                 cols.table_name as REFERENCED_TABLE, cons.column_name as COLUMN_NAME
+                 FROM user_tab_columns col
+                     join user_cons_columns cons
+                       on col.table_name = cons.table_name 
+                      and col.column_name = cons.column_name
+                     join user_constraints cc 
+                       on cons.constraint_name = cc.constraint_name
+                     join user_cons_columns cols 
+                       on cc.r_constraint_name = cols.constraint_name 
+                      and cons.position = cols.position
+                 WHERE cc.constraint_type = 'R'
+                 AND cons.table_name = '#{table}'")
                  while h = res.fetch_hash
-                     fk_name = h['constraint_name']
-                     fk_name = $1 if fk_name =~ /^FK_(.+)/
-                     o_foreign_keys[fk_name] ||= {:table => h['referenced_table'], :columns => {}}
-                     o_foreign_keys[fk_name][:columns][h['column']] = h['referenced_column']
+                     fk_name = h['CONSTRAINT_NAME']
+                     o_foreign_keys[fk_name] ||= {:table => h['REFERENCED_TABLE'], :columns => {}}
+                     o_foreign_keys[fk_name][:columns][h['COLUMN_NAME']] = h['REFERENCED_COLUMN']
                  end
              end
              foreign_keys = []
              o_foreign_keys.each do |fk_name, fk_hash|
-                 foreign_keys << ForeignKeyConstraint.new(kf_name, fk_hash[:table], fk_hash[:columns])
+                 foreign_keys << ForeignKeyConstraint.new(fk_name, fk_hash[:table], fk_hash[:columns])
              end
              return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
 
@@ -466,6 +490,10 @@ module Spider; module Model; module Storage; module Db
          
          def sequence_name(name)
              shorten_identifier(name, 30).upcase
+         end
+         
+         def foreign_key_name(name)
+             shorten_identifier(super, 30)
          end
          
          def schema_field_varchar2_equal?(current, field)
