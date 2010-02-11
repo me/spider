@@ -4,6 +4,7 @@ require 'apps/zoo/models/food'
 module Zoo
     
     class Animal < Spider::Model::Managed
+        remove_element :id
         element :id, String, :primary_key => true
         element :name, String
         element :comment, Text
