@@ -80,8 +80,13 @@ module Spider; module Model; module Storage; module Db
             return conn
         end
         
-        def disconnect
+        def self.disconnect(conn)
+            conn.close
+        end
+        
+        def release
             begin
+                Spider::Logger.debug("MYSQL #{self.object_id} releasing connection #{@conn}")
                 @conn.autocommit(true) if @conn
                 super
             rescue
@@ -119,23 +124,34 @@ module Spider; module Model; module Storage; module Db
             @connection_params = [@host, @user, @pass, @db_name, @port, @sock]
         end
         
-        def start_transaction
+        def do_start_transaction
             connection.autocommit(false)
-            @in_transaction = true
+            connection_attributes[:in_transaction] = true
+        end
+        
+        def savepoint(name)
+            execute("SAVEPOINT #{name}")
+            super
         end
         
         def in_transaction?
-            return @in_transaction ? true : false
+            return connection_attributes[:in_transaction] ? true : false
         end
         
-        def commit
+
+        def do_commit
             @conn.commit if @conn
-            disconnect
+            connection_attributes[:in_transaction] = false
         end
         
-        def rollback
+        def do_rollback
             @conn.rollback
-            disconnect
+            connection_attributes[:in_transaction] = false
+        end
+        
+        def rollback_savepoint(name=nil)
+            execute("ROLLBACK TO #{name}")
+            super
         end
         
         def execute(sql, *bind_vars)
@@ -183,14 +199,14 @@ module Spider; module Model; module Storage; module Db
                     return res
                 end
             rescue => exc
-                disconnect
+                release
                 if (exc.message =~ /Duplicate entry/)
                     raise Spider::Model::Storage::DuplicateKey
                 else
                     raise exc
                 end
             ensure
-                disconnect if @conn && !in_transaction?
+                release if @conn && !in_transaction?
             end
          end
          

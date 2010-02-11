@@ -1,3 +1,4 @@
+require 'spiderfw/model/storage/db/connectors/odbc'
 
 module Spider; module Model
     
@@ -5,6 +6,9 @@ module Spider; module Model
         
         
         def self.get_storage(type, url)
+            Thread.current[:storages] ||= {}
+            Thread.current[:storages][type] ||= {}
+            return Thread.current[:storages][type][url] if Thread.current[:storages][type][url]
             case type
             when 'db'
                 matches = url.match(/^(.+?):\/\/(.+)/)
@@ -39,8 +43,8 @@ module Spider; module Model
                         klass.instance_eval{ include Db::Connectors.const_get(conn_mod)}
                     end
                 end
-                storage = klass.new(url)
-                return storage
+                Thread.current[:storages][type][url] = klass.new(url)
+                return Thread.current[:storages][type][url]
             end
         end
         

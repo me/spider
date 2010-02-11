@@ -1,5 +1,6 @@
 require 'spiderfw/model/storage/base_storage'
 require 'spiderfw/model/mappers/db_mapper'
+require 'spiderfw/model/storage/db/db_connection_pool'
 require 'iconv'
 
 module Spider; module Model; module Storage; module Db
@@ -39,77 +40,36 @@ module Spider; module Model; module Storage; module Db
                 raise "Unimplemented"
             end
             
-            # Returns a connection, drawing from the pool or instantiating a new one.
-            # Arguments are passed to the #new_connection method.
-            # Pool size is configured with 'storage.db.pool.size'.
+            def max_connections
+                nil
+            end
+            
+            def connection_pools
+                @pools ||= {}
+            end
+            
             def get_connection(*args)
-                @connection_semaphore ||= Mutex.new
-                @connections ||= {}
-                @free_connections ||= {}
-                max_connections = Spider.conf.get('storage.db.pool.size')
-                
-                conn = nil
-                connect_exception = nil
-                @connection_semaphore.synchronize{
-                    @free_connections[args] ||= []
-                    @connections[args] ||= []
-                    keep_trying = true
-                    while (!conn && keep_trying)
-                        if (@free_connections[args].empty?)
-                            #Spider::Logger.debug("NO FREE CONNECTION")
-                            if @connections[args].length <= max_connections
-                                begin
-                                    conn = new_connection(*args)
-                                    @connections[args] << conn if conn
-                                rescue => exc
-                                    connect_exception = exc
-                                    keep_trying = false
-                                end
-                                #Spider::Logger.debug("CREATED NEW CONNECTION #{conn}")
-                            else
-                                sleep_cnt = 0
-                                while @free_connections[args].empty? && sleep_cnt < 10000
-                                    sleep(0.001)
-                                    sleep_cnt += 1
-                                end
-                                keep_trying = false if sleep_cnt == 10000
-                                #Spider::Logger.debug("WAITED FOR FREE CONNECTION, GOT #{@free_connections[args].last}")
-                            end
-                        end
-                        unless conn
-                            while (!conn && !@free_connections[args].empty?)
-                                conn = @free_connections[args].pop
-                                unless connection_alive?(conn)
-                                    remove_connection_nosync(conn, args)
-                                    conn = nil
-                                end
-                            end
-                        end
-                    end
-                    #Spider::Logger.debug("GOT CONNECTION #{args}")
-                    
-                }
-                raise connect_exception if connect_exception
-                raise StorageException, "Unable to get a connection" unless conn
-                return conn
+                @pools ||= {}
+                @pools[args] ||= DbConnectionPool.new(args, self)
+                @pools[args].get_connection
             end
             
             # Frees a connection, relasing it to the pool
             def release_connection(conn, conn_params)
                 return unless conn
-                @free_connections[conn_params] << conn
+                return unless @pools && @pools[conn_params]
+                @pools[conn_params].release(conn)
             end
             
             # Removes a connection from the pool.
             def remove_connection(conn, conn_params)
-                @connection_semaphore.synchronize{
-                    remove_connection_nosync(conn, conn_params)
-                }
+                return unless conn
+                return unless @pools && @pools[conn_params]
+                @pools[conn_params].remove(conn)
             end
             
-            def remove_connection_nosync(conn, conn_params) #:nodoc:
-                @free_connections[conn_params].delete(conn)
-                @connections[conn_params].delete(conn)
+            def disconnect(conn)
+                raise "Virtual"
             end
                 
             # Checks whether a connection is still alive. Must be implemented by subclasses.
@@ -117,6 +77,10 @@ module Spider; module Model; module Storage; module Db
                 raise "Virtual"
             end
             
+        end
+        
+        def connection_pool
+            self.class.connection_pools[@connection_params]
         end
         
         # The constructor takes the connection URL, which will be parsed into connection params.
@@ -133,24 +97,37 @@ module Spider; module Model; module Storage; module Db
         def connected?
             @conn != nil
         end
+
         
         # Returns the current connection, or creates a new one.
-        # If a block is given, will disconnect after yielding.
+        # If a block is given, will release the connection after yielding.
         def connection
             is_connected = connected?
             connect unless is_connected
             if block_given?
                 yield @conn
-                disconnect unless is_connected
+                release unless is_connected
             end
             return @conn
         end
         
+        def self.connection_attributes
+            @connection_attributes ||= {}
+        end
+        
+        def connection_attributes
+            self.class.connection_attributes[connection] ||= {
+                :transaction_nesting => 0, :savepoints => []
+            }
+        end
+        
         # Releases the current connection to the pool.
-        def disconnect
+        def release
             # The subclass should check if the connection is alive, and if it is not call remove_connection instead
+            c = @conn
+            @conn = nil
             begin
-                self.class.release_connection(@conn, @connection_params)
+                self.class.release_connection(c, @connection_params)
             ensure
                 @conn = nil
             end
@@ -177,9 +154,27 @@ module Spider; module Model; module Storage; module Db
             return self.class.capabilities[:transactions]
         end
         
-        # May be implemented by subclasses.
         def start_transaction
+            return savepoint("point#{@savepoints.length}") if in_transaction?
+            connection_attributes[:transaction_nesting] += 1
+            Spider.logger.debug("#{self.class.name} starting transaction for connection #{connection.object_id}")
+            do_start_transaction
+            return true
+        end
+        
+        # May be implemented by subclasses.
+        def do_start_transaction
            raise StorageException, "The current storage does not support transactions" 
+        end
+        
+        def in_transaction
+            if in_transaction?
+                connection_attributes[:transaction_nesting] += 1
+                return true
+            else
+                start_transaction
+                return false
+            end
         end
         
         def in_transaction?
@@ -187,10 +182,61 @@ module Spider; module Model; module Storage; module Db
         end
         
         def commit
+            raise StorageException, "Commit without a transaction" unless in_transaction?
+            return connection_attributes[:savepoints].pop unless connection_attributes[:savepoints].empty?
+            commit!
+        end
+        
+        def commit_or_continue
+            raise StorageException, "Commit without a transaction" unless in_transaction?
+            if connection_attributes[:transaction_nesting] == 1
+                commit
+                return true
+            else
+                connection_attributes[:transaction_nesting] -= 1
+            end
+        end
+        
+        def commit!
+            Spider.logger.debug("#{self.class.name} commit connection #{@conn.object_id}")
+            connection_attributes[:transaction_nesting] = 0
+            do_commit
+            release
+        end
+        
+        def do_commit
+            raise StorageException, "The current storage does not support transactions" 
         end
         
         def rollback
+            raise "Can't rollback in a nested transaction" if @transaction_nesting > 1
+            return rollback_savepoint(@savepoints.last) unless @savepoints.empty?
+            rollback!
+        end
+        
+        def rollback!
+            connection_attributes[:transaction_nesting] = 0
+            Spider.logger.debug("#{self.class.name} rollback")
+            do_rollback
+            connection_attributes[:savepoints] = []
+            release
+        end
+        
+        def do_rollback
             raise StorageException, "The current storage does not support transactions" 
+        end
+        
+        def savepoint(name)
+            @savepoints << name
+        end
+        
+        def rollback_savepoint(name=nil)
+            if name
+                @savepoints = @savepoints[0,(@savepoints.index(name))]
+                name
+            else
+                @savepoints.pop
+            end
         end
         
         def lock(table, mode=:exclusive)
@@ -566,8 +612,8 @@ module Spider; module Model; module Storage; module Db
                 sql_fields += ', ' unless sql_fields.empty?
                 sql_fields += sql_table_field(field[:name], field[:type], attributes)
             end
-            if (create[:attributes][:primary_key])
-                primary_key_fields = create[:attributes][:primary_key].join(', ')
+            if (create[:attributes][:primary_keys] && !create[:attributes][:primary_keys].empty?)
+                primary_key_fields = create[:attributes][:primary_keys].join(', ')
                 sql_fields += ", PRIMARY KEY (#{primary_key_fields})"
             end
             ["CREATE TABLE #{name} (#{sql_fields})"]

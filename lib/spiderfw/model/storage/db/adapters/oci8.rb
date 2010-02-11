@@ -27,6 +27,10 @@ module Spider; module Model; module Storage; module Db
             return conn
         end
         
+        def self.disconnect(conn)
+            conn.logoff
+        end
+        
         def self.connection_alive?(conn)
             # TODO: move to ping method when ruby-oci8 2.x is stable
             begin
@@ -37,7 +41,7 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
-        def disconnect
+        def release
             begin
                 @conn.autocommit = true if @conn
                 super
@@ -64,7 +68,7 @@ module Spider; module Model; module Storage; module Db
         end
         
 
-        def start_transaction
+        def do_start_transaction
             connection.autocommit = false
         end
         
@@ -72,14 +76,14 @@ module Spider; module Model; module Storage; module Db
             return @conn && !@conn.autocommit?
         end
         
-        def commit
+        def do_commit
             @conn.commit if @conn
-            disconnect
+            release
         end
         
-        def rollback
+        def do_rollback
             @conn.rollback
-            disconnect
+            release
         end
         
         def prepare_value(type, value)
@@ -162,11 +166,11 @@ module Spider; module Model; module Storage; module Db
                      return res
                  end
              rescue => exc
-                 disconnect
+                 release
                  raise exc
              ensure
                  cursor.close if cursor
-                 disconnect if @conn && !in_transaction?
+                 release if @conn && !in_transaction?
              end
          end
          
@@ -340,12 +344,12 @@ module Spider; module Model; module Storage; module Db
          def create_sequence(sequence_name, start=1, increment=1)
              execute("create sequence #{sequence_name} start with #{start} increment by #{increment}")
          end
-         
+
          def update_sequence(name, val)
              execute("drop sequence #{name}")
              create_sequence(name, val)
          end
-         
+
          ##############################################################
          #   Methods to get information from the db                   #
          ##############################################################
@@ -356,6 +360,8 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
+             primary_keys = []
+             o_foreign_keys = {}
              connection do |conn|
                  t = conn.describe_table(table)
                  t.columns.each do |c|
@@ -369,8 +375,33 @@ module Spider; module Model; module Storage; module Db
                      col.delete(:length) if (col[:precision])
                      columns[c.name] = col
                  end
+                 res = conn.exec("SELECT cols.table_name, cols.column_name, cols.position, cons.status, cons.owner
+                 FROM user_constraints cons, user_cons_columns cols
+                 WHERE cons.constraint_type = 'P'
+                 AND cons.constraint_name = cols.constraint_name
+                 AND cols.table_name = '#{table}'")
+                 while h = res.fetch_hash
+                     primary_keys << h['column_name']
+                 end
+                 res = conn.exec("SELECT cons.constraint_name, cols.table_name as table, cols.column_name as column,
+                 cons.table_name as referenced_table, cons.column_name as referenced_column
+                 FROM user_constraints cons, user_cons_columns cols
+                 WHERE cons.constraint_type = 'R'
+                 AND cons.constraint_name = cols.constraint_name
+                 AND cols.table_name = '#{table}'")
+                 while h = res.fetch_hash
+                     fk_name = h['constraint_name']
+                     fk_name = $1 if fk_name =~ /^FK_(.+)/
+                     o_foreign_keys[fk_name] ||= {:table => h['referenced_table'], :columns => {}}
+                     o_foreign_keys[fk_name][:columns][h['column']] = h['referenced_column']
+                 end
              end
-             return {:columns => columns}
+             foreign_keys = []
+             o_foreign_keys.each do |fk_name, fk_hash|
+                 foreign_keys << ForeignKeyConstraint.new(kf_name, fk_hash[:table], fk_hash[:columns])
+             end
+             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
+
          end
 
          def table_exists?(table)
