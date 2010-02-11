@@ -202,6 +202,10 @@ module Spider; module Model; module Storage; module Db
             "#{@table.name}.#{@name}"
         end
         
+        def inspect
+            "#<#{self.class.name}:#{self.object_id} @name=\"#{@name}\", @table=#<Spider::Model::Storage::Db::Table:0x6d3ff94 #{@table.name}> >"
+        end
+        
     end
     
     class ForeignKeyConstraint
