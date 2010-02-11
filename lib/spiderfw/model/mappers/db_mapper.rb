@@ -950,7 +950,8 @@ module Spider; module Model; module Mappers
                     element.type.mapper.schema.column(key.name).name
                 end
                 unless foreign_key_constraints.empty?
-                    self.schema.set_foreign_key_constraint("#{schema.table.name}_#{element.name}", element.type.mapper.schema.table.name, foreign_key_constraints)
+                    name = element.attributes[:db_foreign_key_name] || "FK_#{schema.table.name}_#{element.name}"
+                    self.schema.set_foreign_key_constraint(name, element.type.mapper.schema.table.name, foreign_key_constraints)
                 end
             end
         end
@@ -987,9 +988,11 @@ module Spider; module Model; module Mappers
             end
             schema_description.each do |table_name, table_schema|
                 table_attributes = {
-                    :primary_keys => table_schema[:attributes][:primary_keys],
-                    :foreign_key_constraints => table_schema[:attributes][:foreign_key_constraints]
+                    :primary_keys => table_schema[:attributes][:primary_keys]
                 }
+                unless options[:no_foreign_key_constraints]
+                    table_attributes[:foreign_key_constraints] = table_schema[:attributes][:foreign_key_constraints] || []
+                end
                 if @storage.table_exists?(table_name)
                     alter_table(table_name, table_schema[:columns], table_attributes, force)
                 else

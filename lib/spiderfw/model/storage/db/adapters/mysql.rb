@@ -325,7 +325,6 @@ module Spider; module Model; module Storage; module Db
                          fk_fields1 = h['COLUMN_NAME'].split(',')
                          fk_fields2 = h['REFERENCED_COLUMN_NAME'].split(',')
                          fk_name = h['CONSTRAINT_NAME']
-                         fk_name = $1 if fk_name =~ /^FK_(.+)/
                          fk_fields = {}
                          fk_fields1.each_index{ |i| fk_fields[fk_fields1[i]] = fk_fields2[i] }
                          foreign_keys << ForeignKeyConstraint.new(fk_name, fk_table, fk_fields)
