@@ -357,7 +357,6 @@ module Spider; module Model
                 return condition
             end
             
-            storage.start_transaction
             curr = nil
             if (obj_or_condition.is_a?(BaseModel))
                 condition = prepare_delete_condition(obj_or_condition)
@@ -378,19 +377,30 @@ module Spider; module Model
             end
             curr = @model.where(condition) unless curr
             before_delete(curr)
+            vals = []
+            started_transaction = false
             unless cascade.empty? && assocs.empty?
+                storage.in_transaction
+                started_transaction = true
                 curr.each do |curr_obj|
+                    obj_vals = {}
                     cascade.each do |el|
-                        el.model.mapper.delete(curr_obj.get(el))
+                        obj_vals[el] = curr_obj.get(el)
                     end
+                    vals << obj_vals
                     assocs.each do |el|
                         delete_element_associations(curr_obj, el)
                     end
                 end
             end
             do_delete(condition, force)
+            vals.each do |obj_vals|
+                obj_vals.each do |el, val|
+                    el.model.mapper.delete(val)
+                end
+            end
             after_delete(curr)
-            storage.commit
+            storage.commit_or_continue if started_transaction
         end
         
         # Deletes all objects from the storage.
