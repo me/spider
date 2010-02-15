@@ -657,7 +657,6 @@ module Spider; module Model; module Storage; module Db
                 cur_fkc = current && current[:foreign_key_constraints] ? current[:foreign_key_constraints] : []
                 cur_fkc.each do |fkc|
                     next if alter_attributes[:foreign_key_constraints].include?(fkc)
-                    debugger
                     sqls << sql_drop_foreign_key(table_name, foreign_key_name(fkc.name))
                 end
                 if (alter_attributes[:foreign_key_constraints])
