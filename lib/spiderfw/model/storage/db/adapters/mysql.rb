@@ -86,10 +86,11 @@ module Spider; module Model; module Storage; module Db
         
         def release
             begin
-                Spider::Logger.debug("MYSQL #{self.object_id} releasing connection #{@conn}")
+                Spider::Logger.debug("MYSQL #{self.object_id} in thread #{Thread.current} releasing connection #{@conn}")
                 @conn.autocommit(true) if @conn
                 super
-            rescue
+            rescue exc
+                Spider::Logger.error("MYSQL #{self.object_id} in thread #{Thread.current} exception #{exc.message} while trying to release connection #{@conn}")
                 self.class.remove_connection(@conn, @connection_params)
                 @conn = nil
             end
@@ -126,7 +127,7 @@ module Spider; module Model; module Storage; module Db
         
         def do_start_transaction
             connection.autocommit(false)
-            connection_attributes[:in_transaction] = true
+            curr[:in_transaction] = true
         end
         
         def savepoint(name)
@@ -135,18 +136,18 @@ module Spider; module Model; module Storage; module Db
         end
         
         def in_transaction?
-            return connection_attributes[:in_transaction] ? true : false
+            return curr[:in_transaction] ? true : false
         end
         
 
         def do_commit
-            @conn.commit if @conn
-            connection_attributes[:in_transaction] = false
+            curr[:conn].commit if curr[:conn]
+            curr[:in_transaction] = false
         end
         
         def do_rollback
-            @conn.rollback
-            connection_attributes[:in_transaction] = false
+            curr[:conn].rollback
+            curr[:in_transaction] = false
         end
         
         def rollback_savepoint(name=nil)
@@ -159,7 +160,7 @@ module Spider; module Model; module Storage; module Db
                 if (bind_vars && bind_vars.length > 0)
                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                 end
-                @last_executed = [sql, bind_vars]
+                curr[:last_executed] = [sql, bind_vars]
                 if (Spider.conf.get('storage.db.replace_debug_vars'))
                     cnt = -1
                     debug("mysql executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
@@ -167,11 +168,12 @@ module Spider; module Model; module Storage; module Db
                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
                     debug("mysql executing:\n#{sql}\n[#{debug_vars_str}]")
                 end
-                @stmt = connection.prepare(sql)
-                res = @stmt.execute(*bind_vars)
-                have_result = (@stmt.field_count == 0 ? false : true)
+                stmt = connection.prepare(sql)
+                curr[:stmt] = stmt
+                res = stmt.execute(*bind_vars)
+                have_result = (stmt.field_count == 0 ? false : true)
                 if (have_result)
-                    result_meta = @stmt.result_metadata
+                    result_meta = stmt.result_metadata
                     fields = result_meta.fetch_fields
                     result = []
                     while (a = res.fetch)
@@ -183,13 +185,13 @@ module Spider; module Model; module Storage; module Db
                             result << h
                         end
                     end
-                    if (@last_query_type == :select)
+                    if (curr[:last_query_type] == :select)
                         rows_res = connection.query("select FOUND_ROWS()")
-                        @total_rows = rows_res.fetch_row[0].to_i
+                        curr[:total_rows] = rows_res.fetch_row[0].to_i
                     end
                 end
-                @last_insert_id = connection.insert_id
-                @last_query_type = nil
+                curr[:last_insert_id] = connection.insert_id
+                curr[:last_query_type] = nil
                 if (have_result)
                     unless block_given?
                         result.extend(StorageResult)
@@ -206,13 +208,13 @@ module Spider; module Model; module Storage; module Db
                     raise exc
                 end
             ensure
-                release if @conn && !in_transaction?
+                release if curr[:conn] && !in_transaction?
             end
          end
          
          def prepare(sql)
              debug("mysql preparing: #{sql}")
-             return @stmt = connection.prepare(sql)
+             return curr[:stmt] = connection.prepare(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
@@ -220,7 +222,7 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             return @total_rows
+             return curr[:total_rows]
          end
          
          def prepare_value(type, value)
@@ -253,7 +255,7 @@ module Spider; module Model; module Storage; module Db
          
          
          def sql_select(query)
-             @last_query_type = :select
+             curr[:last_query_type] = :select
              bind_vars = query[:bind_vars] || []
              tables_sql, tables_values = sql_tables(query)
              sql = "SELECT "

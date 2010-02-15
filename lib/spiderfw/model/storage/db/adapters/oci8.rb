@@ -43,11 +43,11 @@ module Spider; module Model; module Storage; module Db
         
         def release
             begin
-                @conn.autocommit = true if @conn
+                curr[:conn].autocommit = true if curr[:conn]
                 super
             rescue
-                self.class.remove_connection(@conn, @connection_params)
-                @conn = nil
+                self.class.remove_connection(curr[:conn], @connection_params)
+                curr[:conn] = nil
             end
         end
         
@@ -73,16 +73,16 @@ module Spider; module Model; module Storage; module Db
         end
         
         def in_transaction?
-            return @conn && !@conn.autocommit?
+            return curr[:conn] && !curr[:conn].autocommit?
         end
         
         def do_commit
-            @conn.commit if @conn
+            curr[:conn].commit if curr[:conn]
             release
         end
         
         def do_rollback
-            @conn.rollback
+            curr[:conn].rollback
             release
         end
         
@@ -94,7 +94,7 @@ module Spider; module Model; module Storage; module Db
             return OCI8NilValue.new(Spider::Model.ruby_type(type)) if (value == nil)
             case type.name
             when 'Spider::DataTypes::Binary'
-                return OCI8::BLOB.new(@conn, value)
+                return OCI8::BLOB.new(curr[:conn], value)
             end
             return value
         end
@@ -121,7 +121,7 @@ module Spider; module Model; module Storage; module Db
                  if (bind_vars && bind_vars.length > 0)
                      debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                  end
-                 @last_executed = [sql, bind_vars]
+                 curr[:last_executed] = [sql, bind_vars]
                  if (Spider.conf.get('storage.db.replace_debug_vars'))
                      cnt = -1
                      debug("oci8 executing: "+sql.gsub(/:\d+/){
@@ -159,7 +159,7 @@ module Spider; module Model; module Storage; module Db
                  if (have_result)
                      unless block_given?
                          result.extend(StorageResult)
-                         @last_result = result
+                         curr[:last_result] = result
                          return result
                      end
                  else
@@ -170,7 +170,7 @@ module Spider; module Model; module Storage; module Db
                  raise exc
              ensure
                  cursor.close if cursor
-                 release if @conn && !in_transaction?
+                 release if curr[:conn] && !in_transaction?
              end
          end
          
@@ -185,10 +185,10 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             return nil unless @last_executed
-             q = @last_query.clone
+             return nil unless curr[:last_executed]
+             q = curr[:last_query].clone
              unless (q[:offset] || q[:limit])
-                 return @last_result ? @last_result.length : nil
+                 return curr[:last_result] ? curr[:last_result].length : nil
              end
              q.delete(:offset); q.delete(:limit)
              sql, vars = sql_select(q)
@@ -227,7 +227,7 @@ module Spider; module Model; module Storage; module Db
          
          
          def sql_select(query)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              # Spider::Logger.debug("SQL SELECT:")
              # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
@@ -262,11 +262,11 @@ module Spider; module Model; module Storage; module Db
              order = sql_order(query)
              if (query[:limit])
                  if (query[:offset])
-                     limit = "oci8_row_num between :#{@bind_cnt+=1} and :#{@bind_cnt+=1}"
+                     limit = "oci8_row_num between :#{curr[:bind_cnt]+=1} and :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:offset] + 1
                      bind_vars << query[:offset] + query[:limit]
                  else
-                     limit = "oci8_row_num < :#{@bind_cnt+=1}"
+                     limit = "oci8_row_num < :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:limit] + 1
                  end
                  replaced_fields.each do |f, repl|
@@ -305,11 +305,11 @@ module Spider; module Model; module Storage; module Db
                      if (bound_vars)
                          val0, val1 = value
                      else
-                         val0 = ":#{(@bind_cnt += 1)}"; val1 = ":#{(@bind_cnt += 1)}"
+                         val0 = ":#{(curr[:bind_cnt] += 1)}"; val1 = ":#{(curr[:bind_cnt] += 1)}"
                      end
                      sql = "#{key} #{comp} #{val0} AND #{val1}"
                  else
-                     val = bound_vars ? ":#{(@bind_cnt += 1)}" : value
+                     val = bound_vars ? ":#{(curr[:bind_cnt] += 1)}" : value
                      sql = "#{key} #{comp} #{val}"
                  end
                  
@@ -319,9 +319,9 @@ module Spider; module Model; module Storage; module Db
          end
          
          def sql_insert(insert)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              keys = insert[:values].keys.join(', ')
-             vals = insert[:values].values.map{":#{(@bind_cnt += 1)}"}
+             vals = insert[:values].values.map{":#{(curr[:bind_cnt] += 1)}"}
              vals = vals.join(', ')
              sql = "INSERT INTO #{insert[:table]} (#{keys}) " +
                    "VALUES (#{vals})"
@@ -329,23 +329,23 @@ module Spider; module Model; module Storage; module Db
          end
          
          def sql_insert_values(insert)
-             insert[:values].values.map{":#{(@bind_cnt += 1)}"}.join(', ')
+             insert[:values].values.map{":#{(curr[:bind_cnt] += 1)}"}.join(', ')
          end
          
          def sql_update(query)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              super
          end
          
          def sql_update_values(update)
              update[:values].map{ |k, v| 
-                 val = v.is_a?(Spider::QueryFuncs::Expression) ? v : ":#{(@bind_cnt += 1)}"
+                 val = v.is_a?(Spider::QueryFuncs::Expression) ? v : ":#{(curr[:bind_cnt] += 1)}"
                  "#{k} = #{val}"
              }.join(', ')
          end
          
          def sql_delete(del, force=false)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              super
          end
          

@@ -79,6 +79,13 @@ module Spider; module Model; module Storage; module Db
             
         end
         
+        def curr
+            Thread.current[:db_storages] ||= {}
+            Thread.current[:db_storages][@connection_params] ||= {
+                :transaction_nesting => 0, :savepoints => []
+            }
+        end
+        
         def connection_pool
             self.class.connection_pools[@connection_params]
         end
@@ -90,25 +97,31 @@ module Spider; module Model; module Storage; module Db
         
         # Instantiates a new connection with current connection params.
         def connect()
-            @conn = self.class.get_connection(*@connection_params)
+            return self.class.get_connection(*@connection_params)
+            Spider::Logger.debug("#{self.class.name} in thread #{Thread.current} acquired connection #{@conn}")
         end
         
         # True if currently connected.
         def connected?
-            @conn != nil
+            curr[:conn] != nil
         end
 
         
         # Returns the current connection, or creates a new one.
         # If a block is given, will release the connection after yielding.
         def connection
-            is_connected = connected?
-            connect unless is_connected
+            # is_connected = connected?
+            #             Spider.logger.debug("#{self} already connected with conn #{@conn}") if is_connected
+            #             connect unless is_connected
+            curr[:conn] = connect
             if block_given?
-                yield @conn
-                release unless is_connected
+                yield curr[:conn]
+                release # unless is_connected
+                return true
+            else
+                #debugger unless @conn
+                return curr[:conn]
             end
-            return @conn
         end
         
         def self.connection_attributes
@@ -116,21 +129,17 @@ module Spider; module Model; module Storage; module Db
         end
         
         def connection_attributes
-            self.class.connection_attributes[connection] ||= {
-                :transaction_nesting => 0, :savepoints => []
-            }
+            self.class.connection_attributes[connection] ||= {}
         end
         
         # Releases the current connection to the pool.
         def release
             # The subclass should check if the connection is alive, and if it is not call remove_connection instead
-            c = @conn
-            @conn = nil
-            begin
-                self.class.release_connection(c, @connection_params)
-            ensure
-                @conn = nil
-            end
+            c = curr[:conn]
+            Spider.logger.debug("#{self} in thread #{Thread.current} releasing #{curr[:conn]}")
+            curr[:conn] = nil
+            self.class.release_connection(c, @connection_params)
+            Spider.logger.debug("#{self} in thread #{Thread.current} released #{curr[:conn]}")
             return nil
             #@conn = nil
         end
@@ -155,8 +164,8 @@ module Spider; module Model; module Storage; module Db
         end
         
         def start_transaction
-            return savepoint("point#{@savepoints.length}") if in_transaction?
-            connection_attributes[:transaction_nesting] += 1
+            return savepoint("point#{curr[:savepoints].length}") if in_transaction?
+            curr[:transaction_nesting] += 1
             Spider.logger.debug("#{self.class.name} starting transaction for connection #{connection.object_id}")
             do_start_transaction
             return true
@@ -169,7 +178,7 @@ module Spider; module Model; module Storage; module Db
         
         def in_transaction
             if in_transaction?
-                connection_attributes[:transaction_nesting] += 1
+                curr[:transaction_nesting] += 1
                 return true
             else
                 start_transaction
@@ -183,23 +192,23 @@ module Spider; module Model; module Storage; module Db
         
         def commit
             raise StorageException, "Commit without a transaction" unless in_transaction?
-            return connection_attributes[:savepoints].pop unless connection_attributes[:savepoints].empty?
+            return curr[:savepoints].pop unless curr[:savepoints].empty?
             commit!
         end
         
         def commit_or_continue
             raise StorageException, "Commit without a transaction" unless in_transaction?
-            if connection_attributes[:transaction_nesting] == 1
+            if curr[:transaction_nesting] == 1
                 commit
                 return true
             else
-                connection_attributes[:transaction_nesting] -= 1
+                curr[:transaction_nesting] -= 1
             end
         end
         
         def commit!
-            Spider.logger.debug("#{self.class.name} commit connection #{@conn.object_id}")
-            connection_attributes[:transaction_nesting] = 0
+            Spider.logger.debug("#{self.class.name} commit connection #{curr[:conn].object_id}")
+            curr[:transaction_nesting] = 0
             do_commit
             release
         end
@@ -209,16 +218,16 @@ module Spider; module Model; module Storage; module Db
         end
         
         def rollback
-            raise "Can't rollback in a nested transaction" if @transaction_nesting > 1
-            return rollback_savepoint(@savepoints.last) unless @savepoints.empty?
+            raise "Can't rollback in a nested transaction" if curr[:transaction_nesting] > 1
+            return rollback_savepoint(curr[:savepoints].last) unless curr[:savepoints].empty?
             rollback!
         end
         
         def rollback!
-            connection_attributes[:transaction_nesting] = 0
+            curr[:transaction_nesting] = 0
             Spider.logger.debug("#{self.class.name} rollback")
             do_rollback
-            connection_attributes[:savepoints] = []
+            curr[:savepoints] = []
             release
         end
         
@@ -227,15 +236,15 @@ module Spider; module Model; module Storage; module Db
         end
         
         def savepoint(name)
-            @savepoints << name
+            curr[:savepoints] << name
         end
         
         def rollback_savepoint(name=nil)
             if name
-                @savepoints = @savepoints[0,(@savepoints.index(name))]
+                curr[:savepoints] = curr[:savepoints][0,(curr[:savepoints].index(name))]
                 name
             else
-                @savepoints.pop
+                curr[:savepoints].pop
             end
         end
         
@@ -387,7 +396,7 @@ module Spider; module Model; module Storage; module Db
         
         # Executes a select query (given in struct form).
         def query(query)
-            @last_query = query
+            curr[:last_query] = query
             case query[:query_type]
             when :select
                 sql, bind_vars = sql_select(query)
@@ -401,7 +410,7 @@ module Spider; module Model; module Storage; module Db
         
         # Returns a two element array, containing the SQL for given select query, and the variables to bind.
         def sql_select(query)
-            @last_query_type = :select
+            curr[:last_query_type] = :select
             bind_vars = query[:bind_vars] || []
             tables_sql, tables_values = sql_tables(query)
             sql = "SELECT #{sql_keys(query)} FROM #{tables_sql} "
@@ -417,7 +426,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def total_rows
-            @total_rows
+            curr[:total_rows]
         end
         
         # Returns the SQL for select keys.
@@ -562,7 +571,7 @@ module Spider; module Model; module Storage; module Db
         
         # Returns SQL and values for an insert statement.
         def sql_insert(insert)
-            @last_query_type = :insert
+            curr[:last_query_type] = :insert
             sql = "INSERT INTO #{insert[:table]} (#{insert[:values].keys.join(', ')}) " +
                   "VALUES (#{insert[:values].values.map{'?'}.join(', ')})"
             return [sql, insert[:values].values]
@@ -570,7 +579,7 @@ module Spider; module Model; module Storage; module Db
         
         # Returns SQL and values for an update statement.
         def sql_update(update)
-            @last_query_type = :update
+            curr[:last_query_type] = :update
             values = []
             tables = update[:table]
             if (update[:joins] && update[:joins][update[:table]])
@@ -596,7 +605,7 @@ module Spider; module Model; module Storage; module Db
         
         # Returns SQL and bound values for a DELETE statement.
         def sql_delete(delete, force=false)
-            @last_query_type = :delete
+            curr[:last_query_type] = :delete
             where, bind_vars = sql_condition(delete)
             where = "1=0" if !force && (!where || where.empty?)
             sql = "DELETE FROM #{delete[:table]}"
