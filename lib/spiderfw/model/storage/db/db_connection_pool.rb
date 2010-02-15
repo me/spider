@@ -4,6 +4,7 @@ module Spider; module Model; module Storage; module Db
 
     class DbConnectionPool
         attr_reader :max_size
+        attr_accessor :timeout, :retry
 
         def initialize(connection_params, provider)
             @connection_params = connection_params
@@ -36,39 +37,20 @@ module Spider; module Model; module Storage; module Db
 
         def get_connection
             Thread.current[:db_connections] ||= {}
-            if conn = Thread.current[:db_connections][@connection_params]
-                 # Spider.logger.debug("DB Pool (#{Thread.current}): returning thread connection")
-                @free_connections.delete(conn)
-                conn
-            else
-                Thread.current[:db_connections][@connection_params] = checkout
+            @connection_mutex.synchronize do
+                if conn = Thread.current[:db_connections][@connection_params]
+                    # Spider.logger.debug("DB Pool (#{Thread.current}): returning thread connection #{conn}")
+                    @free_connections.delete(conn)
+                    conn
+                else
+                    Thread.current[:db_connections][@connection_params] = _checkout
+                end
             end
         end
         
         def checkout
             @connection_mutex.synchronize do
-                # Spider.logger.debug("DB Pool (#{Thread.current}): checkout (max: #{@max_size})")
-                1.upto(@retry) do
-                    if @free_connections.empty?
-                        # Spider.logger.debug("DB Pool (#{Thread.current}): no free connection")
-                        if @connections.length < @max_size
-                            create_new_connection
-                        else
-                            unless @queue.wait(@timeout)
-                                raise StorageException, "Unable to get a db connection in #{@timeout} seconds"
-                            end
-                        end
-                    else
-                        # Spider.logger.debug("DB Pool (#{Thread.current}): had free connection")
-                    end
-                    conn = @free_connections.pop
-                    if @provider.connection_alive?(conn)
-                        # Spider.logger.debug("DB Pool (#{Thread.current}): returning #{conn} (#{@free_connections.length} free)")
-                        return conn
-                    else
-                        remove(conn)
-                    end
-                end
+                _checkout
             end
         end
         
@@ -96,6 +78,33 @@ module Spider; module Model; module Storage; module Db
         end
         
         private
+        
+        def _checkout
+            # Spider.logger.debug("DB Pool (#{Thread.current}): checkout (max: #{@max_size})")
+            1.upto(@retry) do
+                if @free_connections.empty?
+                    # Spider.logger.debug("DB Pool (#{Thread.current}): no free connection")
+                    if @connections.length < @max_size
+                        create_new_connection
+                    else
+                        Spider.logger.debug "#{Thread.current} WAITING FOR CONNECTION, #{@queue.count_waiters} IN QUEUE"
+                        unless @queue.wait(@timeout)
+                            raise StorageException, "Unable to get a db connection in #{@timeout} seconds" if @timeout
+                        end
+                    end
+                else
+                    # Spider.logger.debug("DB Pool (#{Thread.current}): had free connection")
+                end
+                conn = @free_connections.pop
+                if @provider.connection_alive?(conn)
+                    # Spider.logger.debug("DB Pool (#{Thread.current}): returning #{conn} (#{@free_connections.length} free)")
+                    return conn
+                else
+                    remove(conn)
+                end
+            end
+        end
+        
         def remove_connection(conn)
             @free_connections.delete(conn)
             @connections.delete(conn)
@@ -103,8 +112,8 @@ module Spider; module Model; module Storage; module Db
         
         
         def create_new_connection
-            Spider.logger.debug("DB Pool (#{Thread.current}): creating new connection (#{@connections.length} already in pool)")
             conn = @provider.new_connection(*@connection_params)
+            Spider.logger.debug("DB Pool (#{Thread.current}): creating new connection #{conn} (#{@connections.length} already in pool)")
             @connections << conn
             @free_connections << conn
         end
