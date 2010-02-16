@@ -945,6 +945,7 @@ module Spider; module Model; module Mappers
                 element.type.primary_keys.each do |key|
                     column =  self.schema.foreign_key_field(element.name, key.name)
                     column_name = column.name
+                    next if !key.integrated? && !element.type.mapper.schema.column(key.name) # FIXME
                     foreign_key_constraints[column_name] = key.integrated? ? \
                     element.type.mapper.schema.foreign_key_field(key.integrated_from.name, key.integrated_from_element).name : \
                     element.type.mapper.schema.column(key.name).name
