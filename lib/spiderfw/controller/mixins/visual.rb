@@ -443,7 +443,7 @@ module Spider; module ControllerMixins
                 search_paths ||= template_paths
                 path = Spider::Template.real_path(name, cur_path, owner, search_paths)
                 t = Spider::Template.new(path) if path
-                t.owner_class = self
+                t.owner_class ||= self
                 return t
                 # # FIXME: use Template's real_path
                 # if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
@@ -485,8 +485,10 @@ module Spider; module ControllerMixins
                 if (path.is_a?(Symbol))
                     path = Spider::Layout.named_layouts[path]
                 end
-                path = Spider::Template.real_path(path+'.layout', layout_path, self)
-                return Spider::Layout.new(path)
+                resource = Spider::Template.find_resource(path+'.layout', layout_path, self)
+                layout = Spider::Layout.new(resource.path)
+                layout.owner_class = resource.definer
+                layout
             end
             
             

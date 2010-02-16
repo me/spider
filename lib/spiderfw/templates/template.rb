@@ -113,6 +113,10 @@ module Spider
                 Spider.find_resource_path(:views, path, cur_path, owner_class, search_paths)
             end
             
+            def find_resource(path, cur_path=nil, owner_class=nil, search_paths=[])
+                Spider.find_resource(:views, path, cur_path, owner_class, search_paths)
+            end
+            
             # An array of possible override tags.
             # Overrides may be used when placing a widget in a template, or when including another template.
             # All except tpl:content may have the _search_ attribute, that is a CSS or XPath expression specifing
@@ -338,7 +342,7 @@ module Spider
         
         # The full path of a template mentioned in this one.
         def real_path(path)
-            self.class.real_path(path, File.dirname(@path), @owner.class)
+            self.class.real_path(path, File.dirname(@path), @owner_class ? @owner_class : @owner.class)
         end
             
         
