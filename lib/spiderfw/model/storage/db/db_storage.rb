@@ -98,7 +98,7 @@ module Spider; module Model; module Storage; module Db
         # Instantiates a new connection with current connection params.
         def connect()
             return self.class.get_connection(*@connection_params)
-            Spider::Logger.debug("#{self.class.name} in thread #{Thread.current} acquired connection #{@conn}")
+            #Spider::Logger.debug("#{self.class.name} in thread #{Thread.current} acquired connection #{@conn}")
         end
         
         # True if currently connected.
@@ -136,10 +136,10 @@ module Spider; module Model; module Storage; module Db
         def release
             # The subclass should check if the connection is alive, and if it is not call remove_connection instead
             c = curr[:conn]
-            Spider.logger.debug("#{self} in thread #{Thread.current} releasing #{curr[:conn]}")
+            #Spider.logger.debug("#{self} in thread #{Thread.current} releasing #{curr[:conn]}")
             curr[:conn] = nil
             self.class.release_connection(c, @connection_params)
-            Spider.logger.debug("#{self} in thread #{Thread.current} released #{curr[:conn]}")
+            #Spider.logger.debug("#{self} in thread #{Thread.current} released #{curr[:conn]}")
             return nil
             #@conn = nil
         end

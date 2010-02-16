@@ -86,7 +86,7 @@ module Spider; module Model; module Storage; module Db
         
         def release
             begin
-                Spider::Logger.debug("MYSQL #{self.object_id} in thread #{Thread.current} releasing connection #{@conn}")
+                #Spider::Logger.debug("MYSQL #{self.object_id} in thread #{Thread.current} releasing connection #{@conn}")
                 @conn.autocommit(true) if @conn
                 super
             rescue exc
