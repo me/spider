@@ -701,7 +701,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def sql_drop_primary_key(table_name)
-            "ALTER #{table_name} DROP PRIMARY KEY"
+            "ALTER TABLE #{table_name} DROP PRIMARY KEY"
         end
         
         def sql_drop_foreign_key(table_name, key_name)
