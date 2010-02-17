@@ -387,6 +387,7 @@ module Spider; module Model; module Storage; module Db
              when 'Fixnum'
                  db_attributes[:length] = 11
              end
+             db_attributes[:autoincrement] = false if attributes[:autoincrement] && !attributes[:primary_key]
              return db_attributes
          end
          
@@ -419,20 +420,7 @@ module Spider; module Model; module Storage; module Db
          # Mapper extension
          
          module MapperExtension
-             
-             def generate_schema(schema=nil)
-                 schema = super
-                 autoincrement = schema.columns.select{ |k, v| v.attributes[:autoincrement] }
-                 keep = autoincrement.select{ |k, v| @model.elements[k].primary_key? }.map{ |v| v[0] }
-                 keep = [] if keep.length > 1
-                 #keep = autoincrement[0] if (keep.length != 1)
-                 autoincrement.each do |k, v|
-                     next if k == keep[0]
-                     v.attributes[:autoincrement] = false
-                     schema.set_sequence(k, @storage.sequence_name("#{schema.table}_#{k}"))
-                 end
-                 return schema
-             end
+        
              
              def do_insert(obj)
                  super
