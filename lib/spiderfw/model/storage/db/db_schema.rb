@@ -93,13 +93,13 @@ module Spider; module Model; module Storage; module Db
         
         # Sets the column name for an element.
         def set_column(element_name, field)
-            field = Field.new(@table, field[:name], field[:type]) if field.is_a?(Hash)
+            field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             @columns[element_name] = field
         end
         
         # Sets a foreign key to the primary key of an element.
         def set_foreign_key(element_name, element_key, field)
-            field = Field.new(@table, field[:name], field[:type]) if field.is_a?(Hash)
+            field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             @foreign_keys[element_name] ||= {}
             @foreign_keys[element_name][element_key] = field
         end
