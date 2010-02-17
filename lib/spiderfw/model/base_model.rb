@@ -1765,6 +1765,7 @@ module Spider; module Model
         #
         # For more fine-grained control of the output, it is better to use the #cut method and call to_json on it.
         def to_json(state=nil, &proc)
+            require 'json'
             ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
             if (@tmp_json_seen && !block_given?)
                 pks = self.class.primary_keys.map{ |k| get(k).to_json }
@@ -1774,41 +1775,42 @@ module Spider; module Model
             @tmp_json_seen = true
             json = ""
             #Spider::Model.with_identity_mapper do |im|
-                self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-                    (int = get(el)) && int.instance_variable_set("@tmp_json_seen", true)
-                end
+            self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
+                (int = get(el)) && int.instance_variable_set("@tmp_json_seen", true)
+            end
+            if (block_given?)
+                select_elements = Proc.new{ true }
+            else
+                select_elements = Proc.new{ |name, el|
+                    !el.hidden?
+                    #  &&
+                    # #!el.attributes[:integrated_model]  && 
+                    # (element_has_value?(el) || (el.integrated? && element_has_value?(el.integrated_from)))
+                }
+            end
+
+
+            json = "{" +
+            self.class.elements.select(&select_elements).map{ |name, el|
                 if (block_given?)
-                    select_elements = Proc.new{ true }
+                    val = yield(self, el)
+                    val ? "#{name.to_json}: #{val.to_json}" : nil
                 else
-                    select_elements = Proc.new{ |name, el|
-                        !el.hidden?
-                        #  &&
-                        # #!el.attributes[:integrated_model]  && 
-                        # (element_has_value?(el) || (el.integrated? && element_has_value?(el.integrated_from)))
-                     }
-                 end
-                
-                json = "{" +
-                        self.class.elements.select(&select_elements).map{ |name, el|
-                             if (block_given?)
-                                 val = yield(self, el)
-                                 val ? "#{name}: #{val}" : nil
-                             else
-                                 val = get(name)
-                                 if (el.type == 'text' || el.type == 'longText')
-                                     val = ic.iconv(val + ' ')[0..-2]
-                                 end
-                                 val = val.to_json
-                                 "#{name}: #{val}"
-                             end
-                        }.select{ |pair| pair}.join(',') + "}"
+                    val = get(name)
+                    if (el.type == 'text' || el.type == 'longText')
+                        val = ic.iconv(val + ' ')[0..-2]
+                    end
+                    val = val.to_json
+                    "#{name.to_json}: #{val}"
+                end
+                }.select{ |pair| pair}.join(',') + "}"
                 @tmp_json_seen = false
                 self.class.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
                     (int = get(el)) && int.instance_variable_set("@tmp_json_seen", false)
                 end
-            #end
-            return json
-        end
+                #end
+                return json
+            end
         
         # Returns a part of the object tree, converted to Hashes, Arrays and Strings.
         # Arguments can be:
