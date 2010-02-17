@@ -4,7 +4,6 @@ require 'mysql'
 module Spider; module Model; module Storage; module Db
     
     class Mysql < DbStorage
-        attr_reader :last_insert_id
         
         def self.base_types
             super << Spider::DataTypes::Binary
@@ -247,6 +246,10 @@ module Spider; module Model; module Storage; module Db
                  return type.civil(value.year, value.month, value.day)
              end
              return super(type, value)
+         end
+         
+         def last_insert_id
+             curr[:last_insert_id]
          end
          
          ##############################################################
