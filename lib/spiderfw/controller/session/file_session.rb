@@ -39,6 +39,7 @@ module Spider
                         data = Marshal.restore(f.read)
                     rescue => exc
                         Spider::Logger.error("Corrupt session")
+                        data = {}
                     end
                     mtime = f.mtime
                     f.flock(File::LOCK_UN)
@@ -50,10 +51,12 @@ module Spider
             
             def purge(life)
                 dir = Spider.conf.get('session.file.path')
+                @sync.lock(Sync::EX)
                 Find.find(dir) do |path|
                     next unless File.file?(path)
                     File.unlink(path) if File.exist?(path) && (File.mtime(path) + life < Time.now)
                 end
+                @sync.lock(Sync::UN)
             end
             
             def delete(sid)
