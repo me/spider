@@ -310,7 +310,11 @@ module Spider
                 root.search('tpl:include').each do |incl|
                     src = real_path(incl.attributes['src'])
                     @dependencies << src
-                    incl.swap(self.get_el(src).to_html)
+                    incl_el = self.get_el(src)
+                    assets = incl_el.children_of_type('tpl:asset')
+                    assets_html = ""
+                    assets.each{ |ass| assets_html += ass.to_html }
+                    incl.swap(assets_html+self.get_el(src).to_html)
                 end
             end
             return root
