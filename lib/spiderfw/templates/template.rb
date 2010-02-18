@@ -22,7 +22,7 @@ module Spider
         
         attr_accessor :_action, :_action_to, :_widget_action
         attr_accessor :widgets, :compiled, :id_path
-        attr_accessor :request, :response, :owner, :owner_class
+        attr_accessor :request, :response, :owner, :owner_class, :definer_class
         attr_accessor :mode # :widget, ...
         attr_reader :overrides, :path, :subtemplates, :widgets
         
@@ -243,7 +243,7 @@ module Spider
             else
                 owner_class = (@owner ? @owner.class : @owner_class )
             end
-            res = Spider.find_resource(type.to_sym, src, @path, owner_class)
+            res = Spider.find_resource(type.to_sym, src, @path, [owner_class, @definer_class])
             controller = nil
             if (res && res.definer)
                 controller = res.definer.controller
@@ -342,7 +342,7 @@ module Spider
         
         # The full path of a template mentioned in this one.
         def real_path(path)
-            self.class.real_path(path, File.dirname(@path), @owner_class ? @owner_class : @owner.class)
+            self.class.real_path(path, File.dirname(@path), [@owner.class, @definer_class])
         end
             
         

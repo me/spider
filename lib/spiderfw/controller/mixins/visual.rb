@@ -487,7 +487,7 @@ module Spider; module ControllerMixins
                 end
                 resource = Spider::Template.find_resource(path+'.layout', layout_path, self)
                 layout = Spider::Layout.new(resource.path)
-                layout.owner_class = resource.definer
+                layout.definer_class = resource.definer
                 layout
             end
             
