@@ -336,8 +336,8 @@ module Spider
         # 
         # Will look for the resource in the runtime root first, than in the
         # app's :"#{resource_type}_path", and finally in the spider folder.
-        def find_resource(resource_type, path, cur_path=nil, owner_class=nil, search_paths=[])
-            owner_class = nil if owner_class == NilClass
+        def find_resource(resource_type, path, cur_path=nil, owner_classes=nil, search_paths=[])
+            owner_classes = [owner_classes] unless owner_classes.is_a?(Enumerable)
             # FIXME: security check for allowed paths?
             def first_found(extensions, path)
                 extensions.each do |ext|
@@ -348,59 +348,62 @@ module Spider
                 return nil
             end
             
-            resource_config = @resource_types[resource_type]
-            raise "Unknown resource type #{resource_type}" unless resource_config
-            resource_rel_path = resource_config[:path]
-            extensions = [nil] + resource_config[:extensions]
-            path.strip!
-            if (path[0..3] == 'ROOT')
-                path.sub!(/^ROOT/, Spider.paths[:root])
-                return Resource.new(path, @home)
-            elsif (path[0..5] == 'SPIDER')
-                path.sub!(/^SPIDER/, $SPIDER_PATH)
-                return Resource.new(path, self)
-            elsif (cur_path)
-                if (path[0..1] == './')
-                    return Resource.new(first_found(extensions, cur_path+path[1..-1]), owner_class)
-                elsif (path[0..1] == '../')
-                    return Resource.new(first_found(extensions, File.dirname(cur_path)+path[2..-1]), owner_class)
-                end
-            end
-            app = nil
-            if (path[0].chr == '/')
-                Spider.apps_by_path.each do |p, a|
-                    if (path.index(p) == 1)
-                        app = a
-                        path = path[p.length+2..-1]
-                        break
+            owner_classes.each do |owner_class| # FIXME: refactor
+                owner_class = nil if owner_class == NilClass
+                resource_config = @resource_types[resource_type]
+                raise "Unknown resource type #{resource_type}" unless resource_config
+                resource_rel_path = resource_config[:path]
+                extensions = [nil] + resource_config[:extensions]
+                path.strip!
+                if (path[0..3] == 'ROOT')
+                    path.sub!(/^ROOT/, Spider.paths[:root])
+                    return Resource.new(path, @home)
+                elsif (path[0..5] == 'SPIDER')
+                    path.sub!(/^SPIDER/, $SPIDER_PATH)
+                    return Resource.new(path, self)
+                elsif (cur_path)
+                    if (path[0..1] == './')
+                        return Resource.new(first_found(extensions, cur_path+path[1..-1]), owner_class)
+                    elsif (path[0..1] == '../')
+                        return Resource.new(first_found(extensions, File.dirname(cur_path)+path[2..-1]), owner_class)
                     end
                 end
-            elsif (owner_class.is_a?(Spider::App))
-                app = owner_class
-            else
-                app = owner_class.app if (owner_class && owner_class.app)
-            end
-            return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
-            search_locations = [["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}", @home]]
-            if app.respond_to?("#{resource_type}_path")
-                search_locations << [app.send("#{resource_type}_path"), app]
-            else
-                search_locations << [app.path+'/'+resource_rel_path, app]
-            end
-            search_locations << [$SPIDER_PATH+'/'+resource_rel_path, self]
-            search_paths.each do |p|
-                p = [p, owner_class] unless p.is_a?(Array)
-                search_locations << p
-            end
-            search_locations.each do |p|
-                found = first_found(extensions, p[0]+'/'+path)
-                return Resource.new(found, p[1]) if found
+                app = nil
+                if (path[0].chr == '/')
+                    Spider.apps_by_path.each do |p, a|
+                        if (path.index(p) == 1)
+                            app = a
+                            path = path[p.length+2..-1]
+                            break
+                        end
+                    end
+                elsif (owner_class.is_a?(Spider::App))
+                    app = owner_class
+                else
+                    app = owner_class.app if (owner_class && owner_class.app)
+                end
+                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
+                search_locations = [["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}", @home]]
+                if app.respond_to?("#{resource_type}_path")
+                    search_locations << [app.send("#{resource_type}_path"), app]
+                else
+                    search_locations << [app.path+'/'+resource_rel_path, app]
+                end
+                search_locations << [$SPIDER_PATH+'/'+resource_rel_path, self]
+                search_paths.each do |p|
+                    p = [p, owner_class] unless p.is_a?(Array)
+                    search_locations << p
+                end
+                search_locations.each do |p|
+                    found = first_found(extensions, p[0]+'/'+path)
+                    return Resource.new(found, p[1]) if found
+                end
             end
             return Resource.new(path)
         end
         
-        def find_resource_path(resource_type, path, cur_path=nil, owner_class=nil, search_paths=[])
-            res = find_resource(resource_type, path, cur_path, owner_class, search_paths)
+        def find_resource_path(resource_type, path, cur_path=nil, owner_classes=nil, search_paths=[])
+            res = find_resource(resource_type, path, cur_path, owner_classes, search_paths)
             return res ? res.path : nil
         end
         

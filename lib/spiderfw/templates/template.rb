@@ -109,12 +109,12 @@ module Spider
             end
             
             # Returns the view path (see #Spider::find_asset)
-            def real_path(path, cur_path=nil, owner_class=nil, search_paths=[])
-                Spider.find_resource_path(:views, path, cur_path, owner_class, search_paths)
+            def real_path(path, cur_path=nil, owner_classes=nil, search_paths=[])
+                Spider.find_resource_path(:views, path, cur_path, owner_classes, search_paths)
             end
             
-            def find_resource(path, cur_path=nil, owner_class=nil, search_paths=[])
-                Spider.find_resource(:views, path, cur_path, owner_class, search_paths)
+            def find_resource(path, cur_path=nil, owner_classes=nil, search_paths=[])
+                Spider.find_resource(:views, path, cur_path, owner_classes, search_paths)
             end
             
             # An array of possible override tags.
