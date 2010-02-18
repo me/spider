@@ -247,6 +247,8 @@ module Spider
             controller = nil
             if (res && res.definer)
                 controller = res.definer.controller
+            elsif (owner_class < Spider::Controller)
+                controller = owner_class
             end
             ass[:path] = res.path if res
             if controller.respond_to?(:pub_url)
