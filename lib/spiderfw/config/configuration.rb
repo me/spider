@@ -97,7 +97,7 @@ module Spider
                         end
                     elsif (!@options[key][:params] || @options[key][:params][:type] != Hash) # sub conf
                         @values[key] ||= Configuration.new(@prefix+".#{key}")
-                        val.each { |k, v| self[key][k.to_s] = v }
+                        val.each { |k, v| self[key].set(k.to_s, v) }
                     else
                         self[key] = val
                     end
