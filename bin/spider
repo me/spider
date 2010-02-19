@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'rubygems'
 require 'spiderfw/env'
 require 'spiderfw/cmd/cmd'
 cmd = Spider::CommandLine::Cmd.new
