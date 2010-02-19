@@ -226,7 +226,7 @@ module Spider
             
         def load_yaml(file)
             y = YAML::load_file(file)
-            raise ConfigurationException(:yaml), "Can't parse configuration file #{file}" unless y
+            raise ConfigurationException.new(:yaml), "Can't parse configuration file #{file}" unless y
             y.each do |key, val|
                 case key
                 when /set (.+)/
@@ -237,8 +237,21 @@ module Spider
             end
         end
         
+        def to_yaml
+            to_hash.to_yaml
+        end
+        
         def to_hash
-            return @values.clone
+            h = {}
+            @values.each do |k, v|
+                if v.is_a?(self.class)
+                    v = v.to_hash
+                    next if v.empty?
+                end
+                next if v.class == Class
+                h[k] = v
+            end
+            return h
         end
         
     end
