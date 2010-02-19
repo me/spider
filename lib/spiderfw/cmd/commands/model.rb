@@ -22,11 +22,12 @@ class ModelCommand < CmdParse::Command
                 @update_sequences = true
             }
             opt.on("--non-managed", _("Process also non managed models"), "-m"){ |m| @non_managed = true}
+            opt.on("--no-fk-constraints", _("Don't create foreign key constraints"), "-c"){ |c| @no_fkc = true }
         end
         
         sync_cmd.set_execution_block do |req_models|
             require 'spiderfw'
-            require 'spiderfw/model/mappers/db_mapper.rb'
+            require 'spiderfw/model/mappers/db_mapper'
             req_models || []
             unsafe_fields = {}
             req_models = Spider.apps.values if (req_models.empty?)
@@ -52,7 +53,7 @@ class ModelCommand < CmdParse::Command
                 models.each do |model|
                     begin
                         Spider::Model.sync_schema(model, @force, 
-                        :drop_fields => @drop, :update_sequences => @update_sequences)
+                        :drop_fields => @drop, :update_sequences => @update_sequences, :no_foreign_key_constraints => @no_fkc)
                     rescue Spider::Model::Mappers::SchemaSyncUnsafeConversion => exc
                         unsafe_fields[model] = exc.fields
                     end 
@@ -66,7 +67,6 @@ class ModelCommand < CmdParse::Command
                         r = STDIN.gets.chomp.downcase
                         yes_chr = _("yes")[0].chr
                         no_chr = _("no")[0].chr
-                        debugger
                         if (r == _("yes") || (yes_chr != no_chr && r == yes_chr)) 
                             Spider::Model.sync_schema(mod, true, :no_sync => true, :drop_tables => @drop_tables)
                         end

@@ -27,6 +27,28 @@ class TestCommand < CmdParse::Command
             end
         end
         self.add_command(run_cmd)
+        
+        self_cmd = CmdParse::Command.new('self', false)
+        self_cmd.short_desc = _("Run framework tests")
+        self_cmd.set_execution_block do
+            require 'test/unit/collector/dir'
+            require 'test/unit'
+            $SPIDER_RUNMODE = 'test'
+            require 'spiderfw'
+            test_env = "#{$SPIDER_PATH}/test"
+#            Dir.cwd(test_env)
+            $:.push(test_env)
+            apps = Spider.find_apps_in_folder("#{test_env}/apps")
+            Spider.apps.clear
+
+            apps.each{ |app| Spider.load_app_at_path app }
+
+            Spider._test_setup
+            collector = Test::Unit::Collector::Dir.new()
+            collector.collect("#{test_env}/tests")
+            Spider._test_teardown
+        end
+        self.add_command(self_cmd)
 
 
     end

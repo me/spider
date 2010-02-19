@@ -4,7 +4,6 @@ require 'mysql'
 module Spider; module Model; module Storage; module Db
     
     class Mysql < DbStorage
-        attr_reader :last_insert_id
         
         def self.base_types
             super << Spider::DataTypes::Binary
@@ -80,11 +79,17 @@ module Spider; module Model; module Storage; module Db
             return conn
         end
         
-        def disconnect
+        def self.disconnect(conn)
+            conn.close
+        end
+        
+        def release
             begin
+                #Spider::Logger.debug("MYSQL #{self.object_id} in thread #{Thread.current} releasing connection #{@conn}")
                 @conn.autocommit(true) if @conn
                 super
-            rescue
+            rescue exc
+                Spider::Logger.error("MYSQL #{self.object_id} in thread #{Thread.current} exception #{exc.message} while trying to release connection #{@conn}")
                 self.class.remove_connection(@conn, @connection_params)
                 @conn = nil
             end
@@ -119,23 +124,34 @@ module Spider; module Model; module Storage; module Db
             @connection_params = [@host, @user, @pass, @db_name, @port, @sock]
         end
         
-        def start_transaction
+        def do_start_transaction
             connection.autocommit(false)
-            @in_transaction = true
+            curr[:in_transaction] = true
+        end
+        
+        def savepoint(name)
+            execute("SAVEPOINT #{name}")
+            super
         end
         
         def in_transaction?
-            return @in_transaction ? true : false
+            return curr[:in_transaction] ? true : false
         end
         
-        def commit
-            @conn.commit if @conn
-            disconnect
+
+        def do_commit
+            curr[:conn].commit if curr[:conn]
+            curr[:in_transaction] = false
         end
         
-        def rollback
-            @conn.rollback
-            disconnect
+        def do_rollback
+            curr[:conn].rollback
+            curr[:in_transaction] = false
+        end
+        
+        def rollback_savepoint(name=nil)
+            execute("ROLLBACK TO #{name}")
+            super
         end
         
         def execute(sql, *bind_vars)
@@ -143,7 +159,7 @@ module Spider; module Model; module Storage; module Db
                 if (bind_vars && bind_vars.length > 0)
                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                 end
-                @last_executed = [sql, bind_vars]
+                curr[:last_executed] = [sql, bind_vars]
                 if (Spider.conf.get('storage.db.replace_debug_vars'))
                     cnt = -1
                     debug("mysql executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
@@ -151,11 +167,12 @@ module Spider; module Model; module Storage; module Db
                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
                     debug("mysql executing:\n#{sql}\n[#{debug_vars_str}]")
                 end
-                @stmt = connection.prepare(sql)
-                res = @stmt.execute(*bind_vars)
-                have_result = (@stmt.field_count == 0 ? false : true)
+                stmt = connection.prepare(sql)
+                curr[:stmt] = stmt
+                res = stmt.execute(*bind_vars)
+                have_result = (stmt.field_count == 0 ? false : true)
                 if (have_result)
-                    result_meta = @stmt.result_metadata
+                    result_meta = stmt.result_metadata
                     fields = result_meta.fetch_fields
                     result = []
                     while (a = res.fetch)
@@ -167,13 +184,13 @@ module Spider; module Model; module Storage; module Db
                             result << h
                         end
                     end
-                    if (@last_query_type == :select)
+                    if (curr[:last_query_type] == :select)
                         rows_res = connection.query("select FOUND_ROWS()")
-                        @total_rows = rows_res.fetch_row[0].to_i
+                        curr[:total_rows] = rows_res.fetch_row[0].to_i
                     end
                 end
-                @last_insert_id = connection.insert_id
-                @last_query_type = nil
+                curr[:last_insert_id] = connection.insert_id
+                curr[:last_query_type] = nil
                 if (have_result)
                     unless block_given?
                         result.extend(StorageResult)
@@ -183,20 +200,20 @@ module Spider; module Model; module Storage; module Db
                     return res
                 end
             rescue => exc
-                disconnect
+                release
                 if (exc.message =~ /Duplicate entry/)
                     raise Spider::Model::Storage::DuplicateKey
                 else
                     raise exc
                 end
             ensure
-                disconnect if @conn && !in_transaction?
+                release if curr[:conn] && !in_transaction?
             end
          end
          
          def prepare(sql)
              debug("mysql preparing: #{sql}")
-             return @stmt = connection.prepare(sql)
+             return curr[:stmt] = connection.prepare(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
@@ -204,7 +221,7 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             return @total_rows
+             return curr[:total_rows]
          end
          
          def prepare_value(type, value)
@@ -231,13 +248,17 @@ module Spider; module Model; module Storage; module Db
              return super(type, value)
          end
          
+         def last_insert_id
+             curr[:last_insert_id]
+         end
+         
          ##############################################################
          #   SQL methods                                              #
          ##############################################################         
          
          
          def sql_select(query)
-             @last_query_type = :select
+             curr[:last_query_type] = :select
              bind_vars = query[:bind_vars] || []
              tables_sql, tables_values = sql_tables(query)
              sql = "SELECT "
@@ -272,6 +293,8 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
+             primary_keys = []
+             foreign_keys = []
              connection do |c|
                  res = c.query("select * from #{table} where 1=0")
                  fields = res.fetch_fields
@@ -298,9 +321,23 @@ module Spider; module Model; module Storage; module Db
                          col[flag_name] = (flags & flag_val == 0) ? false : true
                      end
                      columns[f.name] = col
+                     primary_keys << f.name if f.is_pri_key?
+                 end                 
+                 res = c.query("select * from INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE constraint_schema = '#{@db_name}' and table_name = '#{table}'")
+                 while h = res.fetch_hash
+                     fk_table = h['REFERENCED_TABLE_NAME']
+                     if fk_table
+                         fk_fields1 = h['COLUMN_NAME'].split(',')
+                         fk_fields2 = h['REFERENCED_COLUMN_NAME'].split(',')
+                         fk_name = h['CONSTRAINT_NAME']
+                         fk_fields = {}
+                         fk_fields1.each_index{ |i| fk_fields[fk_fields1[i]] = fk_fields2[i] }
+                         foreign_keys << ForeignKeyConstraint.new(fk_name, fk_table, fk_fields)
+                     end
                  end
+                 
              end
-             return {:columns => columns}
+             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
          end
 
          def table_exists?(table)
@@ -350,6 +387,7 @@ module Spider; module Model; module Storage; module Db
              when 'Fixnum'
                  db_attributes[:length] = 11
              end
+             db_attributes[:autoincrement] = false if attributes[:autoincrement] && !attributes[:primary_key]
              return db_attributes
          end
          
@@ -382,24 +420,11 @@ module Spider; module Model; module Storage; module Db
          # Mapper extension
          
          module MapperExtension
-             
-             def generate_schema(schema=nil)
-                 schema = super
-                 autoincrement = schema.columns.select{ |k, v| v[:attributes][:autoincrement] }
-                 keep = autoincrement.select{ |k, v| @model.elements[k].primary_key? }.map{ |v| v[0] }
-                 keep = [] if keep.length > 1
-                 #keep = autoincrement[0] if (keep.length != 1)
-                 autoincrement.each do |k, v|
-                     next if k == keep[0]
-                     v[:attributes][:autoincrement] = false
-                     schema.set_sequence(k, @storage.sequence_name("#{schema.table}_#{k}"))
-                 end
-                 return schema
-             end
+        
              
              def do_insert(obj)
                  super
-                 schema.columns.select{ |k, v| v[:attributes][:autoincrement] }.each do |k, v| # should be one
+                 schema.columns.select{ |k, v| v.attributes[:autoincrement] }.each do |k, v| # should be one
                      obj.set_loaded_value(k, storage.last_insert_id)
                  end
              end

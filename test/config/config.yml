@@ -8,7 +8,7 @@ template.safe: false
 
 #set devel:
 storages:
-    default:
+    test:
         url: 'db:sqlite://var/db.test.sqlite'
     
 set test:

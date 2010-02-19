@@ -36,6 +36,8 @@ module Spider
     # Model
     
     config_option 'storage.db.pool.size', _("How many connections to open to a db"), :default => 5
+    config_option 'storage.db.pool.timeout', _("Timout in seconds to obtain a connection"), :default => 5
+    config_option 'storage.db.pool.retry', _("How many times to retry acquiring a connection"), :default => 5
     
     config_option 'storage.db.replace_debug_vars', _("Replace bound variables in debug sql"), {
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }

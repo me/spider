@@ -22,7 +22,7 @@ module Spider
         
         attr_accessor :_action, :_action_to, :_widget_action
         attr_accessor :widgets, :compiled, :id_path
-        attr_accessor :request, :response, :owner, :owner_class
+        attr_accessor :request, :response, :owner, :owner_class, :definer_class
         attr_accessor :mode # :widget, ...
         attr_reader :overrides, :path, :subtemplates, :widgets
         
@@ -109,8 +109,12 @@ module Spider
             end
             
             # Returns the view path (see #Spider::find_asset)
-            def real_path(path, cur_path=nil, owner_class=nil, search_paths=[])
-                Spider.find_resource_path(:views, path, cur_path, owner_class, search_paths)
+            def real_path(path, cur_path=nil, owner_classes=nil, search_paths=[])
+                Spider.find_resource_path(:views, path, cur_path, owner_classes, search_paths)
+            end
+            
+            def find_resource(path, cur_path=nil, owner_classes=nil, search_paths=[])
+                Spider.find_resource(:views, path, cur_path, owner_classes, search_paths)
             end
             
             # An array of possible override tags.
@@ -239,10 +243,12 @@ module Spider
             else
                 owner_class = (@owner ? @owner.class : @owner_class )
             end
-            res = Spider.find_resource(type.to_sym, src, @path, owner_class)
+            res = Spider.find_resource(type.to_sym, src, @path, [owner_class, @definer_class])
             controller = nil
             if (res && res.definer)
                 controller = res.definer.controller
+            elsif (owner_class < Spider::Controller)
+                controller = owner_class
             end
             ass[:path] = res.path if res
             if controller.respond_to?(:pub_url)
@@ -304,7 +310,11 @@ module Spider
                 root.search('tpl:include').each do |incl|
                     src = real_path(incl.attributes['src'])
                     @dependencies << src
-                    incl.swap(self.get_el(src).to_html)
+                    incl_el = self.get_el(src)
+                    assets = incl_el.children_of_type('tpl:asset')
+                    assets_html = ""
+                    assets.each{ |ass| assets_html += ass.to_html }
+                    incl.swap(assets_html+self.get_el(src).to_html)
                 end
             end
             return root
@@ -338,7 +348,7 @@ module Spider
         
         # The full path of a template mentioned in this one.
         def real_path(path)
-            self.class.real_path(path, File.dirname(@path), @owner.class)
+            self.class.real_path(path, File.dirname(@path), [@owner.class, @definer_class])
         end
             
         

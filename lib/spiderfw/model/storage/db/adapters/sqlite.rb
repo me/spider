@@ -27,7 +27,7 @@ module Spider; module Model; module Storage; module Db
             @conn = self.class.new_connection(*@connection_params) unless @conn
         end
         
-        def disconnect
+        def release
             @conn.close if @conn
             @conn = nil
         end
@@ -53,12 +53,12 @@ module Spider; module Model; module Storage; module Db
         
         def commit
             @conn.commit
-            disconnect
+            release
         end
         
         def rollback
             @conn.rollback
-            disconnect
+            release
         end
         
         def assigned_key(key)
@@ -90,7 +90,7 @@ module Spider; module Model; module Storage; module Db
                      return result
                  end
              ensure
-                 disconnect unless in_transaction?
+                 release unless in_transaction?
              end
          end
          

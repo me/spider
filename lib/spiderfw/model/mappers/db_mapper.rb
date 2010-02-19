@@ -319,6 +319,14 @@ module Spider; module Model; module Mappers
             order, order_joins = prepare_order(query)
             joins += order_joins if order_joins
             seen_fields = {}
+            model_pks = []
+            @model.primary_keys.each do |pk|
+                if (pk.integrated?)
+                    model_pks << pk.integrated_from.name
+                else
+                    model_pks << pk.name
+                end
+            end
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
@@ -326,7 +334,7 @@ module Spider; module Model; module Mappers
                     field = schema.field(el)
                     unless seen_fields[field.name]
                         keys << field
-                        primary_keys << field if element.primary_key?
+                        primary_keys << field if model_pks.include?(el)
                         seen_fields[field.name] = true
                     end
                 elsif (!element.multiple?)
@@ -335,6 +343,7 @@ module Spider; module Model; module Mappers
                             field = schema.foreign_key_field(el, key.name)
                             unless seen_fields[field.name]
                                 keys << field
+                                primary_keys << field if model_pks.include?(el)
                                 seen_fields[field.name] = true
                             end
                         end
@@ -368,7 +377,7 @@ module Spider; module Model; module Mappers
                     end
                     only_conditions[:values] << polym_only if query.request.only_polymorphs?
                     polym_select = model.mapper.prepare_select(Query.new(nil, polym_request)) # FIXME!
-                    polym_select[:keys].map!{ |key| "#{key} AS #{key.gsub('.', '_')}"}
+                    polym_select[:keys].map!{ |key| "#{key} AS #{key.to_s.gsub('.', '_')}"}
                     keys += polym_select[:keys]
                     join_fields = {}
                     @model.primary_keys.each do |key|
@@ -885,6 +894,7 @@ module Spider; module Model; module Mappers
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
                     if (!element.multiple?) # 1/n <-> 1
                         current_schema = schema.foreign_keys[element.name] || {}
+                        foreign_key_constraints = {}
                         element.type.primary_keys.each do |key|
                             if key.model? # fixme: only works with single primary key model (after the first)
                                 curr_key = key
@@ -907,12 +917,13 @@ module Spider; module Model; module Mappers
                             unless column
                                 column_name = element.attributes[:db_column_name] || @storage.column_name("#{element.name}_#{key.name}")
                                 column_attributes = @storage.column_attributes(key_type, key_attributes)
-                                column = Field.new(schema.table, column_name, column_name, column_attributes)
+                                column = Field.new(schema.table, column_name, column_type, column_attributes)
                             end
                             column.type ||= column_type
                             column.primary_key = true if (element.primary_key? || integrated_pks.include?([element.name, key.name]))
                             schema.set_foreign_key(element.name, key.name, column)
                         end
+
                     end
                 end
             end
@@ -922,6 +933,30 @@ module Spider; module Model; module Mappers
             return schema
         end
         
+        def compute_foreign_key_constraints
+            @model.each_element do |element|
+                foreign_key_constraints = {}
+                next if element.integrated?
+                next unless mapped?(element)
+                next if element.attributes[:added_reverse] && element.has_single_reverse?
+                next unless element.model?
+                next if element.multiple?
+                next unless element.type.mapper.storage == @storage
+                element.type.primary_keys.each do |key|
+                    column =  self.schema.foreign_key_field(element.name, key.name)
+                    column_name = column.name
+                    next if !key.integrated? && !element.type.mapper.schema.column(key.name) # FIXME
+                    foreign_key_constraints[column_name] = key.integrated? ? \
+                    element.type.mapper.schema.foreign_key_field(key.integrated_from.name, key.integrated_from_element).name : \
+                    element.type.mapper.schema.column(key.name).name
+                end
+                unless foreign_key_constraints.empty?
+                    name = element.attributes[:db_foreign_key_name] || "FK_#{schema.table.name}_#{element.name}"
+                    self.schema.set_foreign_key_constraint(name, element.type.mapper.schema.table.name, foreign_key_constraints)
+                end
+            end
+        end
+
         # Returns an array of all keys, "dereferencing" model keys.
         def collect_real_keys(element, path=[]) # :nodoc:
             real_keys = []
@@ -937,12 +972,14 @@ module Spider; module Model; module Mappers
 
         # Modifies the storage according to the schema.
         def sync_schema(force=false, options={})
+            compute_foreign_key_constraints
             schema_description = schema.get_schemas
             sequences = {}
             sequences[schema.table] = schema.sequences
 
             @model.elements_array.select{ |el| el.attributes[:anonymous_model] }.each do |el|
                 next if el.model.mapper.class != self.class
+                el.model.mapper.compute_foreign_key_constraints
                 schema_description.merge!(el.model.mapper.schema.get_schemas)
                 sequences[el.model.mapper.schema.table] ||= {}
                 sequences[el.model.mapper.schema.table].merge!(el.model.mapper.schema.sequences)
@@ -951,7 +988,12 @@ module Spider; module Model; module Mappers
                 # sequences.merge!(el.model.mapper.schema.sequences)
             end
             schema_description.each do |table_name, table_schema|
-                table_attributes = {:primary_key => table_schema[:attributes][:primary_key]}
+                table_attributes = {
+                    :primary_keys => table_schema[:attributes][:primary_keys]
+                }
+                unless options[:no_foreign_key_constraints]
+                    table_attributes[:foreign_key_constraints] = table_schema[:attributes][:foreign_key_constraints] || []
+                end
                 if @storage.table_exists?(table_name)
                     alter_table(table_name, table_schema[:columns], table_attributes, force)
                 else
@@ -1016,8 +1058,8 @@ module Spider; module Model; module Mappers
                     add_fields << field_hash
                 else
                     type = fields[field][:type]
-                    attributes = fields[field][:attributes]
-                    attributes ||= {}
+                    field_attributes = fields[field][:attributes]
+                    field_attributes ||= {}
                     if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
                         Spider.logger.debug("DIFFERENT: #{field}")
                         Spider.logger.debug(current_fields[field])
@@ -1031,15 +1073,20 @@ module Spider; module Model; module Mappers
                 raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
             end
             alter_attributes = {}
-            if (current[:primary_key] != attributes[:primary_key])
-                alter_attributes[:primary_key] = attributes[:primary_key]
+            if (current[:primary_keys] != attributes[:primary_keys])
+                alter_attributes[:primary_keys] = attributes[:primary_keys]
             end
+            if (attributes[:foreign_key_constraints])
+                
+            end
+            alter_attributes[:foreign_key_constraints] = attributes[:foreign_key_constraints]
             @storage.alter_table({
                 :table => name,
                 :add_fields => add_fields,
                 :alter_fields => alter_fields,
                 :all_fields => all_fields,
-                :attributes => alter_attributes
+                :attributes => alter_attributes,
+                :current => current
             })
         end
         

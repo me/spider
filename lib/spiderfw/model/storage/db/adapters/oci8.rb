@@ -27,6 +27,10 @@ module Spider; module Model; module Storage; module Db
             return conn
         end
         
+        def self.disconnect(conn)
+            conn.logoff
+        end
+        
         def self.connection_alive?(conn)
             # TODO: move to ping method when ruby-oci8 2.x is stable
             begin
@@ -37,13 +41,13 @@ module Spider; module Model; module Storage; module Db
             end
         end
         
-        def disconnect
+        def release
             begin
-                @conn.autocommit = true if @conn
+                curr[:conn].autocommit = true if curr[:conn]
                 super
             rescue
-                self.class.remove_connection(@conn, @connection_params)
-                @conn = nil
+                self.class.remove_connection(curr[:conn], @connection_params)
+                curr[:conn] = nil
             end
         end
         
@@ -64,22 +68,22 @@ module Spider; module Model; module Storage; module Db
         end
         
 
-        def start_transaction
+        def do_start_transaction
             connection.autocommit = false
         end
         
         def in_transaction?
-            return @conn && !@conn.autocommit?
+            return curr[:conn] && !curr[:conn].autocommit?
         end
         
-        def commit
-            @conn.commit if @conn
-            disconnect
+        def do_commit
+            curr[:conn].commit if curr[:conn]
+            release
         end
         
-        def rollback
-            @conn.rollback
-            disconnect
+        def do_rollback
+            curr[:conn].rollback
+            release
         end
         
         def prepare_value(type, value)
@@ -90,7 +94,7 @@ module Spider; module Model; module Storage; module Db
             return OCI8NilValue.new(Spider::Model.ruby_type(type)) if (value == nil)
             case type.name
             when 'Spider::DataTypes::Binary'
-                return OCI8::BLOB.new(@conn, value)
+                return OCI8::BLOB.new(curr[:conn], value)
             end
             return value
         end
@@ -117,7 +121,7 @@ module Spider; module Model; module Storage; module Db
                  if (bind_vars && bind_vars.length > 0)
                      debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                  end
-                 @last_executed = [sql, bind_vars]
+                 curr[:last_executed] = [sql, bind_vars]
                  if (Spider.conf.get('storage.db.replace_debug_vars'))
                      cnt = -1
                      debug("oci8 executing: "+sql.gsub(/:\d+/){
@@ -155,18 +159,18 @@ module Spider; module Model; module Storage; module Db
                  if (have_result)
                      unless block_given?
                          result.extend(StorageResult)
-                         @last_result = result
+                         curr[:last_result] = result
                          return result
                      end
                  else
                      return res
                  end
              rescue => exc
-                 disconnect
+                 release
                  raise exc
              ensure
                  cursor.close if cursor
-                 disconnect if @conn && !in_transaction?
+                 release if curr[:conn] && !in_transaction?
              end
          end
          
@@ -181,10 +185,10 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             return nil unless @last_executed
-             q = @last_query.clone
+             return nil unless curr[:last_executed]
+             q = curr[:last_query].clone
              unless (q[:offset] || q[:limit])
-                 return @last_result ? @last_result.length : nil
+                 return curr[:last_result] ? curr[:last_result].length : nil
              end
              q.delete(:offset); q.delete(:limit)
              sql, vars = sql_select(q)
@@ -203,9 +207,27 @@ module Spider; module Model; module Storage; module Db
          #   SQL methods                                              #
          ##############################################################
          
+         def sql_drop_primary_key(table_name)
+             constraint_name = nil
+             connection do |conn|
+                 res = conn.exec("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS cons, user_cons_columns cols 
+                                    WHERE cons.constraint_type = 'P'
+                                    AND cons.constraint_name = cols.constraint_name
+                                    AND cols.table_name = '#{table_name}'")
+                 if h = res.fetch_hash
+                     constraint_name = h['CONSTRAINT_NAME']
+                 end
+             end
+             "ALTER TABLE #{table_name} DROP CONSTRAINT #{constraint_name}"
+         end
+         
+         def sql_drop_foreign_key(table_name, key_name)
+             "ALTER TABLE #{table_name} DROP CONSTRAINT #{key_name}"
+         end
+         
          
          def sql_select(query)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              # Spider::Logger.debug("SQL SELECT:")
              # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
@@ -240,11 +262,11 @@ module Spider; module Model; module Storage; module Db
              order = sql_order(query)
              if (query[:limit])
                  if (query[:offset])
-                     limit = "oci8_row_num between :#{@bind_cnt+=1} and :#{@bind_cnt+=1}"
+                     limit = "oci8_row_num between :#{curr[:bind_cnt]+=1} and :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:offset] + 1
                      bind_vars << query[:offset] + query[:limit]
                  else
-                     limit = "oci8_row_num < :#{@bind_cnt+=1}"
+                     limit = "oci8_row_num < :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:limit] + 1
                  end
                  replaced_fields.each do |f, repl|
@@ -283,11 +305,11 @@ module Spider; module Model; module Storage; module Db
                      if (bound_vars)
                          val0, val1 = value
                      else
-                         val0 = ":#{(@bind_cnt += 1)}"; val1 = ":#{(@bind_cnt += 1)}"
+                         val0 = ":#{(curr[:bind_cnt] += 1)}"; val1 = ":#{(curr[:bind_cnt] += 1)}"
                      end
                      sql = "#{key} #{comp} #{val0} AND #{val1}"
                  else
-                     val = bound_vars ? ":#{(@bind_cnt += 1)}" : value
+                     val = bound_vars ? ":#{(curr[:bind_cnt] += 1)}" : value
                      sql = "#{key} #{comp} #{val}"
                  end
                  
@@ -297,9 +319,9 @@ module Spider; module Model; module Storage; module Db
          end
          
          def sql_insert(insert)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              keys = insert[:values].keys.join(', ')
-             vals = insert[:values].values.map{":#{(@bind_cnt += 1)}"}
+             vals = insert[:values].values.map{":#{(curr[:bind_cnt] += 1)}"}
              vals = vals.join(', ')
              sql = "INSERT INTO #{insert[:table]} (#{keys}) " +
                    "VALUES (#{vals})"
@@ -307,23 +329,23 @@ module Spider; module Model; module Storage; module Db
          end
          
          def sql_insert_values(insert)
-             insert[:values].values.map{":#{(@bind_cnt += 1)}"}.join(', ')
+             insert[:values].values.map{":#{(curr[:bind_cnt] += 1)}"}.join(', ')
          end
          
          def sql_update(query)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              super
          end
          
          def sql_update_values(update)
              update[:values].map{ |k, v| 
-                 val = v.is_a?(Spider::QueryFuncs::Expression) ? v : ":#{(@bind_cnt += 1)}"
+                 val = v.is_a?(Spider::QueryFuncs::Expression) ? v : ":#{(curr[:bind_cnt] += 1)}"
                  "#{k} = #{val}"
              }.join(', ')
          end
          
          def sql_delete(del, force=false)
-             @bind_cnt = 0
+             curr[:bind_cnt] = 0
              super
          end
          
@@ -340,12 +362,12 @@ module Spider; module Model; module Storage; module Db
          def create_sequence(sequence_name, start=1, increment=1)
              execute("create sequence #{sequence_name} start with #{start} increment by #{increment}")
          end
-         
+
          def update_sequence(name, val)
              execute("drop sequence #{name}")
              create_sequence(name, val)
          end
-         
+
          ##############################################################
          #   Methods to get information from the db                   #
          ##############################################################
@@ -356,6 +378,8 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
+             primary_keys = []
+             o_foreign_keys = {}
              connection do |conn|
                  t = conn.describe_table(table)
                  t.columns.each do |c|
@@ -369,8 +393,39 @@ module Spider; module Model; module Storage; module Db
                      col.delete(:length) if (col[:precision])
                      columns[c.name] = col
                  end
+                 res = conn.exec("SELECT cols.table_name, cols.COLUMN_NAME, cols.position, cons.status, cons.owner
+                 FROM user_constraints cons, user_cons_columns cols
+                 WHERE cons.constraint_type = 'P'
+                 AND cons.constraint_name = cols.constraint_name
+                 AND cols.table_name = '#{table}'")
+                 while h = res.fetch_hash
+                     primary_keys << h['COLUMN_NAME']
+                 end
+                 res = conn.exec("SELECT cons.constraint_name as CONSTRAINT_NAME, cols.column_name as REFERENCED_COLUMN,
+                 cols.table_name as REFERENCED_TABLE, cons.column_name as COLUMN_NAME
+                 FROM user_tab_columns col
+                     join user_cons_columns cons
+                       on col.table_name = cons.table_name 
+                      and col.column_name = cons.column_name
+                     join user_constraints cc 
+                       on cons.constraint_name = cc.constraint_name
+                     join user_cons_columns cols 
+                       on cc.r_constraint_name = cols.constraint_name 
+                      and cons.position = cols.position
+                 WHERE cc.constraint_type = 'R'
+                 AND cons.table_name = '#{table}'")
+                 while h = res.fetch_hash
+                     fk_name = h['CONSTRAINT_NAME']
+                     o_foreign_keys[fk_name] ||= {:table => h['REFERENCED_TABLE'], :columns => {}}
+                     o_foreign_keys[fk_name][:columns][h['COLUMN_NAME']] = h['REFERENCED_COLUMN']
+                 end
              end
-             return {:columns => columns}
+             foreign_keys = []
+             o_foreign_keys.each do |fk_name, fk_hash|
+                 foreign_keys << ForeignKeyConstraint.new(fk_name, fk_hash[:table], fk_hash[:columns])
+             end
+             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
+
          end
 
          def table_exists?(table)
@@ -435,6 +490,10 @@ module Spider; module Model; module Storage; module Db
          
          def sequence_name(name)
              shorten_identifier(name, 30).upcase
+         end
+         
+         def foreign_key_name(name)
+             shorten_identifier(super, 30)
          end
          
          def schema_field_varchar2_equal?(current, field)

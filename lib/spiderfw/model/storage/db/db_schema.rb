@@ -23,6 +23,7 @@ module Spider; module Model; module Storage; module Db
             @junction_tables = {}
             @sequences = {}
             @pass = {}
+            @foreign_key_constraints = []
         end
         
         # Returns the main table name.
@@ -92,16 +93,21 @@ module Spider; module Model; module Storage; module Db
         
         # Sets the column name for an element.
         def set_column(element_name, field)
-            field = Field.new(@table, field[:name], field[:type]) if field.is_a?(Hash)
+            field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             @columns[element_name] = field
         end
         
         # Sets a foreign key to the primary key of an element.
         def set_foreign_key(element_name, element_key, field)
-            field = Field.new(@table, field[:name], field[:type]) if field.is_a?(Hash)
+            field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             @foreign_keys[element_name] ||= {}
             @foreign_keys[element_name][element_key] = field
         end
+        
+        def set_foreign_key_constraint(name, table, keys, options={})
+            @foreign_key_constraints << ForeignKeyConstraint.new(name, table, keys, options)
+        end
+        
         
         # Sets the db name for a named sequence.
         def set_sequence(name, db_name)
@@ -127,16 +133,17 @@ module Spider; module Model; module Storage; module Db
         #   }}
         def get_schemas
             schemas = {}
-            schemas[@table] = {:columns => {}, :attributes => {}}
+            schemas[@table.name] = {:columns => {}, :attributes => {}}
             @columns.each do |element, column|
-                schemas[@table][:columns][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
+                schemas[@table.name][:columns][column.name] = {:type => column.type, :attributes => column.attributes}
             end
             @foreign_keys.each_key do |element|
                 @foreign_keys[element].each do |key, column|
-                    schemas[@table][:columns][column[:name]] = {:type => column[:type], :attributes => column[:attributes]}
+                    schemas[@table.name][:columns][column.name] = {:type => column.type, :attributes => column.attributes}
                 end
             end
-            schemas[@table][:attributes][:primary_key] = @primary_key
+            schemas[@table.name][:attributes][:primary_keys] = primary_keys.map{ |k| k.name }
+            schemas[@table.name][:attributes][:foreign_key_constraints] = @foreign_key_constraints
             return schemas
         end
         
@@ -174,7 +181,7 @@ module Spider; module Model; module Storage; module Db
         
         def initialize(table, name, type, attributes={})
             @table = table
-            @name = name
+            @name = name.to_s
             @type = type
             @attributes = attributes
             @table.add_field(self)
@@ -195,7 +202,29 @@ module Spider; module Model; module Storage; module Db
             "#{@table.name}.#{@name}"
         end
         
+        def inspect
+            "#<#{self.class.name}:#{self.object_id} @name=\"#{@name}\", @table=#<Spider::Model::Storage::Db::Table:0x6d3ff94 #{@table.name}> >"
+        end
         
+    end
+    
+    class ForeignKeyConstraint
+        attr_reader :name, :table, :fields, :options
+        
+        def initialize(name, table, fields, options={})
+            @name = name.to_s
+            @table = table
+            @fields = fields
+            @options = options
+        end
+        
+        def ==(other)
+            other.table == @table && other.fields == @fields && other.options == @options
+        end
+        
+        def eq?(other)
+            self ==  other
+        end
         
     end
     
