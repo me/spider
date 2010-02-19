@@ -1,10 +1,10 @@
 require 'rake'
 
 Gem::Specification.new do |s|
-  s.name     = "spider"
-  s.version  = "0.3"
-  s.date     = "2008-11-21"
-  s.summary  = "A framework"
+  s.name     = "spiderfw"
+  s.version  = "0.5.2"
+  s.date     = "2010-02-18"
+  s.summary  = "A (web) framework"
   s.email    = "abmajor7@gmail.com"
   s.homepage = "http://github.com/me/spider"
   s.description = "Spider is yet another Ruby framework."
@@ -14,20 +14,21 @@ Gem::Specification.new do |s|
       'README',
       'Rakefile',
       'spider.gemspec',
-      'lib/**/*.rb',
+      'apps/**/*',
       'bin/*',
-      'blueprints/**/*'
+      'blueprints/**/*',
       'data/**/*',
-      'tasks/**/*'
+      'lib/**/*.rb',
+      'views/**/*'
   ].to_a
 #  s.test_files = []
 #  s.rdoc_options = ["--main", "README.txt"]
 #  s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
-  s.executables = ['bin/spider']
-  s.default_executable = 'bin/spider'
+  s.executables = ['spider']
+  s.default_executable = 'spider'
   s.add_dependency("cmdparse", ["> 2.0.0"])
   s.add_dependency("gettext", ["> 2.0.0"])
-  s.add_dependency("hpricot", ["= 0.6"])
+  s.add_dependency("hpricot", ["> 0.8"])
   s.add_dependency("json", ["> 1.1"])
   s.add_dependency("uuid", ["> 2.0"])
   s.add_dependency("rufus-scheduler", ["> 1.0"])
