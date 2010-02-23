@@ -26,13 +26,15 @@ module Spider; module Model
         def get(model, values)
             @objects[model] ||= {}
             pks = {}
+            has_pks = false
             model.primary_keys.each do |k| 
                 # dereference integrated primary keys
                 pks[k.name] = (k.integrated? && values[k.integrated_from.name]) ? 
                     values[k.integrated_from.name].get(k.integrated_from_element) :
                     values[k.name]
-                raise IdentityMapperException, "Can't get without all primary keys" unless pks[k.name]
+                has_pks = true if pks[k.name]
             end
+            raise IdentityMapperException, "Can't get without all primary keys" unless has_pks
             pks.extend(HashComparison)
             obj = (@objects[model][pks] ||= model.new(pks))
             pks.each{ |k, v| obj.element_loaded(k) }
