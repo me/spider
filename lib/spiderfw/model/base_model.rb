@@ -989,6 +989,11 @@ module Spider; module Model
             end
             if (values)
                 if (values.is_a? Hash)
+                    values.keys.select{ |k| 
+                        self.class.elements[k.to_sym] && self.class.elements[k.to_sym].primary_key? 
+                    }.each do |k|
+                        set!(k, values[k])
+                    end
                     values.each do |key, val|
                         set!(key, val)
                     end
