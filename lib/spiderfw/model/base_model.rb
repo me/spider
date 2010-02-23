@@ -196,6 +196,8 @@ module Spider; module Model
                     parts = attributes[:integrated_from].split('.')
                     attributes[:integrated_from] = @elements[parts[0].to_sym]
                     attributes[:integrated_from_element] = parts[1].to_sym if parts[1]
+                elsif (attributes[:integrated_from].is_a?(Symbol))
+                    attributes[:integrated_from] = @elements[attributes[:integrated_from]]
                 end
                 if (!attributes[:integrated_from_element])
                     attributes[:integrated_from_element] = name
@@ -503,6 +505,11 @@ module Spider; module Model
         # this will not have the desired effect; remove and redefine the element instead.
         def self.element_attributes(element_name, attributes)
             elements[element_name].attributes.merge!(attributes)
+            if attributes[:primary_key] && !@primary_keys.include?(elements[element_name])
+                @primary_keys << elements[element_name]
+            elsif !attributes[:primary_key]
+                @primary_keys.delete(elements[element_name])
+            end
         end
         
         # Defines a multiple element. Equivalent to calling
