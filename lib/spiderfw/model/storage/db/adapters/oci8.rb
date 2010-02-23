@@ -245,7 +245,7 @@ module Spider; module Model; module Storage; module Db
                      #   end
                      transformed = "O#{replace_cnt += 1}"
                      replaced_fields[field.to_s] = transformed
-                     if (field.type == 'CLOB')
+                     if (field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB')
                          field = "CAST(#{field} as varchar2(100))"
                      end
                      query[:keys] << "#{field} AS #{transformed}"
