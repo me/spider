@@ -111,7 +111,7 @@ module Spider; module Model; module Storage; module Db
                 return value.to_datetime if type == DateTime
                 return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
             when 'Spider::DataTypes::Text'
-                value =  value ? value.read : ''
+                value = value.read if value.respond_to?(:read)
             end
             return super(type, value)
         end
