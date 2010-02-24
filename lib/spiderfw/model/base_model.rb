@@ -990,6 +990,7 @@ module Spider; module Model
             if (values)
                 if (values.is_a? Hash)
                     values.keys.select{ |k| 
+                        k = k.name if k.is_a?(Element)
                         self.class.elements[k.to_sym] && self.class.elements[k.to_sym].primary_key? 
                     }.each do |k|
                         set!(k, values[k])
