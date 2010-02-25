@@ -1108,8 +1108,9 @@ module Spider; module Model
             element = element.name if (element.class == Spider::Model::Element)
             first, rest = element.to_s.split('.', 2)
             if (rest)
-                return nil unless element_has_value?(first.to_sym)
-                return send(first).get(rest)
+                sub_val = send(first)
+                return nil unless sub_val
+                return sub_val.get(rest)
             end
             return send(element)
         end
