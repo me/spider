@@ -210,7 +210,7 @@ module Spider; module Model
 
             orig_type = type
             assoc_type = nil
-            if (attributes[:junction] || (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && \
+            if (proc || attributes[:junction] || (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && \
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
                (attributes[:has_single_reverse] == false || !attributes[:reverse] ||  (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?))))
@@ -1059,7 +1059,7 @@ module Spider; module Model
                     end
                 end
                 obj.identity_mapper = self.identity_mapper if obj.respond_to?(:identity_mapper)
-                if (element.attributes[:junction] && element.attributes[:keep_junction])
+                if (element.multiple? && element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
                 end
                 if (element.attributes[:set] && element.attributes[:set].is_a?(Hash))
