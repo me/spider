@@ -78,6 +78,17 @@ module Spider; module HTTP
         
         def initialize(server)
             @server = server
+            if (Spider.conf.get('webserver.timeout'))
+                begin
+                  require 'system_timer'
+                  @timer = SystemTimer
+                rescue LoadError
+                  require 'timeout'
+                  @timer = Timeout
+                end
+
+            end
+            
             #@request_notify = true
         end
         
@@ -113,16 +124,25 @@ module Spider; module HTTP
             end
 
             begin
-                controller = ::Spider::HTTPController.new(controller_request, controller_response)
-                controller.extend(Spider::FirstResponder)
-                Spider::Logger.debug("CONTROLLER: #{controller}")
-                controller.before(path)
-                MongrelIO.send_headers(controller_response, response) unless Spider.conf.get('http.auto_headers')
-                controller.execute(path)
-                Spider::Logger.debug("Response:")
-                Spider::Logger.debug(controller.response)
-                controller.after(path)
-                Spider::Logger.debug("Controller #{controller} DONE")
+                main_block = lambda do
+                    controller = ::Spider::HTTPController.new(controller_request, controller_response)
+                    controller.extend(Spider::FirstResponder)
+                    Spider::Logger.debug("CONTROLLER: #{controller}")
+                    controller.before(path)
+                    MongrelIO.send_headers(controller_response, response) unless Spider.conf.get('http.auto_headers')
+                    controller.execute(path)
+                    Spider::Logger.debug("Response:")
+                    Spider::Logger.debug(controller.response)
+                    controller.after(path)
+                    Spider::Logger.debug("Controller #{controller} DONE")
+                end
+                if (Spider.conf.get('webserver.timeout'))
+                    @timer.timeout(Spider.conf.get('webserver.timeout')) do
+                        main_block.call
+                    end
+                else
+                    main_block.call
+                end
             rescue => exc
                 Spider.logger.error(exc)
                 controller.ensure() if controller
