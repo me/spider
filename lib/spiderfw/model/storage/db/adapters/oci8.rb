@@ -113,6 +113,8 @@ module Spider; module Model; module Storage; module Db
                 return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
             when 'Spider::DataTypes::Text'
                 value = value.read if value.respond_to?(:read)
+            when 'Spider::DataTypes::Decimal', 'BigDecimal'
+                value = value.to_s
             end
             return super(type, value)
         end
