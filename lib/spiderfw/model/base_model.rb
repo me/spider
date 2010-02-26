@@ -807,6 +807,11 @@ module Spider; module Model
             @mapper_modules << mod
         end
         
+        def self.mapper_include_for(params, mod)
+            @mapper_modules_for ||= []
+            @mapper_modules_for << [params, mod]
+        end
+        
         # The given proc will be mixed in the mapper used by this class
         # Note that the proc will be converted to a Module, so any overridden methods will still have 
         # access to the super method.
@@ -880,6 +885,13 @@ module Spider; module Model
             mapper = storage.get_mapper(self)
             if (@mapper_modules)
                 @mapper_modules.each{ |mod| mapper.extend(mod) }
+            end
+            if (@mapper_modules_for)
+                @mapper_modules_for.each do |params, mod|
+                    if params.is_a?(String)
+                        mapper.extend(mod) if self.use_storage == params
+                    end
+                end
             end
             if (@mapper_procs)
                 @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
