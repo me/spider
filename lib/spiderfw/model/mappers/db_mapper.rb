@@ -460,10 +460,28 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 if (!v.is_a?(Condition) && element.model?)
                     condition.delete(element.name)
-                    if (v.is_a?(BaseModel))
-                        element.model.primary_keys.each do |primary_key|
-                            condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
+                    def set_pks_condition(condition, el, val, prefix)
+                        el.model.primary_keys.each do |primary_key|
+                            new_prefix = "#{prefix}.#{primary_key.name}"
+                            if (primary_key.model?)
+                                if (primary_key.model.primary_keys.length == 1)
+                                    # FIXME: this should not be needed, see below
+                                    condition.set(new_prefix, '=', val.get(primary_key).get(primary_key.model.primary_keys[0]))
+                                else
+                                    # FIXME! does not work, the subcondition does not get processed
+                                    raise "Subonditions on multiple key elements not supported yet"
+                                    set_pks_condition(condition,  primary_key, val.get(primary_key), new_prefix)
+                                end
+                            else
+                                condition.set(new_prefix, '=', val.get(primary_key))
+                            end
                         end
+                    end
+                    if (v.is_a?(BaseModel))
+                        set_pks_condition(condition, element, v, element.name)
+                        # element.model.primary_keys.each do |primary_key|
+                        #                             condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
+                        #                         end
                     elsif (element.model.primary_keys.length == 1 )
                         new_v = Condition.new
                         if (model.mapper.have_references?(element.name))
