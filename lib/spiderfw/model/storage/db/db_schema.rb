@@ -179,8 +179,8 @@ module Spider; module Model; module Storage; module Db
     end
     
     class Field
-        attr_reader :name, :table
-        attr_accessor :type
+        attr_reader :table
+        attr_accessor :name, :type
         attr_accessor :attributes
         
         def initialize(table, name, type, attributes={})
