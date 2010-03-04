@@ -30,10 +30,18 @@ module Spider; module Model
             true
         end
         
+        def _set_dates(bool=nil)
+            @_set_dates = bool if bool != nil
+            @_set_dates
+        end
+        
+        
         with_mapper do
             def before_save(obj, mode)
-                obj.obj_created = DateTime.now if mode == :insert
-                obj.obj_modified = DateTime.now if obj.modified?
+                if obj._set_dates
+                    obj.obj_created = DateTime.now if mode == :insert
+                    obj.obj_modified = DateTime.now if obj.modified?
+                end
                 super
             end
         end
