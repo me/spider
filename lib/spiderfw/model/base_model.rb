@@ -259,6 +259,7 @@ module Spider; module Model
                         assoc_type.class_eval(&proc)
                     end
                 end
+                orig_type.referenced_by_junctions << [assoc_type, other_name]
                 attributes[:keep_junction] = true if (attributes[:through] && attributes[:keep_junction] != false)
                 attributes[:association_type] = assoc_type
             end
@@ -703,6 +704,10 @@ module Spider; module Model
         
         # Does nothing. This method is to keep note of elements created in other models.
         def self._added_elements(&proc)
+        end
+        
+        def self.referenced_by_junctions
+            @referenced_by_junctions ||= []
         end
         
         #####################################################
