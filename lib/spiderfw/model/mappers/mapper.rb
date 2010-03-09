@@ -378,7 +378,6 @@ module Spider; module Model
             Spider::Logger.debug(condition)
             prepare_query_condition(condition)
             cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
-            junctions = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:junction] }
             assocs = association_elements.select do |el|
                 !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
             end
@@ -391,9 +390,6 @@ module Spider; module Model
                 started_transaction = true
                 curr.each do |curr_obj|
                     obj_vals = {}
-                    junctions.each do |el|
-                        obj_vals[el] = curr_obj.get(el)
-                    end
                     cascade.each do |el|
                         obj_vals[el] = curr_obj.get(el)
                     end
