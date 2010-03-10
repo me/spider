@@ -6,7 +6,7 @@ module Spider; module TemplateBlocks
         
         def compile(options={})
             init = ""
-            cond = vars_to_scene(@el.attributes['sp:tag-if'])
+            cond = vars_to_scene(@el.get_attribute('sp:tag-if'))
             @el.remove_attribute('sp:tag-if')
             html = HTML.new(@el, @template)
             c = "if (#{cond})\n"

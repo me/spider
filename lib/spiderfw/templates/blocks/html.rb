@@ -21,25 +21,25 @@ module Spider; module TemplateBlocks
         
         def get_start(options)
             if options[:mode] == :widget
-                cl = @el.attributes['class'] || ''
-                if @el.attributes['id']
+                cl = @el.get_attribute('class') || ''
+                if @el.has_attribute?('id')
                     cl += ' ' unless cl.empty?
-                    cl += "id-#{@el.attributes['id']}"
-                    @el.raw_attributes.delete('id')
+                    cl += "id-#{@el.get_attribute('id')}"
+                    @el.remove_attribute('id')
                 end
                 if (options[:root])
                     cl += " widget"
                     if options[:owner_class]
                         cl += " wdgt-#{options[:owner_class].name.gsub('::', '-')}"
                     end
-                    @el.raw_attributes['id'] =  "{ @widget[:full_id] }"
+                    @el.set_attribute('id', "{ @widget[:full_id] }")
                     cl += ' ' unless cl.empty?
                     cl += '{ @widget[:css_classes] }'
                 end
-                @el.raw_attributes['class'] = cl
+                @el.set_attribute('class', cl)
             end
             start = "<"+@el.name
-            @el.attributes.each do |key, val|
+            @el.attributes.to_hash.each do |key, val|
                 start += " #{key}=\""
                 rest = scan_vars(val) do |text, code|
                     start += text+"'+("+vars_to_scene(code)+").to_s+'"

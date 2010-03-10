@@ -204,11 +204,11 @@ module Spider
             el = process_tags(root)
             @overrides.each{ |o| apply_override(root, o) } if (@overrides)
             root.search('tpl:placeholder').remove # remove empty placeholders
-            res =  root.children_of_type('tpl:asset')
+            res =  root.children ? root.children_of_type('tpl:asset') : []
             res_init = ""
             res.each do |r|
                 r.set_attribute('class', 'to_delete')
-                pr = parse_asset(r.attributes['type'], r.attributes['src'], r.attributes)
+                pr = parse_asset(r.get_attribute('type'), r.get_attribute('src'), r.attributes.to_hash)
                 assets << pr
                 res_init += "@assets << { 
                     :type => :#{pr[:type]}, 
@@ -274,16 +274,18 @@ module Spider
             doc = open(path){ |f| Hpricot.XML(f) }
             root = doc.root
             overrides = []
-            override_tags.each do |tag|
-                overrides += root.children_of_type('tpl:'+tag)
+            if root.children
+                override_tags.each do |tag|
+                    overrides += root.children_of_type('tpl:'+tag)
+                end
             end
             overrides.each{ |o| o.set_attribute('class', 'to_delete') }
             root.search('.to_delete').remove
             add_overrides overrides
             if (root.name == 'tpl:extend')
-                ext_src = root.attributes['src']
-                ext_app = root.attributes['app']
-                ext_widget = root.attributes['widget']
+                ext_src = root.get_attribute('src')
+                ext_app = root.get_attribute('app')
+                ext_widget = root.get_attribute('widget')
                 if ext_widget
                     ext_widget = Spider::Template.get_registered_class(ext_widget)
                     ext_src ||= ext_widget.default_template
@@ -297,7 +299,7 @@ module Spider
                     ext_search_paths = ext_owner.template_paths
                 end 
                 ext = self.class.real_path(ext_src, @path, ext_owner, ext_search_paths)
-                assets = root.children_of_type('tpl:asset')
+                assets = root.children ? root.children_of_type('tpl:asset') : []
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
@@ -308,10 +310,10 @@ module Spider
                 end
             else
                 root.search('tpl:include').each do |incl|
-                    src = real_path(incl.attributes['src'])
+                    src = real_path(incl.get_attribute('src'))
                     @dependencies << src
                     incl_el = self.get_el(src)
-                    assets = incl_el.children_of_type('tpl:asset')
+                    assets = incl_el.children ? incl_el.children_of_type('tpl:asset') : []
                     assets_html = ""
                     assets.each{ |ass| assets_html += ass.to_html }
                     incl.swap(assets_html+self.get_el(src).to_html)
@@ -326,16 +328,16 @@ module Spider
             if (block == :Tag)
                 sp_attributes = {}
                 # FIXME: should use blocks instead
-                el.attributes.each do |key, value|
+                el.attributes.to_hash.each do |key, value|
                     if (key[0..1] == 'sp')
                         sp_attributes[key] = value
-                        el.raw_attributes.delete(key)
+                        el.remove_attribute(key)
                     end
                 end
                 klass = Spider::Template.get_registered_class(el.name)
                 tag = klass.new(el)
                 res = process_tags(Hpricot(tag.render).root)
-                sp_attributes.each{ |key, value| res.raw_attributes[key] = value }
+                sp_attributes.each{ |key, value| res.set_attribute(key, value) }
                 return res
             else
                 el.each_child do |child|
@@ -480,13 +482,13 @@ module Spider
         
         def add_overrides(overrides)
             overrides.each do |ov|
-                w = ov.attributes['widget']
+                w = ov.get_attribute('widget')
                 if (w)
                     first, rest = w.split('/', 2)
                     if (rest)
-                        ov.raw_attributes['widget'] = rest
+                        ov.set_attribute('widget', rest)
                     else
-                        ov.raw_attributes.delete('widget')
+                        ov.remove_attribute('widget')
                     end
  #                   debugger
                     @widgets_overrides[first] ||= []
@@ -504,7 +506,7 @@ module Spider
         
         # Applies an override to an (Hpricot) element.
         def apply_override(el, override)
-            search_string = override.attributes['search']
+            search_string = override.get_attribute('search')
             override.name = 'tpl:override-content' if override.name == 'tpl:inline-override'
             if (search_string)
                 # # Fix Hpricot bug!
@@ -513,7 +515,7 @@ module Spider
                 # end
                 found = el.parent.search(search_string)
             elsif (override.name == 'tpl:content')
-                found = el.search("tpl:placeholder[@name='#{override.attributes['name']}']")
+                found = el.search("tpl:placeholder[@name='#{override.get_attribute('name')}']")
             else
                 found = [el]
             end
@@ -531,10 +533,10 @@ module Spider
                         f.swap(override.innerHTML)
                         parent.search('tpl:overridden').each{ |o| o.swap(overridden) }
                     elsif (override.name == 'tpl:override-attr')
-                        f.set_attribute(override.attributes["name"], override.attributes["value"])
+                        f.set_attribute(override.get_attribute("name"), override.get_attribute("value"))
                     elsif (override.name == 'tpl:append-attr')
-                        f.set_attribute(override.attributes["name"], \
-                        (f.attributes[override.attributes["name"]] || '')+override.attributes["value"]) 
+                        f.set_attribute(override.get_attribute("name"), \
+                        (f.get_attribute(override.get_attribute("name")) || '')+override.get_attribute("value")) 
                     elsif (override.name == 'tpl:append')
                         f.innerHTML += override.innerHTML
                     elsif (override.name == 'tpl:prepend')

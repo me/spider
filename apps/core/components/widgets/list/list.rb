@@ -170,7 +170,7 @@ module Spider; module Components
         end
         
         def create_requested_sublist(sbl, row, cnt)
-            attributes = sbl.attributes.clone
+            attributes = sbl.attributes.to_hash.clone
             if (attributes['element'])
                 el = @model.elements[attributes['element'].to_sym]
                 #next unless el # may be ok if the query is polymorphic
@@ -228,7 +228,7 @@ module Spider; module Components
 
         def parse_runtime_content(doc, src_path='')
             doc = super
-            return doc if doc.children.empty?
+            return doc if !doc.children || doc.children.empty?
             doc.root.children_of_type('sublist').each do |sl|
                 raise ArgumentError, "Sublist of #{@id} does not have an id" unless sl['id']
                 @requested_sublists ||= []
