@@ -35,6 +35,7 @@ module Spider
                     def request_url
                         Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
                     end
+                    alias :url :request_url
                     
                     def pub_url
                         request_url+'/public'
