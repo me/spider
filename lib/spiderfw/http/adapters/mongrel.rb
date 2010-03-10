@@ -122,7 +122,7 @@ module Spider; module HTTP
             else
                 controller_response.server_output = response
             end
-
+            controller = nil
             begin
                 main_block = lambda do
                     controller = ::Spider::HTTPController.new(controller_request, controller_response)
