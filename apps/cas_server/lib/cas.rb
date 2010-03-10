@@ -133,7 +133,7 @@ module Spider; module CASServer::CAS
       if lt.consumed
         error = "The login ticket you provided has already been used up. Please try logging in again."
         $LOG.warn("Login ticket '#{ticket}' previously used up")
-      elsif (DateTime.now - lt.obj_created) < Spider.conf.get('cas.login_ticket_expiry')
+      elsif lt.obj_created && (DateTime.now - lt.obj_created) < Spider.conf.get('cas.login_ticket_expiry')
         $LOG.info("Login ticket '#{ticket}' successfully validated")
       else
         error = "Your login ticket has expired. Please try logging in again."
