@@ -85,7 +85,7 @@ module Spider; module Model
             @subclasses ||= []
             @subclasses << subclass
             each_element do |el|
-                subclass.add_element(el.clone)
+                subclass.add_element(el.clone) unless el.attributes[:local_pk]
             end
             subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
