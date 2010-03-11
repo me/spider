@@ -5,6 +5,7 @@ module Spider; module Forms
         i_attr_accessor :name
         is_attribute :value
         is_attr_accessor :label
+        is_attr_accessor :required, :type => Spider::DataTypes::Bool
         
         def self.template_path_parent
             File.dirname(File.dirname(__FILE__))
@@ -63,6 +64,10 @@ module Spider; module Forms
             @modified
         end
         
+        def has_value?
+            @value && (!@value.is_a?(String) || !@value.empty?)
+        end
+        
         def read_only
             @read_only = true
             if template_exists?(@use_template+'_readonly')
@@ -78,7 +83,18 @@ module Spider; module Forms
             @read_only
         end
         
+        def required?
+            @attributes[:required]
+        end
+        
+        def check
+            if required? && !has_value?
+                add_error( _("%s is required") % self.label )
+            end
+        end
+        
         def parse_runtime_content(doc, src_path=nil)
+            doc = super
             doc.search('input:connect').each do |connect|
                 options = {}
                 options[:required] = connect.attributes['required'] ? true : false
