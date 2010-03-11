@@ -82,10 +82,12 @@ module Spider
         end
         
         def flash
+            restore unless @restored
             @data[:_flash] ||= FlashHash.new
         end
         
         def transient
+            restore unless @restored
             @data[:_transient] ||= TransientHash.new
         end
         
