@@ -357,12 +357,7 @@ module Spider
                     if (sub_w)
                         @widgets[w_id].widget_attributes[sub_w] = a
                     else
-                        # FIXME: what if there are a 'name' and a 'value' attributes?
-                        if (a[:name] && a[:value])
-                            @widgets[w_id].attributes[a[:name].to_sym] = a[:value]
-                        else
-                            a.each{ |key, value| @widgets[w_id].attributes[key] = value}
-                        end
+                        a.each{ |key, value| @widgets[w_id].attributes[key] = value}
                     end
                 end
             end
