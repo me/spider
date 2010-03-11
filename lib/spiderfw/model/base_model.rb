@@ -359,7 +359,7 @@ module Spider; module Model
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
                 end
-                if (!val && element.model? && element.multiple?)
+                if !val && element.model? && (element.multiple? || element.attributes[:extended_model])
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
@@ -610,6 +610,7 @@ module Spider; module Model
             attributes = {}
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
             attributes[:delete_cascade] = params[:delete_cascade]
+            attributes[:extended_model] = true
             integrated = element(integrated_name, model, attributes)
             integrate_options = {:keep_pks => true}.merge((params[:integrate_options] || {}))
             integrate(integrated_name, integrate_options)

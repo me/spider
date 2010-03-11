@@ -137,10 +137,7 @@ module Spider; module Model
             end
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
-                    obj.instantiate_element(el) unless obj.get(el)
-                    unless sub = obj.get(el)
-                        raise "Object #{obj} is missing its superclass object for model #{m} (element #{el.name})"
-                    end
+                    sub = obj.get(el)
                     sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
                 end
             end
