@@ -312,7 +312,7 @@ module Spider; module Forms
 #                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
                 rescue FormatError => exc
 #                    debugger
-                    add_error(exc, exc.message, element_name)
+                    add_error(exc.message, element_name, exc)
                 end
             end
             if (@fixed)
@@ -340,7 +340,7 @@ module Spider; module Forms
                     if exc.is_a?(Spider::Model::MapperElementError)
                         Spider::Logger.error(exc)
                         exc_element =  exc.element.name
-                        add_error(exc, exc.message, exc_element)
+                        add_error(exc.message, exc_element, exc)
                     else
                         raise
                     end
@@ -365,7 +365,7 @@ module Spider; module Forms
         def after_save(obj, save_mode)
         end
         
-        def add_error(exception, message, element_name=nil)
+        def add_error(message, element_name=nil, exception=nil)
             @error = true
             @errors[element_name] ||= []
             @errors[element_name] << message
