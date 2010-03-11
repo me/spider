@@ -5,6 +5,7 @@ module Spider; module Forms
         is_attr_accessor :size, :type => Fixnum, :default => 25
 
         def prepare
+            super
             @modified = false
             if (params['pwd1'] && !params['pwd1'].empty? && params['pwd2'])
                 if (params['pwd1'] != params['pwd2'])
