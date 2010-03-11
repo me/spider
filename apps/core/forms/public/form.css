@@ -8,15 +8,23 @@
     list-style-position:outside;
 }
 
+
+
 .spider.forms.form .fields{
     padding: 10px;
     margin: 20px;
 }
 
 .spider.forms.form label{
+	position: relative;
     display: block;
     float: left;
     width: 8em;
+}
+
+.spider.forms.form label .form_required_symbol{
+	position: absolute;
+	right: 8px;
 }
 
 .spider.forms.form .row.error label{
