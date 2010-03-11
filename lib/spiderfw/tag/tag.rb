@@ -15,7 +15,7 @@ module Spider
         end
         
         def initialize(el)
-            @attributes = el.attributes
+            @attributes = el.attributes.to_hash
             @content = el.innerHTML
         end
         
