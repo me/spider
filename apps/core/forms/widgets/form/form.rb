@@ -414,12 +414,20 @@ module Spider; module Forms
         end
         
         def self.parse_override(el)
+
             if (el.name == 'form:fields')
                 el.name = 'tpl:override-content'
                 el['search'] = '.fields'
             end
             el.search('form:input').each do |input|
-                new_input = "<sp:run obj=\"@inputs[:#{input['id']}]\" />"
+                input_attributes = input.attributes.to_hash
+                widget_id = input_attributes.delete('id')
+                new_input = "<sp:run obj=\"@inputs[:#{widget_id}]\" widget=\":#{widget_id}\">"
+                
+                input_attributes.each do |key, value|
+                    new_input += "<sp:attribute name=\"#{key}\" value=\"#{value}\" />"
+                end
+                new_input += "</sp:run>"
                 input.swap(new_input)
             end
             return el
