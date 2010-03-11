@@ -267,8 +267,8 @@ module Spider; module Forms
         end
         
         def instantiate_obj
-            if (@pk && !@pk.empty?)
-                parts = @pk.split(':')
+            if (@pk && !@pk.to_s.empty?)
+                parts = @pk.to_s.split(':')
                 h = {}
                 @model.primary_keys.each{ |k| h[k.name] = parts.shift }
                 return @model.new(h)
