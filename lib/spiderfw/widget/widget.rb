@@ -159,6 +159,7 @@ module Spider
                 overrides.each do |ovr|
                     parse_override(ovr)
                 end
+
                 Hpricot::Elements[*overrides].remove
                 plugins.each do |plugin|
                     name = plugin['name']
@@ -288,6 +289,7 @@ module Spider
             unless @template
                 @template = load_template(@use_template)
             end
+            prepare_template(@template)
             @id ||= @attributes[:id]
             @template.id_path = @id_path
             @template.mode = :widget
