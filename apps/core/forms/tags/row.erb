@@ -1,4 +1,13 @@
-<div class="row { (<%= (@attributes['error_condition'])%>) ? 'error' : '' }">
+<%
+if @attributes['element']
+    error_condition = @attributes['error_condition'] ? @attributes['error_condition'] : "@inputs[#{@attributes['element']}].error?"
+    required =  @attributes['required'] ? @attributes['required'] : "@inputs[#{@attributes['element']}].required?"
+else
+    error_condition = @attributes['error_condition']
+    required = @attributes['required']
+end
+%>
+<div class="row { (<%=error_condition%>) ? ' error' : '' }{ (<%=required%>) ? ' required' : '' }">
     <%=@content%>
     <div style="clear: both"></div>
 </div>
