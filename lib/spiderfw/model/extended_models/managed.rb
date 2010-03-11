@@ -31,6 +31,7 @@ module Spider; module Model
         end
         
         def _set_dates(bool=nil)
+            @_set_dates = true if @_set_dates == nil
             @_set_dates = bool if bool != nil
             @_set_dates
         end
