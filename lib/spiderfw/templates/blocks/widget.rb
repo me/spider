@@ -7,11 +7,11 @@ module Spider; module TemplateBlocks
         def compile(options={})
             klass = Spider::Template.get_registered_class(@el.name)
             init_params = []
-            id = @el.attributes['id']
+            id = @el.get_attribute('id')
             raise TemplateCompileError, "Widget #{@el.name} does not have an id" unless id
-            template_attr = @el.attributes['template']
+            template_attr = @el.get_attribute('template')
             @el.remove_attribute('template')
-            @el.attributes.each do |key, val|
+            @el.attributes.to_hash.each do |key, val|
                 if (!val.empty? && val[0].chr == '@')
                     sval = var_to_scene(val, 'scene')
                 else

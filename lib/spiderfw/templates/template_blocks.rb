@@ -10,33 +10,33 @@ module Spider
         end
         
         def self.get_block_type(el, skip_attributes=false)
-            if (el.class == ::Hpricot::Text)
+            if el.class == ::Hpricot::Text
                 block = :Text
-            elsif (el.class == ::Hpricot::Comment)
+            elsif el.class == ::Hpricot::Comment
                 block = :Comment
-            elsif (!skip_attributes && (el.attributes['sp:if'] || el.attributes['sp:run-if']))
+            elsif !skip_attributes && (el.has_attribute?('sp:if') || el.has_attribute?('sp:run-if'))
                 block = :If
-            elsif (!skip_attributes && el.attributes['sp:tag-if'])
+            elsif !skip_attributes && el.has_attribute?('sp:tag-if')
                 block = :TagIf
-            elsif (!skip_attributes && el.attributes['sp:attr-if'])
+            elsif !skip_attributes && el.has_attribute?('sp:attr-if')
                 block = :AttrIf
-            elsif (!skip_attributes && (el.attributes['sp:each'] || el.attributes['sp:each_index']))
+            elsif !skip_attributes && (el.has_attribute?('sp:each') || el.has_attribute?('sp:each_index'))
                 block = :Each
-            elsif (el.name == 'sp:render')
+            elsif el.name == 'sp:render'
                 block = :Render
-            elsif (el.name == 'sp:run')
+            elsif el.name == 'sp:run'
                 block = :Run
-            elsif (el.name == 'sp:yield')
+            elsif el.name == 'sp:yield'
                 block = :Yield
-            elsif (el.name == 'sp:pass' || el.name == 'sp:template')
+            elsif el.name == 'sp:pass' || el.name == 'sp:template'
                 block = :Pass
-            elsif (el.name == 'sp:debugger')
+            elsif el.name == 'sp:debugger'
                 block = :Debugger
-            elsif (Spider::Template.registered?(el.name))
+            elsif Spider::Template.registered?(el.name)
                 klass = Spider::Template.get_registered_class(el.name)
-                if (klass < ::Spider::Widget)
+                if klass < ::Spider::Widget
                     block = :Widget
-                elsif (klass < Spider::Tag)
+                elsif klass < Spider::Tag
                     block = :Tag
                 else
                     Spider.logger.error("Could not parse #{el.name} tag")

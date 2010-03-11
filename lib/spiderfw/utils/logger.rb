@@ -44,6 +44,9 @@ module Spider
             def send_to_loggers(action, *args)
                 return if $SAFE > 1
                 return unless @loggers
+                if args[0].is_a?(String)
+                    args[0] = "T#{Thread.current.object_id} #{args[0]}"
+                end
                 @loggers.each do |dest, logger| 
                     begin
                         logger.send(action, *args) 

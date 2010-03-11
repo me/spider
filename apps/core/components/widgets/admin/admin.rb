@@ -40,6 +40,7 @@ module Spider; module Components
                 @scene.username = @request.user.to_s
             else
                 @scene.username = _("guest")
+                @scene.guest = true
             end
             super
         end

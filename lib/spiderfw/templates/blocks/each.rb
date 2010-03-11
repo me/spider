@@ -14,9 +14,9 @@ module Spider; module TemplateBlocks
             rep_type = nil
             rep = nil
             ['sp:each', 'sp:each_index'].each do |name|
-                if (@el.attributes[name])
+                if (@el.has_attribute?(name))
                     rep_type = name[3..-1]
-                    rep = @el.attributes[name]
+                    rep = @el.get_attribute(name)
                     @el.remove_attribute(name)
                     break
                 end

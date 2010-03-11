@@ -315,7 +315,12 @@ module Spider; module Model
         def search_key(obj, name) # :nodoc:
             sub = obj.is_a?(Hash) ? obj[name] : obj.get(name.to_sym)
             if (sub.is_a?(Spider::Model::BaseModel))
-                @model.elements[name.to_sym].type.primary_keys.map{ |k| sub.get(k).to_s }.join(',')
+                name_parts = name.to_s.split('.')
+                model = @model
+                name_parts.each do |part|
+                    model = model.elements[part.to_sym].type
+                end
+                model.primary_keys.map{ |k| sub.get(k).to_s }.join(',')
             else
                 sub.to_s
             end

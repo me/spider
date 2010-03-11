@@ -9,7 +9,7 @@ module Spider; module Model; module Storage; module Db
             :sequences => true,
             :transactions => true
         }
-        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid']
+        @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid', 'name', 'comment']
         @safe_conversions = {
             'CHAR' => ['VARCHAR', 'CLOB'],
             'VARCHAR' => ['CLOB'],
@@ -108,10 +108,13 @@ module Spider; module Model; module Storage; module Db
             case type.name
             when 'Date', 'DateTime'
                 return nil unless value
+                return value if value.is_a?(type)
                 return value.to_datetime if type == DateTime
                 return value.to_date # FIXME: check what is returned, here we espect an OCI8::Date
             when 'Spider::DataTypes::Text'
-                value =  value ? value.read : ''
+                value = value.read if value.respond_to?(:read)
+            when 'Spider::DataTypes::Decimal', 'BigDecimal'
+                value = value.to_s
             end
             return super(type, value)
         end
@@ -245,7 +248,7 @@ module Spider; module Model; module Storage; module Db
                      #   end
                      transformed = "O#{replace_cnt += 1}"
                      replaced_fields[field.to_s] = transformed
-                     if (field.type == 'CLOB')
+                     if (field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB')
                          field = "CAST(#{field} as varchar2(100))"
                      end
                      query[:keys] << "#{field} AS #{transformed}"
@@ -276,7 +279,7 @@ module Spider; module Model; module Storage; module Db
                      pk_sql = query[:primary_keys].join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
-                     data_sql = "SELECT #{keys} FROM #{query[:tables].join(',')} WHERE #{pk_sql} IN (#{distinct_sql}) order by #{order}"
+                     data_sql = "SELECT #{keys} FROM #{tables_sql} WHERE #{pk_sql} IN (#{distinct_sql}) order by #{order}"
                  else
                      data_sql = "#{sql} order by #{order}"
                  end

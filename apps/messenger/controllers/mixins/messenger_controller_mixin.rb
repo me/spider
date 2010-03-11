@@ -35,7 +35,6 @@ module Spider; module Messenger
             end
             mail.html = html if html
             mail.text = text if text
-            debugger
             if (attachments && !attachments.empty?)
                 attachments.each do |att|
                     if (att[:file_name])

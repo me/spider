@@ -2,10 +2,17 @@
 	<tpl:asset type="css" src="form.css" />
 	<tpl:asset type="js" src="form.js" />
 	<div sp:if="@error" class='errors'>
-		Errori:
 		<ul>
-			<sp:pass sp:each="@errors |k, v|">
-				<li sp:each="v |err|">
+		    <li sp:if="@errors[nil]" sp:each="@errors[nil] |err|">
+		        { err }
+		    </li>
+			<sp:pass sp:each="@names |element|">
+				<li sp:if="@errors[element]" sp:each="@errors[element] |err|">
+					{ err }
+				</li>
+			</sp:pass>
+            <sp:pass sp:each="(@errors.keys - @names) |element|">
+				<li sp:if="@errors[element]" sp:each="@errors[element] |err|">
 					{ err }
 				</li>
 			</sp:pass>
@@ -19,7 +26,7 @@
 				<sp:run obj="input" />
 			</sp:pass>
 			<div class="fields">
-				<forms:element_row sp:each="@names |element|" element="element" error_condition="@errors[element]" />
+				<forms:element_row sp:each="@names |element|" element="element" required="@inputs[element].required?"/>
 			</div>
 			<div class="row buttons">
 				<input type='submit' name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>

@@ -39,11 +39,6 @@ module Spider
         
         def initialize(sid=nil)
             @sid = sid || generate_sid
-            restore
-            Spider::Logger.debug("SESSION RESTORED:")
-            Spider::Logger.debug(@data)
-            @data ||= {}
-            @data[:_flash].reset if @data[:_flash]
         end
         
         def delete
@@ -55,18 +50,22 @@ module Spider
         end
         
         def [](key)
+            restore unless @restored
             @data[key]
         end
         
         def []=(key, val)
+            restore unless @restored
             @data[key] = val
         end
         
         def delete(key)
+            restore unless @restored
             @data.delete(key)
         end
         
         def persist
+            return unless @restored
             clear_empty_hashes!(@data)
             @data[:_flash].purge if @data[:_flash]
             @data[:_transient].purge if @data[:_transient]
@@ -76,14 +75,19 @@ module Spider
         end
         
         def restore
-            @data = self.class[@sid]
+            @data = self.class[@sid] || {}
+            @data[:_flash].reset if @data[:_flash]
+            Spider.logger.debug("Session restored: #{@data.inspect}")
+            @restored = true
         end
         
         def flash
+            restore unless @restored
             @data[:_flash] ||= FlashHash.new
         end
         
         def transient
+            restore unless @restored
             @data[:_transient] ||= TransientHash.new
         end
         

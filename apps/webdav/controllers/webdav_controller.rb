@@ -351,7 +351,7 @@ module Spider; module WebDAV
     			raise HTTPStatus.NO_CONTENT
     		else
     		    Spider::Logger.error("UNLOCK OF #{path} FAILED!!!")
-    			raise Forbidden
+    			raise Forbidden, "Unlock of path #{path}"
     		end
     	end
     	
@@ -362,7 +362,7 @@ module Spider; module WebDAV
     		begin
     			vfs.mkdir(path)
     		rescue Errno::ENOENT, Errno::EACCES
-    			raise Forbidden
+    			raise Forbidden, "MKCOL of path #{path}"
     		rescue Errno::ENOSPC
     			raise HTTPStatus.WEBDAV_INSUFFICIENT_STORAGE
     		rescue Errno::EEXIST
@@ -378,7 +378,7 @@ module Spider; module WebDAV
 
     			vfs.unlock_all(lock.resource) if vfs.locking? and lock
     		rescue Errno::EPERM
-    			raise Forbidden
+    			raise Forbidden, "DELETE #{path}"
     		end
     		raise HTTPStatus.NO_CONTENT
     	end
@@ -829,7 +829,7 @@ module Spider; module WebDAV
     		src	= path
     		dest = normalize_path(@request.env['HTTP_DESTINATION'])
 
-    		src == dest and raise Forbidden
+    		src == dest and raise Forbidden, "Copy or move #{src} on itself"
 
     		if @request.env['REQUEST_METHOD'] == 'MOVE'
     			# MOVE - check lock on source

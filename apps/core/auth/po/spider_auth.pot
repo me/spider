@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Auth 0.1\n"
-"POT-Creation-Date: 2009-10-27 14:38+0100\n"
+"POT-Creation-Date: 2010-03-11 11:35+0100\n"
 "PO-Revision-Date: 2009-06-30 16:58+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,6 +15,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: controllers/mixins/auth_helper.rb:63
+msgid "Please login first"
+msgstr ""
 
 #: models/digest_user.rb:17
 msgid ""

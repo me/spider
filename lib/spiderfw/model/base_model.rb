@@ -85,10 +85,11 @@ module Spider; module Model
             @subclasses ||= []
             @subclasses << subclass
             each_element do |el|
-                subclass.add_element(el.clone)
+                subclass.add_element(el.clone) unless el.attributes[:local_pk]
             end
             subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
+            subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
         end
         
         # Returns the parent Spider::App of the module
@@ -196,6 +197,8 @@ module Spider; module Model
                     parts = attributes[:integrated_from].split('.')
                     attributes[:integrated_from] = @elements[parts[0].to_sym]
                     attributes[:integrated_from_element] = parts[1].to_sym if parts[1]
+                elsif (attributes[:integrated_from].is_a?(Symbol))
+                    attributes[:integrated_from] = @elements[attributes[:integrated_from]]
                 end
                 if (!attributes[:integrated_from_element])
                     attributes[:integrated_from_element] = name
@@ -208,7 +211,7 @@ module Spider; module Model
 
             orig_type = type
             assoc_type = nil
-            if (attributes[:junction] || (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && \
+            if (proc || attributes[:junction] || (attributes[:multiple] && (!attributes[:add_reverse]) && (!attributes[:has_single_reverse]) && \
                 # FIXME! the first check is needed when the referenced class has not been parsed yet 
                 # but now it assumes that the reverse is not multiple if it is not defined
                (attributes[:has_single_reverse] == false || !attributes[:reverse] ||  (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?))))
@@ -257,6 +260,7 @@ module Spider; module Model
                         assoc_type.class_eval(&proc)
                     end
                 end
+                orig_type.referenced_by_junctions << [assoc_type, other_name]
                 attributes[:keep_junction] = true if (attributes[:through] && attributes[:keep_junction] != false)
                 attributes[:association_type] = assoc_type
             end
@@ -356,7 +360,7 @@ module Spider; module Model
                     val = instance_variable_get(ivar)
                     prepare_value(name, val)
                 end
-                if (!val && element.model? && element.multiple?)
+                if !val && element.model? && (element.multiple? || element.attributes[:extended_model])
                     val = instance_variable_set(ivar, instantiate_element(name))
                 end
                 val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
@@ -503,6 +507,11 @@ module Spider; module Model
         # this will not have the desired effect; remove and redefine the element instead.
         def self.element_attributes(element_name, attributes)
             elements[element_name].attributes.merge!(attributes)
+            if attributes[:primary_key] && !@primary_keys.include?(elements[element_name])
+                @primary_keys << elements[element_name]
+            elsif !attributes[:primary_key]
+                @primary_keys.delete(elements[element_name])
+            end
         end
         
         # Defines a multiple element. Equivalent to calling
@@ -588,6 +597,7 @@ module Spider; module Model
             if (model == superclass) # first undo table per class inheritance
                 @elements = {}
                 @elements_order = []
+                @extended_models.delete(model) if @extended_models
             end
             primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks])
             model.primary_keys.each{ |k| remove_element(k) }
@@ -602,6 +612,7 @@ module Spider; module Model
             attributes = {}
             attributes[:hidden] = true unless (params[:hide_integrated] == false)
             attributes[:delete_cascade] = params[:delete_cascade]
+            attributes[:extended_model] = true
             integrated = element(integrated_name, model, attributes)
             integrate_options = {:keep_pks => true}.merge((params[:integrate_options] || {}))
             integrate(integrated_name, integrate_options)
@@ -696,6 +707,10 @@ module Spider; module Model
         
         # Does nothing. This method is to keep note of elements created in other models.
         def self._added_elements(&proc)
+        end
+        
+        def self.referenced_by_junctions
+            @referenced_by_junctions ||= []
         end
         
         #####################################################
@@ -800,6 +815,11 @@ module Spider; module Model
             @mapper_modules << mod
         end
         
+        def self.mapper_include_for(params, mod)
+            @mapper_modules_for ||= []
+            @mapper_modules_for << [params, mod]
+        end
+        
         # The given proc will be mixed in the mapper used by this class
         # Note that the proc will be converted to a Module, so any overridden methods will still have 
         # access to the super method.
@@ -873,6 +893,13 @@ module Spider; module Model
             mapper = storage.get_mapper(self)
             if (@mapper_modules)
                 @mapper_modules.each{ |mod| mapper.extend(mod) }
+            end
+            if (@mapper_modules_for)
+                @mapper_modules_for.each do |params, mod|
+                    if params.is_a?(String)
+                        mapper.extend(mod) if self.use_storage == params
+                    end
+                end
             end
             if (@mapper_procs)
                 @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
@@ -982,6 +1009,12 @@ module Spider; module Model
             end
             if (values)
                 if (values.is_a? Hash)
+                    values.keys.select{ |k| 
+                        k = k.name if k.is_a?(Element)
+                        self.class.elements[k.to_sym] && self.class.elements[k.to_sym].primary_key? 
+                    }.each do |k|
+                        set!(k, values[k])
+                    end
                     values.each do |key, val|
                         set!(key, val)
                     end
@@ -1046,7 +1079,7 @@ module Spider; module Model
                     end
                 end
                 obj.identity_mapper = self.identity_mapper if obj.respond_to?(:identity_mapper)
-                if (element.attributes[:junction] && element.attributes[:keep_junction])
+                if (element.multiple? && element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
                 end
                 if (element.attributes[:set] && element.attributes[:set].is_a?(Hash))
@@ -1095,8 +1128,9 @@ module Spider; module Model
             element = element.name if (element.class == Spider::Model::Element)
             first, rest = element.to_s.split('.', 2)
             if (rest)
-                return nil unless element_has_value?(first.to_sym)
-                return send(first).get(rest)
+                sub_val = send(first)
+                return nil unless sub_val
+                return sub_val.get(rest)
             end
             return send(element)
         end

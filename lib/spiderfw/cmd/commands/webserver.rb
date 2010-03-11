@@ -40,6 +40,7 @@ class WebServerCommand < CmdParse::Command
             raise "Can't use cgi mode with SSL" if @ssl && @cgi
             @port ||= Spider.conf.get('webserver.port')
             @server_name ||= Spider.conf.get('http.server')
+            @pid_file = Spider.paths[:var]+'/run/server.pid'
             puts _("Using webserver %s") % @server_name if $verbose
             puts _("Listening on port %s") % @port if $verbose
             server = Spider::HTTP.const_get(servers[@server_name]).new
@@ -62,6 +63,10 @@ class WebServerCommand < CmdParse::Command
                     server.shutdown
                     ssl_server.shutdown if ssl_server
                     Spider.shutdown
+                    begin
+                        File.unlink(@pid_file)
+                    rescue Errno::ENOENT
+                    end
                 }
                 trap('TERM', &do_shutdown)
                 trap('INT', &do_shutdown)
@@ -71,12 +76,11 @@ class WebServerCommand < CmdParse::Command
             }
             if (@daemonize)
                 forked = Spider.fork do
-                    File.new(Spider.paths[:var]+'/run/server.pid', w) do |f|
+                    File.open(@pid_file, 'w') do |f|
                         f.write(Process.pid)
                     end
                     $0 = 'spider-server'
                     start.call
-                    @runner.join
                 end
                 Process.detach(forked)
             else

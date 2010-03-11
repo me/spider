@@ -337,10 +337,11 @@ module Spider; module Model; module Mappers
                         primary_keys << field if model_pks.include?(el)
                         seen_fields[field.name] = true
                     end
-                elsif (!element.multiple?)
+                elsif (!element.attributes[:junction])
                     if (schema.has_foreign_fields?(el))
                         element.model.primary_keys.each do |key|
                             field = schema.foreign_key_field(el, key.name)
+                            raise "Can't find a foreign key field for key #{key.name} of element #{el} of model #{@model}" unless field
                             unless seen_fields[field.name]
                                 keys << field
                                 primary_keys << field if model_pks.include?(el)
@@ -459,10 +460,28 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 if (!v.is_a?(Condition) && element.model?)
                     condition.delete(element.name)
-                    if (v.is_a?(BaseModel))
-                        element.model.primary_keys.each do |primary_key|
-                            condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
+                    def set_pks_condition(condition, el, val, prefix)
+                        el.model.primary_keys.each do |primary_key|
+                            new_prefix = "#{prefix}.#{primary_key.name}"
+                            if (primary_key.model?)
+                                if (primary_key.model.primary_keys.length == 1)
+                                    # FIXME: this should not be needed, see below
+                                    condition.set(new_prefix, '=', val.get(primary_key).get(primary_key.model.primary_keys[0]))
+                                else
+                                    # FIXME! does not work, the subcondition does not get processed
+                                    raise "Subonditions on multiple key elements not supported yet"
+                                    set_pks_condition(condition,  primary_key, val.get(primary_key), new_prefix)
+                                end
+                            else
+                                condition.set(new_prefix, '=', val.get(primary_key))
+                            end
                         end
+                    end
+                    if (v.is_a?(BaseModel))
+                        set_pks_condition(condition, element, v, element.name)
+                        # element.model.primary_keys.each do |primary_key|
+                        #                             condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
+                        #                         end
                     elsif (element.model.primary_keys.length == 1 )
                         new_v = Condition.new
                         if (model.mapper.have_references?(element.name))
@@ -892,7 +911,7 @@ module Spider; module Model; module Mappers
                     column.primary_key = true if element.primary_key?
                     schema.set_column(element.name, column)
                 elsif (true) # FIXME: must have condition element.storage == @storage in some of the subcases
-                    if (!element.multiple?) # 1/n <-> 1
+                    if (!element.multiple? && !element.attributes[:junction]) # 1/n <-> 1
                         current_schema = schema.foreign_keys[element.name] || {}
                         foreign_key_constraints = {}
                         element.type.primary_keys.each do |key|

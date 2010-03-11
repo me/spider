@@ -1,5 +1,3 @@
-require 'openssl'
-
 class CertCommand < CmdParse::Command
 
 
@@ -21,6 +19,7 @@ class CertCommand < CmdParse::Command
         end
         generate.set_execution_block do |args|
             require 'spiderfw'
+            require 'openssl'
             @path ||= Spider.paths[:certs]
             @org ||= 'default'
             path = @path+'/'+@org

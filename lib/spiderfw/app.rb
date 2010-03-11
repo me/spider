@@ -35,6 +35,7 @@ module Spider
                     def request_url
                         Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
                     end
+                    alias :url :request_url
                     
                     def pub_url
                         request_url+'/public'
@@ -68,6 +69,7 @@ module Spider
                              ms << m
                              m.constants.each do |c|
                                  sub_mod = m.const_get(c)
+                                 next unless sub_mod.is_a?(Module)
                                  next if !sub_mod.subclass_of?(Spider::Model::BaseModel) || sub_mod.app != self
                                  next if sub_mod == m
                                  ms += get_models(sub_mod)

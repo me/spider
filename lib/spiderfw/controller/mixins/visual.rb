@@ -112,11 +112,15 @@ module Spider; module ControllerMixins
         
         def load_template(path, cur_path=nil, owner=nil, search_paths=nil)
             template = self.class.load_template(path, cur_path, owner, search_paths)
+            prepare_template(template)
+            @template = template
+            return template
+        end
+        
+        def prepare_template(template)
             template.owner = self
             template.request = request
             template.response = response
-            @template = template
-            return template
         end
         
         def template_exists?(name)
@@ -441,30 +445,15 @@ module Spider; module ControllerMixins
             def load_template(name, cur_path=nil, owner=nil, search_paths=nil)
                 owner ||= self
                 search_paths ||= template_paths
-                path = Spider::Template.real_path(name, cur_path, owner, search_paths)
-                t = Spider::Template.new(path) if path
-                t.owner_class ||= self
+                resource = Spider::Template.find_resource(name, cur_path, owner, search_paths)
+                raise "Template #{name} not found" unless resource && resource.path
+                t = Spider::Template.new(resource.path)
+                t.owner_class = self
+                t.definer_class = resource.definer
                 return t
-                # # FIXME: use Template's real_path
-                # if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
-                #     name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])
-                #     t = Spider::Template.new(name+'.shtml')
-                # else
-                #     template_paths.each do |path|
-                #         full = path+'/'+name+'.shtml'
-                #         next unless File.exist?(full)
-                #         t = Spider::Template.new(full)
-                #         break
-                #     end
-                # end
-                # if (t)
-                #     t.request = @request
-                #     t.response = @response
-                #     return t
-                # end
-                raise "Template #{name} not found"
+
             end
-            
+                        
             def template_exists?(name, paths=nil)
                 if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
                     name.sub!('SPIDER', $SPIDER_PATH).sub!('ROOT', Spider.paths[:root])

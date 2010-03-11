@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2009-10-27 14:38+0100\n"
+"POT-Creation-Date: 2010-03-11 11:35+0100\n"
 "PO-Revision-Date: 2009-10-07 19:35+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,11 +23,11 @@ msgstr "Amministrazione"
 msgid "guest"
 msgstr "ospite"
 
-#: widgets/crud/crud.rb:65
+#: widgets/crud/crud.rb:94
 msgid "Cancel"
 msgstr "Annulla"
 
-#: widgets/crud/crud.rb:66
+#: widgets/crud/crud.rb:95
 msgid "Ok"
 msgstr "Ok"
 

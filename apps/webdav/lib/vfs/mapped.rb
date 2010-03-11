@@ -77,11 +77,11 @@ module Spider; module WebDAV; module VFS
         end
 
         def cp(src, dst, recursive=true)
-            raise Forbidden
+            raise Forbidden, "Copy #{src} -> #{dst}"
         end
 
         def mv(src, dst)
-            raise Forbidden
+            raise Forbidden, "Move #{src} -> #{dst}"
         end
 
         def exists?(path)

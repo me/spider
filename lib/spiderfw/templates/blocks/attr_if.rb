@@ -11,7 +11,7 @@ module Spider; module TemplateBlocks
         
         def compile(options={})
             init = ""
-            attr_if = @el.attributes['sp:attr-if']
+            attr_if = @el.get_attribute('sp:attr-if')
             @el.remove_attribute('sp:attr-if')
             @el.set_attribute("tmp-attr-if", attr_if)
             compiled = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile(options)

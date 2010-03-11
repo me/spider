@@ -159,6 +159,7 @@ module Spider
                 overrides.each do |ovr|
                     parse_override(ovr)
                 end
+
                 Hpricot::Elements[*overrides].remove
                 plugins.each do |plugin|
                     name = plugin['name']
@@ -288,6 +289,7 @@ module Spider
             unless @template
                 @template = load_template(@use_template)
             end
+            prepare_template(@template)
             @id ||= @attributes[:id]
             @template.id_path = @id_path
             @template.mode = :widget
@@ -357,12 +359,7 @@ module Spider
                     if (sub_w)
                         @widgets[w_id].widget_attributes[sub_w] = a
                     else
-                        # FIXME: what if there are a 'name' and a 'value' attributes?
-                        if (a[:name] && a[:value])
-                            @widgets[w_id].attributes[a[:name].to_sym] = a[:value]
-                        else
-                            a.each{ |key, value| @widgets[w_id].attributes[key] = value}
-                        end
+                        a.each{ |key, value| @widgets[w_id].attributes[key] = value}
                     end
                 end
             end
@@ -530,29 +527,8 @@ module Spider
             #     debugger
             #     a = 3
             # end
-            attributes = doc.search('sp:attribute')
-            attributes.each do |a|
-                name = a.attributes['name'].to_sym
-                kvs = a.children_of_type('sp:value')
-                if (kvs.length > 0)
-                    value = {}
-                    kvs.each do |kv|
-                        key = kv.attributes['key']
-                        val = kv.innerText
-                        value[key] = val
-                    end
-                else
-                    value = a.attributes['value']
-                end
-                if (w = a.attributes['widget'])
-                    @widget_attributes[w] = {:name => name, :value => value}
-                else
-                    @attributes[name] = value
-                end
-            end
-            attributes.remove
             doc.search('sp:runtime-content').each do |cont|
-                w = cont.attributes['widget']
+                w = cont.get_attribute('widget')
                 first, rest = w.split('/', 2)
                 params = nil
                 if (first =~ /(.+)\[(.+)\]/)
@@ -573,13 +549,36 @@ module Spider
                 end
             end
             doc.search('sp:runtime-content').remove
+            
+            attributes = doc.search('sp:attribute')
+            attributes.each do |a|
+                name = a.get_attribute('name').to_sym
+                kvs = a.children ? a.children_of_type('sp:value') : []
+                if (kvs.length > 0)
+                    value = {}
+                    kvs.each do |kv|
+                        key = kv.get_attribute('key')
+                        val = kv.innerText
+                        value[key] = val
+                    end
+                else
+                    value = a.get_attribute('value')
+                end
+                if w = a.get_attribute('widget')
+                    @widget_attributes[w] ||= {}
+                    @widget_attributes[w][name] = value
+                else
+                    @attributes[name] = value
+                end
+            end
+            attributes.remove
             doc.search('sp:use-template').each do |templ|
-                if (templ.attributes['app'])
-                    owner = Spider.apps_by_path[templ.attributes['app']]
+                if templ.has_attribute?('app')
+                    owner = Spider.apps_by_path[templ.get_attribute('app')]
                 else
                     owner = self
                 end
-                @template = load_template(templ.attributes['src'], nil, owner)
+                @template = load_template(templ.get_attribute('src'), nil, owner)
             end
             return doc
         end

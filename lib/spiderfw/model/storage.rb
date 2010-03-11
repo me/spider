@@ -1,4 +1,4 @@
-require 'spiderfw/model/storage/db/connectors/odbc'
+#require 'spiderfw/model/storage/db/connectors/odbc'
 
 module Spider; module Model
     

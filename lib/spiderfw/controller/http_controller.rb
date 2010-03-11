@@ -77,6 +77,8 @@ module Spider
         def try_rescue(exc)
             if exc.is_a?(Spider::Controller::NotFound)
                 Spider.logger.error("Not found: #{exc.path}")
+            elsif exc.is_a?(Spider::Controller::Forbidden)
+                Spider.logger.warn("Forbidden: #{exc.message}")
             else
                 super
             end
