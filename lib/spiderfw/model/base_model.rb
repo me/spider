@@ -89,6 +89,7 @@ module Spider; module Model
             end
             subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
+            subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
         end
         
         # Returns the parent Spider::App of the module
@@ -596,6 +597,7 @@ module Spider; module Model
             if (model == superclass) # first undo table per class inheritance
                 @elements = {}
                 @elements_order = []
+                @extended_models.delete(model) if @extended_models
             end
             primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks])
             model.primary_keys.each{ |k| remove_element(k) }
