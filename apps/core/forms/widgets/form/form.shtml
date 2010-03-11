@@ -2,10 +2,17 @@
 	<tpl:asset type="css" src="form.css" />
 	<tpl:asset type="js" src="form.js" />
 	<div sp:if="@error" class='errors'>
-		Errori:
 		<ul>
-			<sp:pass sp:each="@errors |k, v|">
-				<li sp:each="v |err|">
+		    <li sp:if="@errors[nil]" sp:each="@errors[nil] |err|">
+		        { err }
+		    </li>
+			<sp:pass sp:each="@names |element|">
+				<li sp:if="@errors[element]" sp:each="@errors[element] |err|">
+					{ err }
+				</li>
+			</sp:pass>
+            <sp:pass sp:each="(@errors.keys - @names) |element|">
+				<li sp:if="@errors[element]" sp:each="@errors[element] |err|">
 					{ err }
 				</li>
 			</sp:pass>
