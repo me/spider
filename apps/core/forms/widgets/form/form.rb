@@ -294,6 +294,7 @@ module Spider; module Forms
                 input = @inputs[element_name]
                 next unless input
                 next if input.read_only?
+                input.check
 #                debug("SETTING #{element_name} TO #{@inputs[element_name].prepare_value(@data[element_name.to_s])}")
                 if (input.error?)
                     @error = true
