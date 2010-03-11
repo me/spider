@@ -324,7 +324,7 @@ module Spider
         
         def process_tags(el)
             block = TemplateBlocks.get_block_type(el, true)
-            raise "Bad html in #{@path} at '#{el}', can't parse" if (el == Hpricot::BogusETag)
+            raise "Bad html in #{@path}, can't parse" if el.is_a?(Hpricot::BogusETag)
             if (block == :Tag)
                 sp_attributes = {}
                 # FIXME: should use blocks instead
