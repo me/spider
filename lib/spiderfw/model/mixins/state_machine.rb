@@ -4,25 +4,31 @@ module Spider; module Model
 
         def self.included(model)
             model.extend(ClassMethods)
+            model.mapper_include(MapperMethods)
         end
 
         module ClassMethods
+            attr_reader :state_events
 
             class StateEvent
+                attr_reader :transitions
                 
                 def initialize
                     @transitions = []
                     @action = nil
                 end
                 
-                def transitions(params=nil)
+                def transition(params=nil)
                     @transitions << params if params
-                    @transitions
                 end
                 
                 def action(&proc)
                     @action = proc if proc
                     @action
+                end
+                
+                def run(obj, old_state, new_state)
+                    @action.call(obj, old_state, new_state)
                 end
                 
             end
@@ -37,40 +43,68 @@ module Spider; module Model
 
             def state(name, type, attributes={}, &proc)
                 attributes[:association] = :state
+                raise "States must be models with one primary key" unless type.is_a?(Hash) || (type.model? && type.primary_keys.length == 1)
                 element(name, type, attributes, &proc)
             end
 
-            def state_event(name)
+            def state_event(element_name)
                 ev = StateEvent.new
                 yield ev
-                @state_events ||= []
-                @state_events << ev
+                @state_events ||= {}
+                @state_events[element_name] ||= []
+                @state_events[element_name] << ev
             end
 
 
+        end
+        
+        def _pending_state_events
+            @_pending_state_events ||= []
         end
         
         module MapperMethods
             
             def before_save(obj, mode)
                 obj.model.elements_array.select{ |el| el.association == :state }.each do |el|
-                    if (obj.model.state_events[el.name] && obj.modified?(el))
+                    if (obj.model.state_events[el.name] && obj.element_modified?(el))
                         old = obj.get_new
                         old_state = old.get(el.name)
                         new_state = obj.get(el.name)
+                        old_state = old_state.primary_keys.first if old_state
+                        new_state = new_state.primary_keys.first if new_state
                         obj.model.state_events[el.name].each do |event|
                             call_ev = false
                             event.transitions.each do |tr|
-                                if (!tr[:from] || tr[:from] == old_state) && (!tr[:to] || tr[:to] == new_state)
+                                from_ok = false
+                                to_ok = false
+                                if tr[:from]
+                                    tr[:from] = [tr[:from]] unless tr[:from].is_a?(Array)
+                                    from_ok = true if tr[:from].include?(old_state)
+                                else
+                                    from_ok = true
+                                end
+                                if tr[:to]
+                                    tr[:to] = [tr[:to]] unless tr[:to].is_a?(Array)
+                                    to_ok = true if tr[:to].include?(new_state)
+                                else
+                                    to_ok = true
+                                end
+                                if from_ok && to_ok
                                     call_ev = true
                                     break
                                 end
                             end
                             if (call_ev)
-                                event.run(obj)
+                                obj._pending_state_events << [event, old_state, new_state]
                             end
                         end
                     end
+                end
+            end
+            
+            def after_save(obj, mode)
+                obj._pending_state_events.each do |event, old_state, new_state|
+                    event.run(obj.get_new, old_state, new_state)
                 end
             end
             

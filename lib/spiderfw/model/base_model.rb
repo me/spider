@@ -53,7 +53,7 @@ module Spider; module Model
     class BaseModel
         include Spider::Logger
         include DataTypes
-        include StateMachine
+        # include StateMachine
         
         # The BaseModel class itself. Used when dealing with proxy objects.
         attr_reader :model
