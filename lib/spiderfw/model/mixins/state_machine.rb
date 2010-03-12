@@ -100,9 +100,11 @@ module Spider; module Model
                         end
                     end
                 end
+                super
             end
             
             def after_save(obj, mode)
+                super
                 obj._pending_state_events.each do |event, old_state, new_state|
                     event.run(obj.get_new, old_state, new_state)
                 end
