@@ -2,8 +2,8 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name     = "spiderfw"
-  s.version  = "0.5.2"
-  s.date     = "2010-02-18"
+  s.version  = "0.5.8"
+  s.date     = "2010-03-12"
   s.summary  = "A (web) framework"
   s.email    = "abmajor7@gmail.com"
   s.homepage = "http://github.com/me/spider"
@@ -37,7 +37,7 @@ Gem::Specification.new do |s|
   s.add_dependency("builder", ["> 2.1"])
   s.add_development_dependency("rake", ["> 0.7.3"])
   s.add_development_dependency("ruby-debug", ["> 0.9.3"])
-  s.requirements << "Optional dependencies: openssl, sqlite3, webrick, mongrel, ruby-oci8 =1.0.3, mysql"
+  s.requirements << "Optional dependencies: openssl, sqlite3, webrick, mongrel, ruby-oci8 >2.0, mysql"
   # optional dependencies
   # 
 end
