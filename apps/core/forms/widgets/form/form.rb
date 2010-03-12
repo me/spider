@@ -143,8 +143,14 @@ module Spider; module Forms
                 @scene.crud = @crud
                 @obj = load
                 cond = {}
-                @model.primary_keys.each do |key|
-                    cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
+                if @sub_element.integrated?
+                    @sub_element.integrated_from.model.primary_keys.each do |key|
+                        cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get("#{@sub_element.integrated_from.name}.#{key.name}")
+                    end
+                else
+                    @model.primary_keys.each do |key|
+                        cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
+                    end
                 end
                 @crud.fixed = cond
                 sub_elements = []
