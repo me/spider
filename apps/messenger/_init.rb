@@ -19,6 +19,6 @@ end
 
 require 'apps/messenger/messenger'
 require 'apps/messenger/controllers/messenger_controller'
-require 'apps/messenger/controllers/mixins/messenger_controller_mixin'
+require 'apps/messenger/controllers/mixins/messenger_helper'
 
 # gem dependencies: mailfactory for sending email from templates
