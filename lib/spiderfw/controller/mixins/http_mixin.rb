@@ -14,6 +14,7 @@ module Spider; module ControllerMixins
         
         def redirect(url, code=Spider::HTTP::MOVED_PERMANENTLY)
             debug "REDIRECTING TO #{url}"
+            @request.session.persist if @request.session # It might be too late afterwards
             @response.status = code
             @response.headers["Location"] = url
             @response.headers.delete("Content-Type")
