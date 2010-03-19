@@ -14,7 +14,7 @@ module Spider
                 class << self
                     attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path, :models_path
                     attr_reader :short_name, :route_url, :label, :version
-                    attr_reader :short_prefix
+                    attr_accessor :short_prefix
                     attr_reader :command
                     
                     def init
