@@ -100,13 +100,51 @@ module Spider; module I18n
  
         end
         
-        
         def mgsub(string, key_value_pairs)
             regexp_fragments = key_value_pairs.collect { |k,v| k }
             string.gsub( 
             Regexp.union(*regexp_fragments)) do |match|
                 key_value_pairs.detect{|k,v| k =~ match}[1]
             end
+        end
+        
+        def day_names(format = :wide, calendar = self.default_calendar)
+            begin
+                days = @cldr.calendar.days[calendar][format]
+                return [days['sun'], days['mon'], days['tue'], days['wed'], days['thu'], days['fri'], days['sat']]
+            rescue NoMethodError
+                raise ArgumentError, "Calendar #{calendar} not found" unless @cldr.days[calendar]
+                raise ArgumentError, "Format #{format} not found"
+            end
+            
+        end
+        
+        def month_names(format = :wide, calendar = self.default_calendar)
+            months = []
+            begin
+                @cldr.calendar.months[calendar][format].each do |k, v|
+                    months[k.to_i] = v
+                end
+            rescue NoMethodError
+                raise ArgumentError, "Calendar #{calendar} not found" unless @cldr.months[calendar]
+                raise ArgumentError, "Format #{format} not found"
+            end
+            months
+        end
+        
+        def week_start(calendar = self.default_calendar)
+            wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            wdays.index @cldr.calendar.week_firstdays[calendar.to_s]
+        end
+        
+        def weekend_start(calendar = self.default_calendar)
+            wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            wdays.index @cldr.calendar.weekend_starts[calendar.to_s]
+        end
+        
+        def weekend_end(calendar = self.default_calendar)
+            wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            wdays.index @cldr.calendar.weekend_ends[calendar.to_s]
         end
         
     end
