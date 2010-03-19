@@ -1,0 +1,7 @@
+# Ignore everything in here apart from the .gitignore file
+*
+!.gitignore
+!cache/.gitignore
+!log/.gitignore
+!sessions/.gitignore
+
