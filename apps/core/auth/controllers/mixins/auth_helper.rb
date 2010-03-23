@@ -40,7 +40,7 @@ module Spider; module Auth
                 requested_class = nil
                 klasses.each do |klass|
                     requested_class = klass
-                    user = klass.restore_from_session(@request.session)
+                    user = klass.restore(@request)
                     if user
                         @request.security[:users] << user
                         if (params[:authentication])
