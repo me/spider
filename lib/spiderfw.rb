@@ -372,9 +372,11 @@ module Spider
                         return Resource.new(first_found(extensions, File.dirname(cur_path)+path[2..-1]), owner_class)
                     end
                 end
+                app = nil
                 if (path[0].chr == '/')
+                    first_part = path[1..-1].split('/')[0]
                     Spider.apps_by_path.each do |p, a|
-                        if (path.index(p) == 1)
+                        if first_part == p
                             app = a
                             path = path[p.length+2..-1]
                             break
