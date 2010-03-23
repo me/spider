@@ -439,6 +439,7 @@ module Spider; module Model
         
         # Removes a defined element
         def self.remove_element(el)
+            return unless @elements
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
