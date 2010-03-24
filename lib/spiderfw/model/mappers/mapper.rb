@@ -520,7 +520,7 @@ module Spider; module Model
                                 obj.set_loaded_value(element_name, nil) 
                             end
                         end
-                        return set
+                        return false
                     end
                     set.total_rows = result.total_rows if (!was_loaded)
                     result.each do |row|
