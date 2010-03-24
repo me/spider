@@ -46,12 +46,14 @@ module Spider
                 params[:instance_attr] = true
                 params[:set_var] = true
                 attribute(name, params)
+                attr_reader(name)
             end
             
             def is_attribute(name, params={})
                 params[:instance_attr] = true
                 i_attribute(name, params)
                 attr_to_scene(name)
+                attr_reader(name)
             end
             
             def i_attr_accessor(name, params={})
