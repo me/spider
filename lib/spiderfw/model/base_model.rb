@@ -339,6 +339,7 @@ module Spider; module Model
             #instance variable getter
             element_methods.send(:define_method, name) do
                 element = self.class.elements[name]
+                return element.attributes[:fixed] if element.attributes[:fixed]
                 if (element.integrated?)
                     integrated = get(element.integrated_from.name)
                     return integrated.send(element.integrated_from_element) if integrated
@@ -370,6 +371,7 @@ module Spider; module Model
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                return if element.attributes[:fixed]
                 was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
@@ -1078,6 +1080,11 @@ module Spider; module Model
                             qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
                             obj = qs
                         end 
+                    end
+                end
+                self.class.elements_array.select{ |el| el.attributes[:fixed] }.each do |el|
+                    if el.integrated_from == element
+                        obj.set(el.integrated_from_element, el.attributes[:fixed])
                     end
                 end
                 obj.identity_mapper = self.identity_mapper if obj.respond_to?(:identity_mapper)
