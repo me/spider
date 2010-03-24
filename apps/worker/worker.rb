@@ -78,9 +78,18 @@ module Spider
                             load @scripts_dir+'/'+script
                         end
                     end
-                    # every(Spider.conf.get('worker.jobs_interval').to_s+'s') do
-                    #     self.run_jobs
-                    # end
+                    Spider.apps.each do |name, mod|
+                        if File.directory?(mod.path+'/config/worker')
+                            Dir.glob(mod.path+'/config/worker/*.rb').each do |path|
+                                file = File.basename(path, '.rb')
+                                next if file[0].chr == '.'
+                                res = Spider.find_resource(:worker, file, nil, mod)
+                                if res
+                                    load res.path
+                                end
+                            end
+                        end
+                    end
                     @mutex.unlock
                 end
             end
