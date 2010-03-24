@@ -10,7 +10,7 @@ module Spider; module CASServer
         def self.included(controller)
             controller.route 'proxyValidate', :proxy_validate
             controller.route 'serviceValidate', :service_validate
-            controller.route 'login', :index
+            #controller.route 'login', :index
         end
 
         def before(action='', *arguments)
