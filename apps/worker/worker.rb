@@ -108,6 +108,8 @@ module Spider
             begin
                 Process::kill 0, pid
                 return pid
+            rescue Errno::EPERM
+                return pid
             rescue Errno::ESRCH
                 File.unlink(pid_file)
                 return false
