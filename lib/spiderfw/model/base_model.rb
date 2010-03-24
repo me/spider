@@ -741,13 +741,13 @@ module Spider; module Model
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
-            @label || self.name || ''
+            _(@label || self.name || '')
         end
         
         # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
-            @label_plural || self.name || ''
+            _(@label_plural || self.name || '')
         end
         
         ########################################################
