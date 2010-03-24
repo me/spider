@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Forms 0.1\n"
-"POT-Creation-Date: 2010-03-11 11:35+0100\n"
+"POT-Creation-Date: 2010-03-24 16:27+0100\n"
 "PO-Revision-Date: 2010-03-11 11:36+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,7 +35,6 @@ msgstr "%s e rimani"
 msgid "%s is not a valid date"
 msgstr "%s non è una data valida"
 
-#: widgets/inputs/input/input.rb:36
+#: widgets/inputs/input/input.rb:92
 msgid "%s is required"
 msgstr "Il campo %s è obbligatorio"
-
