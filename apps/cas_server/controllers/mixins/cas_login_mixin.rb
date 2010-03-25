@@ -33,7 +33,7 @@ module Spider; module CASServer
                 }
             end
             begin
-                if @service
+                if @service #&& cas_service_allowed?(@service)
                     if !@renew && tgt && !tgt_error
                         st = generate_service_ticket(@service, tgt.username, tgt)
                         service_with_ticket = service_uri_with_ticket(@service, st)
@@ -72,6 +72,10 @@ module Spider; module CASServer
             return {}
         end
         
+        def cas_service_allowed?(service, user)
+            return true
+        end
+        
         def authenticate
             if error = validate_login_ticket(@request.params['lt'])
                 @scene.message = error
@@ -79,6 +83,10 @@ module Spider; module CASServer
             end
             user = super
             return nil unless user
+            if @service && !@service.empty? && !cas_service_allowed?(@service, user)
+                @scene.message = {:type => 'error', :message => _("The user is not allowed to acces this service.")}
+                return nil
+            end
             cas_user_authenticated(user)
             return user
         end
@@ -120,12 +128,17 @@ module Spider; module CASServer
         
         __.html
         def login
-            if (@request.user)
-                return cas_user_authenticated(@request.user)
+            @service = clean_service_url(@request.params['service'] || @request.params['destination'])
+            if @request.user && !@request.params.key?('renew')
+                if !@service || @service.empty? || cas_service_allowed?(@service, @request.user)
+                    return cas_user_authenticated(@request.user)
+                else
+                    raise Forbidden
+                end
             end 
             index
         end
-
+        
         __.html
         def logout
             @service = clean_service_url(@request.params['service'] || @request.params['destination'])
