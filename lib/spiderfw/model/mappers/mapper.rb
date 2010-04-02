@@ -793,7 +793,11 @@ module Spider; module Model
                 end
                 if (element.type < Spider::DataType && !v.is_a?(element.type))
                     condition.delete(k)
-                    condition.set(k, c, element.type.from_value(v))
+                    begin
+                        condition.set(k, c, element.type.from_value(v))
+                    rescue TypeError => exc
+                        raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
+                    end
                 elsif element.type == DateTime && v && !v.is_a?(Date)
                     condition.delete(k)
                     condition.set(k, c, DateTime.parse(v))
