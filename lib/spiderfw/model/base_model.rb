@@ -363,7 +363,6 @@ module Spider; module Model
                         mapper.load_element(self, element)
                     end
                     val = instance_variable_get(ivar)
-                    prepare_value(name, val)
                 end
                 if !val && element.model? && (element.multiple? || element.attributes[:extended_model])
                     val = instance_variable_set(ivar, instantiate_element(name))
@@ -1255,7 +1254,7 @@ module Spider; module Model
             if (element.integrated?)
                 get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
             else
-                value = prepare_child(element.name, value) if element.model?
+                value = prepare_child(element.name, value)
                 instance_variable_set("@#{element_name}", value)
             end
             value.loaded = true if (value.is_a?(QuerySet))
