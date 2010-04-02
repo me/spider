@@ -11,7 +11,7 @@ module Spider
         include HTTPMixin
         
         attr_accessor :parent
-        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
+        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :target_mode
         attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
         attr_accessor :active
         
