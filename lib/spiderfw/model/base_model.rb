@@ -781,7 +781,7 @@ module Spider; module Model
         # Returns the model actually defining element_name; that could be the model
         # itself, a superclass, or an integrated model.
         def self.first_definer(element_name)
-            if (self.superclass.elements && self.superclass.elements[element_name])
+            if (@extended_models && @extended_models[self.superclass] && self.superclass.elements[element_name])
                 return self.superclass.first_definer(element_name)
             end
             if (self.attributes[:integrated_models])
