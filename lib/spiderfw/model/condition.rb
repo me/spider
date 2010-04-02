@@ -108,8 +108,13 @@ module Spider; module Model
         # _Note:_ for .like and .ilike comparisons, the SQL '%' syntax must be used.
         #
         def parse_block(&proc)
-            context = eval "self", proc.binding
-            res = context.dup.extend(ConditionMixin).instance_eval(&proc)
+            res = nil
+            if proc.arity == 1
+                res = proc.call(ConditionContext.new)
+            else
+                context = eval "self", proc.binding
+                res = context.dup.extend(ConditionMixin).instance_eval(&proc)
+            end
             self.replace(res)
             @conjunction = res.conjunction
             @comparisons = res.comparisons
@@ -410,6 +415,10 @@ module Spider; module Model
         end
 
         
+    end
+    
+    class ConditionContext
+        include ConditionMixin
     end
     
     
