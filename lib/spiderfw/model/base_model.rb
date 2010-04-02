@@ -488,11 +488,11 @@ module Spider; module Model
             model.each_element do |el|
                 next if params[:except].include?(el.name)
                 next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
-                next if el.primary_key? && params[:no_pks]
                 attributes = el.attributes.clone.merge({
                     :integrated_from => elements[element_name],
                     :integrated_from_element => el.name
                 })
+                attributes.delete(:primary_key) if params[:no_pks]
                 attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
                     attributes[:reverse] = add_rev[:name]
