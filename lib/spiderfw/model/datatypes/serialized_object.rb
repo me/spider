@@ -22,10 +22,6 @@ module Spider; module DataTypes
             YAML::dump(self)
         end
         
-        def map_back(mapper_type, val)
-            YAML::load(val).extend(SerializedMixin)
-        end
-        
     end
     
     

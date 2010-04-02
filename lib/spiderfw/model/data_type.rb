@@ -58,16 +58,17 @@ module Spider
             self
         end
         
-        # FIXME: why does this take a val? Is it used?
-        def map_back(mapper_type, val) # :nodoc:
-            val.is_a?(self.class) ? val : self.class.new(val)
-        end
-        
         # This method may be overridden by subclasses and provide different textual representation for named formats.
         # Possible formats are :normal, :short, :medium, :long, :full.
         # The default implementation ignores the format and just calls to_s.
         def format(format)
             self.to_s
+        end
+        
+        # Is called after an object has acquired the value and finished setting the attributes; should
+        # should alter the value according to the attributes.
+        def prepare
+            
         end
         
     end

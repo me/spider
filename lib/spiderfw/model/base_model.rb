@@ -1220,6 +1220,7 @@ module Spider; module Model
                 element.type.take_attributes.each do |a|
                     value.attributes[a] = element.attributes[a]
                 end
+                value = value.prepare
             elsif element.model?
                 value.autoload(autoload?, true) if value && value.respond_to?(:autolad)
             else
