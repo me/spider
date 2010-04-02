@@ -654,7 +654,7 @@ module Spider; module Model; module Mappers
                     current_model = el.integrated_from.type
                     el = current_model.elements[el.integrated_from_element]
                 end
-                if (el.model?) # && can_join?(el)
+                if (el.model? && can_join?(el))
                     joins << current_model.mapper.get_join(el)
                     current_model = el.model
                 end
@@ -705,8 +705,14 @@ module Spider; module Model; module Mappers
                     el_joins, el_model, el = get_deep_join(order_element)
                     if (el.model?)
                         # FIXME: integrated elements
-                        el.model.primary_keys.each do |pk|
-                            fields << [el.model.mapper.schema.field(pk.name), direction]
+                        if !joins.empty?
+                            el.model.primary_keys.each do |pk|
+                                fields << [el.model.mapper.schema.field(pk.name), direction]
+                            end
+                        else
+                            el.model.primary_keys.each do |pk|
+                                fields << [schema.qualified_foreign_key_field(el.name, pk.name), direction]
+                            end
                         end
                     else
                         field = el_model.mapper.schema.field(el.name)
