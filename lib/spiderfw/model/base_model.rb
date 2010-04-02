@@ -288,8 +288,12 @@ module Spider; module Model
                     attributes[:reverse] ||= attributes[:add_multiple_reverse][:name]
                     rev = attributes[:add_multiple_reverse].merge(:reverse => name, :multiple => true, 
                         :added_reverse => true, :delete_cascade => attributes[:reverse_delete_cascade])
-                    rev[:through] = assoc_type if assoc_type
                     rev_name = rev.delete(:name)
+                    if assoc_type
+                        rev[:through] = assoc_type
+                        rev[:junction_their_element] = self_name
+                        rev[:junction_our_element] = other_name
+                    end
                     orig_type.element(rev_name, self, rev)
                 end
             end
