@@ -63,7 +63,7 @@ module Spider; module Model
                               junction.versioning(branch)
                           end
                           elh[:attributes][:through] = junction.version_model
-                          elh[:attributes][:junction_our_name] = "#{elh[:attributes][:reverse]}_versioned".to_sym
+                          elh[:attributes][:junction_our_element] = "#{elh[:attributes][:reverse]}_versioned".to_sym
                           elh[:attributes][:junction_their_element] = "#{elh[:attributes][:junction_their_element]}_versioned".to_sym
                           vname = "#{elh[:name]}_versioned".to_sym
                           vmod.send(elh[:method], vname, el.type.version_model, elh[:attributes])

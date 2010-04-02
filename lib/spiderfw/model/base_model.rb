@@ -234,8 +234,8 @@ module Spider; module Model
                 end
                 attributes[:junction] = true
                 attributes[:junction_id] = :id unless attributes.has_key?(:junction_id)
-                if (attributes[:junction_our_name])
-                    self_name = attributes[:junction_our_name]
+                if (attributes[:junction_our_element])
+                    self_name = attributes[:junction_our_element]
                 else
                     self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
                 end
