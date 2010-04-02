@@ -290,7 +290,7 @@ module Spider; module Model; module Storage; module Db
                      pk_sql = query[:primary_keys].join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
-                     data_sql = "SELECT #{keys} FROM #{tables_sql} WHERE #{pk_sql} IN (#{distinct_sql}) order by #{order}"
+                     data_sql = "SELECT #{keys} FROM #{tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql}) order by #{order}"
                  else
                      data_sql = "#{sql} order by #{order}"
                  end
