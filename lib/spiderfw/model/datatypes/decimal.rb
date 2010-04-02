@@ -12,9 +12,14 @@ module Spider; module DataTypes
         
         take_attributes :scale
         
-        def set(value)
+        def self.from_value(value)
+            super(value.to_s)
+        end
+        
+        def initialize(value)
             @val = BigDecimal.new(value.to_s).round(attributes[:scale] || 2)
         end
+
 
     end
     
