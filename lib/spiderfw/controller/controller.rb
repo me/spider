@@ -264,7 +264,7 @@ module Spider
             klass = route.dest
             if klass.class != Class
                 if (klass == self) # route to self
-                    @executed_method = route.action
+                    @executed_method = route.action.to_sym
                     @executed_method_arguments = []
                 end
                 return klass
