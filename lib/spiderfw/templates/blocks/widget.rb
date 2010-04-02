@@ -14,6 +14,8 @@ module Spider; module TemplateBlocks
             @el.attributes.to_hash.each do |key, val|
                 if (!val.empty? && val[0].chr == '@')
                     sval = var_to_scene(val, 'scene')
+                elsif (!val.empty? && val[0].chr == '$')
+                    sval = val[1..-1]
                 else
                     sval = '"'+val+'"'
                 end
