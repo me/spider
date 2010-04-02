@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Auth 0.1\n"
-"POT-Creation-Date: 2010-03-11 11:35+0100\n"
-"PO-Revision-Date: 2010-03-11 11:21+0100\n"
+"POT-Creation-Date: 2010-03-24 16:27+0100\n"
+"PO-Revision-Date: 2010-03-24 16:28+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -20,12 +20,8 @@ msgid "Please login first"
 msgstr "Per favore, esegui il login"
 
 #: models/digest_user.rb:17
-msgid ""
-"You must always supply the password to a DigestUser when updating username "
-"or realm"
-msgstr ""
-"È necessario sempre specificare la password di un DigestUser quando si "
-"modifica lo username o il realm"
+msgid "You must always supply the password to a DigestUser when updating username or realm"
+msgstr "È necessario sempre specificare la password di un DigestUser quando si modifica lo username o il realm"
 
 #: models/mixins/authentication_tracking.rb:6
 msgid "Last login"
@@ -34,3 +30,12 @@ msgstr "Ultima login"
 #: models/mixins/authentication_tracking.rb:7
 msgid "Login count"
 msgstr "Numero login"
+
+#: models/super_user.rb:5
+msgid "Superuser"
+msgstr "Amministratore"
+
+#: models/super_user.rb:5
+msgid "Superusers"
+msgstr "Amministratori"
+

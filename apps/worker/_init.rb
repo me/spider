@@ -11,3 +11,5 @@ module Spider
     
 end
 
+
+Spider.register_resource_type :worker, :path => 'config/worker', :extensions => ['rb']

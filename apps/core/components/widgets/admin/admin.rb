@@ -18,7 +18,7 @@ module Spider; module Components
         tag 'admin'
         
         i_attribute :models, :process => lambda{ |models| models.split(/,[\s\n]*/).map{|m| const_get_full(m) } }
-        is_attr_accessor :title, :default => _("Administration")
+        is_attr_accessor :title, :default => lambda{ _("Administration") }
         is_attr_accessor :logout_url, :default => Spider::Auth.request_url+'/login/logout'
         
         def init

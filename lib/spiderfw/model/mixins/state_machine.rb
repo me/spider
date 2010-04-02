@@ -43,7 +43,7 @@ module Spider; module Model
 
             def state(name, type, attributes={}, &proc)
                 attributes[:association] = :state
-                raise "States must be models with one primary key" unless type.is_a?(Hash) || (type.model? && type.primary_keys.length == 1)
+                raise "States must be models with one primary key" unless type.is_a?(Hash) || !type.is_a?(Spider::Model::BaseModel) || type.primary_keys.length == 1
                 element(name, type, attributes, &proc)
             end
 
@@ -70,8 +70,8 @@ module Spider; module Model
                         old = obj.get_new
                         old_state = old.get(el.name)
                         new_state = obj.get(el.name)
-                        old_state = old_state.primary_keys.first if old_state
-                        new_state = new_state.primary_keys.first if new_state
+                        old_state = old_state.primary_keys.first if old_state && el.model?
+                        new_state = new_state.primary_keys.first if new_state && el.model?
                         obj.model.state_events[el.name].each do |event|
                             call_ev = false
                             event.transitions.each do |tr|

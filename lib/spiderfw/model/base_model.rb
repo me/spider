@@ -339,6 +339,7 @@ module Spider; module Model
             #instance variable getter
             element_methods.send(:define_method, name) do
                 element = self.class.elements[name]
+                return element.attributes[:fixed] if element.attributes[:fixed]
                 if (element.integrated?)
                     integrated = get(element.integrated_from.name)
                     return integrated.send(element.integrated_from_element) if integrated
@@ -370,6 +371,7 @@ module Spider; module Model
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                return if element.attributes[:fixed]
                 was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
@@ -439,6 +441,7 @@ module Spider; module Model
         
         # Removes a defined element
         def self.remove_element(el)
+            return unless @elements
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
@@ -485,6 +488,7 @@ module Spider; module Model
             model.each_element do |el|
                 next if params[:except].include?(el.name)
                 next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
+                next if el.primary_key? && params[:no_pks]
                 attributes = el.attributes.clone.merge({
                     :integrated_from => elements[element_name],
                     :integrated_from_element => el.name
@@ -737,13 +741,13 @@ module Spider; module Model
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
-            @label || self.name || ''
+            _(@label || self.name || '')
         end
         
         # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
-            @label_plural || self.name || ''
+            _(@label_plural || self.name || '')
         end
         
         ########################################################
@@ -1076,6 +1080,11 @@ module Spider; module Model
                             qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
                             obj = qs
                         end 
+                    end
+                end
+                self.class.elements_array.select{ |el| el.attributes[:fixed] }.each do |el|
+                    if el.integrated_from == element
+                        obj.set(el.integrated_from_element, el.attributes[:fixed])
                     end
                 end
                 obj.identity_mapper = self.identity_mapper if obj.respond_to?(:identity_mapper)

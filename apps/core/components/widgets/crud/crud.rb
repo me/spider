@@ -104,7 +104,7 @@ module Spider; module Components
                 links = {}
                 table_rows = @widgets[:table].scene.data
                 table_rows.each_index do |i|
-                    links[i] = "#{widget_request_path}/#{table_rows[i][@key_element]}"
+                    links[i] = "#{widget_request_path}/#{Spider::HTTP.urlencode(table_rows[i][@key_element])}"
                 end
                 @widgets[:table].scene.links_to_form = links
             end

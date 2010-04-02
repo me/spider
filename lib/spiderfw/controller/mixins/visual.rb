@@ -83,7 +83,7 @@ module Spider; module ControllerMixins
                     @_widget.execute
                 end
             end
-            if (format_params.is_a?(Hash) && format_params[:template] && !@_widget)
+            if (format_params.is_a?(Hash) && format_params[:template] && !@_widget && !done?)
                 if (@template)
                     render(@template, format_params)  # has been init'ed in before method
                 else

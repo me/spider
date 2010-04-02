@@ -767,10 +767,14 @@ module Spider; module Model; module Mappers
             return @storage.value_for_condition(Model.simplify_type(type), value)
         end
 
+        def storage_value_to_mapper(type, value)
+            storage.value_to_mapper(type, value)
+        end
+
         # Converts a storage value back to the corresponding base type or DataType.
         def map_back_value(type, value)
             value = value[0] if value.class == Array
-            value = storage.value_to_mapper(Model.simplify_type(type), value)
+            value = storage_value_to_mapper(Model.simplify_type(type), value)
             if (type < Spider::DataType && type.maps_back_to)
                 type = type.maps_back_to
             end
@@ -878,6 +882,10 @@ module Spider; module Model; module Mappers
             return schema
         end
 
+        def storage_column_type(type, attributes)
+            @storage.column_type(type, attributes)
+        end
+
         # Autogenerates schema. Returns a DbSchema.
         def generate_schema(schema=nil)
             had_schema = schema ? true : false
@@ -907,7 +915,7 @@ module Spider; module Model; module Mappers
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
                         end
                     end
-                    column_type = element.attributes[:db_column_type] || @storage.column_type(storage_type, element.attributes)
+                    column_type = element.attributes[:db_column_type] || storage_column_type(storage_type, element.attributes)
                     unless column
                         column_name = element.attributes[:db_column_name] || @storage.column_name(element.name)
                         column = Field.new(schema.table, column_name, column_type)

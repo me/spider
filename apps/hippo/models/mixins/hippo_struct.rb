@@ -8,6 +8,7 @@ module Hippo
         def self.included(mod)
             mod.extend(ClassMethods)
             mod.mapper_include(Mapper)
+            mod.remove_element :id
             mod.element :id, Fixnum, :primary_key => true
             mod.element :cr_date, DateTime
             mod.element :mod_date, DateTime
@@ -25,8 +26,8 @@ module Hippo
                 el = super
                 if (el.attributes[:junction])
                     el.model.elements[:id].attributes[:primary_key] = false
-                    el.model.elements[el.attributes[:reverse]].attributes[:primary_key] = true
-                    el.model.elements[el.attributes[:junction_their_element]].attributes[:primary_key] = true
+                    el.model.elements[el.attributes[:reverse]].attributes[:primary_key] = false
+                    el.model.elements[el.attributes[:junction_their_element]].attributes[:primary_key] = false
                 end
                 return el
             end
@@ -134,26 +135,37 @@ module Hippo
             def generate_schema(schema=nil)
                 return super unless @model.binding
                 schema = Spider::Model::Storage::Db::DbSchema.new
-                schema.table = @model.binding[:table]
+                schema.table = Spider::Model::Storage::Db::Table.new(@model.binding[:table])
                 @model.binding[:elements].each do |el, binding|
                     element = @model.elements[el.to_sym]
                     next unless element
                     if (binding[:type] == 'mmbind')
                         junction = element.model.mapper.schema
-                        junction.table = binding[:table]
+                        junction.table = Spider::Model::Storage::Db::Table.new(binding[:table])
+                        junction.columns[:id] = Spider::Model::Storage::Db::Field.new(junction.table, 'ID', @storage.column_type(Fixnum, {}))
                         junction.foreign_keys[element.attributes[:reverse]] ||= {}
-                        junction.foreign_keys[element.attributes[:reverse]][@model.primary_keys[0].name] ||= {}
-                        junction.foreign_keys[element.attributes[:reverse]][@model.primary_keys[0].name][:name] = binding[:local_id]
+                        r_key_type = @storage.column_type(Spider::Model.base_type(@model.primary_keys[0].type), @model.primary_keys[0].attributes)
+                        r_key_field = Spider::Model::Storage::Db::Field.new(junction.table, binding[:local_id], r_key_type)
+                        junction.foreign_keys[element.attributes[:reverse]][@model.primary_keys[0].name] = r_key_field
                         junction.foreign_keys[element.attributes[:junction_their_element]] ||= {}
-                        junction.foreign_keys[element.attributes[:junction_their_element]][element.type.primary_keys[0].name] ||= {}
-                        junction.foreign_keys[element.attributes[:junction_their_element]][element.type.primary_keys[0].name][:name] = binding[:remote_id]
+                        t_key_type = @storage.column_type(Spider::Model.base_type(element.type.primary_keys[0].type), element.type.primary_keys[0].attributes)
+                        t_key_field = Spider::Model::Storage::Db::Field.new(junction.table, binding[:remote_id], t_key_type)
+                        junction.foreign_keys[element.attributes[:junction_their_element]][element.type.primary_keys[0].name] = t_key_field
+                        if (binding[:elements]) 
+                            binding[:elements].each do |j_el_name, j_el_binding|
+                                j_el = element.model.elements[j_el_name.to_sym]
+                                j_el_storage_type = Spider::Model.base_type(j_el.type)
+                                junction.columns[j_el.name] = Spider::Model::Storage::Db::Field.new(junction.table, j_el_binding[:field], @storage.column_type(j_el_storage_type, j_el.attributes))
+                            end
+                        end
                     elsif (element.model? && !element.multiple?)
+                        key_storage_type = Spider::Model.base_type(element.model.primary_keys[0].type)
+                        key_db_type = @storage.column_type(key_storage_type, element.model.primary_keys[0].attributes)
                         schema.foreign_keys[element.name] ||= {}
-                        schema.foreign_keys[element.name][element.model.primary_keys[0].name] ||= {}
-                        schema.foreign_keys[element.name][element.model.primary_keys[0].name][:name] = binding[:field]
+                        schema.foreign_keys[element.name][element.model.primary_keys[0].name] = Spider::Model::Storage::Db::Field.new(schema.table, binding[:field], key_db_type)
                     else
-                        schema.columns[element.name] ||= {}
-                        schema.columns[element.name][:name] = binding[:field]
+                        storage_type = Spider::Model.base_type(element.type)
+                        schema.columns[element.name] = Spider::Model::Storage::Db::Field.new(schema.table, binding[:field], @storage.column_type(storage_type, element.attributes))
                     end
                 end
                 if (@model.binding[:parent_ref])
@@ -163,33 +175,31 @@ module Hippo
                     element = @model.elements[@model.extended_models[extended]]
                     schema.foreign_keys.delete(@model.extended_models[extended])
                     junction = element.model.mapper.schema
-                    junction.table = pr[:table]
+                    junction.table = Spider::Model::Storage::Db::Table.new(pr[:table])
+                    junction.columns[:id] = Spider::Model::Storage::Db::Field.new(junction.table, 'ID', @storage.column_type(Fixnum, {}))
+                    r_key_type = @storage.column_type(Spider::Model.base_type(@model.primary_keys[0].type), @model.primary_keys[0].attributes)
+                    r_key_field = Spider::Model::Storage::Db::Field.new(junction.table, pr[:child_id], r_key_type)
                     junction.foreign_keys[element.attributes[:reverse]] ||= {}
-                    junction.foreign_keys[element.attributes[:reverse]][@model.primary_keys[0].name] ||= {}
-                    junction.foreign_keys[element.attributes[:reverse]][@model.primary_keys[0].name][:name] = pr[:child_id]
+                    junction.foreign_keys[element.attributes[:reverse]][@model.primary_keys[0].name] = r_key_field
                     junction.foreign_keys[element.attributes[:junction_their_element]] ||= {}
-                    junction.foreign_keys[element.attributes[:junction_their_element]][element.type.primary_keys[0].name] ||= {}
-                    junction.foreign_keys[element.attributes[:junction_their_element]][element.type.primary_keys[0].name][:name] = pr[:parent_id]
+                    t_key_type = @storage.column_type(Spider::Model.base_type(element.type.primary_keys[0].type), element.type.primary_keys[0].attributes)
+                    t_key_field = Spider::Model::Storage::Db::Field.new(junction.table, pr[:parent_id], t_key_type)
+                    junction.foreign_keys[element.attributes[:junction_their_element]][element.type.primary_keys[0].name] = t_key_field
                 end
                 @model.elements_array.each do |el|
                     unless @model.binding[:elements][el.name.to_s] || HippoStruct.base_elements.include?(el.name)
                         schema.pass[el.name] = true 
                     end
                 end
-#                debugger if @model.name.to_s == "AgendaHippo::Ordine"
                 return super(schema)
             end
-        
-        end
-        
-        module HippoStorage
-            
-            def column_type(type, attributes)
+
+            def storage_column_type(type, attributes)
                 return super(String, attributes) if (type == DateTime)
                 return super
             end
-            
-             def value_to_mapper(type, value)
+
+             def storage_value_to_mapper(type, value)
                  return value unless value
                  case type.name
                  when 'DateTime'
@@ -201,6 +211,12 @@ module Hippo
                  end
                  return super
              end
+        
+        end
+        
+        module HippoStorage
+            
+            
             
         end
     

@@ -599,6 +599,10 @@ module Spider; module Model
                 h
             end
         end
+
+        def reject!(&proc)
+            @objects.reject!(&proc)
+        end
         
         def to_s
             self.map{ |o| o.to_s }.join(', ')

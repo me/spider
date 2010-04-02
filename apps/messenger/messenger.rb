@@ -13,13 +13,20 @@ module Spider
                 }
             }
         end
+        
+        def self.process_queues
+            self.queues.each_key do |queue|
+                self.process_queue(queue)
+            end
+        end
                 
         def self.process_queue(queue)
-            @mutex ||= Mutex.new
-            return if @mutex.locked?
             raise ArgumentError, "Queue #{name} not found" unless self.queues[queue]
+            @mutexes ||= {}
+            mutex = @mutexes[queue] ||= Mutex.new
+            return if mutex.locked?
             model = self.queues[queue][:model]
-            @mutex.synchronize do
+            mutex.synchronize do
                 now = DateTime.now
                 list = model.where{ (sent == nil) & (next_try <= now) }
                 list.each do |msg|

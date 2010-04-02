@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.3\n"
-"POT-Creation-Date: 2010-03-11 11:35+0100\n"
+"POT-Creation-Date: 2010-03-24 16:27+0100\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -462,11 +462,11 @@ msgstr ""
 msgid "Show locals in debug traces"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:226
+#: lib/spiderfw/controller/mixins/visual.rb:230
 msgid "Page not found"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:233
+#: lib/spiderfw/controller/mixins/visual.rb:237
 msgid "An error occurred"
 msgstr ""
 
@@ -523,11 +523,11 @@ msgstr ""
 msgid "over %d years"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1221
+#: lib/spiderfw/model/base_model.rb:1233
 msgid "'%s' is not a valid date"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1273
+#: lib/spiderfw/model/base_model.rb:1285
 msgid "'%s' is not in the correct format"
 msgstr ""
 
@@ -535,11 +535,11 @@ msgstr ""
 msgid "%s is not a valid e-mail address"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:925
+#: lib/spiderfw/model/mappers/mapper.rb:922
 msgid "Element %s is required"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:929
+#: lib/spiderfw/model/mappers/mapper.rb:926
 msgid "Another item with the same %s is already present"
 msgstr ""
 

@@ -273,6 +273,10 @@ module Spider
             @apps_by_short_name[mod.short_name] = mod
         end
         
+        def app?(path)
+            @apps_by_path[path] ? true : false
+        end
+        
         def load_configuration(path)
             return unless File.directory?(path)
             path += '/' unless path[-1] == ?o
@@ -370,8 +374,9 @@ module Spider
                 end
                 app = nil
                 if (path[0].chr == '/')
+                    first_part = path[1..-1].split('/')[0]
                     Spider.apps_by_path.each do |p, a|
-                        if (path.index(p) == 1)
+                        if first_part == p
                             app = a
                             path = path[p.length+2..-1]
                             break
@@ -479,6 +484,10 @@ module Spider
         
         def locale
             Locale.current[0]
+        end
+        
+        def i18n(l = self.locale)
+            Spider::I18n.provider(l)
         end
         
         def test_setup

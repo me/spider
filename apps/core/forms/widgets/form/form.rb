@@ -71,6 +71,7 @@ module Spider; module Forms
             @pk ||= @_action_local
             @pk ||= params['pk']
             @pk = nil if @pk == 'new'
+            @pk = Spider::HTTP.urldecode(@pk) if @pk && @pk.is_a?(String) && !@pk.empty?
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
