@@ -8,7 +8,7 @@ module Spider; module TemplateBlocks
             c = ""
             init = ""
             start = get_start(options)
-            c += "$out << '#{start}'\n"
+            c += start
             is_root = options[:root]
             options.delete(:root)
             c += "unless self[:widget][:target_only] && !self[:widget][:is_target]\n" if (options[:mode] == :widget && is_root)
@@ -38,23 +38,13 @@ module Spider; module TemplateBlocks
                 end
                 @el.set_attribute('class', cl)
             end
-            start = "<"+@el.name
+            start = "$out << '<"+@el.name
             @el.attributes.to_hash.each do |key, val|
                 start += " #{key}=\""
-                rest = scan_vars(val) do |text, code|
-                    start += text+"'+("+vars_to_scene(code)+").to_s+'"
-                end
-                start += rest
-#                start += replace_vars(val)
-                # if (val =~ /(.*)\{ (.+) \}(.*)/)
-                #     start += $1+"'+"+var_to_scene($2)+".to_s+'"+$3
-                # else
-                #     start += val
-                # end
-                start += '"'
+                start += compile_text(val)
+                start += "\""
             end
-            #start += " /" unless @el.etag
-            start += ">"
+            start += ">'\n"
             return start
         end
         
