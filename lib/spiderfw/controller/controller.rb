@@ -108,13 +108,14 @@ module Spider
         define_annotation(:action) { |k, m| k.controller_actions(m) }
         
         attr_reader :request, :response, :executed_method, :scene
-        attr_accessor :dispatch_action
+        attr_accessor :dispatch_action, :is_target
         
         def initialize(request, response, scene=nil)
             @request = request
             @response = response
             @scene = scene || get_scene
             @dispatch_path = ''
+            @is_target = true
             init
             #@parent = parent
         end
@@ -163,6 +164,11 @@ module Spider
         # dispatch to any route
         def action_target?
             !@dispatch_next[@call_path] || @dispatch_next[@call_path].dest == self
+        end
+        
+        # Returns false if the target of the call is a widget, true otherwise
+        def is_target?
+            @is_target
         end
         
         
