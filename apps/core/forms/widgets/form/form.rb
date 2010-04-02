@@ -354,8 +354,13 @@ module Spider; module Forms
                 end
                 @after_save.call(obj, save_mode) if @after_save
                 after_save(obj, save_mode)
-                if (@auto_redirect)
-                    redirect(@request.path)
+                @auto_redirect = true if @auto_redirect.is_a?(String) && @auto_redirect.strip == 'true'
+                if @auto_redirect
+                    if @auto_redirect.is_a?(String)
+                        redirect(@auto_redirect)
+                    else
+                        redirect(@request.path)
+                    end
                 end
             end
             if (action == 'submit_and_new')
