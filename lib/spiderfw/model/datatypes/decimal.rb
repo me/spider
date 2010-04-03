@@ -8,13 +8,24 @@ module Spider; module DataTypes
     class Decimal < BigDecimal
         include DataType
 
-        maps_back_to superclass
+        #maps_back_to superclass
         
         take_attributes :scale
         
-        def set(value)
-            @val = BigDecimal.new(value.to_s).round(attributes[:scale] || 2)
+        def self.from_value(value)
+            super(value.to_s)
         end
+        
+        def prepare
+            self.class.from_value(self.round(attributes[:scale] || 2))
+        end
+        
+        def to_s(s=nil)
+            s ||= "#{attributes[:scale]}F"
+            super(s)
+        end
+        
+
 
     end
     

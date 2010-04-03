@@ -24,6 +24,7 @@ module Spider; module Model; module Storage; module Db
         def self.new_connection(user, pass, dbname, role)
             conn ||= ::OCI8.new(user, pass, dbname, role)
             conn.autocommit = true
+            conn.non_blocking = true
             return conn
         end
         
@@ -127,14 +128,14 @@ module Spider; module Model; module Storage; module Db
                  curr[:last_executed] = [sql, bind_vars]
                  if (Spider.conf.get('storage.db.replace_debug_vars'))
                      cnt = -1
-                     debug("oci8 executing: "+sql.gsub(/:\d+/){
+                     debug("oci8 #{connection} executing: "+sql.gsub(/:\d+/){
                          v = bind_vars[cnt]
                          dv = debug_vars[cnt+=1]
                          v.is_a?(String) ? "'#{dv}'" : dv
                      })
                  else
                      debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
-                     debug("oci8 executing:\n#{sql}\n[#{debug_vars_str}]")
+                     debug("oci8 #{connection} executing:\n#{sql}\n[#{debug_vars_str}]")
                  end
                  cursor = connection.parse(sql)
                  return cursor if (!cursor || cursor.is_a?(Fixnum))
@@ -152,11 +153,16 @@ module Spider; module Model; module Storage; module Db
                  if (have_result)
                      result = []
                      while (h = cursor.fetch_hash)
+                         h.each do |key, val|
+                             if val.respond_to?(:read)
+                                 h[key] = val.read
+                             end
+                         end
                          if block_given?
-                              yield h
-                          else
-                              result << h
-                          end
+                             yield h
+                         else
+                             result << h
+                         end
                      end
                  end
                  if (have_result)
@@ -168,9 +174,14 @@ module Spider; module Model; module Storage; module Db
                  else
                      return res
                  end
+                 cursor.close
+
              rescue => exc
+                 curr[:conn].break if curr[:conn]
+                 rollback! if in_transaction?
+                 #curr[:conn].logoff
                  release
-                 raise exc
+                 raise
              ensure
                  cursor.close if cursor
                  release if curr[:conn] && !in_transaction?
@@ -279,7 +290,7 @@ module Spider; module Model; module Storage; module Db
                      pk_sql = query[:primary_keys].join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
-                     data_sql = "SELECT #{keys} FROM #{tables_sql} WHERE #{pk_sql} IN (#{distinct_sql}) order by #{order}"
+                     data_sql = "SELECT #{keys} FROM #{tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql}) order by #{order}"
                  else
                      data_sql = "#{sql} order by #{order}"
                  end

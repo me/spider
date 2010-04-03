@@ -11,5 +11,7 @@ module Spider
     config_option 'messenger.email.retries', :type => Fixnum, :default => 5
     config_option 'messenger.email.retry_time', _("Seconds to wait until retry (will be incremented at each retry)"), 
         :type => Fixnum, :default => 10
+    config_option 'messenger.queue.run_every', _("Time in seconds between queue runs"), :type => Fixnum, :default => 60
+    
     
 end

@@ -133,7 +133,7 @@ module Spider
         #--
         # from Merb        
         def self.urlencode(s)
-           s.to_s.gsub(/([^ a-zA-Z0-9_.-]+)/n) {
+           s.to_s.gsub(/([^a-zA-Z0-9_.-]+)/n) {
              '%'+$1.unpack('H2'*$1.size).join('%').upcase
            }.tr(' ', '+')
         end

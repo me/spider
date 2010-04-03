@@ -520,7 +520,7 @@ module Spider; module Model
                                 obj.set_loaded_value(element_name, nil) 
                             end
                         end
-                        return set
+                        return false
                     end
                     set.total_rows = result.total_rows if (!was_loaded)
                     result.each do |row|
@@ -787,13 +787,17 @@ module Spider; module Model
                     integrated_from = element.integrated_from
                     integrated_from_element = element.integrated_from_element
                     condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
-                elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash)) # conditions on junction id don't make sense
+                elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil?) # conditions on junction id don't make sense
                     condition.delete(k)
                     condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
                 end
                 if (element.type < Spider::DataType && !v.is_a?(element.type))
                     condition.delete(k)
-                    condition.set(k, c, element.type.from_value(v))
+                    begin
+                        condition.set(k, c, element.type.from_value(v))
+                    rescue TypeError => exc
+                        raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
+                    end
                 elsif element.type == DateTime && v && !v.is_a?(Date)
                     condition.delete(k)
                     condition.set(k, c, DateTime.parse(v))

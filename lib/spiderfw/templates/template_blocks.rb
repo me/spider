@@ -127,6 +127,29 @@ module Spider
                 return scanner.rest
             end
             
+            def compile_text(str)
+                res = ""
+                scanner = ::StringScanner.new(str)
+                pos = 0
+                var_regexp = /\{ ([^}]+) \}/
+                while scanner.scan_until(Regexp.union(var_regexp, GettextRegexp))
+                    text = scanner.pre_match[pos..-1]
+                    pos = scanner.pos
+                    case scanner.matched
+                    when var_regexp
+                         res += text+"'+("+vars_to_scene(scanner.matched[2..-3])+").to_s+'"
+                    when GettextRegexp
+                        res += "'\n$out << _('#{escape_text($1)}')"
+                        if $2
+                            res += " #{vars_to_scene($2)}" 
+                        end
+                        res += "\n$out << '"
+                    end
+                end
+                res += scanner.rest
+                return res
+            end
+            
             
             def inspect
                 @el

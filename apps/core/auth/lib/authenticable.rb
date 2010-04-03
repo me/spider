@@ -69,6 +69,10 @@ module Spider; module Auth
                 end
                 return obj
             end
+            
+            def restore(request)
+                restore_from_session(request.session)
+            end
         
             def restore_session_hash(saved)
                 if (self.subclass_of?(Spider::Model::BaseModel))

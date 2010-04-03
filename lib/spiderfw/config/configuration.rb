@@ -171,6 +171,16 @@ module Spider
             o[first] = {:description => description, :params => params}
         end
         
+        def option(name)
+            o = @options
+            first, rest = name.split('.', 2)
+            while (rest)
+                o = (o[first] ||= {})
+                first, rest = rest.split('.', 2)
+            end
+            return o[first]
+        end
+        
 
         
         def get(key)

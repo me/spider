@@ -5,7 +5,7 @@ Spider.register_resource_type(:email, :extensions => ['erb'], :path => 'template
 
 module Spider; module Messenger
     
-    module MessengerControllerMixin
+    module MessengerHelper
         
         # Compiles an e-mail from given template and scene, and sends it using
         # #Messenger::email
@@ -15,16 +15,20 @@ module Spider; module Messenger
         # {:file => '/full/file/path', :type => 'mime type', :file_name => 'optional email file name', 
         # :headers => 'optional string or array of additional headers'}
         def email(template, scene, from, to, headers={}, attachments=[], params={})
-            path_txt = self.class.find_resource_path(:email, template+'.txt')
+            Spider::Messenger::MessengerHelper.email(self.class, template, scene, from, to, headers, attachments, params)
+        end
+        
+        def self.email(klass, template, scene, from, to, headers={}, attachments=[], params={})
+            path_txt = klass.find_resource_path(:email, template+'.txt')
             path_txt = nil unless File.exist?(path_txt)
-            path_html = self.class.find_resource_path(:email, template+'.txt')
+            path_html = klass.find_resource_path(:email, template+'.txt')
             path_html = nil unless File.exist?(path_html)
             scene_binding = scene.instance_eval{ binding }
             if (path_txt || path_html)
                 text = ERB.new(IO.read(path_txt)).result(scene_binding) if path_txt
                 html = ERB.new(IO.read(path_html)).result(scene_binding) if path_html
             else
-                path = self.class.find_resource_path(:email, template)
+                path = klass.find_resource_path(:email, template)
                 text = ERB.new(IO.read(path)).result(scene_binding)
             end
             mail = MailFactory.new
@@ -47,7 +51,6 @@ module Spider; module Messenger
             mail_headers, mail_body = mail.to_s.split("\r\n\r\n")
             Messenger.email(from, to, mail_headers, mail_body, params)
         end
-        
     end
     
 end; end

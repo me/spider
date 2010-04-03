@@ -11,7 +11,7 @@ module Spider
         include HTTPMixin
         
         attr_accessor :parent
-        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target, :target_mode
+        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :target_mode
         attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
         attr_accessor :active
         
@@ -46,12 +46,14 @@ module Spider
                 params[:instance_attr] = true
                 params[:set_var] = true
                 attribute(name, params)
+                attr_reader(name)
             end
             
             def is_attribute(name, params={})
                 params[:instance_attr] = true
                 i_attribute(name, params)
                 attr_to_scene(name)
+                attr_reader(name)
             end
             
             def i_attr_accessor(name, params={})

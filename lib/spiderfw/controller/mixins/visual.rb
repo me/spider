@@ -57,17 +57,21 @@ module Spider; module ControllerMixins
             end
         end
         
+        def visual_params
+            @visual_params ||= {}
+        end
+        
         def execute(action='', *params)
-            format_params = @executed_format_params
+            @visual_params = @executed_format_params
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
-            elsif (format_params.is_a?(Hash) && format_params[:params])
+            elsif (@visual_params.is_a?(Hash) && @visual_params[:params])
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end
             super(action, *params)
-            return unless format_params.is_a?(Hash)
-            if (format_params.is_a?(Hash) && format_params[:template])
+            return unless @visual_params.is_a?(Hash)
+            if (@visual_params.is_a?(Hash) && @visual_params[:template])
                 @template ||= init_template
                 widget_target = @request.params['_wt']
                 widget_execute = @request.params['_we']
@@ -75,6 +79,7 @@ module Spider; module ControllerMixins
                     first, rest = widget_target.split('/', 2)
                     @_widget = find_widget(first)
                     raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
+                    @is_target = false
                     @_widget.is_target = true unless rest
                     @_widget.set_action(widget_execute) if widget_execute
                     @_widget.target_mode = true
@@ -83,26 +88,29 @@ module Spider; module ControllerMixins
                     @_widget.execute
                 end
             end
-            if (format_params.is_a?(Hash) && format_params[:template] && !@_widget)
+            if (@visual_params.is_a?(Hash) && @visual_params[:call])
+                send(@visual_params[:call], *params)
+            end
+            if (@visual_params.is_a?(Hash) && @visual_params[:template] && !@_widget && !done?)
                 if (@template)
-                    render(@template, format_params)  # has been init'ed in before method
+                    render(@template, @visual_params)  # has been init'ed in before method
                 else
-                    render(format_params[:template], format_params)
+                    render(@visual_params[:template], @visual_params)
                 end
             end
-            return unless format_params.is_a?(Hash)
-            if (format_params[:redirect])
+            return unless @visual_params.is_a?(Hash)
+            if (@visual_params[:redirect])
                 # red = format_params[:redirect] == true ? request_url : format_params[:redirect]
                 # red = owner_controller.request_url if (self.is_a?(Widget))
-                redirect(format_params[:redirect])
+                redirect(@visual_params[:redirect])
             end
-            if (@executed_format == :json && format_params[:scene] || format_params[:return]) # FIXME: move in JSON mixin?
-                if (format_params[:return])
-                    $out << format_params[:return].to_json
-                elsif (format_params[:scene].is_a?(Array))
+            if (@executed_format == :json && @visual_params[:scene] || @visual_params[:return]) # FIXME: move in JSON mixin?
+                if (@visual_params[:return])
+                    $out << @visual_params[:return].to_json
+                elsif (@visual_params[:scene].is_a?(Array))
                     h = @scene.to_hash
                     res = {}
-                    format_params[:scene].each{ |k| res[k] = h[k] }
+                    @visual_params[:scene].each{ |k| res[k] = h[k] }
                     $out << res.to_json
                 else
                     $out << @scene.to_json
@@ -133,7 +141,7 @@ module Spider; module ControllerMixins
             scene ||= @scene
             scene ||= get_scene
             if (!path)
-                format_params = self.class.output_format_params(@executed_method, @executed_format)
+                format_params = @visual_params || self.class.output_format_params(@executed_method, @executed_format)
                 return unless format_params && format_params[:template]
                 path = format_params[:template]
                 options = format_params.merge(options)

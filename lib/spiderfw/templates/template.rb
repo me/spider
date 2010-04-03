@@ -562,13 +562,14 @@ module Spider
         
         # Assets for the template and contained widgets.
         def all_assets
-            res = assets
+            res = [] 
             seen = {}
             @widgets.each do |id, w|
 #                next if seen[w.class]
                 seen[w.class] = true
                 res += w.assets
             end
+            res += assets
             return res
         end
         

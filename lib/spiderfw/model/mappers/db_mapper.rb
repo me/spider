@@ -429,6 +429,7 @@ module Spider; module Model; module Mappers
                 has_join = false
                 cur.each do |cur_join|
                     if (cur_join[:keys] == join[:keys] && cur_join[:conditions] == join[:conditions])
+                        cur_join[:type] = :left if join[:type] == :left
                         has_join = true
                         break
                     end
@@ -454,11 +455,14 @@ module Spider; module Model; module Mappers
             # FIXME: move to mapper
             model = condition.polymorph ? condition.polymorph : @model
             model_schema = model.mapper.schema
+            cond = {}
+            # FIXME: the allow_left_joins hack will probably not work in the general case
+            cond[:allow_left_joins] = options[:allow_left_joins] || {}
             # debugger if condition.polymorph
             condition.each_with_comparison do |k, v, comp|
                 # normalize condition values
                 element = model.elements[k.to_sym]
-                if (!v.is_a?(Condition) && element.model?)
+                if (v && !v.is_a?(Condition) && element.model?)
                     condition.delete(element.name)
                     def set_pks_condition(condition, el, val, prefix)
                         el.model.primary_keys.each do |primary_key|
@@ -477,12 +481,12 @@ module Spider; module Model; module Mappers
                             end
                         end
                     end
-                    if (v.is_a?(BaseModel))
+                    if v.is_a?(BaseModel)
                         set_pks_condition(condition, element, v, element.name)
                         # element.model.primary_keys.each do |primary_key|
                         #                             condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
                         #                         end
-                    elsif (element.model.primary_keys.length == 1 )
+                    elsif element.model.primary_keys.length == 1 
                         new_v = Condition.new
                         if (model.mapper.have_references?(element.name))
                             new_v.set(element.model.primary_keys[0].name, comp, v)
@@ -497,17 +501,14 @@ module Spider; module Model; module Mappers
             end 
             bind_values = []
             joins = []
-            cond = {}
             remaining_condition = Condition.new # TODO: implement
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
-            # FIXME: the allow_left_joins hack will probably not work in the general case
-            cond[:allow_left_joins] = options[:allow_left_joins] || {}
             condition.each_with_comparison do |k, v, comp|
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
@@ -523,17 +524,24 @@ module Spider; module Model; module Mappers
                         cond[:values] << element_cond
                     else
                         if (element.storage == model.mapper.storage)
-                            join_type = cond[:allow_left_joins][element.model] ? :left : :inner
+                            if v.nil?
+                                join_type = comp == '=' ? :left : :inner
+                            else
+                                join_type = cond[:allow_left_joins][element.model] ? :left : :inner
+                            end
                             sub_join = model.mapper.get_join(element, join_type)
                             joins << sub_join
-                            element.model.mapper.prepare_query_condition(v)
                             
-                            sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :allow_left_joins => cond[:allow_left_joins])
-                            sub_condition[:table] = sub_join[:as] if sub_join[:as]
-                            joins += sub_joins
+                            unless v.nil?
+                                element.model.mapper.prepare_query_condition(v)
                             
-                            cond[:values] << sub_condition
-                            cond[:allow_left_joins].merge!(sub_condition[:allow_left_joins])
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :allow_left_joins => cond[:allow_left_joins])
+                                sub_condition[:table] = sub_join[:as] if sub_join[:as]
+                                joins += sub_joins
+                                cond[:values] << sub_condition
+                                cond[:allow_left_joins].merge!(sub_condition[:allow_left_joins])
+                            end
+                            
                         else
                            remaining_condition ||= Condition.new
                            remaining_condition.set(k, comp, v)
@@ -622,7 +630,7 @@ module Spider; module Model; module Mappers
                     condition, condition_joins, condition_remaining = element.mapper.prepare_condition(element.condition)
                 end
                 join = {
-                    :type => :inner,
+                    :type => join_type,
                     :from => schema.table,
                     :to => element.mapper.schema.table,
                     :keys => keys,
@@ -654,7 +662,7 @@ module Spider; module Model; module Mappers
                     current_model = el.integrated_from.type
                     el = current_model.elements[el.integrated_from_element]
                 end
-                if (el.model?) # && can_join?(el)
+                if (el.model? && can_join?(el))
                     joins << current_model.mapper.get_join(el)
                     current_model = el.model
                 end
@@ -705,8 +713,14 @@ module Spider; module Model; module Mappers
                     el_joins, el_model, el = get_deep_join(order_element)
                     if (el.model?)
                         # FIXME: integrated elements
-                        el.model.primary_keys.each do |pk|
-                            fields << [el.model.mapper.schema.field(pk.name), direction]
+                        if !joins.empty?
+                            el.model.primary_keys.each do |pk|
+                                fields << [el.model.mapper.schema.field(pk.name), direction]
+                            end
+                        else
+                            el.model.primary_keys.each do |pk|
+                                fields << [schema.qualified_foreign_key_field(el.name, pk.name), direction]
+                            end
                         end
                     else
                         field = el_model.mapper.schema.field(el.name)
@@ -761,10 +775,14 @@ module Spider; module Model; module Mappers
             return @storage.value_for_condition(Model.simplify_type(type), value)
         end
 
+        def storage_value_to_mapper(type, value)
+            storage.value_to_mapper(type, value)
+        end
+
         # Converts a storage value back to the corresponding base type or DataType.
         def map_back_value(type, value)
             value = value[0] if value.class == Array
-            value = storage.value_to_mapper(Model.simplify_type(type), value)
+            value = storage_value_to_mapper(Model.simplify_type(type), value)
             if (type < Spider::DataType && type.maps_back_to)
                 type = type.maps_back_to
             end
@@ -872,6 +890,10 @@ module Spider; module Model; module Mappers
             return schema
         end
 
+        def storage_column_type(type, attributes)
+            @storage.column_type(type, attributes)
+        end
+
         # Autogenerates schema. Returns a DbSchema.
         def generate_schema(schema=nil)
             had_schema = schema ? true : false
@@ -901,7 +923,7 @@ module Spider; module Model; module Mappers
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))
                         end
                     end
-                    column_type = element.attributes[:db_column_type] || @storage.column_type(storage_type, element.attributes)
+                    column_type = element.attributes[:db_column_type] || storage_column_type(storage_type, element.attributes)
                     unless column
                         column_name = element.attributes[:db_column_name] || @storage.column_name(element.name)
                         column = Field.new(schema.table, column_name, column_type)

@@ -37,6 +37,8 @@ module Spider
             if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
                 @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
             end
+            @request.http_method = @request.env['REQUEST_METHOD'].upcase.to_sym
+            @request.http_host = @request.env['HTTP_HOST']
             Locale.clear
             Locale.init(:driver => :cgi)
             Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
@@ -85,6 +87,7 @@ module Spider
         end
         
         module HTTPRequest
+            attr_accessor :http_method, :http_host
             
             # Returns PATH_INFO reversing any proxy mappings if needed.
             def path

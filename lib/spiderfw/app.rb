@@ -12,12 +12,18 @@ module Spider
                 
                 #@controller ||= :"Spider::AppController"
                 class << self
-                    attr_reader :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path, :models_path
+                    attr_reader :id, :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path, :models_path
                     attr_reader :short_name, :route_url, :label, :version
-                    attr_reader :short_prefix
+                    attr_accessor :short_prefix
                     attr_reader :command
+                    attr_reader :spec
                     
                     def init
+                        unless @path
+                          file = caller[1].split(':')[0]
+                          dir = File.expand_path(File.dirname(file))
+                          @path = dir
+                        end
                         @short_name ||= Inflector.underscore(self.name).gsub('/', '_')
                         @pub_path ||= @path+'/public'
                         @test_path ||= @path+'/test'
@@ -26,9 +32,12 @@ module Spider
                         @widgets_path ||= @path+'/widgets'
                         @views_path ||= @path+'/views'
                         @tags_path ||= @path+'/tags'
+                        @version = Gem::Version.new(@version.to_s) if @version && !@version.is_a?(Gem::Version)
+                        spec_path = "#{@path}/#{@short_name}.appspec"
+                        load_spec(spec_path) if File.exists?(spec_path)
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
-                        @version = Gem::Version.new(@version.to_s) unless @version.is_a?(Gem::Version)
+                        
                         find_tags
                     end
                     
@@ -151,37 +160,91 @@ module Spider
                         end
                     end
                     
+                    def load_spec(spec_path=nil)
+                        @spec = AppSpec.load(spec_path)
+                        @spec.app_id = File.basename(spec_path, 'appsec') unless @spec.app_id
+                        @version = @spec.version if @spec.version
+                    end
+                    
                     
                 end
-                
-                # controllers = Spider::App::Controllers.clone
-                # controllers.app = mod
-                # Spider.logger.debug("Controllers.app")
-                # Spider.logger.debug(controllers.to_s)
-                # Spider.logger.debug(controllers.app)
-                #     
-                # mod.const_set(:Controllers, controllers) unless mod.const_defined?(:Controllers)
-                # Spider.logger.debug(Controllers)
+
             end
             mod.init()
-            # routes_file = "#{mod.path}/routes.rb"
-            # if (File.exist?(routes_file))
-            #     load(routes_file)
-            # else
-            #     mod.controller.route('/', mod.name+'::MainController')
-            # end
             Spider::add_app(mod)
         end
         
-        # module Controllers
-        #     def self.app=(app)
-        #         @app = app
-        #     end
-        #     def self.app
-        #         @app
-        #     end
-        # 
-        # end
+        class AppSpec
+            @@attributes = []
+            
+            def self.attribute(name)
+                @@attributes << name
+                str = <<END_OF_EVAL
+                def #{name}(val=nil)
+                    @#{name} = val if val
+                    @#{name}
+                end
+END_OF_EVAL
+                class_eval(str)
+            end
+            
+            attribute :app_id
+            attribute :name
+            attribute :description
+            attribute :authors
+            attribute :git_repo
+            attribute :git_repo_ro
+            attribute :git_repo_rw
+            attribute :depends
+            attribute :gems
+            attribute :version
+            
+            def id(val=nil)
+                self.app_id(val)
+            end
+                        
+            def version(val=nil)
+                @version = Gem::Version.new(val) if val
+                @version
+            end
+
+            def author(val = nil)
+                @authors = [val] if val
+                @authors ||= []
+                @authors[0]
+            end
+            
+            def load(spec_path)
+                self.eval(File.read(spec_path), spec_path)
+                self
+            end
+            
+            def self.load(spec_path)
+                self.new.load(spec_path)
+            end
+            
+            def eval(text, path=nil)
+                self.instance_eval(text)
+                self
+            end
+            
+            def self.eval(text, path=nil)
+                self.new.eval(text, path)
+            end
+            
+            def to_h
+                h = {}
+                @@attributes.each do |a|
+                    h[a] = send(a)
+                end
+                h
+            end
+            
+            def to_json
+                to_h.to_json
+            end
+
+        end
         
     end
     

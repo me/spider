@@ -10,7 +10,7 @@ module Spider; module TemplateBlocks
             @el.remove_attribute('sp:tag-if')
             html = HTML.new(@el, @template)
             c = "if (#{cond})\n"
-            c += "  $out <<  '#{html.get_start(options)}'\n"
+            c += html.get_start(options)
             c += "end\n"
             c, init = html.compile_content(c, init, options)
             tag_end = html.get_end

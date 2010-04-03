@@ -27,6 +27,7 @@ module Spider; module TemplateBlocks
                 arguments = $2.strip
             end
             c = "#{vars_to_scene(repeated)}.#{rep_type} do |#{arguments}|\n"
+            
             content = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile(options)
             content.run_code.each_line do |line|
                 c += '  '+line
@@ -34,7 +35,11 @@ module Spider; module TemplateBlocks
             c += '   $out << "\n"'
             c += "\n"
             c += "end\n"
-            init += content.init_code if content.init_code
+            if content.init_code && !content.init_code.strip.empty?
+                init = "#{vars_to_scene(repeated, '@scene')}.#{rep_type} do |#{arguments}|\n"
+                init += content.init_code 
+                init += "end\n"
+            end
             return CompiledBlock.new(init, c)
         end
         

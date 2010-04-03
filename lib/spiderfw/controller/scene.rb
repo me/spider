@@ -21,6 +21,12 @@ module Spider
             @table
         end
         
+        def <<(other)
+            if other.is_a?(Hash)
+                @table.merge!(other)
+            end
+        end
+        
     end
     
     

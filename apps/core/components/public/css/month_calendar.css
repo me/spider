@@ -1,0 +1,24 @@
+/* @override http://localhost:8989/spider/components/public/css/month_calendar.css */
+
+.spider.components.month-calendar{
+	border-collapse: collapse;
+}
+
+.spider.components.month-calendar td, .spider.components.month-calendar th{
+	padding: 0.3em;
+	text-align: center;
+	border: 1px solid #cecece;
+}
+
+.spider.components.month-calendar td{
+	color: #555555;
+}
+
+.spider.components.month-calendar td.prev-month, .spider.components.month-calendar td.next-month{
+	background-color: #E4E4E4;
+	color: #999999;
+} 
+
+.spider.components.month-calendar td.busy{
+	font-weight: bold;
+}

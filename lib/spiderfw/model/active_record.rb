@@ -138,7 +138,7 @@ module Spider; module Model
                                 if (r_refl.klass == ar && r_refl.primary_key_name == reflection.primary_key_name)
                                     options[:junction_their_element] = r_name
                                 elsif(r_refl.klass == reflection.klass && r_refl.primary_key_name == reflection.association_foreign_key)
-                                    options[:junction_our_name] = r_name
+                                    options[:junction_our_element] = r_name
                                 end
                             end
                             assoc_type = klass.spider_model
@@ -155,7 +155,7 @@ module Spider; module Model
                             self_name = ar.name.downcase.to_sym
                             other_name = klass.name.downcase.to_sym
                             options[:junction_their_element] = other_name
-                            options[:junction_our_name] = self_name
+                            options[:junction_our_element] = self_name
                             options[:junction] = true
                             options[:reverse] = self_name
                             if (pm.const_defined?(junction_model_name))
@@ -205,7 +205,7 @@ module Spider; module Model
                     end
 
                     next unless type
-                    next if options[:junction]  && (!options[:junction_their_element] || !options[:junction_our_name])
+                    next if options[:junction]  && (!options[:junction_their_element] || !options[:junction_our_element])
                     self.element(name, type, options)
                     unless reflection.options[:join_table]
                         if (reflection.table_name == ar.table_name)

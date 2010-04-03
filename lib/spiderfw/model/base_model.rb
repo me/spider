@@ -53,7 +53,7 @@ module Spider; module Model
     class BaseModel
         include Spider::Logger
         include DataTypes
-        include StateMachine
+        # include StateMachine
         
         # The BaseModel class itself. Used when dealing with proxy objects.
         attr_reader :model
@@ -234,8 +234,8 @@ module Spider; module Model
                 end
                 attributes[:junction] = true
                 attributes[:junction_id] = :id unless attributes.has_key?(:junction_id)
-                if (attributes[:junction_our_name])
-                    self_name = attributes[:junction_our_name]
+                if (attributes[:junction_our_element])
+                    self_name = attributes[:junction_our_element]
                 else
                     self_name = first_model.short_name.gsub('/', '_').downcase.to_sym
                 end
@@ -288,8 +288,12 @@ module Spider; module Model
                     attributes[:reverse] ||= attributes[:add_multiple_reverse][:name]
                     rev = attributes[:add_multiple_reverse].merge(:reverse => name, :multiple => true, 
                         :added_reverse => true, :delete_cascade => attributes[:reverse_delete_cascade])
-                    rev[:through] = assoc_type if assoc_type
                     rev_name = rev.delete(:name)
+                    if assoc_type
+                        rev[:through] = assoc_type
+                        rev[:junction_their_element] = self_name
+                        rev[:junction_our_element] = other_name
+                    end
                     orig_type.element(rev_name, self, rev)
                 end
             end
@@ -339,6 +343,7 @@ module Spider; module Model
             #instance variable getter
             element_methods.send(:define_method, name) do
                 element = self.class.elements[name]
+                return element.attributes[:fixed] if element.attributes[:fixed]
                 if (element.integrated?)
                     integrated = get(element.integrated_from.name)
                     return integrated.send(element.integrated_from_element) if integrated
@@ -358,7 +363,6 @@ module Spider; module Model
                         mapper.load_element(self, element)
                     end
                     val = instance_variable_get(ivar)
-                    prepare_value(name, val)
                 end
                 if !val && element.model? && (element.multiple? || element.attributes[:extended_model])
                     val = instance_variable_set(ivar, instantiate_element(name))
@@ -370,6 +374,7 @@ module Spider; module Model
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                return if element.attributes[:fixed]
                 was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
                 if (element.integrated?)
@@ -439,6 +444,7 @@ module Spider; module Model
         
         # Removes a defined element
         def self.remove_element(el)
+            return unless @elements
             el = el.name if el.is_a?(Element)
             @elements.delete(el)
             @elements_order.delete(el)
@@ -489,6 +495,7 @@ module Spider; module Model
                     :integrated_from => elements[element_name],
                     :integrated_from_element => el.name
                 })
+                attributes.delete(:primary_key) if params[:no_pks]
                 attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
                 if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
                     attributes[:reverse] = add_rev[:name]
@@ -737,13 +744,13 @@ module Spider; module Model
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
-            @label || self.name || ''
+            _(@label || self.name || '')
         end
         
         # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
-            @label_plural || self.name || ''
+            _(@label_plural || self.name || '')
         end
         
         ########################################################
@@ -781,7 +788,7 @@ module Spider; module Model
         # Returns the model actually defining element_name; that could be the model
         # itself, a superclass, or an integrated model.
         def self.first_definer(element_name)
-            if (self.superclass.elements && self.superclass.elements[element_name])
+            if (@extended_models && @extended_models[self.superclass] && self.superclass.elements[element_name])
                 return self.superclass.first_definer(element_name)
             end
             if (self.attributes[:integrated_models])
@@ -1078,6 +1085,11 @@ module Spider; module Model
                         end 
                     end
                 end
+                self.class.elements_array.select{ |el| el.attributes[:fixed] }.each do |el|
+                    if el.integrated_from == element
+                        obj.set(el.integrated_from_element, el.attributes[:fixed])
+                    end
+                end
                 obj.identity_mapper = self.identity_mapper if obj.respond_to?(:identity_mapper)
                 if (element.multiple? && element.attributes[:junction] && element.attributes[:keep_junction])
                     obj.append_element = element.attributes[:junction_their_element]
@@ -1208,6 +1220,7 @@ module Spider; module Model
                 element.type.take_attributes.each do |a|
                     value.attributes[a] = element.attributes[a]
                 end
+                value = value.prepare
             elsif element.model?
                 value.autoload(autoload?, true) if value && value.respond_to?(:autolad)
             else
@@ -1242,7 +1255,7 @@ module Spider; module Model
             if (element.integrated?)
                 get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
             else
-                value = prepare_child(element.name, value) if element.model?
+                value = prepare_child(element.name, value)
                 instance_variable_set("@#{element_name}", value)
             end
             value.loaded = true if (value.is_a?(QuerySet))

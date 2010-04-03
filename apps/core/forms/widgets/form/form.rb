@@ -71,6 +71,7 @@ module Spider; module Forms
             @pk ||= @_action_local
             @pk ||= params['pk']
             @pk = nil if @pk == 'new'
+            @pk = Spider::HTTP.urldecode(@pk) if @pk && @pk.is_a?(String) && !@pk.empty?
             @model = const_get_full(@model) if @model.is_a?(String)
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
@@ -143,8 +144,14 @@ module Spider; module Forms
                 @scene.crud = @crud
                 @obj = load
                 cond = {}
-                @model.primary_keys.each do |key|
-                    cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
+                if @sub_element.integrated?
+                    @sub_element.integrated_from.model.primary_keys.each do |key|
+                        cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get("#{@sub_element.integrated_from.name}.#{key.name}")
+                    end
+                else
+                    @model.primary_keys.each do |key|
+                        cond[@sub_element.reverse.to_s+'.'+key.name.to_s] = @obj.get(key)
+                    end
                 end
                 @crud.fixed = cond
                 sub_elements = []
@@ -347,8 +354,13 @@ module Spider; module Forms
                 end
                 @after_save.call(obj, save_mode) if @after_save
                 after_save(obj, save_mode)
-                if (@auto_redirect)
-                    redirect(@request.path)
+                @auto_redirect = true if @auto_redirect.is_a?(String) && @auto_redirect.strip == 'true'
+                if @auto_redirect
+                    if @auto_redirect.is_a?(String)
+                        redirect(@auto_redirect)
+                    else
+                        redirect(@request.path)
+                    end
                 end
             end
             if (action == 'submit_and_new')
