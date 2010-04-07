@@ -80,7 +80,7 @@ module Spider; module Model; module Mappers
         end
         
         # Save preprocessing
-        def prepare_save(obj, save_mode, request=nil) #:nodoc:
+        def prepare_save(obj, save_mode) #:nodoc:
             values = {}
             obj.no_autoload do
                 @model.each_element do |element|
