@@ -594,7 +594,10 @@ module Spider; module Model; module Mappers
                     else
                         el_field = element.mapper.schema.field(key.name)
                     end
-                    keys[schema.foreign_key_field(element.name, key.name)] = el_field
+
+                    fk = schema.foreign_key_field(element.name, key.name)
+                    fk = fk.expression if fk.is_a?(FieldExpression)
+                    keys[fk] = el_field
                     # FIXME: works with models as primary keys through a hack in the field method of db_schema,
                     # assuming the model has only one key. the correct way would be to get another join
                 end
@@ -624,6 +627,7 @@ module Spider; module Model; module Mappers
                         our_field = schema.field(key.name)
                     end
                     keys[our_field] = element.mapper.schema.foreign_key_field(element.reverse, key.name)
+                    keys[our_field] = keys[our_field].expression if keys[our_field].is_a?(FieldExpression)
                 end
                 if (element.condition)
                     condition, condition_joins, condition_remaining = element.mapper.prepare_condition(element.condition)
