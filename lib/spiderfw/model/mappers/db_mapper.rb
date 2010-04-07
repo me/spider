@@ -330,15 +330,15 @@ module Spider; module Model; module Mappers
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
-                if (!element.model?)
+                if !element.model?
                     field = schema.field(el)
                     unless seen_fields[field.name]
                         keys << field
                         primary_keys << field if model_pks.include?(el)
                         seen_fields[field.name] = true
                     end
-                elsif (!element.attributes[:junction])
-                    if (schema.has_foreign_fields?(el))
+                elsif !element.attributes[:junction]
+                    if schema.has_foreign_fields?(el)
                         element.model.primary_keys.each do |key|
                             field = schema.foreign_key_field(el, key.name)
                             raise "Can't find a foreign key field for key #{key.name} of element #{el} of model #{@model}" unless field
