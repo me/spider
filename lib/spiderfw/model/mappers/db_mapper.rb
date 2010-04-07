@@ -473,8 +473,10 @@ module Spider; module Model; module Mappers
                                     condition.set(new_prefix, '=', val.get(primary_key).get(primary_key.model.primary_keys[0]))
                                 else
                                     # FIXME! does not work, the subcondition does not get processed
-                                    raise "Subonditions on multiple key elements not supported yet"
-                                    set_pks_condition(condition,  primary_key, val.get(primary_key), new_prefix)
+                                    raise "Subconditions on multiple key elements not supported yet"
+                                    subcond = Condition.new
+                                    set_pks_condition(subcond,  primary_key, val.get(primary_key), new_prefix)
+                                    condition << subcond
                                 end
                             else
                                 condition.set(new_prefix, '=', val.get(primary_key))
@@ -483,9 +485,6 @@ module Spider; module Model; module Mappers
                     end
                     if v.is_a?(BaseModel)
                         set_pks_condition(condition, element, v, element.name)
-                        # element.model.primary_keys.each do |primary_key|
-                        #                             condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
-                        #                         end
                     elsif element.model.primary_keys.length == 1 
                         new_v = Condition.new
                         if (model.mapper.have_references?(element.name))
@@ -508,7 +507,7 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (v && !v.is_a?(Condition) && model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
