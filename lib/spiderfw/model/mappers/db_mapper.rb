@@ -423,7 +423,7 @@ module Spider; module Model; module Mappers
         # FIXME: document
         def prepare_joins(joins) # :nodoc:
             h = {}
-            seen_joins = {}
+            left_joins = []
             joins.each do |join|
                 h[join[:from]] ||= {}
                 cur = (h[join[:from]][join[:to]] ||= [])
@@ -435,14 +435,24 @@ module Spider; module Model; module Mappers
                         break
                     end
                 end
+                left_joins << join if join[:type] == :left
                 h[join[:from]][join[:to]] << join unless has_join
-                to = join[:as] || join[:to]
-                if seen_joins[to]
-                    seen_joins[to] += 1
-                    join[:as] = "#{to}#{seen_joins[to]}"
-                else
-                    seen_joins[to] = 0
+            end
+            while left_joins.length > 0
+                new_left_joins = []
+                left_joins.each do |lj|
+                    if h[lj[:to]]
+                        h[lj[:to]].each_key do |to|
+                            h[lj[:to]][to].each do |j|
+                                unless j[:type] == :left
+                                    new_left_joins << j
+                                    j[:type] = :left
+                                end
+                            end
+                        end
+                    end
                 end
+                left_joins = new_left_joins
             end
             return h
         end
