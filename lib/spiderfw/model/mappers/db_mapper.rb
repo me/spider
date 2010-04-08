@@ -474,8 +474,6 @@ module Spider; module Model; module Mappers
             model = condition.polymorph ? condition.polymorph : @model
             model_schema = model.mapper.schema
             cond = {}
-            # FIXME: the allow_left_joins hack will probably not work in the general case
-            cond[:allow_left_joins] = options[:allow_left_joins] || {}
             # debugger if condition.polymorph
             condition.each_with_comparison do |k, v, comp|
                 # normalize condition values
@@ -517,7 +515,7 @@ module Spider; module Model; module Mappers
                 end
             end 
             bind_values = []
-            joins = []
+            joins = options[:joins] || []
             remaining_condition = Condition.new # TODO: implement
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
@@ -525,7 +523,7 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (v && !v.is_a?(Condition) && model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
@@ -534,9 +532,6 @@ module Spider; module Model; module Mappers
                             op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
-                            if (el_v.nil? && el_comp == '=')
-                                cond[:allow_left_joins][element.model] = true
-                            end
                         end
                         cond[:values] << element_cond
                     else
@@ -544,19 +539,32 @@ module Spider; module Model; module Mappers
                             if v.nil?
                                 join_type = comp == '=' ? :left : :inner
                             else
-                                join_type = cond[:allow_left_joins][element.model] ? :left : :inner
+                                join_type = :inner
                             end
                             sub_join = model.mapper.get_join(element, join_type)
-                            joins << sub_join
+                            # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
+                            existent = joins.select{ |j| j[:to] == sub_join[:to] }
+                            j_cnt = nil
+                            had_join = false
+                            existent.each do |j|
+                                if sub_join[:to] == j[:to] && sub_join[:keys] == j[:keys] && sub_join[:conditions] == j[:conditions]
+                                    j[:type] = :left if sub_join[:type] == :left
+                                    sub_join = j
+                                    had_join = true
+                                    break
+                                else
+                                    j_cnt ||= 0; j_cnt += 1
+                                end
+                            end
+                            sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
+                            joins << sub_join unless had_join
                             
                             unless v.nil?
-                                element.model.mapper.prepare_query_condition(v)
-                            
-                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :allow_left_joins => cond[:allow_left_joins])
+                                element.model.mapper.prepare_query_condition(v)                            
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
-                                joins += sub_joins
+                                joins = sub_joins
                                 cond[:values] << sub_condition
-                                cond[:allow_left_joins].merge!(sub_condition[:allow_left_joins])
                             end
                             
                         else
@@ -580,14 +588,14 @@ module Spider; module Model; module Mappers
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub, :allow_left_joins => cond[:allow_left_joins])
+                sub_res = self.prepare_condition(sub, :joins => joins)
                 cond[:values] << sub_res[0]
-                joins += sub_res[1]
+                joins = sub_res[1]
                 remaining_condition += sub_res[2]
             end
             return [cond, joins, remaining_condition]
         end
-        
+
         # Figures out a join for element. Returns join hash description, i.e. :
         #   join = {
         #     :type => :inner|:outer|...,
