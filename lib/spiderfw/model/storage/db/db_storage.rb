@@ -473,12 +473,16 @@ module Spider; module Model; module Storage; module Db
             condition = query[:condition]
             return ['', []] unless (condition && condition[:values])
             bind_vars = []
+            condition[:values].reject!{ |v| v.is_a?(Hash) && v[:values].empty? }
             mapped = condition[:values].map do |v|
                 if (v.is_a? Hash) # subconditions
                     # FIXME: optimize removing recursion
+                    
                     sql, vals = sql_condition({:condition => v})
                     bind_vars += vals
-                    !sql.empty? ? "(#{sql})" : nil
+                    sql = nil if sql.empty?
+                    sql = "(#{sql})" if sql && v[:values].length > 1
+                    sql
                 elsif (v[2].is_a? Spider::QueryFuncs::Expression)
                     sql_condition_value(v[0], v[1], v[2].to_s, false)
                 else
