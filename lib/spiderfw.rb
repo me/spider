@@ -100,6 +100,9 @@ module Spider
 
         # Invoked before a server is started. Apps may implement the app_startup method, that will be called.
         def startup
+            unless File.exists?(Spider.paths[:root]+'/init.rb')
+                raise "The server must be started from the root directory"
+            end
             if (Spider.conf.get('template.cache.reload_on_restart'))
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
