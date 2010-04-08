@@ -423,6 +423,7 @@ module Spider; module Model; module Mappers
         # FIXME: document
         def prepare_joins(joins) # :nodoc:
             h = {}
+            seen_joins = {}
             joins.each do |join|
                 h[join[:from]] ||= {}
                 cur = (h[join[:from]][join[:to]] ||= [])
@@ -435,6 +436,13 @@ module Spider; module Model; module Mappers
                     end
                 end
                 h[join[:from]][join[:to]] << join unless has_join
+                to = join[:as] || join[:to]
+                if seen_joins[to]
+                    seen_joins[to] += 1
+                    join[:as] = "#{to}#{seen_joins[to]}"
+                else
+                    seen_joins[to] = 0
+                end
             end
             return h
         end
