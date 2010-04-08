@@ -20,7 +20,7 @@ module Spider; module ControllerMixins
         module ClassMethods
             
             def output_format?(method, format)
-                return true if method == "serve_static"
+                return true if method == :serve_static
                 return super
             end
             

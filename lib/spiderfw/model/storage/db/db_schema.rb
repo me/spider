@@ -74,6 +74,8 @@ module Spider; module Model; module Storage; module Db
         
         # Returns table_name + '.' + #foreign_key_field
         def qualified_foreign_key_field(element_name, key_name)
+            f = foreign_key_field(element_name, key_name)
+            return f.expression if f.is_a?(FieldExpression)
             return @table.name + '.' + foreign_key_field(element_name, key_name).name
         end
         
@@ -99,7 +101,16 @@ module Spider; module Model; module Storage; module Db
         
         # Sets a foreign key to the primary key of an element.
         def set_foreign_key(element_name, element_key, field)
-            field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
+            if field.is_a?(Hash)
+                field[:attributes] ||= {}
+                field[:attributes][:expression] ||= field[:expression]
+                if field[:attributes][:expression]
+                    field[:name] = "#{@table}_#{element_name}_#{element_key}".upcase
+                    field = FieldExpression.new(@table, field[:name], field[:type], field[:attributes] || {})
+                else
+                    field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) 
+                end
+            end
             @foreign_keys[element_name] ||= {}
             @foreign_keys[element_name][element_key] = field
         end
@@ -208,6 +219,21 @@ module Spider; module Model; module Storage; module Db
         
         def inspect
             "#<#{self.class.name}:#{self.object_id} @name=\"#{@name}\", @table=#<Spider::Model::Storage::Db::Table:#{@table.object_id} #{@table.name}> >"
+        end
+        
+    end
+    
+    class FieldExpression < Field
+        attr_reader :expression
+        
+        def initialize(table, name, type, attributes={})
+            super
+            @expression = attributes[:expression]
+        end
+        
+        
+        def to_s
+            "#{@expression} AS #{@name}"
         end
         
     end

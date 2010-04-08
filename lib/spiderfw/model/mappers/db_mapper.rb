@@ -80,7 +80,7 @@ module Spider; module Model; module Mappers
         end
         
         # Save preprocessing
-        def prepare_save(obj, save_mode, request=nil) #:nodoc:
+        def prepare_save(obj, save_mode) #:nodoc:
             values = {}
             obj.no_autoload do
                 @model.each_element do |element|
@@ -330,15 +330,15 @@ module Spider; module Model; module Mappers
             elements.each do |el|
                 element = @model.elements[el.to_sym]
                 next if !element || !element.type || element.integrated?
-                if (!element.model?)
+                if !element.model?
                     field = schema.field(el)
                     unless seen_fields[field.name]
                         keys << field
                         primary_keys << field if model_pks.include?(el)
                         seen_fields[field.name] = true
                     end
-                elsif (!element.attributes[:junction])
-                    if (schema.has_foreign_fields?(el))
+                elsif !element.attributes[:junction]
+                    if schema.has_foreign_fields?(el)
                         element.model.primary_keys.each do |key|
                             field = schema.foreign_key_field(el, key.name)
                             raise "Can't find a foreign key field for key #{key.name} of element #{el} of model #{@model}" unless field
@@ -423,6 +423,7 @@ module Spider; module Model; module Mappers
         # FIXME: document
         def prepare_joins(joins) # :nodoc:
             h = {}
+            left_joins = []
             joins.each do |join|
                 h[join[:from]] ||= {}
                 cur = (h[join[:from]][join[:to]] ||= [])
@@ -434,7 +435,24 @@ module Spider; module Model; module Mappers
                         break
                     end
                 end
+                left_joins << join if join[:type] == :left
                 h[join[:from]][join[:to]] << join unless has_join
+            end
+            while left_joins.length > 0
+                new_left_joins = []
+                left_joins.each do |lj|
+                    if h[lj[:to]]
+                        h[lj[:to]].each_key do |to|
+                            h[lj[:to]][to].each do |j|
+                                unless j[:type] == :left
+                                    new_left_joins << j
+                                    j[:type] = :left
+                                end
+                            end
+                        end
+                    end
+                end
+                left_joins = new_left_joins
             end
             return h
         end
@@ -456,8 +474,6 @@ module Spider; module Model; module Mappers
             model = condition.polymorph ? condition.polymorph : @model
             model_schema = model.mapper.schema
             cond = {}
-            # FIXME: the allow_left_joins hack will probably not work in the general case
-            cond[:allow_left_joins] = options[:allow_left_joins] || {}
             # debugger if condition.polymorph
             condition.each_with_comparison do |k, v, comp|
                 # normalize condition values
@@ -473,8 +489,10 @@ module Spider; module Model; module Mappers
                                     condition.set(new_prefix, '=', val.get(primary_key).get(primary_key.model.primary_keys[0]))
                                 else
                                     # FIXME! does not work, the subcondition does not get processed
-                                    raise "Subonditions on multiple key elements not supported yet"
-                                    set_pks_condition(condition,  primary_key, val.get(primary_key), new_prefix)
+                                    raise "Subconditions on multiple key elements not supported yet"
+                                    subcond = Condition.new
+                                    set_pks_condition(subcond,  primary_key, val.get(primary_key), new_prefix)
+                                    condition << subcond
                                 end
                             else
                                 condition.set(new_prefix, '=', val.get(primary_key))
@@ -483,9 +501,6 @@ module Spider; module Model; module Mappers
                     end
                     if v.is_a?(BaseModel)
                         set_pks_condition(condition, element, v, element.name)
-                        # element.model.primary_keys.each do |primary_key|
-                        #                             condition.set("#{element.name}.#{primary_key.name}", '=', v.get(primary_key))
-                        #                         end
                     elsif element.model.primary_keys.length == 1 
                         new_v = Condition.new
                         if (model.mapper.have_references?(element.name))
@@ -500,7 +515,7 @@ module Spider; module Model; module Mappers
                 end
             end 
             bind_values = []
-            joins = []
+            joins = options[:joins] || []
             remaining_condition = Condition.new # TODO: implement
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
@@ -517,9 +532,6 @@ module Spider; module Model; module Mappers
                             op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
-                            if (el_v.nil? && el_comp == '=')
-                                cond[:allow_left_joins][element.model] = true
-                            end
                         end
                         cond[:values] << element_cond
                     else
@@ -527,19 +539,32 @@ module Spider; module Model; module Mappers
                             if v.nil?
                                 join_type = comp == '=' ? :left : :inner
                             else
-                                join_type = cond[:allow_left_joins][element.model] ? :left : :inner
+                                join_type = :inner
                             end
                             sub_join = model.mapper.get_join(element, join_type)
-                            joins << sub_join
+                            # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
+                            existent = joins.select{ |j| j[:to] == sub_join[:to] }
+                            j_cnt = nil
+                            had_join = false
+                            existent.each do |j|
+                                if sub_join[:to] == j[:to] && sub_join[:keys] == j[:keys] && sub_join[:conditions] == j[:conditions]
+                                    j[:type] = :left if sub_join[:type] == :left
+                                    sub_join = j
+                                    had_join = true
+                                    break
+                                else
+                                    j_cnt ||= 0; j_cnt += 1
+                                end
+                            end
+                            sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
+                            joins << sub_join unless had_join
                             
                             unless v.nil?
-                                element.model.mapper.prepare_query_condition(v)
-                            
-                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :allow_left_joins => cond[:allow_left_joins])
+                                element.model.mapper.prepare_query_condition(v)                            
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
-                                joins += sub_joins
+                                joins = sub_joins
                                 cond[:values] << sub_condition
-                                cond[:allow_left_joins].merge!(sub_condition[:allow_left_joins])
                             end
                             
                         else
@@ -563,14 +588,14 @@ module Spider; module Model; module Mappers
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub, :allow_left_joins => cond[:allow_left_joins])
+                sub_res = self.prepare_condition(sub, :joins => joins)
                 cond[:values] << sub_res[0]
-                joins += sub_res[1]
+                joins = sub_res[1]
                 remaining_condition += sub_res[2]
             end
             return [cond, joins, remaining_condition]
         end
-        
+
         # Figures out a join for element. Returns join hash description, i.e. :
         #   join = {
         #     :type => :inner|:outer|...,
@@ -595,7 +620,10 @@ module Spider; module Model; module Mappers
                     else
                         el_field = element.mapper.schema.field(key.name)
                     end
-                    keys[schema.foreign_key_field(element.name, key.name)] = el_field
+
+                    fk = schema.foreign_key_field(element.name, key.name)
+                    fk = fk.expression if fk.is_a?(FieldExpression)
+                    keys[fk] = el_field
                     # FIXME: works with models as primary keys through a hack in the field method of db_schema,
                     # assuming the model has only one key. the correct way would be to get another join
                 end
@@ -625,6 +653,7 @@ module Spider; module Model; module Mappers
                         our_field = schema.field(key.name)
                     end
                     keys[our_field] = element.mapper.schema.foreign_key_field(element.reverse, key.name)
+                    keys[our_field] = keys[our_field].expression if keys[our_field].is_a?(FieldExpression)
                 end
                 if (element.condition)
                     condition, condition_joins, condition_remaining = element.mapper.prepare_condition(element.condition)
