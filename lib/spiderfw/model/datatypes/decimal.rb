@@ -13,6 +13,7 @@ module Spider; module DataTypes
         take_attributes :scale
         
         def self.from_value(value)
+            return nil if value.nil?
             super(value.to_s)
         end
         
