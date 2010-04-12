@@ -68,7 +68,7 @@ module Spider
         # Is called after an object has acquired the value and finished setting the attributes; should
         # should alter the value according to the attributes.
         def prepare
-            
+            self
         end
         
     end
