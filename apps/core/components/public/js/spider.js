@@ -257,9 +257,8 @@ Spider.WidgetBackend = Class.extend({
 
 	init: function(widget){
 		this.widget = widget;
-		this.baseUrl = document.location.href;
+		this.baseUrl = document.location.href.split('#')[0];
 		this.urlParts = this.baseUrl.split('?');
-		this.urlParts[0] = this.urlParts[0].split('#')[0];
 		this.wUrl = this.urlParts[0]+'?';
 		if (this.urlParts[1]) this.wUrl += this.urlParts[1]+'&';
 		this.wUrl += '_wt='+this.widget.path;
