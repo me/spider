@@ -105,6 +105,7 @@ module Spider; module Model; module Mappers
                                     key_value = element_val.get(key.name)
                                 end
                                 store_key = schema.foreign_key_field(element.name, key.name)
+                                next if store_key.is_a?(FieldExpression)
                                 values[store_key] = map_save_value(key_type, key_value, save_mode)
                             end
                         else
