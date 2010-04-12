@@ -217,7 +217,7 @@ Spider.Widget.initFromEl = function(el){
     var path = Spider.Widget.pathFromId(el.attr('id'));
 	if (Spider.widgets[path]){
 		var widget = Spider.widgets[path];
-		widget.replaceEl(el);
+		// widget.replaceEl(el);
 		return widget;
 	} 
     var cl = el.attr('class');
