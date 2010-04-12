@@ -564,9 +564,14 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns SQL for the ORDER part.
-        def sql_order(query)
+        def sql_order(query, replacements={})
             return '' unless query[:order]
-            return query[:order].map{|o| "#{o[0]} #{o[1]}"}.join(' ,')
+            replacements ||= {}
+            return query[:order].map{|o| 
+                repl = replacements[o[0].to_s]
+                ofield = repl ? repl : o[0]
+                "#{ofield} #{o[1]}"
+            }.join(' ,')
         end
         
         # Returns the LIMIT and OFFSET SQL.
