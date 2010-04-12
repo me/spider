@@ -273,7 +273,7 @@ module Spider; module Model; module Storage; module Db
              where, vals = sql_condition(query)
              bind_vars += vals
              sql += "WHERE #{where} " if where && !where.empty?
-             order = sql_order(query)
+             order = sql_order(query, replaced_fields)
              if (query[:limit])
                  if (query[:offset])
                      limit = "oci8_row_num between :#{curr[:bind_cnt]+=1} and :#{curr[:bind_cnt]+=1}"
@@ -282,9 +282,6 @@ module Spider; module Model; module Storage; module Db
                  else
                      limit = "oci8_row_num < :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:limit] + 1
-                 end
-                 replaced_fields.each do |f, repl|
-                     order = order.gsub(f, repl)
                  end
                  if (!query[:joins].empty?)
                      pk_sql = query[:primary_keys].join(', ')
