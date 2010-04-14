@@ -1036,6 +1036,8 @@ module Spider; module Model
                  # Single unset key, single value
                 elsif ((empty_keys = self.class.primary_keys.select{ |key| !element_has_value?(key) }).length == 1)
                     set(empty_keys[0], values)
+                else
+                    raise ArgumentError, "Don't know how to construct a #{self.class} from #{values.inspect}"
                 end
             end
         end
