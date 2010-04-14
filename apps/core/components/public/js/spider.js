@@ -97,23 +97,7 @@ Spider.Widget = Class.extend({
 		el.each(function(){
 			var $this = $(this);
 			if (this.tagName == 'FORM'){
-				$('input[type=submit]', $this).click(function(e){
-					e.preventDefault();
-					w.setLoading();
-					var submitName = $(this).attr('name');
-					var submitValue = $(this).val();
-					$this.ajaxSubmit({
-						dataType: 'html',
-						beforeSubmit: function(data, form, options){
-							data.push({name: submitName, value: submitValue});
-							data.push({name: '_wt', value: w.path});
-						},
-						success: function(res){
-							w.replaceHTML(res);
-							w.removeLoading();
-						}
-					});
-				});
+				this.ajaxifyForm($(this));
 			}
 			else if (this.tagName == 'A'){
 				$this.click(function(e){
@@ -143,6 +127,29 @@ Spider.Widget = Class.extend({
 			}
 		});
 
+	},
+	
+	ajaxifyForm: function(form){
+		var w = this;
+		var isForm = form.get(0).tagName == 'FORM';
+		$('input[type=submit]', form).click(function(e){
+			e.preventDefault();
+			w.setLoading();
+			var submitName = $(this).attr('name');
+			var submitValue = $(this).val();
+			form.ajaxSubmit({
+				dataType: 'html',
+				semantic: !isForm,
+				beforeSubmit: function(data, form, options){
+					data.push({name: submitName, value: submitValue});
+					data.push({name: '_wt', value: w.path});
+				},
+				success: function(res){
+					w.replaceHTML(res);
+					w.removeLoading();
+				}
+			});
+		});
 	},
 	
 	setLoading: function(){
