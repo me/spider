@@ -5,37 +5,43 @@
         Nessun elemento
     </div>
     <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }">
-        <tr class="heading_row">
-            <th sp:each="@elements |element|">
-                <a sp:tag-if="@sortable[element]" href="{ @request[:path] }?_w{ @widget[:param] }[sort]={ element }">
-                    { @labels[element] }
-                </a>
-            </th>
-        </tr>
-        <tr sp:each_index="@rows |row_i|" class="row { (row_i%2==0) ? 'odd' : 'even' }">
-            <td sp:each="@elements |element|">
-                <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ Spider::HTTP.urlencode(@rows[row_i][element]) }">
-                    { @rows[row_i][element] }
-                </a>
-            </td>
-        </tr>
-        <tr class="paginator" sp:if="@paginate && @pages > 1">
-            <td colspan="{ @elements.size }" >
-                <a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
-                <sp:pass sp:if="@paginate_first > 1">
-                    <a href="{ @request[:path] }?_w{ @widget[:param] }[page]=1" class="page">1</a> ... 
-                </sp:pass>
-                <sp:pass sp:each="(@paginate_first..@paginate_last) |i|" >
-                    <a sp:if="i != @page" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ i }" class="page">
-                        { i }
+        <thead>
+            <tr class="heading_row">
+                <th sp:each="@elements |element|">
+                    <a sp:tag-if="@sortable[element]" href="{ @request[:path] }?_w{ @widget[:param] }[sort]={ element }">
+                        { @labels[element] }
                     </a>
-                    <span sp:if="i == @page" class="current">{ i }</span>
-                </sp:pass>
-                <sp:pass sp:if="@paginate_last < @pages-1">
-                    ... <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @pages }" class="page">{ @pages }</a> 
-                </sp:pass>
-                <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>
-            </td>
-        </tr>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr sp:each_index="@rows |row_i|" class="row { (row_i%2==0) ? 'odd' : 'even' }">
+                <td sp:each="@elements |element|">
+                    <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ Spider::HTTP.urlencode(@rows[row_i][element]) }">
+                        { @rows[row_i][element] }
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="paginator" sp:if="@paginate && @pages > 1">
+                <td colspan="{ @elements.size }" >
+                    <a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
+                    <sp:pass sp:if="@paginate_first > 1">
+                        <a href="{ @request[:path] }?_w{ @widget[:param] }[page]=1" class="page">1</a> ... 
+                    </sp:pass>
+                    <sp:pass sp:each="(@paginate_first..@paginate_last) |i|" >
+                        <a sp:if="i != @page" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ i }" class="page">
+                            { i }
+                        </a>
+                        <span sp:if="i == @page" class="current">{ i }</span>
+                    </sp:pass>
+                    <sp:pass sp:if="@paginate_last < @pages-1">
+                        ... <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @pages }" class="page">{ @pages }</a> 
+                    </sp:pass>
+                    <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>
+                </td>
+            </tr>
+        </tfoot>
     </table>
 </div>
