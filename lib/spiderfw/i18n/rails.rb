@@ -78,6 +78,30 @@ module Spider; module I18n
             end
             object.strptime(format)
         end
+        
+        def localize_number(number, precision=nil, options={})
+            l = @locale_data
+            defaults           = l["number.format"]
+            precision_defaults = l["number.precision.format"]
+            defaults           = defaults.merge(precision_defaults)
+            separator = (options[:separator] || defaults[:separator])
+            delimiter = (options[:delimiter] || defaults[:delimiter])
+            
+            Spider::I18n.do_localize_number(number, delimiter, separator, precision, options)
+            
+        end
+        
+        def parse_number(string, options={})
+            l = @locale_data
+            defaults           = l["number.format"]
+            precision_defaults = l["number.precision.format"]
+            defaults           = defaults.merge(precision_defaults)
+            separator = (options[:separator] || defaults[:separator])
+            delimiter = (options[:delimiter] || defaults[:delimiter])
+            
+            Spider::I18n.do_parse_number(string, delimiter, separator, options)
+        end
+        
 
         
         def time_ago_in_words(from_time, include_seconds = false)

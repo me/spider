@@ -58,7 +58,30 @@ module Spider
                     Spider::Logger.error("No provider found for locale #{locale}")
                     return object.to_s
                 end
-                return p.localize_date_time(locale, object, format, options)
+                return p.localize_date_time(object, format, options)
+            end
+            
+            def localize_number(locale, object, precision=nil, options={})
+                p = provider(locale)
+                unless p
+                    Spider::Logger.error("No provider found for locale #{locale}")
+                    return object.to_s
+                end
+                return p.localize_number(object, precision, options)
+            end
+            
+            def do_localize_number(object, delimiter, separator, precision=nil, options={})
+                options = ({
+                     :use_delimiter => true
+                 }).merge(options)
+                 unless precision
+                     precision = object.class <= Fixnum ? 0 : 2
+                 end
+                rounded_number = (Float(object) * (10 ** precision)).round.to_f / 10 ** precision
+                parts = rounded_number.to_s.split('.')
+                parts[0].gsub!(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1#{delimiter}")
+                parts[1] += "0"*(precision-parts[1].length)
+                parts.join(separator)
             end
             
             def parse_dt(locale, string, format = :default, options={})
@@ -67,7 +90,7 @@ module Spider
                     Spider::Logger.error("No provider found for locale #{locale}")
                     return Date.parse(string)
                 end
-                return p.parse_dt(locale, string, format, options)
+                return p.parse_dt(string, format, options)
             end
             
             def parse_date(locale, string, format = :default, options = {})
@@ -76,6 +99,32 @@ module Spider
 
             def parse_datetime(locale, string, format = :default, options = {})
                 parse_dt(locale, string, format, options.merge({:return => :datetime}))
+            end
+            
+            def parse_number(locale, string)
+                p = provider(locale)
+                unless p
+                    Spider::Logger.error("No provider found for locale #{locale}")
+                    return nil
+                end
+                return p.parse_number(string)
+            end
+            
+            def do_parse_number(string, delimiter, separator, options={})
+                parts = string.to_s.gsub(delimiter, "").split(separator)
+                unless options[:return]
+                    options[:return] = parts[1] ? Float : Fixnum
+                end
+                if options[:return] <= Fixnum
+                    return parts[0].to_i
+                elsif options[:return] <= Float
+                    return "#{parts[0]}.#{parts[1]}".to_f
+                elsif options[:return] <= BigDecimal
+                    return BigDecimal.new("#{parts[0]}.#{parts[1]}")
+                else
+                    raise ArgumentError, "Don't know how to transform a number to a #{options[:return]}"
+                end
+
             end
             
             # from Rails
@@ -110,6 +159,7 @@ module Spider
                 else                      _("over %d years") % (distance_in_minutes / 525600).round
                 end
             end
+            
             
         end
 
