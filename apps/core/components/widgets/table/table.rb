@@ -126,7 +126,9 @@ module Spider; module Components
                         if (!row[el])
                             res_row[el] = '' 
                         elsif (element.type <= Date || element.type <= Time)
-                            res_row[el] = Spider::I18n.localize(@request.locale, row[el], :short)
+                            res_row[el] = Spider::I18n.localize_date_time(@request.locale, row[el], :short)
+                        elsif (element.type <= Float || element.type <= BigDecimal)
+                            res_row[el] = Spider::I18n.localize_number(@request.locale, row[el])
                         elsif (row[el].respond_to?(:format))
                             res_row[el] = row[el].format(:short)
                         else                            
