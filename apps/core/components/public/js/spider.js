@@ -97,7 +97,7 @@ Spider.Widget = Class.extend({
 		el.each(function(){
 			var $this = $(this);
 			if (this.tagName == 'FORM'){
-				this.ajaxifyForm($(this));
+				w.ajaxifyForm($(this));
 			}
 			else if (this.tagName == 'A'){
 				$this.click(function(e){
