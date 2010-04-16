@@ -560,7 +560,15 @@ module Spider; module Model; module Mappers
                             sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
                             joins << sub_join unless had_join
                             
-                            unless v.nil?
+                            if v.nil? && comp == '='
+                                element_cond = {:conj => 'AND', :values => []}
+                                element.model.primary_keys.each do |k|
+                                    field = model_schema.qualified_foreign_key_field(element.name, k.name)
+                                    field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
+                                    element_cond[:values] << field_cond
+                                end
+                                cond[:values] << element_cond
+                            elsif v
                                 element.model.mapper.prepare_query_condition(v)                            
                                 sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
