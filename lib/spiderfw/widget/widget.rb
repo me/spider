@@ -201,6 +201,7 @@ module Spider
         
         def initialize(request, response, scene=nil)
             super
+            @is_target = false
             @widgets = {}
             @attributes = WidgetAttributes.new(self)
             @id_path = []
