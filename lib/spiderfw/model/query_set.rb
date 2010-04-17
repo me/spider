@@ -326,6 +326,12 @@ module Spider; module Model
             end
         end
         
+        # Remove all elements from self
+        def clear
+            @objects = []
+            @index_lookup.each_key{ |k| @index_lookup[k] = {} }
+        end
+        
         # Remove when merging
         alias :map_array :map
         
@@ -406,8 +412,7 @@ module Spider; module Model
         # Executes the query and fetches the objects; (the next batch if a fetch_window is set).
         def load
             return self unless loadable?
-            @objects = []
-            @index_lookup.each_key{ |k| @index_lookup[k] = {} }
+            clear
             @loaded = false
             @loaded_elements = {}
             return load_next if @fetch_window && !@query.offset

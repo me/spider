@@ -258,6 +258,7 @@ module Spider; module Model
         def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
+
             if (element.attributes[:junction])
                 their_element = element.attributes[:junction_their_element]
                 if (val.model != element.model) # dereferenced junction
@@ -285,15 +286,20 @@ module Spider; module Model
                     unless mode == :insert
                         condition = Condition.and
                         condition[our_element] = obj
-                        raise "Can't save without a junction id" unless element.attributes[:junction_id]
-                        val.each do |row|
-                            next unless row_id = row.get(element.attributes[:junction_id])
-                            condition.set(:id, '<>', row_id)
+                        if element.attributes[:junction_id]
+                            val.each do |row|
+                                next unless row_id = row.get(element.attributes[:junction_id])
+                                condition.set(:id, '<>', row_id)
+                            end
                         end
                         element.model.mapper.delete(condition)
                     end
                     val.set(our_element, obj)
-                    val.save
+                    if element.attributes[:junction_id]
+                        val.save
+                    else
+                        val.insert
+                    end
                 end
             else
                 if (element.multiple?)

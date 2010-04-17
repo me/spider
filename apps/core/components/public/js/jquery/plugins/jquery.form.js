@@ -54,11 +54,11 @@ $.fn.ajaxSubmit = function(options) {
 		options = { success: options };
 
 	var url = $.trim(this.attr('action'));
+	url = url || window.location.href || '';
 	if (url) {
 		// clean url (don't include hash vaue)
 		url = (url.match(/^([^#]+)/)||[])[1];
    	}
-   	url = url || window.location.href || '';
 
 	options = $.extend({
 		url:  url,

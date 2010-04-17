@@ -97,23 +97,7 @@ Spider.Widget = Class.extend({
 		el.each(function(){
 			var $this = $(this);
 			if (this.tagName == 'FORM'){
-				$('input[type=submit]', $this).click(function(e){
-					e.preventDefault();
-					w.setLoading();
-					var submitName = $(this).attr('name');
-					var submitValue = $(this).val();
-					$this.ajaxSubmit({
-						dataType: 'html',
-						beforeSubmit: function(data, form, options){
-							data.push({name: submitName, value: submitValue});
-							data.push({name: '_wt', value: w.path});
-						},
-						success: function(res){
-							w.replaceHTML(res);
-							w.removeLoading();
-						}
-					});
-				});
+				w.ajaxifyForm($(this));
 			}
 			else if (this.tagName == 'A'){
 				$this.click(function(e){
@@ -143,6 +127,29 @@ Spider.Widget = Class.extend({
 			}
 		});
 
+	},
+	
+	ajaxifyForm: function(form){
+		var w = this;
+		var isForm = form.get(0).tagName == 'FORM';
+		$('input[type=submit]', form).click(function(e){
+			e.preventDefault();
+			w.setLoading();
+			var submitName = $(this).attr('name');
+			var submitValue = $(this).val();
+			form.ajaxSubmit({
+				dataType: 'html',
+				semantic: !isForm,
+				beforeSubmit: function(data, form, options){
+					data.push({name: submitName, value: submitValue});
+					data.push({name: '_wt', value: w.path});
+				},
+				success: function(res){
+					w.replaceHTML(res);
+					w.removeLoading();
+				}
+			});
+		});
 	},
 	
 	setLoading: function(){
@@ -217,7 +224,7 @@ Spider.Widget.initFromEl = function(el){
     var path = Spider.Widget.pathFromId(el.attr('id'));
 	if (Spider.widgets[path]){
 		var widget = Spider.widgets[path];
-		widget.replaceEl(el);
+		if (el.get(0) != widget.el.get(0)) widget.replaceEl(el);
 		return widget;
 	} 
     var cl = el.attr('class');
@@ -257,9 +264,8 @@ Spider.WidgetBackend = Class.extend({
 
 	init: function(widget){
 		this.widget = widget;
-		this.baseUrl = document.location.href;
+		this.baseUrl = document.location.href.split('#')[0];
 		this.urlParts = this.baseUrl.split('?');
-		this.urlParts[0] = this.urlParts[0].split('#')[0];
 		this.wUrl = this.urlParts[0]+'?';
 		if (this.urlParts[1]) this.wUrl += this.urlParts[1]+'&';
 		this.wUrl += '_wt='+this.widget.path;

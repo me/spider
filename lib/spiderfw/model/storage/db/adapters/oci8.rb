@@ -127,10 +127,10 @@ module Spider; module Model; module Storage; module Db
                  end
                  curr[:last_executed] = [sql, bind_vars]
                  if (Spider.conf.get('storage.db.replace_debug_vars'))
-                     cnt = -1
-                     debug("oci8 #{connection} executing: "+sql.gsub(/:\d+/){
-                         v = bind_vars[cnt]
-                         dv = debug_vars[cnt+=1]
+                     debug("oci8 #{connection} executing: "+sql.gsub(/:(\d+)/){
+                         i = $1.to_i
+                         v = bind_vars[i-1]
+                         dv = debug_vars[i-1]
                          v.is_a?(String) ? "'#{dv}'" : dv
                      })
                  else
@@ -273,7 +273,7 @@ module Spider; module Model; module Storage; module Db
              where, vals = sql_condition(query)
              bind_vars += vals
              sql += "WHERE #{where} " if where && !where.empty?
-             order = sql_order(query)
+             order = sql_order(query, replaced_fields)
              if (query[:limit])
                  if (query[:offset])
                      limit = "oci8_row_num between :#{curr[:bind_cnt]+=1} and :#{curr[:bind_cnt]+=1}"
@@ -282,9 +282,6 @@ module Spider; module Model; module Storage; module Db
                  else
                      limit = "oci8_row_num < :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:limit] + 1
-                 end
-                 replaced_fields.each do |f, repl|
-                     order = order.gsub(f, repl)
                  end
                  if (!query[:joins].empty?)
                      pk_sql = query[:primary_keys].join(', ')

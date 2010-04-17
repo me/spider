@@ -12,7 +12,7 @@ module Spider; module I18n
 
         end
 
-        def localize_date_time(locale, object, format = :default, options={})
+        def localize_date_time(object, format = :default, options={})
             options[:calendar] ||= 'gregorian'
             
             if (format == :default)
@@ -64,7 +64,7 @@ module Spider; module I18n
         end
         
         # FIXME: add extended format handling like in localize
-        def parse_dt(locale, string, format = :default, options = {})
+        def parse_dt(string, format = :default, options = {})
             options[:calendar] ||= 'gregorian'
             
             if (format == :default)
@@ -145,6 +145,18 @@ module Spider; module I18n
         def weekend_end(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
             wdays.index @cldr.calendar.weekend_ends[calendar.to_s]
+        end
+        
+        def localize_number(object, precision=nil, options={})
+            delimiter = @cldr.number.symbol_group
+            separator = @cldr.number.symbol_decimal
+            Spider::I18n.do_localize_number(object, delimiter, separator, precision, options)
+        end
+        
+        def parse_number(string, options={})
+            delimiter = @cldr.number.symbol_group
+            separator = @cldr.number.symbol_decimal
+            Spider::I18n.do_parse_number(string, delimiter, separator, options)
         end
         
     end

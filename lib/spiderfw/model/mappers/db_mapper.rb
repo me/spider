@@ -105,6 +105,7 @@ module Spider; module Model; module Mappers
                                     key_value = element_val.get(key.name)
                                 end
                                 store_key = schema.foreign_key_field(element.name, key.name)
+                                next if store_key.is_a?(FieldExpression)
                                 values[store_key] = map_save_value(key_type, key_value, save_mode)
                             end
                         else
@@ -559,7 +560,15 @@ module Spider; module Model; module Mappers
                             sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
                             joins << sub_join unless had_join
                             
-                            unless v.nil?
+                            if v.nil? && comp == '='
+                                element_cond = {:conj => 'AND', :values => []}
+                                element.model.primary_keys.each do |k|
+                                    field = model_schema.qualified_foreign_key_field(element.name, k.name)
+                                    field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
+                                    element_cond[:values] << field_cond
+                                end
+                                cond[:values] << element_cond
+                            elsif v
                                 element.model.mapper.prepare_query_condition(v)                            
                                 sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]

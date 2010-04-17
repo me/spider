@@ -69,6 +69,7 @@ module Spider; module ControllerMixins
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end
+            @is_target = false if @visual_params.is_a?(Hash) && @visual_params[:template] && @request.params['_wt']
             super(action, *params)
             return unless @visual_params.is_a?(Hash)
             if (@visual_params.is_a?(Hash) && @visual_params[:template])
@@ -79,7 +80,6 @@ module Spider; module ControllerMixins
                     first, rest = widget_target.split('/', 2)
                     @_widget = find_widget(first)
                     raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
-                    @is_target = false
                     @_widget.is_target = true unless rest
                     @_widget.set_action(widget_execute) if widget_execute
                     @_widget.target_mode = true
