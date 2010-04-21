@@ -262,11 +262,13 @@ module Spider
                 
 
                 # Service
-
+                
+                soap_address = request_url
+                soap_address += '/' unless soap_address[-1].chr == '/'
                 xm.service('name' => self.class.soap_service_name) do
                     xm.port('name' => self.class.soap_port_name, 'binding' => 'typens:'+self.class.soap_binding_name) do
                         xm.soap(:address, 
-                        'location' => request_url)
+                        'location' => soap_address)
                     end
                 end
 
