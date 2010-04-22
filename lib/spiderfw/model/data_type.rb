@@ -38,7 +38,7 @@ module Spider
             # Defines a list of Element attributes the DataType will use. They will be available in the @attributes
             # instance variable.
             def take_attributes(*list)
-                if (list)
+                if (list && !list.empty?)
                     @take_attributes = list
                 else
                     @take_attributes || []
