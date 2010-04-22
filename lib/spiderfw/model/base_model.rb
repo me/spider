@@ -1219,10 +1219,16 @@ module Spider; module Model
             element = self.class.elements[element] unless element.is_a?(Element)
             if (element.type < Spider::DataType)
                 value = element.type.from_value(value) unless value.is_a?(element.type)
-                element.type.take_attributes.each do |a|
-                    value.attributes[a] = element.attributes[a]
+                if value
+                    element.type.take_attributes.each do |a|
+                        if element.attributes[a].is_a?(Proc)
+                            value.attributes[a] = value.instance_eval(&element.attributes[a])
+                        else
+                            value.attributes[a] = element.attributes[a]
+                        end
+                    end
+                    value = value.prepare
                 end
-                value = value.prepare
             elsif element.model?
                 value.autoload(autoload?, true) if value && value.respond_to?(:autolad)
             else
