@@ -44,7 +44,7 @@ module Spider; module Forms
         end
         
         def format_value
-            @value
+            @value.respond_to?(:format) ? @value.format : @value
         end
         
         def done?
