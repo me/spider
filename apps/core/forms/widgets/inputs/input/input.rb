@@ -111,6 +111,10 @@ module Spider; module Forms
             @css_classes << "connect-#{target}"
         end
         
+        def needs_multipart?
+            false
+        end
+        
         
         # def execute
         #     @scene.name = 
