@@ -61,7 +61,7 @@ module Spider
         # This method may be overridden by subclasses and provide different textual representation for named formats.
         # Possible formats are :normal, :short, :medium, :long, :full.
         # The default implementation ignores the format and just calls to_s.
-        def format(format)
+        def format(format = :normal)
             self.to_s
         end
         
