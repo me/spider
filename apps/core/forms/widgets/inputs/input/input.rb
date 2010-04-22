@@ -25,6 +25,8 @@ module Spider; module Forms
             return scene
         end
         
+        # Returns the value to be stored. If nil is returned, the value will not be unset; in this case,
+        # the method should modify the value directly.
         def prepare_value(val)
             val == {} ? nil : val
         end
