@@ -70,19 +70,23 @@ module Spider; module Model; module Storage; module Db
         
 
         def do_start_transaction
+            return unless transactions_enabled?
             connection.autocommit = false
         end
         
         def in_transaction?
+            return false unless transactions_enabled?
             return curr[:conn] && !curr[:conn].autocommit?
         end
         
         def do_commit
+            return release unless transactions_enabled?
             curr[:conn].commit if curr[:conn]
             release
         end
         
         def do_rollback
+            return release unless transactions_enabled?
             curr[:conn].rollback
             release
         end
