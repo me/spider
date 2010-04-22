@@ -71,6 +71,13 @@ module Spider
             self
         end
         
+        # Returns a new instance of the datatype for the value passed, copying any set attributes
+        def new(val=nil)
+            dt = self.class.new(val)
+            attributes.each{ |k, v| dt.attributes[k] = v }
+            dt
+        end
+        
     end
     
 end
