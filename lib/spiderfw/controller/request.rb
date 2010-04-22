@@ -20,13 +20,17 @@ module Spider
             @body = b
         end
         
-        def body(&proc)
+        def body
             b = @body.is_a?(String) ? StringIO.new(@body) : @body
             return nil unless b
-            while (buf = b.read(BUFSIZE))
-                yield buf
+            if block_given?
+                while (buf = b.read(BUFSIZE))
+                    yield buf
+                end
             end
+            return b
         end
+        
         
         def read_body
             return @body if @body.is_a?(String)
