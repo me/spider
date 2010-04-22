@@ -1,4 +1,4 @@
-require 'uuid'
+require 'uuidtools'
 
 module UUIDException
     

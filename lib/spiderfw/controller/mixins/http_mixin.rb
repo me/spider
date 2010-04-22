@@ -1,5 +1,5 @@
 require 'base64'
-require 'uuid'
+require 'uuidtools'
 require 'digest/md5'
 require 'macaddr'
 require 'spiderfw/http/http'
@@ -131,7 +131,7 @@ module Spider; module ControllerMixins
             pk  = Digest::MD5.hexdigest("#{now}:#{digest_instance_key}")[0,32]
             nonce = [now + ":" + pk].pack("m*").chop # it has 60 length of chars.
             
-            opaque = [UUID.new.generate].pack("m*").chop
+            opaque = [UUIDTools::UUID.random_create.to_s].pack("m*").chop
             header = "Digest realm=\"#{realm}\", qop=\"auth\", nonce=\"#{nonce}\", opaque=\"#{opaque}\""
             @response.headers['WWW-Authenticate'] = header
             @response.status = Spider::HTTP::UNAUTHORIZED

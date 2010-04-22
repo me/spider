@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'uuid'
+require 'uuidtools'
 require 'spiderfw/utils/shared_store'
 
 module Locking
@@ -17,7 +17,7 @@ module Locking
 			@properties = properties
 			@created = Time.now
 			
-			@token = UUID.new.generate
+			@token = UUIDTools::UUID.random_create.to_s
 		end
 		
 		def [](key)

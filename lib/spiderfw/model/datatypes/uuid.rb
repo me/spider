@@ -1,4 +1,4 @@
-require "uuid"
+require "uuidtools"
 
 module Spider; module DataTypes
 
@@ -12,7 +12,7 @@ module Spider; module DataTypes
         end
         
         # format :short returns just the first part
-        def format(type)
+        def format(type = :normal)
             if (type == :short)
                 return self.to_s.split('-')[0]
             end
@@ -20,7 +20,7 @@ module Spider; module DataTypes
         end
         
         def self.generate
-            ::UUID.new.generate
+            UUIDTools::UUID.random_create.to_s
         end
 
     end

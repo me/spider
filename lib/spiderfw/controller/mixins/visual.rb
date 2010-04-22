@@ -228,7 +228,7 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
-            exc.uuid = UUID.new.generate if exc.respond_to?(:uuid=)
+            exc.uuid = UUIDTools::UUID.random_create.to_s if exc.respond_to?(:uuid=)
             format = self.class.output_format(:error) || :html
             return super unless @executed_format == :html
             return super unless action_target?
