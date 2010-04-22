@@ -1,5 +1,5 @@
 <div class="{ @widget[:css_class] }">
-	<tpl:asset type="css" src="form.css" />
+	<tpl:asset type="css" src="css/form.css" />
 	<tpl:asset type="js" src="form.js" />
 	<div sp:if="@error" class='errors'>
 		<ul>
