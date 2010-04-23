@@ -122,12 +122,20 @@ module Spider
         end
 
         def before(action='', *params)
+            begin
+                # Debugger post mortem interferes with the mapping of exceptions
+                Debugger.post_mortem = false 
+            rescue NameError, RuntimeError
+            end
             method = @request.env['REQUEST_METHOD']
             @soap_proxy = SoapProxy.new(self, self.class.soap_methods)
             @soap_registry = SOAP::Mapping::Registry.new
             self.class.methods_soap_types.each do |t|
                 t.soap_controller = self.class
                 @soap_registry.add(t, t.soap_class, t.soap_factory, t.soap_info)
+            end
+            unless Spider.runmode == 'devel'
+                @soap_registry.add(RuntimeError, SOAP::Mapping::SOAPException, CustomExceptionFactory.new, nil)
             end
             if method == 'POST'
                 @router = ::SOAP::RPC::Router.new(self.class.name)
