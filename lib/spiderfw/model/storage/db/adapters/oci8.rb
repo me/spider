@@ -249,6 +249,7 @@ module Spider; module Model; module Storage; module Db
              # Spider::Logger.debug("SQL SELECT:")
              # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
+             order_on_different_table = false
              if query[:limit] # Oracle is so braindead
                  replaced_fields = {}
                  replace_cnt = 0
@@ -263,6 +264,7 @@ module Spider; module Model; module Storage; module Db
                      #   end
                      transformed = "O#{replace_cnt += 1}"
                      replaced_fields[field.to_s] = transformed
+                     order_on_different_table = true unless query[:tables].include?(field.table)
                      if (field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB')
                          field = "CAST(#{field} as varchar2(100))"
                      end
@@ -288,10 +290,11 @@ module Spider; module Model; module Storage; module Db
                      bind_vars << query[:limit] + 1
                  end
                  if (!query[:joins].empty?)
+                     data_tables_sql = order_on_different_table ? tables_sql : query[:tables].join(', ')
                      pk_sql = query[:primary_keys].join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
-                     data_sql = "SELECT #{keys} FROM #{tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql}) order by #{order}"
+                     data_sql = "SELECT #{keys} FROM #{data_tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql}) order by #{order}"
                  else
                      data_sql = "#{sql} order by #{order}"
                  end
