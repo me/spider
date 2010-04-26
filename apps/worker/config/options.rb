@@ -1,5 +1,6 @@
 module Spider
     
+    config_option 'worker.enable', :type => Spider::DataTypes::Bool, :default => lambda{ Spider.config.get('runmode') == 'devel' ? false : true }
     config_option 'worker.fork', :type => Spider::DataTypes::Bool, :default => lambda{
       RUBY_PLATFORM =~ /win32|mingw32/ ? false : true
     }
