@@ -308,6 +308,7 @@ module Spider; module Model; module Storage; module Db
          end
          
          def sql_condition_value(key, comp, value, bound_vars=true)
+             curr[:bind_cnt] ||= 0
              if (comp.to_s.downcase == 'ilike')
                  comp = 'like'
                  key = "UPPER(#{key})"
