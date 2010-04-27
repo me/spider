@@ -264,7 +264,7 @@ module Spider; module Model; module Storage; module Db
                      #   end
                      transformed = "O#{replace_cnt += 1}"
                      replaced_fields[field.to_s] = transformed
-                     order_on_different_table = true unless query[:tables].include?(field.table)
+                     order_on_different_table = true if field.is_a?(Spider::Model::Storage::Db::Field) && !query[:tables].include?(field.table)
                      if (field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB')
                          field = "CAST(#{field} as varchar2(100))"
                      end
