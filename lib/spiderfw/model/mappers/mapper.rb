@@ -514,7 +514,7 @@ module Spider; module Model
                 end
                 if (do_fetch)
                     @model.primary_keys.each{ |key| query.request[key] = true}
-                    expand_request(query.request, set) unless options[:no_expand_request]
+                    expand_request(query.request, set) unless options[:no_expand_request] || !query.request.expandable?
                     query = prepare_query(query, query_set)
                     query.request.total_rows = true unless query.request.total_rows == false
                     result = fetch(query)
