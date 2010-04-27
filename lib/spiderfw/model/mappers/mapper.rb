@@ -788,6 +788,11 @@ module Spider; module Model
             condition.simplify
             condition.each_with_comparison do |k, v, c|
                 raise MapperError, "Condition for nonexistent element #{k} on model #{model}" unless element = model.elements[k]
+                if (element.attributes[:computed_from]) # FIXME: temp fix
+                    condition.delete(k)
+                    condition.set(element.attributes[:computed_from][0], c, v)
+                    element = model.elements[element.attributes[:computed_from][0]]
+                end
                 if (element.integrated?)
                     condition.delete(k)
                     integrated_from = element.integrated_from
