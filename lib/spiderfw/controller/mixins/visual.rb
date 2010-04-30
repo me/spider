@@ -61,6 +61,26 @@ module Spider; module ControllerMixins
             @visual_params ||= {}
         end
         
+        def init_widgets(template)
+            widget_target = @request.params['_wt']
+            widget_execute = @request.params['_we']
+            if (widget_target && !@rendering_error)
+                first, rest = widget_target.split('/', 2)
+                @_widget = find_widget(first)
+                raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
+                @is_target = false
+                @_widget.is_target = true unless rest
+                @_widget.set_action(widget_execute) if widget_execute
+                @_widget.target_mode = true
+                @_widget.widget_target = rest
+            end
+            template.do_widgets_before
+            if @_widget
+                @_widget.execute
+                done
+            end
+        end
+        
         def execute(action='', *params)
             @visual_params = @executed_format_params
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
@@ -69,42 +89,24 @@ module Spider; module ControllerMixins
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end
-            @is_target = false if @visual_params.is_a?(Hash) && @visual_params[:template] && @request.params['_wt']
             super(action, *params)
             return unless @visual_params.is_a?(Hash)
-            if (@visual_params.is_a?(Hash) && @visual_params[:template])
-                @template ||= init_template
-                widget_target = @request.params['_wt']
-                widget_execute = @request.params['_we']
-                if (widget_target)
-                    first, rest = widget_target.split('/', 2)
-                    @_widget = find_widget(first)
-                    raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
-                    @_widget.is_target = true unless rest
-                    @_widget.set_action(widget_execute) if widget_execute
-                    @_widget.target_mode = true
-                    @_widget.widget_target = rest
-                    @template.do_widgets_before
-                    @_widget.execute
-                end
-            end
-            if (@visual_params.is_a?(Hash) && @visual_params[:call])
+            @template = init_template if !@template && @visual_params[:template]
+            init_widgets(@template) if @template
+            if @visual_params[:call]
                 send(@visual_params[:call], *params)
             end
-            if (@visual_params.is_a?(Hash) && @visual_params[:template] && !@_widget && !done?)
+            if @visual_params[:template] && !@_widget && !done?
                 if (@template)
                     render(@template, @visual_params)  # has been init'ed in before method
                 else
                     render(@visual_params[:template], @visual_params)
                 end
             end
-            return unless @visual_params.is_a?(Hash)
-            if (@visual_params[:redirect])
-                # red = format_params[:redirect] == true ? request_url : format_params[:redirect]
-                # red = owner_controller.request_url if (self.is_a?(Widget))
+            if @visual_params[:redirect]
                 redirect(@visual_params[:redirect])
             end
-            if (@executed_format == :json && @visual_params[:scene] || @visual_params[:return]) # FIXME: move in JSON mixin?
+            if @executed_format == :json && @visual_params[:scene] || @visual_params[:return] # FIXME: move in JSON mixin?
                 if (@visual_params[:return])
                     $out << @visual_params[:return].to_json
                 elsif (@visual_params[:scene].is_a?(Array))
@@ -147,9 +149,15 @@ module Spider; module ControllerMixins
                 options = format_params.merge(options)
             end
             template = load_template(path)
-            template.init(scene)
+            do_template_init(template, options)            
             @template = template
             @loaded_template_path = path
+
+            return template
+        end
+        
+        def do_template_init(template, options={})
+            template.init(scene)
             if (@request.params['_action'])
                 template._widget_action = @request.params['_action']
             else
@@ -183,22 +191,21 @@ module Spider; module ControllerMixins
             else
                 template = init_template(path, scene, options)
             end
-            template.do_widgets_before
-            unless (@_partial_render) # TODO: implement or remove
-                chosen_layouts = options[:layout] || @layout
-                chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
-                if (chosen_layouts)
-                    t = template
-                    l = nil
-                    (chosen_layouts.length-1).downto(0) do |i|
-                        l = init_layout(chosen_layouts[i])
-                        l.template = t
-                        t = l
-                    end
-                    l.render(scene)
-                else
-                    template.render(scene)
+            init_widgets(template)
+            return template if done?
+            chosen_layouts = options[:layout] || @layout
+            chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
+            if (chosen_layouts)
+                t = template
+                l = nil
+                (chosen_layouts.length-1).downto(0) do |i|
+                    l = init_layout(chosen_layouts[i])
+                    l.template = t
+                    t = l
                 end
+                l.render(scene)
+            else
+                template.render(scene)
             end
             return template
         end
@@ -273,6 +280,7 @@ module Spider; module ControllerMixins
                     super(exc)
                 end
             end
+            @rendering_error = true
             render "errors/#{error_page}", :layout => "errors/error"
             super
         end
