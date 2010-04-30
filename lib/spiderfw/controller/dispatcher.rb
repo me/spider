@@ -40,11 +40,11 @@ module Spider
                 obj = dispatched_object(route)
                 obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
                 route.obj = obj
+                if (route.options[:do])
+                    obj.instance_exec(*(route.params || []), &route.options[:do])
+                end
             end
-            obj = route.obj
-            if (route.options[:do])
-                route.options[:do].call(obj, *(route.params || []))
-            end
+            obj = route.obj            
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
             return [obj, route.action, new_arguments]

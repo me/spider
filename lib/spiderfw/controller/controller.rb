@@ -276,9 +276,6 @@ module Spider
             obj.dispatch_action = route.matched || ''
             # FIXME: this is not clean
             obj.set_action(route.action)
-            if (route.options[:do])
-                obj.instance_eval &route.options[:do]
-            end
 #            obj.dispatch_path = @dispatch_path + route.path
             return obj
         end
