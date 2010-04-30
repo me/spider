@@ -138,6 +138,7 @@ module Spider
                     match = try.match(path)
                     if (match)
                         action = action_index ? match[action_index] : match.post_match
+                        action = action[0..-2] if action.length > 0 && action[-1].chr == '/'
                         params = match[1..(match.length-1)]
                         matched = match[0]
                     end
