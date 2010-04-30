@@ -505,6 +505,7 @@ module Spider
                     end
                 end
             end
+            widget
         end
         
         def check_subwidget_conditions
