@@ -1,3 +1,5 @@
+require 'tempfile'
+
 module Spider
     module HTTP
         autoload :Server,   'spiderfw/http/server'
@@ -7,7 +9,12 @@ module Spider
         autoload :Thin,     'spiderfw/http/adapters/thin'
         #autoload :Rack,     'spiderfw/http/adapters/rack/rack'
         
-        @multipart_regexp = /\Amultipart\/form-data.*boundary=\"?([^\";,]+)/n.freeze
+        MULTIPART_REGEXP = /\Amultipart\/form-data.*boundary=\"?([^\";,]+)/n.freeze
+        NAME_REGEX         = /Content-Disposition:.* name="?([^\";]*)"?/ni.freeze
+        CONTENT_TYPE_REGEX = /Content-Type: (.*)\r\n/ni.freeze
+        FILENAME_REGEX     = /Content-Disposition:.* filename="?([^\";]*)"?/ni.freeze
+        CRLF               = "\r\n".freeze
+        EOL                = CRLF
         
         module StatusCodes
         
@@ -171,6 +178,22 @@ module Spider
         end
         
         
+        def self.params_to_hash(value, prefix = nil)
+            case value
+            when Array
+                value.map { |v|
+                    params_to_hash(v, "#{prefix}[]")
+                }.inject({}){ |h, v| h.merge!(v) }
+            when Hash
+                value.map { |k, v|
+                    params_to_hash(v, prefix ? "#{prefix}[#{k}]" : k)
+                }.inject({}){ |h, v| h.merge!(v) }
+            else
+                {prefix => value}
+            end
+        end
+        
+        
         # Converts a query string snippet to a hash and adds it to existing
         # parameters.
         #
@@ -214,7 +237,6 @@ module Spider
         # Hash:: The parsed request.
         #--
         # from Merb
-        # da utilizzare
         def self.parse_multipart(request, boundary, content_length)
           boundary = "--#{boundary}"
           paramhsh = {}
@@ -225,8 +247,9 @@ module Spider
           bufsize = 16384
           content_length -= boundary_size
           status = input.read(boundary_size)
-          raise ControllerExceptions::MultiPartParseError, "bad content body:\n'#{status}' should == '#{boundary + EOL}'"  unless status == boundary + EOL
+          raise ArgumentError, "bad content body:\n'#{status}' should == '#{boundary + EOL}'"  unless status == boundary + EOL
           rx = /(?:#{EOL})?#{Regexp.quote(boundary,'n')}(#{EOL}|--)/
+          files = []
           loop {
             head = nil
             body = ''
@@ -246,8 +269,7 @@ module Spider
                 name = head[NAME_REGEX, 1]
 
                 if filename && !filename.empty?
-                  body = Tempfile.new(:Merb)
-                  body.binmode if defined? body.binmode
+                  body = UploadedFile.new(filename, content_type)
                 end
                 next
               end
@@ -260,7 +282,7 @@ module Spider
               read_size = bufsize < content_length ? bufsize : content_length
               if( read_size > 0 )
                 c = input.read(read_size)
-                raise ControllerExceptions::MultiPartParseError, "bad content body"  if c.nil? || c.empty?
+                raise ArgumentError, "bad content body"  if c.nil? || c.empty?
                 buf << c
                 content_length -= c.size
               end
@@ -274,23 +296,30 @@ module Spider
               content_length = -1  if $1 == "--"
             end
 
-            if filename && !filename.empty?   
-              body.rewind
-              data = { 
-                :filename => File.basename(filename),  
-                :content_type => content_type,  
-                :tempfile => body, 
-                :size => File.size(body.path) 
-              }
-            else
-              data = body
+            if filename && !filename.empty?
+                body.rewind
+                files << body
             end
+            data = body
             paramhsh = normalize_params(paramhsh,name,data)
             break  if buf.empty? || content_length == -1
           }
-          paramhsh
+          [paramhsh, files]
         end
         
+        
+    end
+    
+    
+    class UploadedFile < ::Tempfile
+        attr_reader :filename, :content_type
+        
+        def initialize(filename, content_type)
+            @filename = filename
+            @content_type = content_type
+            super('uploaded', Spider.paths[:tmp])
+            
+        end
         
     end
     

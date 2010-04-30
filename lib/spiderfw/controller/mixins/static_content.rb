@@ -68,7 +68,13 @@ module Spider; module ControllerMixins
             debug("Serving asset: #{full_path}")
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
             stat = File.lstat(full_path)
-            ct = File.directory?(full_path) ? "httpd/unix-directory" : WEBrick::HTTPUtils::mime_type(full_path, ::MIME::Types)
+            if File.directory?(full_path)
+                ct = "httpd/unix-directory"
+            else
+                ct = MIME::Types.type_for(full_path)
+                ct = ct.to_s if ct
+                ct ||= "application/octet-stream"
+            end
             @response.headers['Content-Type'] = ct
             @response.headers['Content-Length'] = stat.size
             @response.headers['Last-Modified'] = stat.mtime.httpdate

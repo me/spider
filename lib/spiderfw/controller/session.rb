@@ -1,4 +1,4 @@
-require 'uuid'
+require 'uuidtools'
 require 'spiderfw/controller/session/flash_hash'
 require 'spiderfw/controller/session/transient_hash'
 
@@ -46,7 +46,7 @@ module Spider
         end
         
         def generate_sid
-            UUID.new.generate
+            UUIDTools::UUID.random_create.to_s
         end
         
         def [](key)

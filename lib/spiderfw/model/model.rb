@@ -34,7 +34,8 @@ module Spider
             map_types = {
                 Spider::DataTypes::Text => String,
                 Spider::DataTypes::Bool => FalseClass,
-                Spider::DataTypes::Binary => String
+                Spider::DataTypes::Binary => String,
+                Spider::DataTypes::FilePath => String
             }
             return map_types[klass] if map_types[klass]
             return klass

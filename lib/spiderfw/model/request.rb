@@ -10,6 +10,8 @@ module Spider; module Model
         attr_accessor :total_rows
         # (array) find also the given subclasses of the queried model.
         attr_reader :polymorphs
+        # (bool) if true, the request will be expanded with lazy groups on load
+        attr_accessor :expandable
         
         def initialize(val=nil, params={})
             if (val.is_a?(Array))
@@ -20,6 +22,7 @@ module Spider; module Model
             end
             @total_rows = params[:total_rows]
             @polymorphs = {}
+            @expandable = true
         end
         
         # TODO: fix/remove?
@@ -72,6 +75,10 @@ module Spider; module Model
         
         def with_superclass?
             @with_superclass
+        end
+        
+        def expandable?
+            @expandable
         end
     
     end

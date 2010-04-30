@@ -38,6 +38,7 @@ module Spider; module Forms
         attr_to_scene :inputs, :names, :hidden_inputs, :labels, :error, :errors, :sub_links
         attribute :show_related, :type => TrueClass, :default => false
         i_attribute :auto_redirect, :default => false
+        is_attribute :multipart, :default => false
         attr_accessor :save_actions
         attr_accessor :fixed
         attr_accessor :before_save, :after_save
@@ -181,6 +182,7 @@ module Spider; module Forms
             @scene.submit_and_new_text = @attributes[:submit_and_new_text] % @scene.submit_text
             @scene.submit_and_stay_text = @attributes[:submit_and_stay_text] % @scene.submit_text
             @scene.submit_buttons = @save_actions.keys
+            @scene.enctype = 'multipart/form-data' if @multipart
             super
         end
         
@@ -222,6 +224,15 @@ module Spider; module Forms
                     widget_type = Password
                 elsif (el.type == Spider::DataTypes::Bool)
                     widget_type = Checkbox
+                elsif (el.type == Spider::DataTypes::FilePath)
+                    if el.attributes[:uploadable]
+                        widget_type = FileInput
+                        input_attributes = {:save_path => el.attributes[:base_path]}
+                        input_attributes[:save_path] = input_attributes[:save_path].call if input_attributes[:save_path].is_a?(Proc)
+                    else
+                        widget_type = Text
+                        input_attributes = {:size => 50}
+                    end
                 elsif (el.model?)
                     if ([:choice, :multiple_choice, :state, :multiple_state].include?(el.association) && !el.extended?)
                         widget_type = el.type.attributes[:estimated_size] && el.type.attributes[:estimated_size] > 30 ? 
@@ -263,6 +274,7 @@ module Spider; module Forms
                 input.model = el.type if input.respond_to?(:model)
                 input.condition = el.condition if el.condition
             end
+            @multipart = true if input.needs_multipart?
             return input
         end
         

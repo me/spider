@@ -23,7 +23,7 @@ module SOAP; module Mapping
     end
     
 end; end
-
+    
 module Spider
     
     module Soap
@@ -76,6 +76,21 @@ module Spider
                 end
                 return true, obj
             end
+        end
+        
+        class CustomExceptionFactory < SOAP::Mapping::Factory
+            
+            def obj2soap(soap_class, obj, info, map)
+                soap_obj = ::SOAP::SOAPStruct.new
+                elename = ::SOAP::Mapping.name2elename("message")
+                soap_obj.add elename, ::SOAP::Mapping._obj2soap(obj.message, map)
+                soap_obj
+            end
+            
+            def soap2obj(obj_class, node, info, map)
+                return RuntimeError.new(node['message'].data)
+            end
+            
         end
         
         module SoapType

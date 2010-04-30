@@ -38,7 +38,7 @@ module Spider
             # Defines a list of Element attributes the DataType will use. They will be available in the @attributes
             # instance variable.
             def take_attributes(*list)
-                if (list)
+                if (list && !list.empty?)
                     @take_attributes = list
                 else
                     @take_attributes || []
@@ -61,7 +61,7 @@ module Spider
         # This method may be overridden by subclasses and provide different textual representation for named formats.
         # Possible formats are :normal, :short, :medium, :long, :full.
         # The default implementation ignores the format and just calls to_s.
-        def format(format)
+        def format(format = :normal)
             self.to_s
         end
         
@@ -69,6 +69,13 @@ module Spider
         # should alter the value according to the attributes.
         def prepare
             self
+        end
+        
+        # Returns a new instance of the datatype for the value passed, copying any set attributes
+        def new(val=nil)
+            dt = self.class.new(val)
+            attributes.each{ |k, v| dt.attributes[k] = v }
+            dt
         end
         
     end

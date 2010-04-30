@@ -1,4 +1,4 @@
-require 'uuid'
+require 'uuidtools'
 
 module Spider; module Messenger
     
@@ -34,7 +34,7 @@ module Spider; module Messenger
         
         with_mapper do
             def before_save(obj, mode)
-                obj.ticket = ::UUID.generate if mode == :insert
+                obj.ticket = UUIDTools::UUID.random_create.to_s if mode == :insert
                 super
             end
         end

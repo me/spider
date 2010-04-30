@@ -1,0 +1,15 @@
+.wdgt-Spider-Forms-FileInput .change{
+	margin: 5px 0;
+}
+
+.wdgt-Spider-Forms-FileInput .js-change-link{
+	margin-left: 10px;
+}
+
+.wdgt-Spider-Forms-FileInput .js-change-link.open{
+	color: #AAAAFF;
+}
+
+.wdgt-Spider-Forms-FileInput .file-link.deleted{
+	text-decoration: line-through;
+}

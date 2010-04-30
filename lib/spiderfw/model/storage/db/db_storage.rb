@@ -163,6 +163,10 @@ module Spider; module Model; module Storage; module Db
             return self.class.capabilities[:transactions]
         end
         
+        def transactions_enabled?
+            @configuration['enable_transactions'] && supports_transactions?
+        end
+        
         def start_transaction
             return savepoint("point#{curr[:savepoints].length}") if in_transaction?
             curr[:transaction_nesting] += 1
@@ -197,6 +201,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def commit_or_continue
+            return unless transactions_enabled?
             raise StorageException, "Commit without a transaction" unless in_transaction?
             if curr[:transaction_nesting] == 1
                 commit

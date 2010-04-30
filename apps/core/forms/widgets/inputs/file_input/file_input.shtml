@@ -1,0 +1,12 @@
+<div class="input">
+    <tpl:asset type="css" src="css/file_input.css" />
+    <tpl:asset type="js" src="input.js" />
+    <tpl:asset type="js" src="file_input.js" />
+    <div sp:if="@value && !@value.to_s.empty?">
+        <a class="file-link" href="{ widget_action('view_file') }">{ @formatted_value }</a>
+        <span class="clear">(<input type="checkbox" name="{ @name }[clear]"> _(Clear))</span>
+    </div>
+    <div class="change"><span sp:if="@value && !@value.to_s.empty?"><span class="change-label">_(Change)</span>:</span>
+        <input type="file" name="{ @name }[file]" value="{ @value }" size="{ @size }">
+    </div>
+</div>

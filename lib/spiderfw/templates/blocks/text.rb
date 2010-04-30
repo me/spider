@@ -3,7 +3,7 @@ require 'strscan'
 
 module Spider; module TemplateBlocks
     ExpressionOutputRegexp = /\{\s([^\s].*?)\s\}/
-    GettextRegexp = /_\((.+)?\)(\s%\s([^\s,]+)(,\s*\S+\s*\])?)?/
+    GettextRegexp = /_\(([^\)]+)?\)(\s%\s([^\s,]+)(,\s*\S+\s*\])?)?/
     ERBRegexp = /(<%(.+)?%>)/
     
     class Text < Block

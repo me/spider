@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
   s.add_dependency("gettext", ["> 2.0.0"])
   s.add_dependency("hpricot", ["> 0.8"])
   s.add_dependency("json", ["> 1.1"])
-  s.add_dependency("uuid", ["> 2.0"])
+  s.add_dependency("uuidtools", ["> 2.1"])
   s.add_dependency("rufus-scheduler", ["> 1.0"])
   s.add_dependency("mime-types", ["> 1.0"])
   s.add_dependency("locale", ["> 2.0"])

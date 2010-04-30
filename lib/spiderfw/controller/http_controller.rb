@@ -31,12 +31,20 @@ module Spider
             @response.cookies['sid'] = @request.session.sid
             @response.cookies['sid'].path = '/'
             @request.params = {}
+            @uploaded_files = []
             if (@request.env['QUERY_STRING'])
                 @request.params = Spider::HTTP.parse_query(@request.env['QUERY_STRING'])
             end
-            if (@request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE'] && @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded'))
-                @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
+            if @request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE']
+                if @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded')
+                    @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
+                elsif @request.env['HTTP_CONTENT_TYPE'] =~ Spider::HTTP::MULTIPART_REGEXP
+                    multipart_params, multipart_files = Spider::HTTP.parse_multipart(@request.body, $1, @request.env['CONTENT_LENGTH'].to_i)
+                    @request.params.merge!(multipart_params)
+                    @uploaded_files = multipart_files
+                end
             end
+
             @request.http_method = @request.env['REQUEST_METHOD'].upcase.to_sym
             @request.http_host = @request.env['HTTP_HOST']
             Locale.clear
@@ -67,6 +75,9 @@ module Spider
         def ensure(action='', *arguments)
             dispatch(:ensure, action, *arguments)
             $stdout = @previous_stdout
+            @uploaded_files.each do |f|
+                f.close
+            end
         end
         
         

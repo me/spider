@@ -25,6 +25,8 @@ module Spider; module Forms
             return scene
         end
         
+        # Returns the value to be stored. If nil is returned, the value will not be unset; in this case,
+        # the method should modify the value directly.
         def prepare_value(val)
             val == {} ? nil : val
         end
@@ -44,7 +46,7 @@ module Spider; module Forms
         end
         
         def format_value
-            @value
+            @value.respond_to?(:format) ? @value.format : @value
         end
         
         def done?
@@ -107,6 +109,10 @@ module Spider; module Forms
               :target => target  
             }).merge(options)
             @css_classes << "connect-#{target}"
+        end
+        
+        def needs_multipart?
+            false
         end
         
         

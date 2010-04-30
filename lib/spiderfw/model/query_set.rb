@@ -342,13 +342,22 @@ module Spider; module Model
 
         # Iterates on objects, loading when needed.
         def each
+            tmp = []
+            prev_parents = []
             self.each_index do |i|
                 obj = @objects[i]
                 prev_parent = obj._parent
                 prev_parent_element = obj._parent_element
                 obj.set_parent(self, nil)
+                tmp << obj
+                prev_parents << [prev_parent, prev_parent_element]
+            end
+            tmp.each do |obj|
                 yield obj
-                obj.set_parent(prev_parent, prev_parent_element)
+            end
+            tmp.each_index do |i|
+                prev_parent, prev_parent_element = prev_parents[i]
+                tmp[i].set_parent(prev_parent, prev_parent_element)
             end
         end
 
