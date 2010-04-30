@@ -228,6 +228,8 @@ module Spider; module Model; module Storage; module Db
              value = super(type, value)
              return value unless value
              case type.name
+             when 'String'
+                 return value.to_s
              when 'Date', 'DateTime'
                  return value.strftime("%Y-%m-%dT%H:%M:%S")
              when 'Fixnum'
