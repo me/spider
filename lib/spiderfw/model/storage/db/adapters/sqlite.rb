@@ -14,23 +14,31 @@ module Spider; module Model; module Storage; module Db
 
         class << self; attr_reader :reserved_kewords; end
         
+        def self.max_connections
+            1
+        end
+        
         def self.base_types
             super << Spider::DataTypes::Binary
         end
         
         def self.new_connection(file)
-            @db = SQLite3::Database.new(file)
-            @db.results_as_hash = true
-            return @db
+            db = SQLite3::Database.new(file)
+            db.results_as_hash = true
+            return db
         end
         
-        def connect
-            @conn = self.class.new_connection(*@connection_params) unless @conn
+        def self.connection_alive?(conn)
+            !conn.closed?
         end
         
         def release
-            @conn.close if @conn
-            @conn = nil
+            begin
+                #curr[:conn].close
+                super
+            rescue
+                curr[:conn] = nil
+            end
         end
         
         
@@ -44,26 +52,30 @@ module Spider; module Model; module Storage; module Db
             @connection_params = [@file]
         end
         
-        def start_transaction
+        def do_start_transaction
+            return unless transactions_enabled?
             connection.transaction
         end
         
         def in_transaction?
-            @conn && @conn.transaction_active?
+            return false unless transactions_enabled?
+            return curr[:conn] && curr[:conn].transaction_active?
         end
         
-        def commit
-            @conn.commit
+        def do_commit
+            return release unless transactions_enabled?
+            curr[:conn].commit if curr[:conn]
             release
         end
-        
-        def rollback
-            @conn.rollback
+                
+        def do_rollback
+            return release unless transactions_enabled?
+            curr[:conn].rollback
             release
         end
-        
+                
         def assigned_key(key)
-            @last_insert_row_id
+            curr[:last_insert_row_id]
         end
         
         def value_for_save(type, value, save_mode)
@@ -82,9 +94,9 @@ module Spider; module Model; module Storage; module Db
                  debug("sqlite executing:\n#{sql}\n[#{debug_vars}]")
 
                  result = connection.execute(sql, *bind_vars)
-                 @last_insert_row_id = connection.last_insert_row_id
+                 curr[:last_insert_row_id] = connection.last_insert_row_id
                  result.extend(StorageResult)
-                 @last_result = result
+                 curr[:last_result] = result
                  if block_given?
                      result.each{ |row| yield row }
                  else
@@ -98,8 +110,7 @@ module Spider; module Model; module Storage; module Db
 
          def prepare(sql)
              debug("sqlite preparing: #{sql}")
-             connect unless connected?
-             return @conn.prepare(sql)
+             return connection.prepare(sql)
          end
 
          def execute_statement(stmt, *bind_vars)
@@ -107,16 +118,20 @@ module Spider; module Model; module Storage; module Db
          end
          
          def total_rows
-             return nil unless @last_query
-             q = @last_query
+             return nil unless curr[:last_query]
+             q = curr[:last_query]
              unless (q[:offset] || q[:limit])
-                 return @last_result ? @last_result.length : nil
+                 return curr[:last_result] ? curr[:last_result].length : nil
              end
              q[:offset] = q[:limit] = nil
              q[:keys] = ["COUNT(*) AS N"]
              res = execute(sql_select(q), q[:bind_vars])
              return res[0]['N']
          end
+         
+         #############################################################
+         #   SQL methods                                             #
+         #############################################################
          
          ##############################################################
          #   Methods to get information from the db                   #
@@ -128,17 +143,35 @@ module Spider; module Model; module Storage; module Db
 
          def describe_table(table)
              columns = {}
-             stmt = prepare("select * from #{table}")
-             stmt.columns.each_index do |index|
-                 field = stmt.columns[index]
-                 columns[field] ||= {}
-                 if (stmt.types[index] =~ /([^\(]+)(?:\((\d+)\))?/)
-                     columns[field][:type] = $1
-                     columns[field][:length] = $2.to_i if $2
+             primary_keys = []
+             res = execute("PRAGMA table_info('#{table}')")
+             res.each do |row|
+                 name = row['name']
+                 type = row['type']
+                 length = nil
+                 precision = nil
+                 if type =~ /(.+)\((.+)\)/
+                     type = $1
+                     length = $2
                  end
+                 if length && length.include?(",")
+                     length, precision = length.split(',')
+                 end
+                 length = length.to_i if length
+                 precision = precision.to_i if length
+                 primary_keys << name if row['pk'] == "1"
+                 columns[name] = {:type => type, :length => length, :precision => precision}
              end
-             stmt.close
-             return {:columns => columns}
+             # stmt.columns.each_index do |index|
+             #     field = stmt.columns[index]
+             #     columns[field] ||= {}
+             #     if (stmt.types[index] =~ /([^\(]+)(?:\((\d+)\))?/)
+             #         columns[field][:type] = $1
+             #         columns[field][:length] = $2.to_i if $2
+             #     end
+             # end
+             # stmt.close
+             return {:columns => columns, :primary_keys => primary_keys}
          end
 
          def table_exists?(table)
