@@ -37,7 +37,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
         end
         
         def parse_url(url)
-            # adapter//<username:password>@<dsn>
+            # adapter://<username:password>@<dsn>
             if (url =~ /(.+):\/\/(?:(.+):(.+)@)?(.+)/)
                 @adapter = $1
                 @user = $2
