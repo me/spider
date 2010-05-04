@@ -6,9 +6,10 @@ module Spider; module Model; module Storage; module Db
     class SQLite < DbStorage
         @reserved_keywords = superclass.reserved_keywords + []
         @capabilities = {
-            :autoincrement => false,
+            :autoincrement => true,
             :sequences => true,
-            :transactions => true
+            :transactions => true,
+            :foreign_keys => false
         }
 
         class << self; attr_reader :reserved_kewords; end

@@ -1070,7 +1070,7 @@ module Spider; module Model; module Mappers
                 table_attributes = {
                     :primary_keys => table_schema[:attributes][:primary_keys]
                 }
-                unless options[:no_foreign_key_constraints]
+                unless options[:no_foreign_key_constraints] || !storage.supports?(:foreign_keys)
                     table_attributes[:foreign_key_constraints] = table_schema[:attributes][:foreign_key_constraints] || []
                 end
                 if @storage.table_exists?(table_name)

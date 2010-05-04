@@ -12,7 +12,8 @@ module Spider; module Model; module Storage; module Db
         @capabilities = {
             :autoincrement => true,
             :sequences => false,
-            :transactions => true
+            :transactions => true,
+            :foreign_keys => true
         }
         @reserved_keywords = superclass.reserved_keywords
         @safe_conversions = {

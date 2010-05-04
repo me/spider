@@ -11,7 +11,8 @@ module Spider; module Model; module Storage; module Db
             {
                 :autoincrement => true,
                 :sequences => false,
-                :transactions => true
+                :transactions => true,
+                :foreign_keys => false # not implemented
             }
         end
         

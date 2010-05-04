@@ -7,7 +7,8 @@ module Spider; module Model; module Storage; module Db
         @capabilities = {
             :autoincrement => false,
             :sequences => true,
-            :transactions => true
+            :transactions => true,
+            :foreign_keys => true
         }
         @reserved_keywords = superclass.reserved_keywords + ['oci8_row_num', 'file', 'uid', 'name', 'comment']
         @safe_conversions = {
