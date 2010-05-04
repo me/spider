@@ -212,6 +212,7 @@ module Spider; module Model
                 save_done(obj, save_mode) 
             end
             @doing_save_done = false
+            true
         end
 
         # Elements that are associated to this one externally.
