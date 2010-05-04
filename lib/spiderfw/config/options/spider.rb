@@ -27,7 +27,7 @@ module Spider
     config_option 'webserver.reload_sources', _("Reload application and spider sources on each request"), {
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
     }
-    config_option 'webserver.port', _("Port to use for the http server"), :default => 8080
+    config_option 'webserver.port', _("Port to use for the http server"), :type => Fixnum, :default => 8080
     config_option 'webserver.force_threads', _("Force threading on non-threaded adapters"),
         :default => Proc.new{ RUBY_VERSION_PARTS[1] == '8' ? true : false }
     config_option 'webserver.timeout', _("Time allowed for each request (in seconds)"), :type=> Fixnum, :default => nil
@@ -79,17 +79,19 @@ module Spider
     
     config_option 'http.nonce_life', _("Life in seconds of HTTP Digest Authentication nonces"), :type => Fixnum, :default => 60
     # TODO: implement in webrick/others, check if has a performance gain
-    config_option 'http.auto_headers', _("Automatically send headers on first output (breaks the debugger)"), :default => true
+    config_option 'http.auto_headers', _("Automatically send headers on first output"), 
+        :type => Spider::DataTypes::Bool, :default => true
     config_option 'http.seize_stdout', _("Redirect standard output to the browser"), :default => false
     config_option 'http.proxy_mapping', _("If the request is proxyied, the urls used to reach spider, with the corresponding paths called by the proxy"),
         :type => Hash
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
     
     config_option 'debug.console.level', _("Level of debug output to console"), :default => :INFO,
-        :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
-    config_option 'log.errors', _("Log errors to file"), :default => true
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false },
+        :choices => [false, :DEBUG, :WARN, :INFO, :ERROR]
+    config_option 'log.errors', _("Log errors to file"), :type => Spider::DataTypes::Bool, :default => true
     config_option 'log.debug.level', _("Log level to use for debug file (false for no debug)"), :default => false,
-        :choices => [false, :DEBUG, :INFO],
+        :choices => [false, :DEBUG, :WARN, :INFO, :ERROR],
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
     config_option 'log.rotate.age', _("Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"), :default => 'daily'
     config_option 'log.rotate.size', _("Maximum logfile size (only applies when log.rotate.age is a number)"), :default => 1048576
