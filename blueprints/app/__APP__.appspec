@@ -1,0 +1,4 @@
+id "<%= app_name %>"
+name "<%= app_name.split('_').map{|part| part.capitalize }.join(' ') %>"
+version "0.1"
+author ""
