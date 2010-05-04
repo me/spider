@@ -10,7 +10,16 @@ module Spider
     
     # Web server
     config_option 'http.server', _("The internal server to use"), {
-        :default => 'mongrel'
+        :default => lambda{
+            begin
+                require 'rubygems'
+                require 'mongrel'
+                'mongrel'
+            rescue LoadError
+                'webrick'
+            end
+        },
+        :type => String, :choices => ['webrick', 'mongrel', 'thin']
     }
     config_option 'webserver.show_traces', _("Whether to show the stack trace on error"), {
         :default => Proc.new{ ['test', 'devel'].include?(Spider.config.get('runmode')) ? true : false  }
