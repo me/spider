@@ -195,13 +195,14 @@ module Spider; module Model; module Storage; module Db
         end
         
         def commit
+            return false unless transactions_enabled?
             raise StorageException, "Commit without a transaction" unless in_transaction?
             return curr[:savepoints].pop unless curr[:savepoints].empty?
             commit!
         end
         
         def commit_or_continue
-            return unless transactions_enabled?
+            return false unless transactions_enabled?
             raise StorageException, "Commit without a transaction" unless in_transaction?
             if curr[:transaction_nesting] == 1
                 commit

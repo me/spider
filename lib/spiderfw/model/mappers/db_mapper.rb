@@ -39,7 +39,7 @@ module Spider; module Model; module Mappers
         end            
         
         def save_all(root) #:nodoc:
-            @storage.start_transaction if @storage.supports_transactions?
+            @storage.start_transaction
             super
             @storage.commit
         end
