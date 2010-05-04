@@ -295,7 +295,7 @@ module Spider
                         @configuration.load_yaml(path+f)
                     rescue ConfigurationException => exc
                         if (exc.type == :yaml)
-                            @logger.error("Configuration file #{path+f} is not falid YAML")
+                            @logger.error("Configuration file #{path+f} is not valid YAML")
                         else
                             raise
                         end
@@ -515,7 +515,6 @@ module Spider
     end
     
 end
-
 
 # load instead of require for reload_sources to work correctly
 load 'spiderfw/config/options/spider.rb'
