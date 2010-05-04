@@ -150,6 +150,26 @@ module Spider
             end
         end
         
+        def options
+            options = []
+            def iterate_options(src, prefix, dst)
+                src.each do |key, val|
+                    full_key = prefix ? "#{prefix}.#{key}" : key
+                    if val[:params]
+                        if val[:params][:type] == :conf
+                            iterate_options(src[key]["x"], full_key+'.x', dst)
+                        else
+                            dst << full_key
+                        end
+                    else
+                        iterate_options(src[key], full_key, dst)
+                    end
+                end
+            end
+            iterate_options(@options, nil, options)
+            options
+        end
+        
         # Sets an allowed configuration option
         # Possible params are:
         # -:default     the default value for the option; if it is a proc, it will be called
