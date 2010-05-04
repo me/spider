@@ -7,6 +7,7 @@ require 'spiderfw/cmd/commands/console'
 require 'spiderfw/cmd/commands/test'
 require 'spiderfw/cmd/commands/setup'
 require 'spiderfw/cmd/commands/model'
+require 'spiderfw/cmd/commands/config'
 
 module Spider; module CommandLine
 
@@ -17,7 +18,12 @@ module Spider; module CommandLine
             @cmd.program_name = "spider"
             @cmd.options = CmdParse::OptionParserWrapper.new do |opt|
                 opt.separator _("Global options:")
-                opt.on("--verbose", _("Be verbose when outputting info"), "-v" ) {|t| $verbose = true }
+                opt.on("--version", _("Output Spider version and exit"), "-v"){ |v| 
+                    require 'spiderfw/version'
+                    puts Spider::VERSION
+                    exit
+                }
+                opt.on("--verbose", _("Be verbose when outputting info"), "-V" ) {|t| $verbose = true }
                 opt.on("--chdir", _("Cd to a directory before running"), "-c"){ |c| Dir.chdir(c) }
                 opt.on("--sets SETS", Array, _("Include configuration sets"), "-s"){ |sets|
                     $SPIDER_CONFIG_SETS = sets
@@ -40,6 +46,7 @@ module Spider; module CommandLine
             @cmd.add_command(TestCommand.new)
             @cmd.add_command(SetupCommand.new)
             @cmd.add_command(ModelCommand.new)
+            @cmd.add_command(ConfigCommand.new)
             # @cmd.add_command(ScaffoldCommand.new)
         end
 
