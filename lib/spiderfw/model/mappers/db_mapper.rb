@@ -1074,9 +1074,9 @@ module Spider; module Model; module Mappers
                     table_attributes[:foreign_key_constraints] = table_schema[:attributes][:foreign_key_constraints] || []
                 end
                 if @storage.table_exists?(table_name)
-                    alter_table(table_name, table_schema[:columns], table_attributes, force)
+                    alter_table(table_name, table_schema, table_attributes, force)
                 else
-                    create_table(table_name, table_schema[:columns], table_attributes)
+                    create_table(table_name, table_schema, table_attributes)
                 end
                 if (options[:drop_fields])
                     current = @storage.describe_table(table_name)[:columns]
@@ -1105,28 +1105,33 @@ module Spider; module Model; module Mappers
         end
 
         # Returns a create table structure description.
-        def create_table(table_name, fields, attributes) # :nodoc:
-            fields = fields.map{ |name, details| {
-              :name => name,
-              :type => details[:type],
-              :attributes => details[:attributes]  
-            } }
+        def create_table(table_name, schema, attributes) # :nodoc:
+            fields = schema[:fields_order].map do |f| 
+                details = schema[:columns][f.name]
+                {
+                    :name => f.name,
+                    :type => details[:type],
+                    :attributes => details[:attributes]  
+                }
+            end
             @storage.create_table({
                 :table => table_name,
                 :fields => fields,
-                :attributes => attributes,
+                :attributes => attributes
             })
         end
 
         # Returns an alter table structure description
-        def alter_table(name, fields, attributes, force=nil) # :nodoc:
+        def alter_table(name, schema, attributes, force=nil) # :nodoc:
             current = @storage.describe_table(name)
             current_fields = current[:columns]
             add_fields = []
             alter_fields = []
             all_fields = []
             unsafe = []
-            fields.each_key do |field|
+            fields = schema[:columns]
+            schema[:fields_order].each do |f|
+                field = f.name
                 field_hash = {
                     :name => field, 
                     :type => fields[field][:type], 
@@ -1191,7 +1196,6 @@ module Spider; module Model; module Mappers
     end
 
     # Error raised when a conversion results in a potential data loss.
-    
     class SchemaSyncUnsafeConversion < RuntimeError
         attr :fields
         def initialize(fields)

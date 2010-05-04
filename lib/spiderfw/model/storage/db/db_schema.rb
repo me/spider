@@ -24,6 +24,7 @@ module Spider; module Model; module Storage; module Db
             @sequences = {}
             @pass = {}
             @foreign_key_constraints = []
+            @order = []
         end
         
         # Returns the main table name.
@@ -97,6 +98,7 @@ module Spider; module Model; module Storage; module Db
         def set_column(element_name, field)
             field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             @columns[element_name] = field
+            @order << field
         end
         
         # Sets a foreign key to the primary key of an element.
@@ -113,6 +115,7 @@ module Spider; module Model; module Storage; module Db
             end
             @foreign_keys[element_name] ||= {}
             @foreign_keys[element_name][element_key] = field
+            @order << field
         end
         
         def set_foreign_key_constraint(name, table, keys, options={})
@@ -144,7 +147,7 @@ module Spider; module Model; module Storage; module Db
         #   }}
         def get_schemas
             schemas = {}
-            schemas[@table.name] = {:columns => {}, :attributes => {}}
+            schemas[@table.name] = {:columns => {}, :attributes => {}, :fields_order => @order}
             @columns.each do |element, column|
                 schemas[@table.name][:columns][column.name] = {:type => column.type, :attributes => column.attributes}
             end

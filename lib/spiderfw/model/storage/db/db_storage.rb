@@ -96,7 +96,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Instantiates a new connection with current connection params.
-        def connect()
+        def connect
             return self.class.get_connection(*@connection_params)
             #Spider::Logger.debug("#{self.class.name} in thread #{Thread.current} acquired connection #{@conn}")
         end
@@ -591,7 +591,7 @@ module Spider; module Model; module Storage; module Db
         # Returns SQL and values for an insert statement.
         def sql_insert(insert)
             curr[:last_query_type] = :insert
-            sql = "INSERT INTO #{insert[:table]} (#{insert[:values].keys.join(', ')}) " +
+            sql = "INSERT INTO #{insert[:table]} (#{insert[:values].keys.map{ |k| k.name }.join(', ')}) " +
                   "VALUES (#{insert[:values].values.map{'?'}.join(', ')})"
             return [sql, insert[:values].values]
         end
@@ -618,7 +618,7 @@ module Spider; module Model; module Storage; module Db
         # Returns the COLUMN = val, ... part of an update statement.
         def sql_update_values(update)
             update[:values].map{ |k, v| 
-                v.is_a?(Spider::QueryFuncs::Expression) ? "#{k} = #{v}" : "#{k} = ?"
+                v.is_a?(Spider::QueryFuncs::Expression) ? "#{k.name} = #{v}" : "#{k.name} = ?"
             }.join(', ')
         end
         
