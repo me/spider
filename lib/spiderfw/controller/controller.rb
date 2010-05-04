@@ -8,6 +8,7 @@ require 'spiderfw/controller/first_responder'
 require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/controller/mixins/http_mixin'
 require 'spiderfw/controller/mixins/static_content'
+require 'spiderfw/widget/widget'
 
 require 'spiderfw/controller/helpers/widget_helper'
 

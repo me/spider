@@ -1,4 +1,3 @@
-require 'spiderfw/controller/app_controller'
 require 'fileutils'
 
 module Spider
@@ -10,7 +9,6 @@ module Spider
                 
                 include Spider::DataTypes
                 
-                #@controller ||= :"Spider::AppController"
                 class << self
                     attr_reader :id, :path, :pub_path, :test_path, :setup_path, :widgets_path, :views_path, :tags_path, :models_path
                     attr_reader :short_name, :route_url, :label, :version
@@ -54,7 +52,7 @@ module Spider
                         #controllers = self.const_get(:Controllers)
                         if (!@controller || !const_defined?(@controller))
                             @controller = :AppController
-                            return const_set(@controller, Spider::AppController.clone)
+                            return const_set(@controller, Spider::PageController.clone)
                             
                         end
                         return const_get(@controller)
@@ -127,7 +125,7 @@ module Spider
                             name = File.basename(entry, '.erb')
                             klass = Spider::Tag.new_class(@tags_path+'/'+entry)
                             const_set(Spider::Inflector.camelize(name).to_sym, klass)
-                            Spider::Logger.debug("REGISTERED TAG #{name}, #{klass}")
+                            #Spider::Logger.debug("REGISTERED TAG #{name}, #{klass}")
                             register_tag(name, klass)
                         end
                     end

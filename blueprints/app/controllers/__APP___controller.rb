@@ -1,9 +1,10 @@
 <%= modules[0..-2].inject(""){ |s, mod| s+= "module #{mod}; "} %>module <%=modules[-1]%>
     
-    class <%= module_name %>Controller < Spider::AppController
+    class <%= module_name %>Controller < Spider::PageController
         
         layout '<%= app_name %>'
     
+        __.html
         def index
             @scene.msg = 'Hello!'
             render('index')
