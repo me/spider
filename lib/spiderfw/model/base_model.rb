@@ -1679,12 +1679,14 @@ module Spider; module Model
         def save
             mapper.save(self)
             reset_modified_elements
+            self
         end
         
         # Saves the object and all child objects to the storage 
         # (see Mapper#save_all)
         def save_all
             mapper.save_all(self)
+            self
         end
         
         # Inserts the object in the storage
