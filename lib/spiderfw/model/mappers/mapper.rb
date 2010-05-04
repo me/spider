@@ -127,7 +127,9 @@ module Spider; module Model
                         obj.set(el, set_data)
                     end
                 end
-                raise RequiredError.new(el) if (el.required? && obj.element_modified?(el) && !obj.element_has_value?(el))
+                if (el.required? && (mode == :insert || obj.element_modified?(el)) && !obj.element_has_value?(el))
+                    raise RequiredError.new(el) 
+                end
                 if (el.unique? && !el.integrated? && obj.element_modified?(el))
                     existent = @model.where(el.name => obj.get(el))
                     if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
