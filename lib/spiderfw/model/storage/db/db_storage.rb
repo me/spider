@@ -669,7 +669,7 @@ module Spider; module Model; module Storage; module Db
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
             if (alter_attributes[:primary_keys] && !alter_attributes[:primary_keys].empty?)
-                sqls << sql_drop_primary_key(table_name) if (!current[:primary_keys].empty? && current[:primary_keys] != alter_attributes[:primary_keys])
+                sqls << sql_drop_primary_key(table_name) if (current[:primary_keys] && !current[:primary_keys].empty? && current[:primary_keys] != alter_attributes[:primary_keys])
                 sqls << sql_create_primary_key(table_name, alter_attributes[:primary_keys])
             end
             if (alter_attributes[:foreign_key_constraints])

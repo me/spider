@@ -1,3 +1,3 @@
 module Spider
-    VERSION = '0.3'
+    VERSION = File.read(File.dirname(__FILE__)+'/../../VERSION')
 end
