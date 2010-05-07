@@ -2,7 +2,7 @@ require 'rubygems'
 require 'spiderfw/i18n/gettext'
 require 'cmdparse'
 require 'spiderfw/cmd/commands/webserver'
-require 'spiderfw/cmd/commands/init'
+require 'spiderfw/cmd/commands/create'
 require 'spiderfw/cmd/commands/console'
 require 'spiderfw/cmd/commands/test'
 require 'spiderfw/cmd/commands/setup'
@@ -36,7 +36,7 @@ module Spider; module CommandLine
 
             @cmd.add_command(CmdParse::HelpCommand.new, true)
             @cmd.add_command(WebServerCommand.new)
-            @cmd.add_command(InitCommand.new)
+            @cmd.add_command(CreateCommand.new)
             @cmd.add_command(ConsoleCommand.new)
             begin
                 require 'spiderfw/cmd/commands/cert'

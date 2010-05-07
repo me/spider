@@ -1,10 +1,10 @@
 require 'spiderfw/create'
 
-class InitCommand < CmdParse::Command
+class CreateCommand < CmdParse::Command
 
 
     def initialize
-        super( 'init', true, true )
+        super( 'create', true, true )
         @short_desc = _("Create a working dir for development or installation")
 #        @description = _("")
 
@@ -29,7 +29,7 @@ class InitCommand < CmdParse::Command
         end
         self.add_command(app, false)
         
-        install = CmdParse::Command.new('install', false)
+        install = CmdParse::Command.new('home', false)
         install.short_desc = _("Create an installation")
         install.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--path", 
@@ -41,7 +41,7 @@ class InitCommand < CmdParse::Command
         install.set_execution_block do |installs|
             @path ||= Dir.pwd
             installs.each do |inst|
-                Spider::Create.install(inst, @path)
+                Spider::Create.home(inst, @path)
             end
         end
         self.add_command(install, false)

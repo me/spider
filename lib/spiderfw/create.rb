@@ -28,9 +28,9 @@ module Spider
             create(source_folder, dest_folder, replacements, erb_binding)
         end
         
-        def self.install(name, path)
+        def self.home(name, path)
             dest_path = path+'/'+name
-            source_path = $SPIDER_PATH+'/blueprints/install'
+            source_path = $SPIDER_PATH+'/blueprints/home'
             create(source_path, dest_path)
         end
         
