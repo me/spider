@@ -54,7 +54,17 @@ module Spider
                 return self.app.path+'/views'
             end
         
-            
+            # Defines a method that will be called before the controller's before,
+            # if the action matches the given conditions.
+            # - The first argument, the condition(s), may be a String, a Regexp, a Proc or a Symbol,
+            # that will be checked against the action, or an Array containing several conditions.
+            # - The second argument, a Symbol, is the method to be called if the conditions match.
+            # - The third optional argument, an Hash, may contain :unless => true: in this case,
+            # the conditions will be inverted, that is, the method will be executed unless the conditions
+            # match.
+            # Example:
+            #   before('list_', :before_lists)
+            # will call the method before_lists if the action starts with 'list_'
             def before(conditions, method, params={})
                 @dispatch_methods ||= {}
                 @dispatch_methods[:before] ||= []
