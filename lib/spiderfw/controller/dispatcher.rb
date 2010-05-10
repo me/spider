@@ -238,6 +238,8 @@ module Spider
                         return true if (action == check || (action[-1].chr == '/' && action[0..-2] == check))
                     elsif check.is_a?(Regexp)
                         return true if action =~ check
+                    elsif check.is_a?(Proc)
+                        return true if check.call(action)
                     elsif (check.is_a?(Symbol))
                         first, rest = action.split('/', 2)
                         return true if first && first.to_sym == check
