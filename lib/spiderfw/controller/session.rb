@@ -56,6 +56,8 @@ module Spider
         
         def []=(key, val)
             restore unless @restored
+            raise "You can't overwrite the :_flash Hash" if key == :_flash
+            raise "You can't overwrite the :_transient Hash" if key == :_transient
             @data[key] = val
         end
         
