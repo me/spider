@@ -2,7 +2,7 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name     = "spiderfw"
-  s.version  = "0.5.8"
+  s.version  = File.read(File.dirname(__FILE__)+'/VERSION')
   s.date     = "2010-03-12"
   s.summary  = "A (web) framework"
   s.email    = "abmajor7@gmail.com"
