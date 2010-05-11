@@ -1,4 +1,24 @@
+module Spider; module Model
+    
+end; end
+
 module Spider; module QueryFuncs
+    
+    def self.included(mod)
+        mod.extend(self)
+        super
+    end
+    
+    def self.add_query_func(name, klass)
+        (class << self; self; end).module_eval do
+            define_method(name) do |*args|
+                return klass.new(*args)
+            end
+        end
+        define_method(name) do |*args|
+            return klass.new(*args)
+        end
+    end
 
     class Expression
         
@@ -27,6 +47,11 @@ module Spider; module QueryFuncs
 
     class Function
         attr_accessor :mapper_fields
+        
+        def self.inherited(subclass)
+            cl_name = subclass.name.split('::')[-1].to_sym
+            Spider::QueryFuncs.add_query_func(cl_name, subclass)
+        end
 
         def self.func_name
             self.name =~ /::([^:]+)$/
@@ -81,6 +106,18 @@ module Spider; module QueryFuncs
             [@el1, @el2]
         end
     end
+    
+    class NAryFunction < Function
+        
+        def initialize(*elements)
+            @elements = elements
+        end
+        
+        def elements
+            @elements
+        end
+        
+    end
 
 
     class CurrentDate < ZeroArityFunction
@@ -93,6 +130,20 @@ module Spider; module QueryFuncs
     end
 
     class Subtract < BinaryFunction
+    end
+    
+    class Concat < NAryFunction
+    end
+    
+    class Substr < UnaryFunction
+        attr_reader :start, :length
+        
+        def initialize(el, start, length=nil)
+            @el = el
+            @start = start
+            @length = length
+        end
+        
     end
 
 

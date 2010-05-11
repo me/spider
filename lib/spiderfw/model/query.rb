@@ -143,5 +143,3 @@ module Spider; module Model
 
     
 end; end
-
-require 'spiderfw/model/query_funcs'

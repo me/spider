@@ -125,7 +125,8 @@ module Spider; module Model
         # Yields each key, value and comparison.
         def each_with_comparison
             self.each do |k, v|
-                yield k, v, @comparisons[k.to_sym] || '='
+                k = k.to_sym if k.respond_to?(:to_sym)
+                yield k, v, @comparisons[k] || '='
             end
         end
         
@@ -164,10 +165,13 @@ module Spider; module Model
                 @subconditions << or_cond
                 return self
             end
-            field = field.to_s
-            parts = field.split('.', 2)
-            parts[0] = parts[0].to_sym
-            field = field.to_sym unless parts[1]
+            parts = []
+            unless field.is_a?(Spider::QueryFuncs::Function)
+                field = field.to_s
+                parts = field.split('.', 2)
+                parts[0] = parts[0].to_sym
+                field = field.to_sym unless parts[1]
+            end
             if (parts[1])
                 hash_set(parts[0], get_deep_obj()) unless self[parts[0]]
                 self[parts[0]].set(parts[1], comparison, value)
@@ -190,7 +194,8 @@ module Spider; module Model
         def [](key)
             # TODO: deep
             key = key.name if key.class == Element
-            super(key.to_sym)
+            key = key.to_sym if key.respond_to?(:to_sym) # might be a QueryFunc
+            super(key)
         end
         
         # Adds a range condition. This creates a subcondition with >= and <= conditions.

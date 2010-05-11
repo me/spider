@@ -476,6 +476,7 @@ module Spider; module Model; module Mappers
             cond = {}
             # debugger if condition.polymorph
             condition.each_with_comparison do |k, v, comp|
+                next if k.is_a?(QueryFuncs::Function)
                 # normalize condition values
                 element = model.elements[k.to_sym]
                 if (v && !v.is_a?(Condition) && element.model?)
@@ -520,6 +521,12 @@ module Spider; module Model; module Mappers
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
             condition.each_with_comparison do |k, v, comp|
+                if k.is_a?(QueryFuncs::Function)
+                    field = prepare_queryfunc(k)
+                    cond[:values] << [field, comp, v]
+                    joins += field.joins
+                    next
+                end
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
@@ -603,6 +610,7 @@ module Spider; module Model; module Mappers
             end
             return [cond, joins, remaining_condition]
         end
+
 
         # Figures out a join for element. Returns join hash description, i.e. :
         #   join = {
@@ -694,6 +702,7 @@ module Spider; module Model; module Mappers
             Spider::Logger.debug("GETTING DEEP JOIN TO #{dotted_element} (#{@model})")
             parts.each do |part|
                 el = current_model.elements[part]
+                raise "Can't find element #{part} in model #{current_model}" unless el
                 if (el.integrated?)
                     joins << current_model.mapper.get_join(el.integrated_from)
                     current_model = el.integrated_from.type
@@ -711,6 +720,18 @@ module Spider; module Model; module Mappers
                 el = current_model.elements[el.integrated_from_element]
             end
             return [joins, current_model, el]
+        end
+        
+        def prepare_queryfunc(func)
+            joins = []
+            func_elements = func.inner_elements
+            func_elements.each do |el_name, owner_func|
+                el_joins, el_model, el = get_deep_join(el_name)
+                joins += el_joins
+                owner_func.mapper_fields ||= {}
+                owner_func.mapper_fields[el.name] = el_model.mapper.schema.field(el.name)
+            end
+            return FieldFunction.new(storage.function(func), schema.table, joins)
         end
         
         # Takes a Spider::QueryFuncs::Expression, and associates the fields to the corresponding elements
@@ -736,15 +757,8 @@ module Spider; module Model; module Mappers
                 order_element, direction = order
                 el_model = @model
                 if (order_element.is_a?(QueryFuncs::Function))
-                    func_fields = []
-                    func_elements = order_element.inner_elements
-                    func_elements.each do |el_name, owner_func|
-                        el_joins, el_model, el = get_deep_join(el_name)
-                        joins += el_joins
-                        owner_func.mapper_fields ||= {}
-                        owner_func.mapper_fields[el.name] = el_model.mapper.schema.field(el.name)
-                    end
-                    field = storage.function(order_element)
+                    field = prepare_queryfunc(order_element)
+                    joins += field.joins
                     fields << [field, direction]
                 else
                     el_joins, el_model, el = get_deep_join(order_element)

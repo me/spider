@@ -241,6 +241,19 @@ module Spider; module Model; module Storage; module Db
         
     end
     
+    class FieldFunction
+        attr_reader :expression, :table, :joins
+        def initialize(expression, table, joins)
+            @expression = expression
+            @table = table
+            @joins = joins
+        end
+        
+        def to_s
+            @expression
+        end
+    end
+    
     class ForeignKeyConstraint
         attr_reader :name, :table, :fields, :options
         

@@ -212,6 +212,7 @@ module Spider
 
 end
 
+require 'spiderfw/model/query_funcs'
 require 'spiderfw/model/base_model'
 require 'spiderfw/model/mixins/mixins'
 require 'spiderfw/model/extended_models/managed'
