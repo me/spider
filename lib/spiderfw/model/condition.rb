@@ -208,8 +208,12 @@ module Spider; module Model
         
         # Deletes a field from the Condition.
         def delete(field)
+            field = field.to_sym
+            return nil unless self[field] || @comparisons[field]
+            cur = [self[field], @comparisons[field]]
             super
-            @comparisons.delete(field.to_sym)
+            @comparisons.delete(field)
+            cur
         end    
         
         # Parses a string comparison.
@@ -347,6 +351,19 @@ module Spider; module Model
             pol = []
             pol << @polymorph if @polymorph
             return pol + @subconditions.inject([]){ |arr, s| arr += s.polymorphs }
+        end
+        
+        # Returns, from self and subconditions, all those who define a condition for one of the given element names.
+        def conditions_for(*element_names)
+            conds = []
+            element_names.each do |el|
+                if self[el]
+                    conds << self
+                    break
+                end
+            end
+            @subconditions.map{ |s| s.conditions_for(*element_names) }.each{ |c| conds += c }
+            conds
         end
     
     end
