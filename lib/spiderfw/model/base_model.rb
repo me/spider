@@ -1758,6 +1758,12 @@ module Spider; module Model
             mapper.delete_element_associations(self, element, object)
         end
         
+        # Method that will be called by the mapper before a query. May be overridden to preprocess the query.
+        # Must return the modified query.
+        def self.prepare_query(query)
+            query
+        end
+        
         ##############################################################
         #   Method missing                                           #
         ##############################################################

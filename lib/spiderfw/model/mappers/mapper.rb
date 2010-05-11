@@ -713,6 +713,7 @@ module Spider; module Model
                 a_order = a.attributes[:order]; b_order = b.attributes[:order]
                 (a_order.is_a?(Fixnum) ? a_order : 100) <=> (b_order.is_a?(Fixnum) ? b_order : 100)
             }.each{ |order_el| query.order_by(order_el.name) }
+            query = @model.prepare_query(query)
             prepare_query_request(query.request, obj)
             prepare_query_condition(query.condition)
             return query
