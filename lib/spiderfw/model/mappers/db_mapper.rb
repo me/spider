@@ -136,7 +136,7 @@ module Spider; module Model; module Mappers
             @model.primary_keys.each do |key|
                 condition[key.name] = map_condition_value(key.type, obj.get(key))
             end
-            prepare_query_condition(condition)
+            preprocess_condition(condition)
             save[:condition], save[:joins] = prepare_condition(condition)
             save[:joins] = prepare_joins(save[:joins])
             save[:table] = @schema.table
@@ -148,7 +148,7 @@ module Spider; module Model; module Mappers
             db_values = {}
             joins = []
             integrated = {}
-            condition = prepare_query_condition(condition)
+            condition = preprocess_condition(condition)
             values.each do |key, val|
                 element = @model.elements[key]
                 if (element.integrated?)
@@ -575,7 +575,7 @@ module Spider; module Model; module Mappers
                                 end
                                 cond[:values] << element_cond
                             elsif v
-                                element.model.mapper.prepare_query_condition(v)                          
+                                v = element.model.mapper.preprocess_condition(v)                          
                                 sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins

@@ -382,7 +382,7 @@ module Spider; module Model
             end
             Spider::Logger.debug("Deleting with condition:")
             Spider::Logger.debug(condition)
-            prepare_query_condition(condition)
+            preprocess_condition(condition)
             cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
             assocs = association_elements.select do |el|
                 !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
@@ -715,7 +715,7 @@ module Spider; module Model
             }.each{ |order_el| query.order_by(order_el.name) }
             query = @model.prepare_query(query)
             prepare_query_request(query.request, obj)
-            prepare_query_condition(query.condition)
+            preprocess_condition(query.condition)
             return query
         end
         
@@ -789,9 +789,7 @@ module Spider; module Model
         end
         
         # Preprocessing of the condition
-        #--
-        # FIXME: better name, move somewhere else
-        def prepare_query_condition(condition)
+        def preprocess_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.simplify
             condition = @model.prepare_condition(condition)
@@ -823,10 +821,9 @@ module Spider; module Model
                     condition.delete(k)
                     condition.set(k, c, DateTime.parse(v))
                 end
-                    
             end
             condition.subconditions.each do |sub|
-                prepare_query_condition(sub)
+                preprocess_condition(sub)
             end
             return condition
         end
