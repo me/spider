@@ -167,6 +167,8 @@ module Spider; module Model
         # :read_only::                (bool) hint to the UI that the element should not be user modifiable.
         # :owned::                    (bool) only this model holds references to type
         # :condition::                (hash or Condition) Restricts an association always adding the condition.
+        # :order::                    (true or Fixnum) When doing queries, sort by this element. More than one element can have the
+        #                             :order attribute; if it is a Fixnum, it will mean the position in the ordering.
         # 
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
         # See also Element.

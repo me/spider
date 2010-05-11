@@ -709,6 +709,10 @@ module Spider; module Model
                 conds = split_condition_polymorphs(query.condition, query.request.polymorphs.keys) 
                 conds.each{ |polym, c| query.condition << c }
             end
+            @model.elements_array.select{ |el| el.attributes[:order] }.sort{ |a, b| 
+                a_order = a.attributes[:order]; b_order = b.attributes[:order]
+                (a_order.is_a?(Fixnum) ? a_order : 100) <=> (b_order.is_a?(Fixnum) ? b_order : 100)
+            }.each{ |order_el| query.order_by(order_el.name) }
             prepare_query_request(query.request, obj)
             prepare_query_condition(query.condition)
             return query
