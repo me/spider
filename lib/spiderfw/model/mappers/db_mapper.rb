@@ -568,8 +568,16 @@ module Spider; module Model; module Mappers
                             
                             if v.nil? && comp == '='
                                 element_cond = {:conj => 'AND', :values => []}
-                                element.model.primary_keys.each do |k|
-                                    field = model_schema.qualified_foreign_key_field(element.name, k.name)
+                                if model.mapper.have_references?(element.name)
+                                    el_name = element.name
+                                    el_model = element.model
+                                else
+                                    el_model = element.type
+                                    model_schema = element.model.mapper.schema 
+                                    el_name = element.attributes[:junction_their_element]
+                                end
+                                el_model.primary_keys.each do |k|
+                                    field = model_schema.qualified_foreign_key_field(el_name, k.name)
                                     field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
                                 end
