@@ -575,7 +575,7 @@ module Spider; module Model; module Mappers
                                 end
                                 cond[:values] << element_cond
                             elsif v
-                                element.model.mapper.prepare_query_condition(v)                            
+                                element.model.mapper.prepare_query_condition(v)                          
                                 sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins

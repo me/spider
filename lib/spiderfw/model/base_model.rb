@@ -1760,9 +1760,16 @@ module Spider; module Model
         end
         
         # Method that will be called by the mapper before a query. May be overridden to preprocess the query.
-        # Must return the modified query.
+        # Must return the modified query. Note: to prepare conditions, use prepare_condition, since it will
+        # be called on subconditions as well.
         def self.prepare_query(query)
             query
+        end
+        
+        # Method that will be called by the mapper before a query. May be overridden to preprocess the condition.
+        # Must return the modified condition.
+        def self.prepare_condition(condition)
+            condition
         end
         
         ##############################################################

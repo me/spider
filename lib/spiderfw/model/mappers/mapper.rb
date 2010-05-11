@@ -794,6 +794,7 @@ module Spider; module Model
         def prepare_query_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.simplify
+            condition = @model.prepare_condition(condition)
             condition.each_with_comparison do |k, v, c|
                 next if k.is_a?(Spider::QueryFuncs::Function)
                 raise MapperError, "Condition for nonexistent element #{k} on model #{model}" unless element = model.elements[k]
