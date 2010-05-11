@@ -349,8 +349,14 @@ module Spider; module Model; module Storage; module Db
                 return "LENGTH(#{fields})"
             when :trim
                 return "TRIM(#{fields})"
+            when :concat
+                return "CONCAT(#{fields})"
+            when :substr
+                arguments = "#{func.start}"
+                arguments += ", #{func.length}" if func.length
+                return "SUBSTR(#{fields}, #{arguments})"
             end
-            raise NotImplementedError, "#{self.class} does not support function #{type}"
+            raise NotImplementedError, "#{self.class} does not support function #{func.func_name}"
         end
         
         ##################################################################
