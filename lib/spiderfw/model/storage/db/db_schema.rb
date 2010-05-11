@@ -77,7 +77,8 @@ module Spider; module Model; module Storage; module Db
         def qualified_foreign_key_field(element_name, key_name)
             f = foreign_key_field(element_name, key_name)
             return f.expression if f.is_a?(FieldExpression)
-            return @table.name + '.' + foreign_key_field(element_name, key_name).name
+            raise "No foreign key field for #{element_name} #{key_name} in #{@table}" unless f
+            return @table.name + '.' + f.name
         end
         
         # True if element_name has a defined column or foreign key.
