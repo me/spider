@@ -299,7 +299,6 @@ module Spider; module Model; module Mappers
         
         # Returns true if an element can be loaded joined-in.
         def can_join?(element)
-            return false if element.multiple?
             return false if element.storage != @storage
             return true
         end
