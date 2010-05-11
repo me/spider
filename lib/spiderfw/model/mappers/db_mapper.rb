@@ -530,7 +530,8 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
-                    if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| !element.model.elements[key].primary_key? }.empty?)
+                    if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
+                        !key.is_a?(Element) || !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
