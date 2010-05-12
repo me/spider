@@ -606,11 +606,11 @@ module Spider; module Model; module Mappers
         #   }
         def get_join(element, join_type = :inner)
             return unless element.model?
-            Spider::Logger.debug("Getting join for model #{@model} to element #{element}")
-            Spider::Logger.debug(@model.primary_keys.map{|k| k.name})
+            #Spider::Logger.debug("Getting join for model #{@model} to element #{element}")
+            #Spider::Logger.debug(@model.primary_keys.map{|k| k.name})
             element_table = element.mapper.schema.table
             if (schema.has_foreign_fields?(element.name))
-                Spider::Logger.debug("JOIN A from #{@model} to #{element.name}")
+                #Spider::Logger.debug("JOIN A from #{@model} to #{element.name}")
                 keys = {}
                 element.model.primary_keys.each do |key|
                     if (key.integrated?)
@@ -642,7 +642,7 @@ module Spider; module Model; module Mappers
                     :as => as
                 }
             elsif (element.has_single_reverse? && element.mapper.schema.has_foreign_fields?(element.reverse)) # n/1 <-> n
-                Spider::Logger.debug("JOIN B from #{@model} to #{element.name}")
+                #Spider::Logger.debug("JOIN B from #{@model} to #{element.name}")
                 keys = {}
                 @model.primary_keys.each do |key|
                     our_field = nil
