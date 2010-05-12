@@ -792,34 +792,43 @@ module Spider; module Model
         def preprocess_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.simplify
-            condition.each_with_comparison do |k, v, c|
-                next if k.is_a?(Spider::QueryFuncs::Function)
-                raise MapperError, "Condition for nonexistent element #{model}.#{k} " unless element = model.elements[k]
-                if (element.integrated?)
-                    condition.delete(k)
-                    integrated_from = element.integrated_from
-                    integrated_from_element = element.integrated_from_element
-                    condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
-                elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil?) # conditions on junction id don't make sense
-                    condition.delete(k)
-                    condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
-                end
-                if (element.type < Spider::DataType && !v.is_a?(element.type))
-                    condition.delete(k)
-                    begin
-                        condition.set(k, c, element.type.from_value(v))
-                    rescue TypeError => exc
-                        raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
+            
+            # This handles integrated elements, junctions, and prepares types
+            def basic_preprocess(condition) # :nodoc:
+                condition.each_with_comparison do |k, v, c|
+                    next if k.is_a?(Spider::QueryFuncs::Function)
+                    next unless element = model.elements[k]
+                    if (element.integrated?)
+                        condition.delete(k)
+                        integrated_from = element.integrated_from
+                        integrated_from_element = element.integrated_from_element
+                        condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
+                    elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil?) # conditions on junction id don't make sense
+                        condition.delete(k)
+                        condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
                     end
-                elsif element.type == DateTime && v && !v.is_a?(Date)
-                    condition.delete(k)
-                    condition.set(k, c, DateTime.parse(v))
+                    if (element.type < Spider::DataType && !v.is_a?(element.type))
+                        condition.delete(k)
+                        begin
+                            condition.set(k, c, element.type.from_value(v))
+                        rescue TypeError => exc
+                            raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
+                        end
+                    elsif element.type == DateTime && v && !v.is_a?(Date)
+                        condition.delete(k)
+                        condition.set(k, c, DateTime.parse(v))
+                    end
                 end
             end
-            condition = @model.prepare_condition(condition)
             
+            basic_preprocess(condition)
+            if @model.respond_to?(:prepare_condition)
+                condition = @model.prepare_condition(condition)
+                basic_preprocess(condition)
+            end
             
-            def set_pks_condition(condition, el, val, prefix)
+            # Utility function to set conditions on 
+            def set_pks_condition(condition, el, val, prefix) # :nodoc:
                 el.model.primary_keys.each do |primary_key|
                     new_prefix = "#{prefix}.#{primary_key.name}"
                     if (primary_key.model?)
@@ -839,7 +848,7 @@ module Spider; module Model
                 end
             end
             
-            # normalize condition values
+            # normalize condition values; converts objects and primary key values to correct conditions on keys
             condition.each_with_comparison do |k, v, comp|
                 next if k.is_a?(QueryFuncs::Function)
                 element = model.elements[k.to_sym]
@@ -860,11 +869,16 @@ module Spider; module Model
                     end
                 end
             end
+            
+            # Final sanity check
             condition.each_with_comparison do |k, v, comp|
                 next if k.is_a?(QueryFuncs::Function)
                 element = model.elements[k.to_sym]
+                raise MapperError , "Condition for non-existent element #{model}.#{k} " unless element
                 raise MapperError, "Condition for computed element #{model}.#{k}" if element.attributes[:computed_from]
             end
+            
+            # Process subconditions
             condition.subconditions.each do |sub|
                 preprocess_condition(sub)
             end

@@ -1766,12 +1766,6 @@ module Spider; module Model
             query
         end
         
-        # Method that will be called by the mapper before a query. May be overridden to preprocess the condition.
-        # Must return the modified condition.
-        def self.prepare_condition(condition)
-            condition
-        end
-        
         ##############################################################
         #   Method missing                                           #
         ##############################################################
