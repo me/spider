@@ -38,17 +38,20 @@ module Spider; module Components
                 @page = @page.to_i
                 @offset = ((@page - 1) * @attributes[:row_limit])
             end
-            if (@sort_el)
-                if (@model.elements[@sort_el].model?)
-                    s = []
-                    @model.elements[@sort_el].model.each_element{ |el| s << "#{@sort_el}.#{el.name}" if el.type == String && !el.primary_key? }
-                    @sort_el = s
-                end
-            end
             @sort_el, @sort_dir = session[:sort] if !@sort_el && session[:sort]
             session[:sort] = [@sort_el, @sort_dir] if @sort_el
             @scene.sorted = {}
             @scene.sorted[@sort_el] = @sort_dir if @sort_el
+            if (@sort_el)
+                if (@model.elements[@sort_el].model?)
+                    s = []
+                    element = @model.elements[@sort_el]
+                    @model.elements[@sort_el].model.each_element do |el|                         
+                        s << "#{@sort_el}.#{el.name}" if (el.type == String && !el.primary_key? && element.model.mapper.mapped?(el) )
+                    end
+                    @sort_el = s
+                end
+            end
             @sort_el = [@sort_el] if @sort_el && !@sort_el.is_a?(Array)
             @scene.link_el = @attributes[:link_el]
             @scene.link = @attributes[:link]
