@@ -7,7 +7,7 @@
     <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }">
         <thead>
             <tr class="heading_row">
-                <th sp:each="@elements |element|">
+                <th sp:each="@elements |element|" class="{ (@sorted[element] ? 'sorted-'+@sorted[element].to_s : '') }">
                     <a sp:tag-if="@sortable[element]" href="{ @request[:path] }?_w{ @widget[:param] }[sort][{ element }]={ @sorted[element] == :asc ? 'desc' : 'asc' }">
                         { @labels[element] }
                     </a>
