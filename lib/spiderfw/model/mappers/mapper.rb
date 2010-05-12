@@ -792,15 +792,9 @@ module Spider; module Model
         def preprocess_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.simplify
-            condition = @model.prepare_condition(condition)
             condition.each_with_comparison do |k, v, c|
                 next if k.is_a?(Spider::QueryFuncs::Function)
-                raise MapperError, "Condition for nonexistent element #{k} on model #{model}" unless element = model.elements[k]
-                if (element.attributes[:computed_from]) # FIXME: temp fix
-                    condition.delete(k)
-                    condition.set(element.attributes[:computed_from][0], c, v)
-                    element = model.elements[element.attributes[:computed_from][0]]
-                end
+                raise MapperError, "Condition for nonexistent element #{model}.#{k} " unless element = model.elements[k]
                 if (element.integrated?)
                     condition.delete(k)
                     integrated_from = element.integrated_from
@@ -821,6 +815,55 @@ module Spider; module Model
                     condition.delete(k)
                     condition.set(k, c, DateTime.parse(v))
                 end
+            end
+            condition = @model.prepare_condition(condition)
+            
+            
+            def set_pks_condition(condition, el, val, prefix)
+                el.model.primary_keys.each do |primary_key|
+                    new_prefix = "#{prefix}.#{primary_key.name}"
+                    if (primary_key.model?)
+                        if (primary_key.model.primary_keys.length == 1)
+                            # FIXME: this should not be needed, see below
+                            condition.set(new_prefix, '=', val.get(primary_key).get(primary_key.model.primary_keys[0]))
+                        else
+                            # FIXME! does not work, the subcondition does not get processed
+                            raise "Subconditions on multiple key elements not supported yet"
+                            subcond = Condition.new
+                            set_pks_condition(subcond,  primary_key, val.get(primary_key), new_prefix)
+                            condition << subcond
+                        end
+                    else
+                        condition.set(new_prefix, '=', val.get(primary_key))
+                    end
+                end
+            end
+            
+            # normalize condition values
+            condition.each_with_comparison do |k, v, comp|
+                next if k.is_a?(QueryFuncs::Function)
+                element = model.elements[k.to_sym]
+                if (v && !v.is_a?(Condition) && element.model?)
+                    condition.delete(element.name)
+                    if v.is_a?(BaseModel)
+                        set_pks_condition(condition, element, v, element.name)
+                    elsif element.model.primary_keys.length == 1 
+                        new_v = Condition.new
+                        if (model.mapper.have_references?(element.name))
+                            new_v.set(element.model.primary_keys[0].name, comp, v)
+                        else
+                            new_v.set(element.reverse, comp, v)
+                        end
+                        condition.set(element.name, comp, new_v)
+                    else
+                        raise MapperError, "Value condition passed on #{k}, but #{element.model} has more then one primary key"
+                    end
+                end
+            end
+            condition.each_with_comparison do |k, v, comp|
+                next if k.is_a?(QueryFuncs::Function)
+                element = model.elements[k.to_sym]
+                raise MapperError, "Condition for computed element #{model}.#{k}" if element.attributes[:computed_from]
             end
             condition.subconditions.each do |sub|
                 preprocess_condition(sub)

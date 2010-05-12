@@ -470,56 +470,35 @@ module Spider; module Model; module Mappers
         #--
         # TODO: better name for :values
         def prepare_condition(condition, options={})
-            # FIXME: move to mapper
             model = condition.polymorph ? condition.polymorph : @model
             model_schema = model.mapper.schema
             cond = {}
-            # debugger if condition.polymorph
-            condition.each_with_comparison do |k, v, comp|
-                next if k.is_a?(QueryFuncs::Function)
-                # normalize condition values
-                element = model.elements[k.to_sym]
-                if (v && !v.is_a?(Condition) && element.model?)
-                    condition.delete(element.name)
-                    def set_pks_condition(condition, el, val, prefix)
-                        el.model.primary_keys.each do |primary_key|
-                            new_prefix = "#{prefix}.#{primary_key.name}"
-                            if (primary_key.model?)
-                                if (primary_key.model.primary_keys.length == 1)
-                                    # FIXME: this should not be needed, see below
-                                    condition.set(new_prefix, '=', val.get(primary_key).get(primary_key.model.primary_keys[0]))
-                                else
-                                    # FIXME! does not work, the subcondition does not get processed
-                                    raise "Subconditions on multiple key elements not supported yet"
-                                    subcond = Condition.new
-                                    set_pks_condition(subcond,  primary_key, val.get(primary_key), new_prefix)
-                                    condition << subcond
-                                end
-                            else
-                                condition.set(new_prefix, '=', val.get(primary_key))
-                            end
-                        end
-                    end
-                    if v.is_a?(BaseModel)
-                        set_pks_condition(condition, element, v, element.name)
-                    elsif element.model.primary_keys.length == 1 
-                        new_v = Condition.new
-                        if (model.mapper.have_references?(element.name))
-                            new_v.set(element.model.primary_keys[0].name, comp, v)
-                        else
-                            new_v.set(element.reverse, comp, v)
-                        end
-                        condition.set(element.name, comp, new_v)
-                    else
-                        raise MapperError, "Value condition passed on #{k}, but #{element.model} has more then one primary key"
-                    end
-                end
-            end 
+
             bind_values = []
             joins = options[:joins] || []
             remaining_condition = Condition.new # TODO: implement
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
+            
+            # find out which elements have non nil conditions to figure out joins
+            def get_not_nil(model, condition, not_nil)
+                condition.all_each_with_comparison do |k, v, comp|
+                    next unless k.respond_to?(:to_sym)
+                    element = model.elements[k.to_sym]
+                    debugger unless element
+                    next unless model.mapper.mapped?(element)
+                    next unless element.model?
+                    not_nil[k] = {} if !v.nil? || comp != '='
+                    get_not_nil(element.model, v, not_nil[k]) if v.is_a?(Condition)
+                end
+            end
+            
+            not_nil = options[:not_nil]
+            unless not_nil
+                not_nil = {}
+                get_not_nil(@model, condition, not_nil)
+            end
+                        
             condition.each_with_comparison do |k, v, comp|
                 if k.is_a?(QueryFuncs::Function)
                     field = prepare_queryfunc(k)
@@ -544,11 +523,7 @@ module Spider; module Model; module Mappers
                         cond[:values] << element_cond
                     else
                         if (element.storage == model.mapper.storage)
-                            if v.nil?
-                                join_type = comp == '=' ? :left : :inner
-                            else
-                                join_type = :inner
-                            end
+                            join_type = (v.nil? && comp == '=') ? :left : :inner
                             sub_join = model.mapper.get_join(element, join_type)
                             # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
                             existent = joins.select{ |j| j[:to] == sub_join[:to] }
@@ -567,9 +542,9 @@ module Spider; module Model; module Mappers
                             sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
                             joins << sub_join unless had_join
                             
-                            if v.nil? && comp == '='
+                            if v.nil? && comp == '=' && !not_nil[element.name]
                                 element_cond = {:conj => 'AND', :values => []}
-                                if model.mapper.have_references?(element.name)
+                                    if model.mapper.have_references?(element.name)
                                     el_name = element.name
                                     el_model = element.model
                                 else
@@ -585,7 +560,7 @@ module Spider; module Model; module Mappers
                                 cond[:values] << element_cond
                             elsif v
                                 v = element.model.mapper.preprocess_condition(v)                          
-                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins)
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins, :not_nil => not_nil[element.name])
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins
                                 cond[:values] << sub_condition
@@ -612,7 +587,7 @@ module Spider; module Model; module Mappers
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub, :joins => joins)
+                sub_res = self.prepare_condition(sub, :joins => joins, :not_nil => not_nil)
                 cond[:values] << sub_res[0]
                 joins = sub_res[1]
                 remaining_condition += sub_res[2]
@@ -781,6 +756,7 @@ module Spider; module Model; module Mappers
                             end
                         end
                     else
+                        raise "Order on unmapped element #{el_model.name}.#{el.name}" unless el_model.mapper.mapped?(el)
                         field = el_model.mapper.schema.field(el.name)
                         fields << [field, direction]
                     end

@@ -130,6 +130,14 @@ module Spider; module Model
             end
         end
         
+        # Yields each key, value and comparison, for this condition and its subconditions
+        def all_each_with_comparison
+            self.each_with_comparison{ |k, v, c| yield k, v, c }
+            @subconditions.each do |sub|
+                sub.all_each_with_comparison{ |k, v, c| yield k, v, c }
+            end
+        end
+        
         # Returns the result of merging the condition with another one (does not modify the original condition).
         def +(condition)
             res = self.clone
