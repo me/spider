@@ -13,6 +13,10 @@ class Date
         to_time(new_offset(DateTime.now.offset), :local)
     end
     
+    def to_date
+        ::Date.new(year, month, day)
+    end
+    
     def lformat(format = :default, locale=nil, options={})
         locale ||= Spider.locale
         Spider::I18n.localize(locale, self, format, options)
