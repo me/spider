@@ -559,7 +559,7 @@ module Spider; module Model; module Storage; module Db
             sql = joins.map{ |join|
                 to_t = join[:as] || join[:to]
                 sql_on = join[:keys].map{ |from_f, to_f|
-                    to_field = to_f.is_a?(FieldExpression) ? to_f : "#{to_t}.#{to_f.name}"
+                    to_field = to_f.is_a?(FieldExpression) ? to_f.expression : "#{to_t}.#{to_f.name}"
                     "#{from_f} = #{to_field}"
                 }.join(' AND ')
                 if (join[:condition])
