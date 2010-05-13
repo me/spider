@@ -18,7 +18,13 @@ module Spider
 
         def self.pub_url
             HTTPMixin.reverse_proxy_mapping('/public')
-        end  
+        end
+        
+        def self.app_pub_path(app=nil)
+            path = self.pub_path+'/apps'
+            path += '/'+app.short_name if app
+            path
+        end
 
     end
 

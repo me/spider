@@ -31,6 +31,10 @@ module Spider
     config_option 'webserver.force_threads', _("Force threading on non-threaded adapters"),
         :default => Proc.new{ RUBY_VERSION_PARTS[1] == '8' ? true : false }
     config_option 'webserver.timeout', _("Time allowed for each request (in seconds)"), :type=> Fixnum, :default => nil
+    config_option 'static_content.mode', _("Mode to use for serving static files"), :type => String,
+        :choices => [nil, 'x-sendfile', 'x-accel-redirect', 'published'], :default => nil
+    config_option 'static_content.auto_publish', _("Automatically publish content to the home's public folder"),
+        :type => Spider::DataTypes::Bool, :default => false
     # Client
     config_option 'client.text_editor', _("The text editor installed on the client")
     

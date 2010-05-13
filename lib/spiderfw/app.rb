@@ -45,6 +45,14 @@ module Spider
                     alias :url :request_url
                     
                     def pub_url
+                        if Spider.conf.get('static_content.mode') == 'publish'
+                            Spider::HomeController.pub_url+'/apps/'+self.short_name
+                        else
+                            request_url+'/public'
+                        end
+                    end
+                    
+                    def pub_url!
                         request_url+'/public'
                     end
                     
