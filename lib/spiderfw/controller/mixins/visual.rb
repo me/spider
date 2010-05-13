@@ -5,7 +5,7 @@ module Spider; module ControllerMixins
     
     # Mixin for objects using templates
     module Visual
-        
+        attr_reader :template
         attr_accessor :layout, :dispatcher_layout
         
         def self.included(klass)
