@@ -485,7 +485,7 @@ module Spider; module Model; module Mappers
                 condition.all_each_with_comparison do |k, v, comp|
                     next unless k.respond_to?(:to_sym)
                     element = model.elements[k.to_sym]
-                    debugger unless element
+                    next unless element
                     next unless model.mapper.mapped?(element)
                     next unless element.model?
                     not_nil[k] = {} if !v.nil? || comp != '='
@@ -510,7 +510,7 @@ module Spider; module Model; module Mappers
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
                     if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
-                        key.is_a?(QueryFuncs::Function) || !element.model.elements[key].primary_key? }.empty?)
+                        !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
