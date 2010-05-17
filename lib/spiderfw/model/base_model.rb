@@ -506,6 +506,7 @@ module Spider; module Model
                     attributes.delete(:add_multiple_reverse)
                 end
                 attributes.delete(:primary_key) unless (params[:keep_pks])
+                attributes.delete(:required)
                 name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
                 element(name, el.type, attributes)
             end
