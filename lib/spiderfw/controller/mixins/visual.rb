@@ -266,7 +266,7 @@ module Spider; module ControllerMixins
                     @scene.backtrace = build_backtrace(exc)
                     client_editor = Spider.conf.get('client.text_editor')
                     prefix = 'txmt://open?url=' if client_editor == 'textmate'
-                    @scene.exception = "#{exc.class.name}: #{exc.message}"
+                    @scene.exception = "#{exc.class.name}: #{CGI.escapeHTML(exc.message)}"
                     cnt = 0
                     @scene.backtrace.each do |tr|
                         tr[:index] = cnt
