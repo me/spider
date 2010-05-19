@@ -514,7 +514,9 @@ module Spider
             
         
         def parse_runtime_content_xml(xml, src_path=nil)
-            parse_runtime_content(Hpricot(xml), src_path)
+            return if xml.empty?
+            doc = Hpricot(xml)
+            parse_runtime_content(doc, src_path) if doc.children && doc.root && doc.root.children
         end
         
         def parse_runtime_content(doc, src_path=nil)
