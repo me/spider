@@ -131,7 +131,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def savepoint(name)
-            execute("SAVEPOINT #{name}")
+            connection.query("SAVEPOINT #{name}")
             super
         end
         
@@ -151,7 +151,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def rollback_savepoint(name=nil)
-            execute("ROLLBACK TO #{name}")
+            connection.query("ROLLBACK TO #{name}")
             super
         end
         
