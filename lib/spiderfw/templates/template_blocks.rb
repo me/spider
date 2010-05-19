@@ -28,7 +28,7 @@ module Spider
                 block = :Run
             elsif el.name == 'sp:yield'
                 block = :Yield
-            elsif el.name == 'sp:pass' || el.name == 'sp:template'
+            elsif el.name == 'sp:pass' || el.name == 'tpl:pass' || el.name == 'sp:template'
                 block = :Pass
             elsif el.name == 'sp:debugger'
                 block = :Debugger
