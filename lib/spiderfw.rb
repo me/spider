@@ -380,7 +380,8 @@ module Spider
                 if (path[0].chr == '/')
                     first_part = path[1..-1].split('/')[0]
                     Spider.apps_by_path.each do |p, a|
-                        if first_part == p
+                        if path.index(p) == 1 # FIXME: breaks something
+                        #if first_part == p
                             app = a
                             path = path[p.length+2..-1]
                             break
