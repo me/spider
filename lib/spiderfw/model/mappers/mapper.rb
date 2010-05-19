@@ -649,6 +649,13 @@ module Spider; module Model
             result = objects.element_queryset(element).index_by(*index_by)
             @model.primary_keys.each{ |key| result.request[key.name] = true }
             result.request[element.attributes[:reverse]] = true
+            if element.attributes[:polymorph]
+                element.type.polymorphic_models.each do |mod, params|
+                    poly_req = Spider::Model::Request.new
+                    mod.primary_keys.each{ |k| poly_req.request(k) }
+                    result.request.with_polymorphs(mod, poly_req)
+                end
+            end
             result.load
             return associate_external(element, objects, result)
         end

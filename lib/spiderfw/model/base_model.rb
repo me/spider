@@ -266,6 +266,10 @@ module Spider; module Model
                 orig_type.referenced_by_junctions << [assoc_type, other_name]
                 attributes[:keep_junction] = true if (attributes[:through] && attributes[:keep_junction] != false)
                 attributes[:association_type] = assoc_type
+                if attributes[:polymorph]
+                    assoc_type.elements[attributes[:junction_their_element]].attributes[:polymorph] = attributes[:polymorph]
+                    attributes.delete(:polymorph)
+                end
             end
             
             @elements[name] = Element.new(name, type, attributes)
@@ -310,7 +314,7 @@ module Spider; module Model
                 # if attributes[:primary_key]
                 #                     attributes[:lazy] = true
                 #                 els
-                if (type < BaseModel && attributes[:multiple])
+                if (type < BaseModel && (attributes[:multiple] || attributes[:polymorph]))
                     # FIXME: we can load eagerly single relations if we can do a join
                     attributes[:lazy] = true
                 else
