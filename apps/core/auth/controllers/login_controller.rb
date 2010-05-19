@@ -10,6 +10,10 @@ module Spider; module Auth
             nil
         end
         
+        def self.logout_redirect
+            nil
+        end
+        
         def self.users=(val)
             @user_classes = val
         end
@@ -85,7 +89,12 @@ module Spider; module Auth
         def logout
             @request.session[:auth] = nil
             @scene.did_logout = true
-            render('login')
+            red = self.class.logout_redirect
+            if red
+                redirect(red)
+            else
+                redirect('index')
+            end
         end
         
     end
