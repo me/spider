@@ -1,2 +1,8 @@
-<tpl:extend src="SPIDER/apps/core/components/widgets/menu/menu.shtml">
-</tpl:extend>
+<div class="tabs">
+    <ul>
+        <li sp:each="@tabs |tab_id|">
+            <a href="#aaa">{ @tabs_labels[tab_id] }</a>
+        </li>
+    </ul>
+    <div id="tabs_content"></div>
+</div>
