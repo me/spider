@@ -49,7 +49,34 @@ module Spider
             return block
         end
         
+        def self.parse_content(el, allowed_blocks=nil, template=nil)
+            content_blocks = []
+            last_block = nil
+            el.each_child do |ch|
+                #Spider.logger.debug "TRAVERSING CHILD #{ch}"
+                # Gives the preceding block the chance to "eat" the next elements
+                next if (last_block && last_block.get_following(ch))
+                last_block = TemplateBlocks.parse_element(ch, allowed_blocks, template)
+                content_blocks << last_block if (last_block)
+            end
+            return content_blocks
+        end
+        
+        def self.compile_content(el, c='', init='', options={})
+            c ||= ""
+            init ||= ""
+            blocks = self.parse_content(el, options[:allowed_blocks], options[:template])
+            blocks.each do |block|
+                compiled = block.compile(options)
+                next unless compiled
+                c += compiled.run_code if (compiled.run_code)
+                init += compiled.init_code if (compiled.init_code)
+            end
+            return [c, init]
+        end
+        
         class Block
+            attr_reader :el, :template, :allowed_blocks
             
             def initialize(el, template=nil, allowed_blocks=nil)
                 @el = el
@@ -59,34 +86,13 @@ module Spider
             end
             
             def parse_content(el)
-                content_blocks = []
-                last_block = nil
-                el.each_child do |ch|
-                    #Spider.logger.debug "TRAVERSING CHILD #{ch}"
-                    # Gives the preceding block the chance to "eat" the next elements
-                    next if (last_block && last_block.get_following(ch))
-                    last_block = TemplateBlocks.parse_element(ch, @allowed_blocks, @template)
-                    content_blocks << last_block if (last_block)
-                end
-                return content_blocks
+                TemplateBlocks.parse_content(el, @allowed_blocks, @template)
             end
             
             def compile_content(c='', init='', options={})
-                c ||= ""
-                init ||= ""
-                blocks = parse_content(@el)
-                blocks.each do |block|
-                    compiled = block.compile(options)
-                    next unless compiled
-                    # if (compiled.run_code =~ /nil/)
-                    #     Spider::Logger.debug("NIL BLOCK")
-                    #     Spider::Logger.debug(block)
-                    #     Spider::Logger.debug(compiled.run_code)
-                    # end
-                    c += compiled.run_code if (compiled.run_code)
-                    init += compiled.init_code if (compiled.init_code)
-                end
-                return [c, init]
+                options[:allowed_blocks] ||= @allowed_blocks
+                options[:template] ||= @template
+                TemplateBlocks.compile_content(@el, c, init, options)
             end
             
             def get_following(el)
