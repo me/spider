@@ -282,8 +282,14 @@ module Spider; module Model
                     attributes[:reverse] ||= attributes[:add_reverse][:name]
                     rev = attributes[:add_reverse].merge(:reverse => name, :added_reverse => true, 
                         :delete_cascade => attributes[:reverse_delete_cascade])
-                    rev[:through] = assoc_type if assoc_type
                     rev_name = rev.delete(:name)
+                    if assoc_type
+                        rev[:junction] = true
+                        rev[:keep_junction] = false
+                        rev[:through] = assoc_type
+                        rev[:junction_their_element] = self_name
+                        rev[:junction_our_element] = other_name
+                    end
                     orig_type.element(rev_name, self, rev)
                 end
             elsif (attributes[:add_multiple_reverse])
@@ -1079,18 +1085,24 @@ module Spider; module Model
             element = self.class.elements[name]
             if (element.model?)
                 # convert between junction and real type if needed
-                if (obj.is_a?(QuerySet) && element.attributes[:junction])
-                    obj.no_autoload do
-                        if (element.attributes[:keep_junction] && obj.model == element.type)
-                            qs = QuerySet.new(element.model)
-                            obj.each{ |el_obj| 
-                                qs << {element.reverse => self, element.attributes[:junction_their_element] => el_obj}
-                            }
-                            obj = qs
-                        elsif (!element.attributes[:keep_junction] && obj.model == element.model)
-                            qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
-                            obj = qs
-                        end 
+                if element.attributes[:junction]
+                    if obj.is_a?(QuerySet) 
+                        obj.no_autoload do
+                            if (element.attributes[:keep_junction] && obj.model == element.type)
+                                qs = QuerySet.new(element.model)
+                                obj.each{ |el_obj| 
+                                    qs << {element.reverse => self, element.attributes[:junction_their_element] => el_obj}
+                                }
+                                obj = qs
+                            elsif (!element.attributes[:keep_junction] && obj.model == element.model)
+                                qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
+                                obj = qs
+                            end 
+                        end
+                    else
+                        if (!element.attributes[:keep_junction] && obj.class == element.model)
+                            obj = obj.get(element.attributes[:junction_their_element])
+                        end
                     end
                 end
                 self.class.elements_array.select{ |el| el.attributes[:fixed] }.each do |el|
