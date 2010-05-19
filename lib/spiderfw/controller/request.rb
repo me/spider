@@ -2,7 +2,7 @@ module Spider
     
     class Request
         attr_accessor :action, :params, :cookies, :env, :protocol,
-                      :format, :extension, :session, :user_id, :server, :request_time, :controller_path,
+                      :format, :session, :user_id, :server, :request_time, :controller_path,
                       :locale, :misc
                       
         BUFSIZE = 1024*4
