@@ -82,7 +82,7 @@ module Spider; module ControllerMixins
         
         def execute(action='', *params)
             @visual_params = @executed_format_params
-            @is_target = false if @request.params['_wt']
+            @is_target = false if @request.params['_wt'] && !self.is_a?(Spider::Widget)
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
             elsif (@visual_params.is_a?(Hash) && @visual_params[:params])
