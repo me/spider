@@ -79,6 +79,7 @@ module Spider; module Model
                 return nil unless l_cond
                 cond = l_cond.call(obj)
                 cond = Condition.new(cond) unless cond.is_a?(Condition)
+                preprocess_condition(cond)
                 return cond
             end
             
@@ -101,6 +102,7 @@ module Spider; module Model
             
             def list(name, attributes={})
                 attributes[:list] = true
+                attributes[:order] ||= true
                 element(name, Fixnum, attributes)
                 observe_element(name) do |obj, el, new_val|
                     obj.save_mode do
