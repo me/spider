@@ -390,6 +390,10 @@ module Spider; module Model
             return ConditionElement.new(name, @condition_context)
         end
         
+        def id
+            return ConditionElement.new(:id, @condition_context)
+        end
+        
         def AND(&proc)
             @condition_context = []
             instance_eval(&proc)
