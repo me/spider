@@ -1,4 +1,5 @@
 require 'spiderfw/controller/controller'
+require 'spiderfw/controller/mixins/visual'
 
 module Spider
 
