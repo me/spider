@@ -91,7 +91,7 @@ module Spider; module ControllerMixins
             end
             super(action, *params)
             return unless @visual_params.is_a?(Hash)
-            @template = init_template if !@template && @visual_params[:template]
+            @template = get_template if !@template && @visual_params[:template]
             init_widgets(@template) if @template
             if @visual_params[:call]
                 send(@visual_params[:call], *params)
@@ -138,7 +138,7 @@ module Spider; module ControllerMixins
         end
         
         
-        def init_template(path=nil, scene=nil, options={})
+        def get_template(path=nil, scene=nil, options={})
             return @template if @template && @loaded_template_path == path
             scene ||= @scene
             scene ||= get_scene
@@ -149,14 +149,15 @@ module Spider; module ControllerMixins
                 options = format_params.merge(options)
             end
             template = load_template(path)
-            do_template_init(template, options)            
+            init_template(template, options)            
             @template = template
             @loaded_template_path = path
 
             return template
         end
         
-        def do_template_init(template, options={})
+        def init_template(template, options={})
+            prepare_template(template) unless template.owner # if called directly
             template.init(scene)
             if (@request.params['_action'])
                 template._widget_action = @request.params['_action']
@@ -189,7 +190,7 @@ module Spider; module ControllerMixins
             if (path.is_a?(Spider::Template))
                 template = path
             else
-                template = init_template(path, scene, options)
+                template = get_template(path, scene, options)
             end
             init_widgets(template)
             return template if done?
