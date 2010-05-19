@@ -4,14 +4,9 @@ module Spider; module TemplateBlocks
     
     class Widget < Block
         
-        def compile(options={})
-            klass = Spider::Template.get_registered_class(@el.name)
+        def self.attributes_to_init_params(attributes)
             init_params = []
-            id = @el.get_attribute('id')
-            raise TemplateCompileError, "Widget #{@el.name} does not have an id" unless id
-            template_attr = @el.get_attribute('template')
-            @el.remove_attribute('template')
-            @el.attributes.to_hash.each do |key, val|
+            attributes.each do |key, val|
                 if (!val.empty? && val[0].chr == '@')
                     sval = var_to_scene(val, 'scene')
                 elsif (!val.empty? && val[0].chr == '$')
@@ -23,6 +18,21 @@ module Spider; module TemplateBlocks
                 init_key = "\"#{init_key}\"" unless key =~ /^[\w\d]+$/
                 init_params << ":#{init_key} => #{sval}"
             end
+            init_params
+        end
+        
+        def compile(options={})
+            klass = Spider::Template.get_registered_class(@el.name)
+            init_params = []
+            id = @el.get_attribute('id')
+            raise TemplateCompileError, "Widget #{@el.name} does not have an id" unless id
+            template_attr = @el.get_attribute('template')
+            @el.remove_attribute('template')
+            if klass.respond_to?(:compile_block)
+                init, c = klass.compile_block(@el, id, @el.attributes.to_hash, options)
+                return CompiledBlock.new(init, c)
+            end
+            init_params = self.class.attributes_to_init_params(@el.attributes.to_hash)
 
             html = ""
             @el.each_child do |ch|
