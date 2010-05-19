@@ -646,9 +646,7 @@ module Spider; module Model
                 pk_name = @elements[:id] ? :"id_#{self.short_name.downcase}" : :id
                 element(pk_name, Fixnum, :autoincrement => true, :local_pk => true, :hidden => true)
             end
-            if (params[:add_polymorphic])
-                model.polymorphic(self, :through => integrated_name)
-            end
+            model.polymorphic(self, :through => integrated_name)
         end
         
         # Externalizes the superclass elements making the superclass an external integrated element.
@@ -656,7 +654,6 @@ module Spider; module Model
         # * :name               (symbol) name of the created element
         # * :delete_cascade     (bool) delete cascade the superclass instance
         # * :no_local_pk        (bool) do not define an id for this class
-        # * :add_polymorphic    (bool) notify the superclass that it is extended, making polymorphic queries possible
         def self.class_table_inheritance(params={})
             self.extend_model(superclass, params)
         end
