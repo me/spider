@@ -392,6 +392,7 @@ module Spider
                     app = owner_class.app if (owner_class && owner_class.app)
                 end
                 return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
+                raise "Can't find owner app for resource #{path}" unless app
                 search_locations = [["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}", @home]]
                 if app.respond_to?("#{resource_type}_path")
                     search_locations << [app.send("#{resource_type}_path"), app]
