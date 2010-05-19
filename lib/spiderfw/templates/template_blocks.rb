@@ -32,6 +32,8 @@ module Spider
                 block = :Pass
             elsif el.name == 'sp:debugger'
                 block = :Debugger
+            elsif el.name == 'sp:parent-context'
+                block = :ParentContext
             elsif Spider::Template.registered?(el.name)
                 klass = Spider::Template.get_registered_class(el.name)
                 if klass < ::Spider::Widget
@@ -206,3 +208,5 @@ require 'spiderfw/templates/blocks/tag'
 require 'spiderfw/templates/blocks/widget'
 require 'spiderfw/templates/blocks/run'
 require 'spiderfw/templates/blocks/debugger'
+require 'spiderfw/templates/blocks/parent_context'
+

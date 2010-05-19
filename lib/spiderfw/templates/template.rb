@@ -455,10 +455,20 @@ module Spider
             #     t.join
             # else
             scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb', 0)
-            scene.__run_template do |widget|
-                @content[widget].render if @content[widget]
+            scene.__run_template do |yielded|
+                if yielded == :_parent
+                    @owner.parent.template.run_block
+                else
+                    @content[yielded].render if @content[yielded]
+                end
             end
             # end
+        end
+        
+        def run_block
+            @scene.__run_block do |yielded, block|
+                @content[yielded].render if @content[yielded]
+            end
         end
         
         # Alias for #render.
