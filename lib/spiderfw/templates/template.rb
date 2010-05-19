@@ -521,6 +521,9 @@ module Spider
         
         # Applies an override to an (Hpricot) element.
         def apply_override(el, override)
+            if override.is_a?(Proc)
+                return override.call(el)
+            end
             search_string = override.get_attribute('search')
             override.name = 'tpl:override-content' if override.name == 'tpl:inline-override'
             if (search_string)
