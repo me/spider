@@ -252,6 +252,10 @@ module Spider
             end
             ass[:path] = res.path if res
             if controller.respond_to?(:pub_url)
+                if src[0].chr == '/'
+                    # strips the app path from the src. FIXME: should probably be done somewhere else
+                    src = src[(2+controller.app.relative_path.length)..-1]
+                end
                 ass[:src] = controller.pub_url + '/' + src
             else
                 ass[:src] = src
@@ -377,6 +381,7 @@ module Spider
                     apply_widget_proc(widget, wp)
                 end
             end
+            widget
         end
         
         def find_widget(path)
