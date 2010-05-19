@@ -33,12 +33,20 @@ Spider.Widget = Class.extend({
 		this.startup();
 		this.ready();
 		this.applyReady();
+		this.plugins = [];
+		if (this.includePlugins) for (var i=0; i<this.includePlugins.length; i++){
+			this.plugin(this.includePlugins[i]);
+		}
     },
     
     remote: function(){
         var args = Array.prototype.slice.call(arguments); 
         var method = args.shift();
-        return this.backend.send(method, args);
+		var options = {};
+		if ($.isFunction(args[args.length-1])){
+			options.callback = args.pop();
+		}
+        return this.backend.send(method, args, options);
     },
 
 	onReady: function(callback){
@@ -212,6 +220,22 @@ Spider.Widget = Class.extend({
 		var args = Array.prototype.slice.call(arguments, 1); 
 		for (var i=0; i < this.events[eventName].length; i++){
 			this.events[eventName][i].apply(this, args);
+		}
+	},
+	
+	plugin: function(pClass, prop){
+		if (prop) pClass = pClass.extend(prop);
+		this.plugins[pClass] = new pClass(this);
+		var plugin = this.plugins[pClass];
+		for (var name in pClass.prototype){
+			if (name.substring(0, 1) == '_') continue;
+			if (typeof pClass.prototype[name] == "function" && !this[name]){
+				this[name] = function(name){
+					return function(){
+						return plugin[name].apply(this, arguments);
+					};
+				}(name);
+			}
 		}
 	}
 	
