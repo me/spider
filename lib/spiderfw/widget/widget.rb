@@ -209,9 +209,14 @@ module Spider
             locale = @request.locale.language
             include_js = [
                 '/js/jquery/jquery-1.4.2.js', '/js/inheritance.js', '/js/spider.js', '/js/jquery/plugins/jquery.query-2.1.6.js',
-                '/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js', #'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js'
-                "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js", '/js/jquery/plugins/jquery.form.js'
+                '/js/jquery/plugins/jquery.form.js',
+                '/js/plugins/plugin.js'
             ]
+            # include_js << [
+            #     '/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js',
+            #     #'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js',
+            #     "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
+            # ]
             include_css = [
                 '/css/spider.css', '/js/jquery/jquery-ui/css/smoothness/jquery-ui-1.7.2.custom.css', 
             ]
