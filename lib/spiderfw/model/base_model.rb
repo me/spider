@@ -170,6 +170,8 @@ module Spider; module Model
         # :condition::                (hash or Condition) Restricts an association always adding the condition.
         # :order::                    (true or Fixnum) When doing queries, sort by this element. More than one element can have the
         #                             :order attribute; if it is a Fixnum, it will mean the position in the ordering.
+        # :default::                  (Proc or value) default value for the element. If it is a Proc, it will be passed
+        #                             the object.
         # 
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
         # See also Element.
@@ -379,6 +381,13 @@ module Spider; module Model
                 end
                 if !val && element.model? && (element.multiple? || element.attributes[:extended_model])
                     val = instance_variable_set(ivar, instantiate_element(name))
+                end
+                if !val && element.attributes[:default]
+                    if element.attributes[:default].is_a?(Proc)
+                        val = element.attributes[:default].call(self)
+                    else
+                        val = element.attributes[:default]
+                    end
                 end
                 val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
                 return val

@@ -136,6 +136,9 @@ module Spider; module Model
                         raise NotUniqueError.new(el)
                     end
                 end
+                if mode == :insert && el.attributes[:default] && !obj.element_modified?(el)
+                    obj.set(el, obj.get(el))
+                end
             end
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
