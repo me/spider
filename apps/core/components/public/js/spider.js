@@ -61,6 +61,10 @@ Spider.Widget = Class.extend({
 	},
 	
 	reload: function(params, callback){
+		if (!callback && $.isFunction(params)){
+			callback = params;
+			params = {};
+		}
 		$C.loadWidget(this.path, params, callback);
 	},
 	
@@ -300,12 +304,14 @@ Spider.WidgetBackend = Class.extend({
 	},
 
 	send: function(method, args, options){
+		if (!options) options = {};
 		var url = this.urlForMethod(method);
 		for (var i=0; i<args.length; i++){
 			url += '&_wp[]='+args[i];
 		}
 		var data = {};
 		var callback = this.widget[method+'_response'];
+		if (!callback) callback = options.callback;
 		if (!callback) callback = function(){};
 		var defaults = {
 			url: url,
@@ -351,6 +357,7 @@ Spider.defineWidget = function(name, parent, w){
 			});
 		});
 	}
+	return widget;
 };
 
 Spider.Controller = Class.extend({
