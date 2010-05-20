@@ -243,6 +243,7 @@ module Spider
             else
                 owner_class = (@owner ? @owner.class : @owner_class )
             end
+            raise "Asset type not given for #{src}" unless type
             res = Spider.find_resource(type.to_sym, src, @path, [owner_class, @definer_class])
             controller = nil
             if (res && res.definer)
