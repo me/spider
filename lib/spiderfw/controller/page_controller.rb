@@ -20,6 +20,8 @@ module Spider
                 if (@widgets[$1])
                     return Route.new(:path => path, :dest => @widgets[$1], :action => $2)
                 end
+            elsif (path =~ /_h\/(.+)/) # Route back to home
+                return Route.new(:path => path, :dest => Spider::HomeController, :action => $1)
             end
             return super
         end
