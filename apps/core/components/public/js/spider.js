@@ -241,6 +241,10 @@ Spider.Widget = Class.extend({
 				}(name);
 			}
 		}
+	},
+	
+	widget: function(id){
+		return $W(this.path+'/'+id);
 	}
 	
 	
@@ -367,6 +371,8 @@ Spider.Controller = Class.extend({
 		var slashPos = url.lastIndexOf('/');
 		url = url.substr(0, slashPos);
 		this.url = url;
+		this.publicUrl = this.url+'/public'; // FIXME
+		this.homeUrl = this.url+'/_h';
     },
     
 	remote: function(method, params, callback, options){
