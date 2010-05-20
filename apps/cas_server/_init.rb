@@ -18,6 +18,6 @@ end
 
 ['mixins/consumable', 'ticket', 'login_ticket', 
 'ticket_granting_ticket', 'proxy_granting_ticket', 'proxy_ticket'].each do |mod|
-    require Spider::CASServer.path+'/models/'+mod
+    require 'apps/cas_server/models/'+mod
 end
 require 'apps/cas_server/controllers/mixins/cas_login_mixin'
