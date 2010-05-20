@@ -269,7 +269,6 @@ module Spider
         end
         
         def widget_before(action='')
-            return unless active?
             Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
             prepare
@@ -278,8 +277,16 @@ module Spider
         
         
         def active?
+            
             return @active unless @active.nil?
+            return @active = true if @is_target
+            return @active = false if attributes[:"sp:target-only"] == "true"
             @active = (!@request.params['_wt'] || @target_mode)
+        end
+        
+        def active=(val)
+            
+            @active = val
         end
         
         def before_done?
@@ -388,7 +395,7 @@ module Spider
         
         def run(action='')
             @widgets.each do |wname, w|
-                w.run
+                w.run if w.run?
             end
             if (@parent)
                 @parent.after_widget(@id.to_sym)
@@ -486,7 +493,7 @@ module Spider
         def add_widget(widget)
             widget.id_path = @id_path + [widget.id]
             widget.parent = self
-            widget.active = true if @is_target || @active
+            # widget.active = true if @is_target || @active
             @widgets[widget.id.to_sym] = widget
             if (@widgets_runtime_content[widget.id.to_sym])
                 @widgets_runtime_content[widget.id.to_sym].each do |content|
