@@ -416,7 +416,7 @@ module Spider
         # Calls the run method on all widget instances.
         def run_widgets
             @widgets.each do |id, w|
-                w.run unless w.did_run?
+                w.run if w.run? && !w.did_run?
             end
             
         end
