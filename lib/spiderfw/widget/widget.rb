@@ -676,6 +676,10 @@ module Spider
             "#{self[:request][:path]}?_wt=#{self[:widget][:id_path].join('/')}&_we=#{name}"+(params.map{|p| "&_wp[]=#{p}"}).join('')
         end
         
+        def widget_params(params)
+            "#{self[:request][:path]}?"+params.map{ |k, v| "_w#{self[:widget][:param]}[#{k}]=#{v}"}.join('&')
+        end
+        
     end
     
 end
