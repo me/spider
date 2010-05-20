@@ -401,7 +401,7 @@ module Spider
         end
         
         def run?
-            @is_target || (!@target_mode && !attributes[:"sp:target_only"])
+            @is_target || (!@target_mode && !attributes[:"sp:target-only"])
         end
         
         def init_widget_done?
