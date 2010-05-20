@@ -1,6 +1,6 @@
 require 'spiderfw/model/mixins/tree'
 require 'apps/core/auth/models/mixins/access_control'
-require 'uuid'
+require 'uuidtools'
 
 module Spider; module Auth
     
@@ -13,7 +13,7 @@ module Spider; module Auth
         
         with_mapper_subclasses do
             def assign_primary_keys(obj)
-                obj.set(:gid, UUID.new.generate)
+                obj.set(:gid, UUIDTools::UUID.random_create.to_s)
             end
         end
         

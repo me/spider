@@ -133,7 +133,7 @@ module Spider
         end
         
         def self.at(time, proc_string)
-            job = Job.new(:uuid => ::UUID.new.generate, :time => time, :task => proc_string)
+            job = Job.new(:uuid => UUIDTools::UUID.random_create.to_s, :time => time, :task => proc_string)
             job.save
             return job.uuid
         end
