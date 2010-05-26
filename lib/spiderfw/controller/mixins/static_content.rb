@@ -75,6 +75,14 @@ module Spider; module ControllerMixins
             mode = Spider.conf.get('static_content.mode')
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
             stat = File.lstat(full_path)
+            if @request.env['HTTP_IF_MODIFIED_SINCE']
+                if_modified = Time.httpdate(@request.env['HTTP_IF_MODIFIED_SINCE'])
+                if stat.mtime <= if_modified
+                    debug("Not modified #{full_path}")
+                    raise HTTPStatus.new(Spider::HTTP::NOT_MODIFIED) 
+                    return
+                end
+            end
             if File.directory?(full_path)
                 ct = "httpd/unix-directory"
             else

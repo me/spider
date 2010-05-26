@@ -11,7 +11,9 @@ module Spider; module Auth
         
         def before(action='', *arguments)
             @request.extend(RequestMethods)
-            return super if action.index(Spider::Auth.route_url) == 0
+            super
+            return if action.index(Spider::Auth.route_url) == 0
+            return if respond_to?(:serving_static?) && serving_static?
             self.class.auth_require_users.each do |req|
                 klasses, params = req
                 klasses = [klasses] unless klasses.is_a?(Array)
@@ -64,7 +66,7 @@ module Spider; module Auth
                 end
                 @request.user = user
             end
-            super
+            
         end
         
         def try_rescue(exc)
