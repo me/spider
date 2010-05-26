@@ -480,24 +480,40 @@ module Spider; module Model; module Mappers
             cond[:conj] = condition.conjunction.to_s
             cond[:values] = []
             
-            # find out which elements have non nil conditions to figure out joins
-            def get_not_nil(model, condition, not_nil)
-                condition.all_each_with_comparison do |k, v, comp|
+
+            
+            def get_join_info(model, condition)
+                join_info = {}
+                condition.each_with_comparison do |k, v, comp|
                     next unless k.respond_to?(:to_sym)
                     element = model.elements[k.to_sym]
                     next unless element
                     next unless model.mapper.mapped?(element)
                     next unless element.model?
-                    not_nil[k] = {} if !v.nil? || comp != '='
-                    get_not_nil(element.model, v, not_nil[k]) if v.is_a?(Condition)
+                    join_info[k.to_s] = true if !v.nil? || comp != '='
+                    if v.is_a?(Spider::Model::Condition)
+                        el_join_info = get_join_info(element.model, v) 
+                        el_join_info.each do |jk, jv|
+                            join_info["#{k}.#{jk}"] = jv
+                        end
+                    end
                 end
+                condition.subconditions.each do |sub_cond|
+                    sub_join_info = get_join_info(model, sub_cond)
+                    if condition.conjunction == :or
+                        join_info.each_key do |k|
+                            join_info.delete(k) unless sub_join_info[k]
+                        end
+                    else
+                        join_info.merge!(sub_join_info)
+                    end
+                end
+                join_info
             end
             
-            not_nil = options[:not_nil]
-            unless not_nil
-                not_nil = {}
-                get_not_nil(@model, condition, not_nil)
-            end
+            join_info = options[:join_info]
+            join_info ||= get_join_info(@model, condition)
+
                         
             condition.each_with_comparison do |k, v, comp|
                 if k.is_a?(QueryFuncs::Function)
@@ -509,6 +525,12 @@ module Spider; module Model; module Mappers
                 element = model.elements[k.to_sym]
                 next unless model.mapper.mapped?(element)
                 if (element.model?)
+                    el_join_info = {}
+                    join_info.each do |jk, jv|
+                        if jk.index(k.to_s+'.') == 0
+                            el_join_info[jk[k.to_s.length..-1]] = jv
+                        end
+                    end
                     if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
                         !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
@@ -523,7 +545,7 @@ module Spider; module Model; module Mappers
                         cond[:values] << element_cond
                     else
                         if (element.storage == model.mapper.storage)
-                            join_type = (v.nil? && comp == '=') ? :left : :inner
+                            join_type = join_info[element.name.to_s] ? :inner : :left
                             sub_join = model.mapper.get_join(element, join_type)
                             # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
                             existent = joins.select{ |j| j[:to] == sub_join[:to] }
@@ -542,7 +564,7 @@ module Spider; module Model; module Mappers
                             sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
                             joins << sub_join unless had_join
                             
-                            if v.nil? && comp == '=' && !not_nil[element.name]
+                            if v.nil? && comp == '=' #&& !not_nil[element.name]
                                 element_cond = {:conj => 'AND', :values => []}
                                     if model.mapper.have_references?(element.name)
                                     el_name = element.name
@@ -560,7 +582,7 @@ module Spider; module Model; module Mappers
                                 cond[:values] << element_cond
                             elsif v
                                 v = element.model.mapper.preprocess_condition(v)                          
-                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins, :not_nil => not_nil[element.name])
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins, :join_info => el_join_info)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins
                                 cond[:values] << sub_condition
@@ -587,7 +609,7 @@ module Spider; module Model; module Mappers
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub, :joins => joins, :not_nil => not_nil)
+                sub_res = self.prepare_condition(sub, :joins => joins, :join_info => join_info)
                 cond[:values] << sub_res[0]
                 joins = sub_res[1]
                 remaining_condition += sub_res[2]
