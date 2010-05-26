@@ -564,7 +564,7 @@ module Spider; module Model; module Mappers
                             sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
                             joins << sub_join unless had_join
                             
-                            if v.nil? && comp == '=' #&& !not_nil[element.name]
+                            if v.nil? && comp == '='
                                 element_cond = {:conj => 'AND', :values => []}
                                     if model.mapper.have_references?(element.name)
                                     el_name = element.name
