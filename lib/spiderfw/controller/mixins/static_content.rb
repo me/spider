@@ -9,8 +9,8 @@ module Spider; module ControllerMixins
         
         def self.included(klass)
             klass.extend(ClassMethods)
-            klass.route('public/', :serve_static)
-            klass.route('w/', :serve_widget_static)
+            klass.route('public/', :serve_static, :do => lambda{ @serving_static = true })
+            klass.route('w/', :serve_widget_static, :do => lambda{ @serving_static = true })
             if (klass < Visual)
                 klass.no_layout('public')
                 klass.no_layout('serve_static')
@@ -102,6 +102,10 @@ module Spider; module ControllerMixins
             scene = super
             scene.controller[:pub_url] = pub_url
             return scene
+        end
+        
+        def serving_static?
+            @serving_static
         end
         
     end
