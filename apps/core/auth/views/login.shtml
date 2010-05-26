@@ -1,4 +1,4 @@
-<div>
+<div class="login-page">
     <div class='error' sp:if='@failed_login'>
         Login errata
     </div>
