@@ -373,6 +373,8 @@ module Spider; module Model
                 val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
                 return val
             end
+            
+            alias_method :"#{name}?", name if type <= Spider::DataTypes::Bool
 
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
