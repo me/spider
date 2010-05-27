@@ -1270,6 +1270,8 @@ module Spider; module Model
                 get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
             else
                 value = prepare_child(element.name, value)
+                current = instance_variable_get("@#{element_name}")
+                current.set_parent(nil, nil) if current && current.is_a?(BaseModel)
                 instance_variable_set("@#{element_name}", value)
             end
             value.loaded = true if (value.is_a?(QuerySet))
