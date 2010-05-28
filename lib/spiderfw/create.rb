@@ -39,6 +39,15 @@ module Spider
             raise RuntimeError, "Folder #{dest_path} already exists" if File.exist?(dest_path)
             FileUtils.mkdir_p(dest_path)
             erb_binding ||= binding
+            if File.exists?("#{source_path}/.dirs")
+                File.readlines("#{source_path}/.dirs").each do |dir|
+                    dir.strip!
+                    replacements.each do |search, replace|
+                        dir.gsub!(search, replace)
+                    end
+                    FileUtils.mkdir_p(dest_path+'/'+dir)
+                end
+            end
             Find.find(source_path) do |sp|
                 next if sp == source_path
                 sp =~ /\/([^\/]+)$/
@@ -49,7 +58,7 @@ module Spider
                     dp.gsub!(search, replace)
                 end
                 if (File.directory?(sp))
-                    FileUtils.mkdir(dest_path+'/'+dp)
+                    FileUtils.mkdir(dest_path+'/'+dp) unless File.directory?(dest_path+'/'+dp)
                 else
                     dst = File.new(dest_path+'/'+dp, 'w')
                     res = ERB.new(IO.read(sp)).result(erb_binding)

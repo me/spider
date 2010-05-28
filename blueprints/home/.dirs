@@ -1,0 +1,7 @@
+apps
+config
+public
+tmp
+var/cache
+var/log
+var/sessions
