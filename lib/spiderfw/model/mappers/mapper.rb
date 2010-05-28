@@ -261,7 +261,6 @@ module Spider; module Model
         def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
-
             if (element.attributes[:junction])
                 their_element = element.attributes[:junction_their_element]
                 if (val.model != element.model) # dereferenced junction
@@ -269,12 +268,12 @@ module Spider; module Model
                         current = obj.get_new
                         current_val = current.get(element)
                         condition = Condition.and
+                        val_condition = Condition.or
                         current_val.each do |row|
                             next if val.include?(row)
-                            condition_row = Condition.or
-                            condition_row[their_element] = row
-                            condition << condition_row
+                            val_condition[their_element] = row
                         end
+                        condition << val_condition
                         unless condition.empty?
                             condition[our_element] = obj
                             element.model.mapper.delete(condition)
