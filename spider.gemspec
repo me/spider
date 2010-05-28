@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
   s.authors  = ["Ivan Pirlik"]
   s.files = FileList[
       'README',
+      'VERSION',
       'Rakefile',
       'spider.gemspec',
       'apps/**/*',
