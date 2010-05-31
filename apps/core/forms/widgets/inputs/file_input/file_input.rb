@@ -1,4 +1,7 @@
-require 'ftools'
+begin
+    require 'ftools'
+rescue LoadError
+end
 
 module Spider; module Forms
     
