@@ -962,7 +962,9 @@ module Spider; module Model
         # Executes #self.where, returning the first result.
         # See #self.where for parameter syntax.
         def self.load(*params, &proc)
-            return self.where(*params, &proc)[0]
+            qs = self.where(*params, &proc)
+            qs.limit = 1
+            return qs[0]
         end
         
         # Returns a queryset without conditions
