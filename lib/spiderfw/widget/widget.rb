@@ -467,6 +467,10 @@ module Spider
             return p
         end
         
+        def has_params?
+            !params.empty?
+        end
+        
         def session(container=@request.session, klass=Hash)
             s = (container['_w'] ||= klass.new)
             @id_path[0..-2].each{ |id| s = (s[id] ||= klass.new) }
