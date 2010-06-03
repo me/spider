@@ -44,6 +44,12 @@ module Spider; module Model
             return true
         end
         
+        def sortable?(element)
+            element = element.name if (element.is_a? Element)
+            element = @model.elements[element]
+            mapped?(element) || element.attributes[:sortable]
+        end
+        
         # Utility methods
         
         # An array of mapped elements.

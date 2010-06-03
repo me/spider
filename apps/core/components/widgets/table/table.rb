@@ -78,7 +78,7 @@ module Spider; module Components
         def run
             @elements ||= choose_elements
             @scene.sortable = {}
-            @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.mapped?(el) ? true : false }
+            @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.sortable?(el) ? true : false }
             @scene.labels = {}
             @elements.each do |el|
                 @scene.labels[el] = @model.elements[el].label

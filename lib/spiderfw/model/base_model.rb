@@ -163,6 +163,8 @@ module Spider; module Model
         # :computed_from::            (array of symbols) the element is not mapped; its value is computed
         #                             by the class from the given elements.
         # :unmapped::                 (bool) the element is not mapped.
+        # :sortable::                 (bool or Array of symbols) specifies that an unmapped element can be used for sorting.
+        #                             The model must provide a meaningful order using the prepare_query method.
         # :check::                    (a Proc, or a Regexp, or a Hash of messages => Regexp|Proc). See #check
         # :through::                  (a BaseModel subclass) model representing the many to many relationship.
         # :read_only::                (bool) hint to the UI that the element should not be user modifiable.
