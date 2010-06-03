@@ -41,8 +41,13 @@ module Spider
             @sid = sid || generate_sid
         end
         
-        def delete
-            self.class.delete(@sid)
+        def delete(key=nil)
+            if key
+                restore unless @restored
+                @data.delete(key)
+            else
+                self.class.delete(@sid)
+            end
         end
         
         def generate_sid
@@ -61,10 +66,6 @@ module Spider
             @data[key] = val
         end
         
-        def delete(key)
-            restore unless @restored
-            @data.delete(key)
-        end
         
         def persist
             return unless @restored
