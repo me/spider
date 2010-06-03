@@ -18,8 +18,8 @@ module Spider; module Model
             :read_only => true, 
             :element_position => 0
         }
-        element :obj_created, DateTime, :hidden => true
-        element :obj_modified, DateTime, :hidden => true
+        element :obj_created, DateTime, :label => _('Created'), :hidden => true
+        element :obj_modified, DateTime, :label => _('Modified'), :hidden => true
         
 
         def assign_id(val) #:nodoc:
