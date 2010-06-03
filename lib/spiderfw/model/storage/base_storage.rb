@@ -54,6 +54,10 @@ module Spider; module Model; module Storage
         def create_sequence(name, start=1, increment=1)
             sequence_next(name, start-1, increment)
         end
+        
+        def generate_uuid
+            Spider::DataTypes::UUID.generate
+        end
             
         
         def update_sequence(name, val)
