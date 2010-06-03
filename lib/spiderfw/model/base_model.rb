@@ -103,12 +103,6 @@ module Spider; module Model
             @app = app
         end
         
-        # Returns an instance of the Model with #autoload set to false
-        def self.static(value=nil)
-            obj = self.new(value)
-            obj.autoload = false
-            return obj
-        end
         
         #######################################
         #   Model definition methods          #
@@ -1043,31 +1037,41 @@ module Spider; module Model
                 @_has_values = true
                 Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
             end
-            if (values)
-                if (values.is_a? Hash)
-                    values.keys.select{ |k| 
-                        k = k.name if k.is_a?(Element)
-                        self.class.elements[k.to_sym] && self.class.elements[k.to_sym].primary_key? 
-                    }.each do |k|
-                        set!(k, values[k])
-                    end
-                    values.each do |key, val|
-                        set!(key, val)
-                    end
-                elsif (values.is_a? BaseModel)
-                    values.each_val do |name, val|
-                        set(name, val) if self.class.has_element?(name)
-                    end
-                elsif (values.is_a? Array)
-                    self.class.primary_keys.each_index do |i|
-                        set(self.class.primary_keys[i], values[i])
-                    end
-                 # Single unset key, single value
-                elsif ((empty_keys = self.class.primary_keys.select{ |key| !element_has_value?(key) }).length == 1)
-                    set(empty_keys[0], values)
-                else
-                    raise ArgumentError, "Don't know how to construct a #{self.class} from #{values.inspect}"
+            set_values(values) if values
+        end
+        
+        # Returns an instance of the Model with #autoload set to false
+        def self.static(values=nil)
+            obj = self.new
+            obj.autoload = false
+            obj.set_values(values) if values
+            return obj
+        end
+        
+        def set_values(values)
+            if (values.is_a? Hash)
+                values.keys.select{ |k| 
+                    k = k.name if k.is_a?(Element)
+                    self.class.elements[k.to_sym] && self.class.elements[k.to_sym].primary_key? 
+                }.each do |k|
+                    set!(k, values[k])
                 end
+                values.each do |key, val|
+                    set!(key, val)
+                end
+            elsif (values.is_a? BaseModel)
+                values.each_val do |name, val|
+                    set(name, val) if self.class.has_element?(name)
+                end
+            elsif (values.is_a? Array)
+                self.class.primary_keys.each_index do |i|
+                    set(self.class.primary_keys[i], values[i])
+                end
+             # Single unset key, single value
+            elsif ((empty_keys = self.class.primary_keys.select{ |key| !element_has_value?(key) }).length == 1)
+                set(empty_keys[0], values)
+            else
+                raise ArgumentError, "Don't know how to construct a #{self.class} from #{values.inspect}"
             end
         end
         
@@ -1092,7 +1096,7 @@ module Spider; module Model
                     val = element.type.new
                     val.autoload = autoload?
                 end
-            end       
+            end
             return prepare_child(name, val)
         end
         
