@@ -68,6 +68,10 @@ Spider.Widget = Class.extend({
 		$C.loadWidget(this.path, params, callback);
 	},
 	
+	isLoaded: function(){
+		return !this.el.is(':empty');
+	},
+	
 	startup: function(){},
 	ready: function(){},
 	update: function(){},
@@ -103,47 +107,30 @@ Spider.Widget = Class.extend({
 	},
 	
 	
+	ajaxifyAll: function(options){
+		this.ajaxify($('form, a', this.el), options);
+	},
+	
+	
 	ajaxify: function(el, options){
 		var w = this;
 		if (!options) options = {};
 		el.each(function(){
 			var $this = $(this);
 			if (this.tagName == 'FORM'){
-				w.ajaxifyForm($(this));
+				w.ajaxifyForm($(this), options);
 			}
 			else if (this.tagName == 'A'){
-				$this.click(function(e){
-					if (options.before){
-						var res = options.before.apply(this);
-						if (res === false) return false ;
-					}
-					e.preventDefault();
-					var a = $(e.target);
-					var url = $(this).attr('href');
-					var parts = url.split('?');
-					url = parts[0]; //+'.json';
-					url += '?';
-					if (parts[1]) url += parts[1]+'&';
-					url += '_wt='+w.path;
-					w.setLoading();
-					$.ajax({
-						url: url,
-						type: 'GET',
-						dataType: 'html',
-						success: function(res){
-							w.replaceHTML(res);
-							w.removeLoading();
-						}
-					});
-				});
+				w.ajaxifyLink($(this), options);
 			}
 		});
 
 	},
 	
-	ajaxifyForm: function(form){
+	ajaxifyForm: function(form, options){
 		var w = this;
 		var isForm = form.get(0).tagName == 'FORM';
+		if (!options) options = {};
 		$('input[type=submit]', form).click(function(e){
 			e.preventDefault();
 			w.setLoading();
@@ -155,10 +142,43 @@ Spider.Widget = Class.extend({
 				beforeSubmit: function(data, form, options){
 					data.push({name: submitName, value: submitValue});
 					data.push({name: '_wt', value: w.path});
+					if (options.before) options.before();
 				},
 				success: function(res){
 					w.replaceHTML(res);
 					w.removeLoading();
+					if (options.onLoad) options.onLoad();
+				}
+			});
+		});
+	},
+	
+	ajaxifyLink: function(a, options){
+		var w = this;
+		if (!options) options = {};
+		a.click(function(e){
+			if (options.before){
+				var res = options.before.apply(w);
+				if (res === false) return false ;
+			}
+			e.preventDefault();
+			var a = $(e.target);
+			var url = $(this).attr('href');
+			var parts = url.split('?');
+			url = parts[0]; //+'.json';
+			url += '?';
+			if (parts[1]) url += parts[1]+'&';
+			url += '_wt='+w.path;
+			if (options.before) options.before();
+			w.setLoading();
+			$.ajax({
+				url: url,
+				type: 'GET',
+				dataType: 'html',
+				success: function(res){
+					w.replaceHTML(res);
+					w.removeLoading();
+					if (options.onLoad) options.onLoad();
 				}
 			});
 		});
@@ -213,11 +233,11 @@ Spider.Widget = Class.extend({
 	},
 	
 	bind: function(eventName, callback){
-		if (!this.events[eventName]){
-			this.events[eventName] = [];
-		}
+		if (!this.events[eventName]) this.events[eventName] = [];
 		this.events[eventName].push(callback);
 	},
+	
+	on: function(eventName, callback){ return this.bind(eventName, callback); },
 	
 	trigger: function(eventName){
 		if (!this.events[eventName]) return;
@@ -311,7 +331,7 @@ Spider.WidgetBackend = Class.extend({
 		if (!options) options = {};
 		var url = this.urlForMethod(method);
 		for (var i=0; i<args.length; i++){
-			url += '&_wp[]='+args[i];
+			url += '&_wp[]='+encodeURIComponent(args[i]);
 		}
 		var data = {};
 		var callback = this.widget[method+'_response'];
@@ -321,7 +341,8 @@ Spider.WidgetBackend = Class.extend({
 			url: url,
 			type: 'POST',
 			success: callback,
-			data: data
+			data: data,
+			dataType: 'json'
 		};
 		options = $.extend(defaults, options);
 		$.ajax(options);
@@ -382,8 +403,9 @@ Spider.Controller = Class.extend({
 		var defaults = {
 			url: url,
 			type: 'POST',
-			complete: callback,
-			data: params
+			success: callback,
+			data: params,
+			dataType: 'json'
 		};
 		options = $.extend(defaults, options);
 		$.ajax(options);
