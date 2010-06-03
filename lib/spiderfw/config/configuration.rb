@@ -219,6 +219,7 @@ module Spider
                 self[key]
             end
         end
+
         
         # FIXME: temporarely allows old behaviour 
         def config(key=nil)
@@ -273,7 +274,8 @@ module Spider
         
         def to_hash
             h = {}
-            @values.each do |k, v|
+            self.options.each do |k|
+                v = self[k]
                 if v.is_a?(self.class)
                     v = v.to_hash
                     next if v.empty?
