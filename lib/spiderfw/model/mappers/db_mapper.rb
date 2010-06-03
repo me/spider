@@ -334,9 +334,9 @@ module Spider; module Model; module Mappers
                 next if !element || !element.type || element.integrated?
                 if !element.model?
                     field = schema.field(el)
+                    primary_keys << field if model_pks.include?(el)
                     unless seen_fields[field.name]
                         keys << field
-                        primary_keys << field if model_pks.include?(el)
                         seen_fields[field.name] = true
                     end
                 elsif !element.attributes[:junction]
@@ -344,9 +344,9 @@ module Spider; module Model; module Mappers
                         element.model.primary_keys.each do |key|
                             field = schema.foreign_key_field(el, key.name)
                             raise "Can't find a foreign key field for key #{key.name} of element #{el} of model #{@model}" unless field
+                            primary_keys << field if model_pks.include?(el)
                             unless seen_fields[field.name]
                                 keys << field
-                                primary_keys << field if model_pks.include?(el)
                                 seen_fields[field.name] = true
                             end
                         end
@@ -411,7 +411,7 @@ module Spider; module Model; module Mappers
             return {
                 :query_type => :select,
                 :keys => keys,
-                :primary_keys => primary_keys,
+                :primary_keys => primary_keys.uniq,
                 :tables => tables,
                 :condition => condition,
                 :joins => joins,
