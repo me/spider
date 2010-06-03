@@ -211,6 +211,7 @@ module Spider; module Model
             if attributes[:computed_from] && !attributes[:computed_from].is_a?(Enumerable)
                 attributes[:computed_from] = [attributes[:computed_from]]
             end
+            type.set_element_attributes(attributes) if type < Spider::DataType
 
 
             orig_type = type
