@@ -168,6 +168,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def start_transaction
+            return unless transactions_enabled?
             return savepoint("point#{curr[:savepoints].length}") if in_transaction?
             curr[:transaction_nesting] += 1
             Spider.logger.debug("#{self.class.name} starting transaction for connection #{connection.object_id}")
