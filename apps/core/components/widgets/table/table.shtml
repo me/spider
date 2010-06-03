@@ -1,9 +1,6 @@
 <div class="{ @widget[:css_class] }">
     <tpl:asset type="css" src="css/table.css" />
 	<tpl:asset type="js" src="widgets/table.js" />
-    <div sp:if="!@rows || @rows.length < 1" class="no_result">
-        Nessun elemento
-    </div>
     <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }">
         <thead>
             <tr class="heading_row">
@@ -44,4 +41,7 @@
             </tr>
         </tfoot>
     </table>
+    <div sp:if="!@rows || @rows.length < 1" class="no_result">
+        _(No element)
+    </div>
 </div>
