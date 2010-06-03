@@ -406,6 +406,13 @@ module Spider; module Model
             return self
         end
         
+        def with_polymorphs
+            @model.polymorphic_models.each do |model, attributes|
+                @query.with_polymorph(model)
+            end
+            self
+        end
+        
         # Sets the value of an element on all currently loaded objects.
         def set(element, value)
             element_name = element.is_a?(Element) ? element.name : element
