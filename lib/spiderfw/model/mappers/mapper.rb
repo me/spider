@@ -150,7 +150,11 @@ module Spider; module Model
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
                     sub = obj.get(el)
-                    sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
+                    if mode == :update || sub.class.auto_primary_keys?
+                        sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
+                    else
+                        sub.insert unless sub.in_storage?
+                    end
                 end
             end
             @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
