@@ -208,6 +208,9 @@ module Spider; module Model
             if (attributes[:condition] && !attributes[:condition].is_a?(Condition))
                 attributes[:condition] = Condition.new(attributes[:condition])
             end
+            if attributes[:computed_from] && !attributes[:computed_from].is_a?(Enumerable)
+                attributes[:computed_from] = [attributes[:computed_from]]
+            end
 
 
             orig_type = type
