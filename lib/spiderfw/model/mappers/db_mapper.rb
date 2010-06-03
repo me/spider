@@ -86,8 +86,10 @@ module Spider; module Model; module Mappers
                 @model.each_element do |element|
                     next if !mapped?(element) || element.integrated?
                     next if save_mode == :update && !obj.element_modified?(element)
-                    if (save_mode == :insert && element.attributes[:autoincrement] && !schema.attributes(element.name)[:autoincrement])
-                        obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
+                    if (save_mode == :insert)
+                        if element.attributes[:autoincrement] && !schema.attributes(element.name)[:autoincrement]
+                            obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
+                        end
                     end
                     if (!element.multiple?)
                         next if (save_mode == :update && element.primary_key?)
