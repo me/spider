@@ -344,18 +344,20 @@ module Spider; module Model; module Storage; module Db
                 else
                     func.mapper_fields[func_el]
                 end
-            }.join(', ')
+            }
             case func.func_name
             when :length
-                return "LENGTH(#{fields})"
+                return "LENGTH(#{fields.join(', ')})"
             when :trim
-                return "TRIM(#{fields})"
+                return "TRIM(#{fields.join(', ')})"
             when :concat
-                return "CONCAT(#{fields})"
+                return "CONCAT(#{fields.join(', ')})"
             when :substr
                 arguments = "#{func.start}"
                 arguments += ", #{func.length}" if func.length
-                return "SUBSTR(#{fields}, #{arguments})"
+                return "SUBSTR(#{fields.join(', ')}, #{arguments})"
+            when :subtract
+                return "(#{fields[0]} - #{fields[1]})"
             end
             raise NotImplementedError, "#{self.class} does not support function #{func.func_name}"
         end
