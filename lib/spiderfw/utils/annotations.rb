@@ -109,6 +109,7 @@ module Annotations
             if (@annotations)
                 @annotations.each do |method, vals|
                     vals.each do |k, args|
+                        args = [args] unless args.is_a?(Array)
                         subclass.annotate(method, k, *args)
                     end
                 end
@@ -161,7 +162,7 @@ module Annotations
             end
         end
         
-        # Defines an annotation. The given block will be called whenever the name annotation
+        # Defines an annotation. The given block will be called whenever the "name" annotation
         # is encountered; it will be passed the current Class, the annotated Method, and the annotation arguments.
         def define_annotation(name, &proc)
             @defined_annotations ||= {}
