@@ -345,7 +345,7 @@ module Spider
         end
         
         # Instantiates this widget's own subwidgets.
-        def init_widgets
+        def init_widgets(template=@template)
             if (self.class.scene_attributes)
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
@@ -353,8 +353,8 @@ module Spider
             end
             template.request = @request
             template.response = @response
-            @template.init(@scene)
-            @template.widgets.each do |name, w|
+            template.init(@scene)
+            template.widgets.each do |name, w|
                 add_widget(w)
             end
             @widgets.each do |id, w| 
