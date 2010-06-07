@@ -373,8 +373,9 @@ $.fn.ajaxSubmit = function(options) {
  * the form itself.
  */
 $.fn.ajaxForm = function(options) {
-	return this.ajaxFormUnbind().bind('submit.form-plugin', function() {
+	return this.ajaxFormUnbind().bind('submit.form-plugin', function(e) {
 		$(this).ajaxSubmit(options);
+		e.stopPropagation();
 		return false;
 	}).bind('click.form-plugin', function(e) {
 		var $el = $(e.target);
