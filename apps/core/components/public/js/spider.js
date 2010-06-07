@@ -7,7 +7,7 @@ function $W(path){
     if (Spider.widgets[path]) return Spider.widgets[path];
     var wdgt_id = path.replace(/\//g, '-');
     var wdgt = $('#'+wdgt_id);
-    if (!wdgt) return null;
+    if (wdgt.length == 0) return null;
     return Spider.Widget.initFromEl(wdgt);
 }
 
@@ -23,6 +23,8 @@ Spider.Widget = Class.extend({
     init: function(container, path, config){
         this.el = container;
         this.path = path;
+		var pathParts = path.split('/');
+		this.widgetId = pathParts[pathParts.length - 1];
         this.backend = new Spider.WidgetBackend(this);
 		this.readyFunctions = [];
 		config = $.extend({}, config);
@@ -30,6 +32,9 @@ Spider.Widget = Class.extend({
 		this.model = config.model;
         Spider.widgets[path] = this;
 		this.events = [];
+		this.onWidgetCallbacks = {};
+		this.widgets = {};
+		this.findWidgets();		
 		this.startup();
 		this.ready();
 		this.applyReady();
@@ -79,6 +84,7 @@ Spider.Widget = Class.extend({
 	replaceHTML: function(html){
 		var el = $(html);
 		this.el.html(el.html());
+		this.findWidgets();
 		this.update();
 		this.ready();
 		Spider.newHTML(this.el);
@@ -88,9 +94,32 @@ Spider.Widget = Class.extend({
 	
 	replaceEl: function(el){
 		this.el = el;
+		this.findWidgets();		
 		this.update();
 		this.ready();
 		this.applyReady();
+	},
+	
+	findWidgets: function(){
+		var self = this;
+		$('.widget', this.el).filter(function(index){
+			if ($(this).parents('.widget').get(0) == self.el.get(0)) return true;
+			return false;
+		}).each(function(){
+			var $this = $(this);
+			var w = $this.spiderWidget();
+			if (!self.widgets[w.widgetId]) self.addWidget(w.widgetId, w);
+			else self.widgets[w.widgetId].replaceEl($this);
+		});
+	},
+	
+	addWidget: function(id, w){
+		this.widgets[id] = w;
+		if (this.onWidgetCallbacks[id]){
+			for (var i=0; i<this.onWidgetCallbacks[id].length; i++){
+				this.onWidgetCallbacks[id][i].call(this, w);
+			}
+		}
 	},
 	
 	paramName: function(key){
@@ -108,12 +137,35 @@ Spider.Widget = Class.extend({
 	
 	
 	ajaxifyAll: function(options){
-		this.ajaxify($('form, a', this.el), options);
+		var els = $('form:not(.ajaxified), a:not(.ajaxified)', this.el);
+		if (!options) options = {};
+		if (options.filter) els = els.filter(options.filter);
+		if (options.not) els = els.not(options.not);
+		this.ajaxify(els, options);
+	},
+	
+	findWidgetsAjaxifiable: function(options){
+		var selfEl = this.el.get(0);
+		return $('form:not(.ajaxified), a:not(.ajaxified)', this.el).filter(function(index){
+			var p = $(this).parent();
+			while (p){
+				if (p.is('.widget')){
+					if (p.get(0) == selfEl) return true;
+					return false;
+				}
+				p = p.parent();
+			}
+			return false;
+		});
 	},
 	
 	
 	ajaxify: function(el, options){
 		var w = this;
+		if (!el || !el.eq){
+			options = el;
+			el = this.findWidgetsAjaxifiable();
+		}
 		if (!options) options = {};
 		el.each(function(){
 			var $this = $(this);
@@ -128,14 +180,15 @@ Spider.Widget = Class.extend({
 	},
 	
 	ajaxifyForm: function(form, options){
-		var w = this;
 		var isForm = form.get(0).tagName == 'FORM';
 		if (!options) options = {};
-		$('input[type=submit]', form).click(function(e){
+		$('input[type=submit]', form).addClass('ajaxified').bind('click.ajaxify', function(e){
+			var $this = $(this);
+			var w = $this.parentWidget();
 			e.preventDefault();
 			w.setLoading();
-			var submitName = $(this).attr('name');
-			var submitValue = $(this).val();
+			var submitName = $this.attr('name');
+			var submitValue = $this.val();
 			form.ajaxSubmit({
 				dataType: 'html',
 				semantic: !isForm,
@@ -156,7 +209,7 @@ Spider.Widget = Class.extend({
 	ajaxifyLink: function(a, options){
 		var w = this;
 		if (!options) options = {};
-		a.click(function(e){
+		a.addClass('ajaxified').bind('click.ajaxify', function(e){
 			if (options.before){
 				var res = options.before.apply(w);
 				if (res === false) return false ;
@@ -264,7 +317,12 @@ Spider.Widget = Class.extend({
 	},
 	
 	widget: function(id){
-		return $W(this.path+'/'+id);
+		return this.widgets[id];
+	},
+	
+	onWidget: function(id, callback){
+		if (!this.onWidgetCallbacks[id]) this.onWidgetCallbacks[id] = [];
+		this.onWidgetCallbacks[id].push(callback);
 	}
 	
 	
@@ -329,22 +387,27 @@ Spider.WidgetBackend = Class.extend({
 
 	send: function(method, args, options){
 		if (!options) options = {};
-		var url = this.urlForMethod(method);
-		for (var i=0; i<args.length; i++){
-			url += '&_wp[]='+encodeURIComponent(args[i]);
-		}
-		var data = {};
-		var callback = this.widget[method+'_response'];
-		if (!callback) callback = options.callback;
-		if (!callback) callback = function(){};
 		var defaults = {
 			url: url,
 			type: 'POST',
-			success: callback,
-			data: data,
 			dataType: 'json'
 		};
 		options = $.extend(defaults, options);
+		if (!options.format) options.format = options.dataType;
+		var url = this.baseUrl;
+		var data = {};
+		if ($.isPlainObject(args[0])) data = args[0];
+		else data = {'_wp': args};
+		$.extend(data, {
+			'_wt': this.widget.path,
+			'_we': method,
+			'_wf': options.format
+		});
+		var callback = this.widget[method+'_response'];
+		if (!callback) callback = options.callback;
+		if (!callback) callback = function(){};
+		options.success = callback;
+		options.data = data;
 		$.ajax(options);
 	}
 
@@ -490,7 +553,9 @@ $(document).ready(function(){
 
 $.fn.spiderWidget = function(){
 	if (!this.attr('id')) return;
-	return $W(Spider.Widget.pathFromId(this.attr('id')));
+	var path = Spider.Widget.pathFromId(this.attr('id'));
+	if (Spider.widgets[path]) return Spider.widgets[path];
+	return Spider.Widget.initFromEl(this);
 };
 
 $.fn.parentWidget = function(){
