@@ -26,6 +26,7 @@ module Spider
             def inherited(subclass)
                 subclass.instance_variable_set(:@attributes, attributes.clone)
                 subclass.instance_variable_set(:@scene_attributes, @scene_attributes.clone) if @scene_attributes
+                super
             end
             
             def attribute(name, params={})
