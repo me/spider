@@ -210,6 +210,7 @@ module Spider; module Model; module Storage; module Db
                  return curr[:last_result] ? curr[:last_result].length : nil
              end
              q.delete(:offset); q.delete(:limit)
+             q[:query_type] = :count
              sql, vars = sql_select(q)
              res = execute("SELECT COUNT(*) AS N FROM (#{sql})", *vars)
              return nil unless res && res[0]
@@ -284,12 +285,13 @@ module Spider; module Model; module Storage; module Db
              bind_vars += vals
              sql += "WHERE #{where} " if where && !where.empty?
              order = sql_order(query, replaced_fields)
-             if (query[:limit])
+             if (query[:limit] || query[:query_type] == :count)
+                 limit = nil
                  if (query[:offset])
                      limit = "oci8_row_num between :#{curr[:bind_cnt]+=1} and :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:offset] + 1
                      bind_vars << query[:offset] + query[:limit]
-                 else
+                 elsif query[:limit]
                      limit = "oci8_row_num < :#{curr[:bind_cnt]+=1}"
                      bind_vars << query[:limit] + 1
                  end
@@ -303,7 +305,11 @@ module Spider; module Model; module Storage; module Db
                      data_sql = "#{sql} order by #{order}"
                  end
                  count_sql = "SELECT /*+ FIRST_ROWS(n) */ a.*, ROWNUM oci8_row_num FROM (#{data_sql}) a"
-                 sql = "SELECT * FROM (#{count_sql}) WHERE #{limit}"
+                 if limit
+                     sql = "SELECT * FROM (#{count_sql}) WHERE #{limit}"
+                 else
+                     sql = count_sql
+                 end
              else
                  sql += "ORDER BY #{order} " if order && !order.empty?
              end
