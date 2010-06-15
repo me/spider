@@ -207,6 +207,78 @@ module Spider
             
         end
         
+        def self.sort(models)
+
+            sorter = Sorter.new(models)
+            sorter.sort
+        end
+        
+        require 'tsort'
+        
+        class Sorter
+            include TSort
+            
+            def initialize(models)
+                @model_tasks = {}
+                @processed_deps = {}
+                @processed = {}
+                @models = models
+                @models.each{ |m| collect_dependencies(m) }
+            end
+            
+            def tsort_each_node(&block)
+                 @model_tasks.each_value(&block)
+             end
+
+             def tsort_each_child(node, &block)
+                 node.dependencies.each(&block)
+             end
+
+             def collect_dependencies(model)
+                 return if model.subclass_of?(Spider::Model::InlineModel)
+                 @processed_deps[model] = true
+                 @model_tasks[model] ||= SortTask.new(model)
+                 if @models.include?(model.superclass)
+                     @model_tasks[model.superclass] ||= SortTask.new(model.superclass)
+                     @model_tasks[model] << @model_tasks[model.superclass]
+                 end
+             end
+
+
+             def sort
+                 tasks = tsort
+                 tasks.map{ |t| t.model }
+             end
+
+
+             def length
+               @model_tasks.keys.length
+             end
+            
+        end
+        
+        class SortTask
+            attr_reader :model, :dependencies
+            
+            def initialize(model)
+                @model = model
+                @dependencies = []
+            end
+            
+            def <<(model)
+                @dependencies << model
+            end
+            
+            def eql?(other)
+                @model == other.model
+            end
+            
+            def inspect
+                "#{@model.name} -> (#{dependencies.map{|d| d.model.name }.join(', ')})"
+            end
+                
+        end
+        
     end
     
 
