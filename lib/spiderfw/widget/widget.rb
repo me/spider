@@ -278,6 +278,7 @@ module Spider
             Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
             prepare
+            prepare_scene(@scene)
             @before_done = true
         end
         
@@ -428,6 +429,7 @@ module Spider
         
         def render
             prepare_scene(@scene)
+            set_scene_vars(@scene)
             @template.render(@scene) unless @target_mode && !@is_target
         end
         
@@ -637,11 +639,7 @@ module Spider
         
         def prepare_scene(scene)
             scene = super
-            if (self.class.scene_attributes) # Repeat for new instance variables
-                self.class.scene_attributes.each do |name|
-                    @scene[name] = instance_variable_get("@#{name}")
-                end
-            end
+            
             # FIXME: owner_controller should be (almost) always defined
             scene.controller[:request_path] = owner_controller.request_path if owner_controller
             scene.widget[:request_path] = widget_request_path
@@ -653,6 +651,14 @@ module Spider
             end
             scene.extend(WidgetScene)
             return scene
+        end
+        
+        def set_scene_vars(scene)
+            if (self.class.scene_attributes) # Repeat for new instance variables
+                self.class.scene_attributes.each do |name|
+                    @scene[name] = instance_variable_get("@#{name}")
+                end
+            end
         end
         
         def css_class
