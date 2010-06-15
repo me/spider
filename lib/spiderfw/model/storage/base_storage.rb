@@ -69,7 +69,7 @@ module Spider; module Model; module Storage
         def sequence_next(name, newval=nil, increment=1)
             path = sequence_file_path(name)
             FileUtils.mkpath(File.dirname(path))
-            self.class.sequence_sync.lock(Sync::EX)
+            self.class.sequence_sync.lock(::Sync::EX)
             if newval
                 seq = newval
             else
