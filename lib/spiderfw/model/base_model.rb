@@ -226,7 +226,7 @@ module Spider; module Model
                (attributes[:has_single_reverse] == false || !attributes[:reverse] ||  (!type.elements[attributes[:reverse]] || type.elements[attributes[:reverse]].multiple?))))
                 attributes[:anonymous_model] = true
                 attributes[:owned] = true unless attributes[:owned] != nil
-                first_model = self.first_definer(name)
+                first_model = self.first_definer(name, type)
                 assoc_type_name = Spider::Inflector.camelize(name)
                 create_junction = true
                 if (attributes[:through])
@@ -818,13 +818,13 @@ module Spider; module Model
         
         # Returns the model actually defining element_name; that could be the model
         # itself, a superclass, or an integrated model.
-        def self.first_definer(element_name)
-            if (@extended_models && @extended_models[self.superclass] && self.superclass.elements[element_name])
-                return self.superclass.first_definer(element_name)
+        def self.first_definer(element_name, type)
+            if (@extended_models && @extended_models[self.superclass] && self.superclass.elements[element_name] && self.superclass.elements[element_name].type == type)
+                return self.superclass.first_definer(element_name, type)
             end
             if (self.attributes[:integrated_models])
                 self.attributes[:integrated_models].keys.each do |mod|
-                    return mod.first_definer(element_name) if (mod.elements[element_name])
+                    return mod.first_definer(element_name, type) if (mod.elements[element_name] && mod.elements[element_name].type == type)
                 end
             end
             return self
