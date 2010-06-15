@@ -5,16 +5,16 @@ module Spider; module Model
     module Versioned
         
         def self.included(model)
-            
             model.extend(ClassMethods)
             model.mapper_include(Mapper)
+            #model.versioning
             vmod = Class.new(model)
             vmod.primary_keys.each do |pk|
                 vmod.element_attributes(pk.name, :primary_key => false)
             end
-            model.const_set("Versioned", vmod)
+            model.const_set(:Versioned, vmod)
             model.set_version_model(nil, vmod)
-            model.element(:sha1, String, :length => 40)
+            model.element(:v_sha1, String, :length => 40)
         end
         
         module ClassMethods
@@ -31,13 +31,16 @@ module Spider; module Model
               end
               vmod = @version_models[branch]
               vmod.primary_keys.each do |pk|
-                  vmod.delete_element(pk.name)
+                  vmod.remove_element(pk.name)
               end
               vmod.elements_array.each do |el|
                   el.attributes[:autoincrement] = false
               end
-              vmod.element(:sha1, String, :primary_key => true, :length => 40)
-              vmod.element(self.short_name.to_sym, self, :add_multiple_reverse => :history)
+              vmod.remove_element(:v_sha1) if vmod.elements[:v_sha1]
+              vmod.remove_element(:v_original) if vmod.elements[:v_original]
+              vmod.remove_element(:version_date) if vmod.elements[:version_date]
+              vmod.element(:v_sha1, String, :primary_key => true, :length => 40)
+              vmod.element(:v_original, self, :add_multiple_reverse => :history)
               vmod.element(:version_date, DateTime)
               self.elements_array.each do |el|
                   elh = dump_element(el)
@@ -74,7 +77,7 @@ module Spider; module Model
            end
            
            def version_element(el=nil)
-               return :sha1 unless el
+               return :v_sha1 unless el
                el = el.name if el.respond_to?(:name)
                @version_elements[el]
            end
@@ -96,7 +99,7 @@ module Spider; module Model
            def save_done(obj, mode)
                obj.set(obj.class.version_element, obj.version_sha1)
                obj.reset_modified_elements
-               obj.set_modified(:sha1 => true)
+               obj.set_modified(:v_sha1 => true)
                obj.mapper.do_update(obj)
                super
            end
@@ -104,7 +107,7 @@ module Spider; module Model
         end
         
         def version_sha1
-            yaml = self.to_yaml(:except => [:sha1])
+            yaml = self.to_yaml(:except => [:v_sha1])
             sha1 = Digest::SHA1.hexdigest(yaml)
         end
         
