@@ -334,8 +334,12 @@ module Spider; module Model
                         element.mapper.bulk_update({our_element => nil}, condition)
                     end
                 end
-                val.set(our_element, obj)
-                val.save
+                val.each do |v|
+                    if v.get(our_element) != obj
+                        v.set(our_element, obj)
+                        v.save
+                    end
+                end
             end
         end
         
