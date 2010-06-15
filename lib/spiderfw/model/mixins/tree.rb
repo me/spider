@@ -36,10 +36,11 @@ module Spider; module Model
                attributes[:association] = :tree
                attributes[:multiple] = true
                attributes[:reverse] ||= :"#{name}_parent"
+               attributes[:reverse_attributes] = {:association => :tree_parent}.merge(attributes[:reverse_attributes] || {})
                attributes[:tree_left] ||= :"#{name}_left"
                attributes[:tree_right] ||= :"#{name}_right"
                attributes[:tree_depth] ||= :"#{name}_depth"
-               choice(attributes[:reverse], self, :association => :tree_parent)
+               choice(attributes[:reverse], self, attributes[:reverse_attributes])
                element(name, self, attributes)
                element(attributes[:tree_left], Fixnum, :hidden => true)
                element(attributes[:tree_right], Fixnum, :hidden => true)
