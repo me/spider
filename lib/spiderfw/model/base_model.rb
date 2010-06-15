@@ -1380,8 +1380,8 @@ module Spider; module Model
         # not contain all of the current model's elements.
         def subclass(model)
             obj = model.new
-            elements_array.each do |el|
-                obj.set(el, self.get(el)) if element_has_value?(el)
+            self.class.elements_array.each do |el|
+                obj.set(el, self.get(el)) if element_has_value?(el) && model.elements[el.name]
             end
             return obj
         end
