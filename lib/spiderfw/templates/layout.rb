@@ -8,6 +8,15 @@ module Spider
             super
             @template = @template.is_a?(Template) ? @template : Template.new(@template)
             @template.init(scene) unless @template.init_done?
+            
+        end
+        
+        def render(*args)
+            prepare_assets unless @assets_prepared
+            super
+        end
+        
+        def prepare_assets
             @template_assets = {:css => [], :js => []}
             seen = {}
             all_assets.each do |res|
@@ -17,7 +26,8 @@ module Spider
                 @template_assets[res[:type].to_sym] << res[:src]
             end
             @content[:yield_to] = @template
-            scene.assets = @template_assets
+            @scene.assets = @template_assets
+            @assets_prepared = true
         end
         
         @@named_layouts = {}
