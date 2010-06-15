@@ -279,6 +279,8 @@ module Spider
             doc = open(path){ |f| Hpricot.XML(f) }
             root = doc.root
             overrides = []
+            orig_overrides = @overrides
+            @overrides = []
             if root.children
                 override_tags.each do |tag|
                     overrides += root.children_of_type('tpl:'+tag)
@@ -287,7 +289,11 @@ module Spider
             overrides.each{ |o| o.set_attribute('class', 'to_delete') }
             root.search('.to_delete').remove
             add_overrides overrides
+            @overrides += orig_overrides
             if (root.name == 'tpl:extend')
+
+                orig_overrides = @overrides
+                @overrides = []
                 ext_src = root.get_attribute('src')
                 ext_app = root.get_attribute('app')
                 ext_widget = root.get_attribute('widget')
@@ -308,6 +314,7 @@ module Spider
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
+                @overrides += orig_overrides
                 if (assets && !assets.empty?)
                     assets.each do |ass|
                         root.innerHTML += ass.to_html
