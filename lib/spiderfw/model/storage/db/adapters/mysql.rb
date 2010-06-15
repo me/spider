@@ -266,6 +266,9 @@ module Spider; module Model; module Storage; module Db
              tables_sql, tables_values = sql_tables(query)
              sql = "SELECT "
              sql += "SQL_CALC_FOUND_ROWS " unless query[:query_type] == :count
+             if query[:joins] && query[:joins].values.map{ |h| h.values }.flatten.select{ |v| v[:type] == :left}.length > 0
+                 sql += "DISTINCT "
+             end
              sql += "#{sql_keys(query)} FROM #{tables_sql} "
              bind_vars += tables_values
              where, vals = sql_condition(query)
