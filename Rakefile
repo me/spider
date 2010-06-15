@@ -5,7 +5,10 @@ require 'pathname'
 def check_app_path(full, partial)
     p = Pathname.new(full)
     rel = p.relative_path_from(Pathname.new(Spider.paths[:core_apps]))
-    return rel.to_s == partial
+    return true if rel.to_s == partial
+    rel = p.relative_path_from(Pathname.new(Spider.paths[:apps]))
+    return true if rel.to_s == partial
+    return false
 end
 
 desc "Update pot/po files. To update a single app, call rake updatepo[app_relative_path], where app_relative_path is the path relative to the apps folder (or 'spider')."
