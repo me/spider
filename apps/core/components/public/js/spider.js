@@ -200,7 +200,8 @@ Spider.Widget = Class.extend({
 				success: function(res){
 					w.replaceHTML(res);
 					w.removeLoading();
-					if (options.onLoad) options.onLoad();
+					if (options.onLoad) options.onLoad(form);
+					w.trigger('ajaxifyLoad', form);
 				}
 			});
 		});
@@ -231,14 +232,15 @@ Spider.Widget = Class.extend({
 				success: function(res){
 					w.replaceHTML(res);
 					w.removeLoading();
-					if (options.onLoad) options.onLoad();
+					if (options.onLoad) options.onLoad(a);
+					w.trigger('ajaxifyLoad', a);
 				}
 			});
 		});
 	},
 	
 	setLoading: function(){
-		if (this.el.is(':empty')){
+		if (this.el.is(':empty') || this.el.children().hasClass('empty-placeholder')){
 			this.el.addClass('loading-empty');
 		}
 		else{
