@@ -113,6 +113,14 @@ module Spider
                 return res ? res.path : nil
             end
             
+            def url=(url)
+                @url = url
+            end
+            
+            def url
+                @url || ''
+            end
+            
             
         end
         
