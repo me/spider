@@ -14,6 +14,9 @@ module Spider
             @env = env
             @locale = Locale.current[0]
             @misc = {}
+            @params = {}
+            @action = ""
+            @session = {}
         end
         
         def body=(b)
