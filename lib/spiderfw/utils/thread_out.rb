@@ -21,4 +21,19 @@ module ThreadOut #:nodoc:
       self.write(stuff)
   end
   
+  def self.output_to(io)
+      if block_given?
+          prev_out = Thread.current[:stdout]
+          Thread.current[:stdout] = io
+          yield
+          Thread.current[:stdout] = prev_out
+      else
+          Thread.current[:stdout] = io
+      end
+  end
+  
+  def output_to(io, &proc)
+      self.class.output_to(io, &proc)
+  end
+  
 end
