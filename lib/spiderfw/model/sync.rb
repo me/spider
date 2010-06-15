@@ -11,15 +11,21 @@ module Spider; module Model
             @processed = {}
         end
         
-        def add(model)
-            collect_dependencies(model)
+        def add(models)
+            models = [models] unless models.is_a?(Array)
+            models.each do |model|
+                collect_dependencies(model)
+            end
+        end
+        
+        def sorted
+            tasks = tsort
+            tasks.map{ |t| t.model }
         end
         
         def each
-            tasks = tsort
-            pp tasks
-            tasks.each do |task|
-                yield task.model
+            sorted.each do |model|
+                yield model
             end
         end
         
