@@ -294,7 +294,11 @@ module Spider; module Model
         
         # True if there are no comparisons and no subconditions.
         def empty?
-            return super && @subconditions.empty?
+            return false unless super
+            @subconditions.each do |sub|
+                return false unless sub.empty?
+            end
+            return true
         end
         
         alias :hash_replace :replace  # :nodoc:
