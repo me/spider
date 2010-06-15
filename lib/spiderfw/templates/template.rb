@@ -301,6 +301,7 @@ module Spider
                     ext_widget = Spider::Template.get_registered_class(ext_widget)
                     ext_src ||= ext_widget.default_template
                     ext_owner = ext_widget
+                    ext_app = ext_widget.app
                 elsif ext_app
                     ext_app = Spider.apps_by_path[ext_app]
                     ext_owner = ext_widget
@@ -314,6 +315,12 @@ module Spider
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
+                root.children_of_type('tpl:asset').each do |ass|
+                    ass_src = ass.get_attribute('src')
+                    unless ass_src[0].chr == '/'
+                        ass.set_attribute('src', "/#{ext_app.relative_path}/#{ass_src}")
+                    end
+                end
                 @overrides += orig_overrides
                 if (assets && !assets.empty?)
                     assets.each do |ass|
