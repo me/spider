@@ -93,6 +93,10 @@ module Spider; module Model
             subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
         end
         
+        def self.subclasses
+            @subclasses || []
+        end
+        
         # Returns the parent Spider::App of the module
         def self.app
             return @app if @app
