@@ -420,7 +420,6 @@ Spider.WidgetBackend = Class.extend({
 	send: function(method, args, options){
 		if (!options) options = {};
 		var defaults = {
-			url: url,
 			type: 'POST',
 			dataType: 'json'
 		};
@@ -438,8 +437,10 @@ Spider.WidgetBackend = Class.extend({
 		var callback = this.widget[method+'_response'];
 		if (!callback) callback = options.callback;
 		if (!callback) callback = function(){};
+		delete(options.callback);
 		options.success = callback;
 		options.data = data;
+		options.url = url;
 		$.ajax(options);
 	}
 
