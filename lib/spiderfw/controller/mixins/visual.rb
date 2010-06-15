@@ -61,12 +61,13 @@ module Spider; module ControllerMixins
             @visual_params ||= {}
         end
         
-        def init_widgets(template)
+        def init_widgets(template, layout=nil)
             widget_target = @request.params['_wt']
             widget_execute = @request.params['_we']
             if (widget_target && !@rendering_error)
                 first, rest = widget_target.split('/', 2)
-                @_widget = find_widget(first)
+                @_widget = template.find_widget(first)
+                @_widget = layout.find_widget(first) if !@_widget && layout
                 raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
                 @_widget.is_target = true unless rest
                 @_widget.set_action(widget_execute) if widget_execute
@@ -74,6 +75,7 @@ module Spider; module ControllerMixins
                 @_widget.widget_target = rest
             end
             template.do_widgets_before
+            layout.do_widgets_before if layout
             if @_widget
                 @_widget.execute
                 done
@@ -167,17 +169,10 @@ module Spider; module ControllerMixins
             end
             return template
         end
-        
-        def render_layout(path, content={})
-            layout = self.class.load_layout(path)
-            layout.request = @request
-            layout.render(content)
-        end
-        
+                
         def init_layout(layout)
             l = layout.is_a?(Layout) ? layout : self.class.load_layout(layout)
-            l.owner = self
-            l.request = request
+            prepare_template(l)
             return l
         end
         
@@ -192,19 +187,23 @@ module Spider; module ControllerMixins
             else
                 template = get_template(path, scene, options)
             end
-            init_widgets(template)
-            return template if done?
+            layout = nil
             chosen_layouts = options[:layout] || @layout
             chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
             if (chosen_layouts)
                 t = template
-                l = nil
+                layout = nil
                 (chosen_layouts.length-1).downto(0) do |i|
-                    l = init_layout(chosen_layouts[i])
-                    l.template = t
-                    t = l
+                    layout = init_layout(chosen_layouts[i])
+                    layout.template = t
+                    t = layout
                 end
-                l.render(scene)
+            end
+            layout.init(scene) if layout
+            init_widgets(template, layout)
+            return template if done?
+            if layout
+                layout.render(scene)
             else
                 template.render(scene)
             end
