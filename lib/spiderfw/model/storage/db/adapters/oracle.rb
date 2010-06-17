@@ -1,9 +1,8 @@
 require 'spiderfw/model/storage/db/db_storage'
-require 'oci8'
 
 module Spider; module Model; module Storage; module Db
     
-    class OCI8 < DbStorage
+    class Oracle < DbStorage
         @capabilities = {
             :autoincrement => false,
             :sequences => true,
@@ -22,36 +21,7 @@ module Spider; module Model; module Storage; module Db
             super << Spider::DataTypes::Binary
         end
         
-        def self.new_connection(user, pass, dbname, role)
-            conn ||= ::OCI8.new(user, pass, dbname, role)
-            conn.autocommit = true
-            conn.non_blocking = true
-            return conn
-        end
-        
-        def self.disconnect(conn)
-            conn.logoff
-        end
-        
-        def self.connection_alive?(conn)
-            # TODO: move to ping method when ruby-oci8 2.x is stable
-            begin
-                conn.autocommit?
-                return true
-            rescue
-                return false
-            end
-        end
-        
-        def release
-            begin
-                curr[:conn].autocommit = true if curr[:conn]
-                super
-            rescue
-                self.class.remove_connection(curr[:conn], @connection_params)
-                curr[:conn] = nil
-            end
-        end
+
         
         def parse_url(url)
             # db:oracle://<username:password>:connect_role@<database>
@@ -64,46 +34,12 @@ module Spider; module Model; module Storage; module Db
                 @role = $3
                 @dbname = $4
             else
-                raise ArgumentError, "OCI8 url '#{url}' is invalid"
+                raise ArgumentError, "Oracle url '#{url}' is invalid"
             end
             @connection_params = [@user, @pass, @dbname, @role]
         end
         
 
-        def do_start_transaction
-            return unless transactions_enabled?
-            connection.autocommit = false
-        end
-        
-        def in_transaction?
-            return false unless transactions_enabled?
-            return curr[:conn] && !curr[:conn].autocommit?
-        end
-        
-        def do_commit
-            return release unless transactions_enabled?
-            curr[:conn].commit if curr[:conn]
-            release
-        end
-        
-        def do_rollback
-            return release unless transactions_enabled?
-            curr[:conn].rollback
-            release
-        end
-        
-        def prepare_value(type, value)
-            value = super
-            if (type < Spider::Model::BaseModel)
-                type = type.primary_keys[0].type
-            end
-            return OCI8NilValue.new(Spider::Model.ruby_type(type)) if (value == nil)
-            case type.name
-            when 'Spider::DataTypes::Binary'
-                return OCI8::BLOB.new(curr[:conn], value)
-            end
-            return value
-        end
         
         def value_for_condition(type, value)
             return value if value.nil?
@@ -125,83 +61,7 @@ module Spider; module Model; module Storage; module Db
             return super(type, value)
         end
 
-         def execute(sql, *bind_vars)
-             begin
-                 if (bind_vars && bind_vars.length > 0)
-                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
-                 end
-                 curr[:last_executed] = [sql, bind_vars]
-                 if (Spider.conf.get('storage.db.replace_debug_vars'))
-                     debug("oci8 #{connection} executing: "+sql.gsub(/:(\d+)/){
-                         i = $1.to_i
-                         v = bind_vars[i-1]
-                         dv = debug_vars[i-1]
-                         v.is_a?(String) ? "'#{dv}'" : dv
-                     })
-                 else
-                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
-                     debug("oci8 #{connection} executing:\n#{sql}\n[#{debug_vars_str}]")
-                 end
-                 cursor = connection.parse(sql)
-                 return cursor if (!cursor || cursor.is_a?(Fixnum))
-                 bind_vars.each_index do |i|
-                     var = bind_vars[i]
-                     if (var.is_a?(OCI8NilValue))
-                         cursor.bind_param(i+1, nil, var.type, 0)
-                     else
-                         cursor.bind_param(i+1, var)
-                     end
-                 end
-                 res = cursor.exec
-                 have_result = (cursor.type == ::OCI8::STMT_SELECT)
-                 # @cursor = connection.exec(sql, *bind_vars)
-                 if (have_result)
-                     result = []
-                     while (h = cursor.fetch_hash)
-                         h.each do |key, val|
-                             if val.respond_to?(:read)
-                                 h[key] = val.read
-                             end
-                         end
-                         if block_given?
-                             yield h
-                         else
-                             result << h
-                         end
-                     end
-                 end
-                 if (have_result)
-                     unless block_given?
-                         result.extend(StorageResult)
-                         curr[:last_result] = result
-                         return result
-                     end
-                 else
-                     return res
-                 end
-                 cursor.close
 
-             rescue => exc
-                 curr[:conn].break if curr[:conn]
-                 rollback! if in_transaction?
-                 #curr[:conn].logoff
-                 release
-                 raise
-             ensure
-                 cursor.close if cursor
-                 release if curr[:conn] && !in_transaction?
-             end
-         end
-         
-
-         def prepare(sql)
-             debug("oci8 preparing: #{sql}")
-             return connection.parse(sql)
-         end
-
-         def execute_statement(stmt, *bind_vars)
-             stmt.exec(bind_vars)
-         end
          
          def total_rows
              return nil unless curr[:last_executed]
@@ -251,9 +111,8 @@ module Spider; module Model; module Storage; module Db
              # Spider::Logger.debug("SQL SELECT:")
              # Spider::Logger.debug(query)
              bind_vars = query[:bind_vars] || []
-             order_on_different_table = false
+             query[:order_replacements] ||= {}
              if query[:limit] # Oracle is so braindead
-                 replaced_fields = {}
                  replace_cnt = 0
                  # add first field to order if none is found; order is needed for limit
                  query[:order] << [query[:keys][0], 'desc'] if query[:order].length < 1
@@ -265,15 +124,18 @@ module Spider; module Model; module Storage; module Db
                      #       i = query[:keys].length < 1
                      #   end
                      transformed = "O#{replace_cnt += 1}"
-                     replaced_fields[field.to_s] = transformed
-                     order_on_different_table = true if field.is_a?(Spider::Model::Storage::Db::Field) && !query[:tables].include?(field.table)
+                     query[:order_replacements][field.to_s] = transformed
+                     if field.is_a?(Spider::Model::Storage::Db::Field) && !query[:tables].include?(field.table)
+                         query[:order_on_different_table] = true 
+                     end
                      if field.is_a?(FieldFunction)
-                         order_on_different_table = true if field.joins.length > 0
+                         query[:order_on_different_table] = true if field.joins.length > 0
                      end
                      if (field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB')
                          field = "CAST(#{field} as varchar2(100))"
                      end
-                     query[:keys] << "#{field} AS #{transformed}"
+                     
+                     query[:keys] << Db::FieldExpression.new(field.table, transformed, field.type, :expression => "#{field}")
                  end
              end
              keys = sql_keys(query)
@@ -284,7 +146,7 @@ module Spider; module Model; module Storage; module Db
              where, vals = sql_condition(query)
              bind_vars += vals
              sql += "WHERE #{where} " if where && !where.empty?
-             order = sql_order(query, replaced_fields)
+             order = sql_order(query, query[:order_replacements])
              if (query[:limit] || query[:query_type] == :count)
                  limit = nil
                  if (query[:offset])
@@ -296,7 +158,7 @@ module Spider; module Model; module Storage; module Db
                      bind_vars << query[:limit] + 1
                  end
                  if (!query[:joins].empty?)
-                     data_tables_sql = order_on_different_table ? tables_sql : query[:tables].join(', ')
+                     data_tables_sql = query[:order_on_different_table] ? tables_sql : query[:tables].join(', ')
                      pk_sql = query[:primary_keys].join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
@@ -406,31 +268,20 @@ module Spider; module Model; module Storage; module Db
          end
 
          def describe_table(table)
-             columns = {}
              primary_keys = []
              o_foreign_keys = {}
+             columns = {}
              connection do |conn|
-                 t = conn.describe_table(table)
-                 t.columns.each do |c|
-                     col = {
-                         :type => c.data_type.to_s.upcase,
-                         :length => c.data_size,
-                         :precision => c.precision,
-                         :scale => c.scale,
-                         :null => c.nullable?
-                     }
-                     col.delete(:length) if (col[:precision])
-                     columns[c.name] = col
-                 end
-                 res = conn.exec("SELECT cols.table_name, cols.COLUMN_NAME, cols.position, cons.status, cons.owner
+                 columns = do_describe_table(conn, table)
+                 res = execute("SELECT cols.table_name, cols.COLUMN_NAME, cols.position, cons.status, cons.owner
                  FROM user_constraints cons, user_cons_columns cols
                  WHERE cons.constraint_type = 'P'
                  AND cons.constraint_name = cols.constraint_name
                  AND cols.table_name = '#{table}'")
-                 while h = res.fetch_hash
+                 res.each do |h|
                      primary_keys << h['COLUMN_NAME']
                  end
-                 res = conn.exec("SELECT cons.constraint_name as CONSTRAINT_NAME, cols.column_name as REFERENCED_COLUMN,
+                 res = execute("SELECT cons.constraint_name as CONSTRAINT_NAME, cols.column_name as REFERENCED_COLUMN,
                  cols.table_name as REFERENCED_TABLE, cons.column_name as COLUMN_NAME
                  FROM user_tab_columns col
                      join user_cons_columns cons
@@ -443,7 +294,7 @@ module Spider; module Model; module Storage; module Db
                       and cons.position = cols.position
                  WHERE cc.constraint_type = 'R'
                  AND cons.table_name = '#{table}'")
-                 while h = res.fetch_hash
+                 res.each do |h|
                      fk_name = h['CONSTRAINT_NAME']
                      o_foreign_keys[fk_name] ||= {:table => h['REFERENCED_TABLE'], :columns => {}}
                      o_foreign_keys[fk_name][:columns][h['COLUMN_NAME']] = h['REFERENCED_COLUMN']
@@ -457,17 +308,6 @@ module Spider; module Model; module Storage; module Db
 
          end
 
-         def table_exists?(table)
-             begin
-                 connection do |c|
-                     c.describe_table(table)
-                 end
-                 Spider.logger.debug("TABLE EXISTS #{table}")
-                 return true
-             rescue OCIError
-                 return false
-             end
-         end
          
          # Schema methods
          
@@ -535,28 +375,32 @@ module Spider; module Model; module Storage; module Db
              return true
          end
          
+         class OracleNilValue
+             attr_accessor :type
+
+             def initialize(type)
+                 @type = type
+                 @type = Fixnum if @type == TrueClass || @type == FalseClass
+             end
+
+             def to_s
+                 'NULL'
+             end
+
+         end
+         
         
     end
     
-    class OCI8NilValue
-        attr_accessor :type
-        
-        def initialize(type)
-            @type = type
-            @type = Fixnum if @type == TrueClass || @type == FalseClass
-        end
-        
-        def to_s
-            'NULL'
-        end
-        
-    end
+
+    
+
     
     ###############################
     #   Exceptions                #
     ###############################
     
-    class OCI8Exception < RuntimeError
+    class OracleException < RuntimeError
     end
     
 end; end; end; end

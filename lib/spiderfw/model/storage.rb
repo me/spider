@@ -19,28 +19,39 @@ module Spider; module Model
                     adapter = $2
                     url = "#{adapter}://#{rest}"
                 end
-                case adapter
+                class_name = case adapter
                 when 'sqlite'
-                    class_name = :SQLite
-                when 'oci8'
-                    class_name = :OCI8
+                    :SQLite
+                when 'oci8', 'oracle'
+                    :Oracle
                 when 'mysql'
-                    class_name = :Mysql
+                    :Mysql
                 when 'mssql'
-                    class_name = :MSSQL
+                    :MSSQL
                 end
                 klass = Db.const_get(class_name)
-                if (connector)
-                    case connector
-                    when 'odbc'
-                        conn_mod = :ODBC
+                unless connector
+                    connector = case adapter
+                    when 'oci8', 'oracle'
+                        RUBY_PLATFORM =~ /java/ ? 'jdbc' : 'oci8'
                     end
-                    conn_class = "#{conn_mod}#{class_name}"
-                    if Db.const_defined?(conn_class)
-                        klass = Db.const_get(conn_class)
+                end
+                if (connector)
+                    conn_mod_name = case connector
+                    when 'odbc'
+                        :ODBC
+                    when 'jdbc'
+                        :JDBC
+                    when 'oci8'
+                        :OCI8
+                    end
+                    full_name = "#{conn_mod_name}#{class_name}"
+                    if Db.const_defined?(full_name)
+                        klass = Db.const_get(full_name)
                     else
-                        klass = Db.const_set(conn_class, Class.new(klass))
-                        klass.instance_eval{ include Db::Connectors.const_get(conn_mod)}
+                        conn_mod = Db::Connectors.const_defined?(full_name) ? Db::Connectors.const_get(full_name) : Db::Connectors.const_get(conn_mod_name)
+                        klass = Db.const_set(full_name, Class.new(klass))
+                        klass.instance_eval{ include conn_mod }
                     end
                 end
                 Thread.current[:storages][type][url] = klass.new(url)

@@ -77,6 +77,13 @@ module Spider; module Model; module Storage; module Db
                 raise "Virtual"
             end
             
+             def inherited(subclass)
+                 subclass.instance_variable_set("@reserved_keywords", @reserved_keywords)
+                 subclass.instance_variable_set("@type_synonyms", @type_synonyms)
+                 subclass.instance_variable_set("@safe_conversions", @safe_conversions)
+                 subclass.instance_variable_set("@capabilities", @capabilities)
+             end
+            
         end
         
         def curr

@@ -61,7 +61,6 @@ module Spider; module CommandLine
                 end
             end
             cmd_name ||= 'help'
-            require 'ruby-debug'
             if !@cmd.main_command.commands[cmd_name]
                 require 'spiderfw'
                 if Spider.apps_by_short_name[cmd_name] && Spider.apps_by_short_name[cmd_name].const_defined?(:Cmd)
