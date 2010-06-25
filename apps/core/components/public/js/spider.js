@@ -25,6 +25,7 @@ Spider.Widget = Class.extend({
         this.path = path;
 		var pathParts = path.split('/');
 		this.widgetId = pathParts[pathParts.length - 1];
+        this.fullId = pathParts.join('_');
         this.backend = new Spider.WidgetBackend(this);
 		this.readyFunctions = [];
 		config = $.extend({}, config);
@@ -355,6 +356,11 @@ Spider.Widget = Class.extend({
 	onWidget: function(id, callback){
 		if (!this.onWidgetCallbacks[id]) this.onWidgetCallbacks[id] = [];
 		this.onWidgetCallbacks[id].push(callback);
+	},
+	
+	parentWidget: function(){
+        var pathParts = this.path.split('/');
+        return $W(pathParts.slice(0, pathParts.length -1).join('/'));
 	}
 	
 	
@@ -648,4 +654,15 @@ Spider.modelToCSS = function(name){
 	return name.split('::').join('-');
 };
 
+jQuery.parseISODate = function(iso){
+    var d = new Date();
+    var r = /(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2}))?/.exec(iso);
+    if (r){
+        d.setFullYear(r[1], r[2]-1, r[3]);
+        if (!r[4]) r[4] = 0; if (!r[5]) r[5] = 0; if (!r[6]) r[6] = 0;
+        d.setHours(r[4], r[5], r[6], 0);
+        return d;
+    }
+    else return null;
+};
 
