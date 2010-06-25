@@ -7,6 +7,10 @@ module Spider
                       
         BUFSIZE = 1024*4
         
+        def self.current
+            Thread.current[:spider_request]
+        end
+        
         
         def initialize(env)
             Spider::Logger.debug("REQUEST:")
