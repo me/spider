@@ -26,7 +26,7 @@ module Spider; module ControllerMixins
                 if (format)
                     format_params = self.class.output_format_params(@executed_method, format)
                 end
-                if @executed_method && !format || (format_params && format_params[:widgets] && !@request.params['_wt'])
+                if @executed_method && !format || (format_params && format_params[:widgets] && !target_mode?)
                     raise Spider::Controller::NotFound.new("#{action}.#{@request.format}") 
                 end
             end
@@ -61,6 +61,10 @@ module Spider; module ControllerMixins
             @visual_params ||= {}
         end
         
+        def target_mode?
+            !@request.params['_wt'].nil? && !@request.params['_wt'].empty?
+        end
+        
         def init_widgets(template, layout=nil)
             widget_target = @request.params['_wt']
             widget_execute = @request.params['_we']
@@ -84,7 +88,7 @@ module Spider; module ControllerMixins
         
         def execute(action='', *params)
             @visual_params = @executed_format_params
-            @is_target = false if @request.params['_wt'] && !self.is_a?(Spider::Widget)
+            @is_target = false if target_mode? && !self.is_a?(Spider::Widget)
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
             elsif (@visual_params.is_a?(Hash) && @visual_params[:params])
@@ -239,6 +243,7 @@ module Spider; module ControllerMixins
             format = self.class.output_format(:error) || :html
             return super unless @executed_format == :html
             return super unless action_target?
+            return super if target_mode?
             output_format_headers(format)
             if (exc.is_a?(Spider::Controller::NotFound))
                 error_page = '404'

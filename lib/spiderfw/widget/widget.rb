@@ -282,14 +282,14 @@ module Spider
         def widget_before(action='')
             Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
+            return unless active?
             prepare
             prepare_scene(@scene)
             @before_done = true
         end
         
         
-        def active?
-            
+        def active?            
             return @active unless @active.nil?
             return @active = true if @is_target
             return @active = false if attributes[:"sp:target-only"] == "true"
@@ -297,7 +297,6 @@ module Spider
         end
         
         def active=(val)
-            
             @active = val
         end
         
@@ -371,6 +370,15 @@ module Spider
             end
             @widgets.each do |id, w| 
                 w.parent = self
+                w.active = true if run?
+            end
+            if !@is_target && @widget_target
+                first, rest = @widget_target.split('/', 2)
+                @_widget = find_widget(first)
+                @_widget.target_mode = true
+                @_widget.widget_target = rest
+                @_widget.is_target = true unless rest
+                @_widget_rest = rest
             end
             @init_widgets_done = true
         end
@@ -449,15 +457,10 @@ module Spider
                     run
                     render
                 end
-            elsif (@widget_target)
-                first, rest = @widget_target.split('/', 2)
-                @_widget = find_widget(first)
-                @_widget.target_mode = true
-                @_widget.widget_target = rest
-                @_widget.is_target = true unless rest
+            elsif (@_widget)
                 @_widget.set_action(widget_execute)
-                @_widget.before(rest, *params)
-                @_widget.execute(rest, *params)
+                @_widget.before(@_widget_rest, *params)
+                @_widget.execute(@_widget_rest, *params)
             else
                 super
             end
