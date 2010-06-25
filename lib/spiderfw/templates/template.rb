@@ -218,6 +218,7 @@ module Spider
             root.search('tpl:placeholder').remove # remove empty placeholders
             res =  root.children ? root.children_of_type('tpl:asset') : []
             res_init = ""
+            assets = []
             res.each do |r|
                 r.set_attribute('class', 'to_delete')
                 pr = parse_asset(r.get_attribute('type'), r.get_attribute('src'), r.attributes.to_hash)
@@ -243,6 +244,7 @@ module Spider
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
+            compiled.assets = @assets + assets
             return compiled
         end
         
@@ -650,7 +652,7 @@ module Spider
     # Class holding compiled template code.
     
     class CompiledTemplate
-        attr_accessor :block, :source_path, :cache_path, :subtemplates, :devel_info
+        attr_accessor :block, :source_path, :cache_path, :subtemplates, :devel_info, :assets
         
         
         def initialize()
