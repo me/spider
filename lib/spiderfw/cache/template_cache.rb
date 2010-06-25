@@ -70,6 +70,7 @@ module Spider
             compiled.cache_path = path
             init_code = IO.read(path+'/init.rb')
             run_code = IO.read(path+'/run.rb')
+            compiled.assets = Marshal.load(IO.read(path+'/assets'))
             block = Spider::TemplateBlocks::CompiledBlock.new(init_code, run_code)
             compiled.block = block
             Dir.new(path).each do |entry|
@@ -99,6 +100,9 @@ module Spider
             end
             File.open(path+'/run.rb', 'w') do |file|
                 file.puts(compiled.block.run_code)
+            end
+            File.open(path+'/assets', 'w') do |file|
+                file.puts(Marshal.dump(compiled.assets))
             end
             compiled.subtemplates.each do |id, sub|
                 sub_path = "#{path}/#{id}"
