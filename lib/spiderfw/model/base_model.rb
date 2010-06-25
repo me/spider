@@ -1360,7 +1360,16 @@ module Spider; module Model
         
         # Converts the object to the instance of a subclass for which this model is polymorphic.
         def polymorphic_become(model)
-            raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[model]
+            return self if self.is_a?(model)
+            unless self.class.polymorphic_models[model]
+                sup = model.superclass
+                while sup < Spider::Model::BaseModel && !self.class.polymorphic_models[sup]
+                    sup = sup.superclass
+                end
+                raise ModelException, "#{self.class} is not polymorphic for #{model}" unless self.class.polymorphic_models[sup]
+                sup_poly = polymorphic_become(sup)
+                return sup_poly.polymorphic_become(model)
+            end
             obj = model.new
             el = self.class.polymorphic_models[model][:through]
             obj.set(el, self)
