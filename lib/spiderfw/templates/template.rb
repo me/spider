@@ -562,8 +562,13 @@ module Spider
             elsif (override.name == 'tpl:content')
                 found = el.search("tpl:placeholder[@name='#{override.get_attribute('name')}']")
             else
-                found = [el]
+                if ['sp:pass', 'tpl:pass', 'sp:template'].include?(el.name)
+                    found = el.children.select{ |child| child.is_a?(Hpricot::Elem) }
+                else
+                    found = [el]
+                end
             end
+            
             if (override.name == 'tpl:delete')
                 found.remove
             else
