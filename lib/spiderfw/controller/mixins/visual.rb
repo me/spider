@@ -75,7 +75,7 @@ module Spider; module ControllerMixins
                 raise Spider::Controller::NotFound.new("Widget #{widget_target}") unless @_widget
                 @_widget.is_target = true unless rest
                 @_widget.set_action(widget_execute) if widget_execute
-                @_widget.target_mode = true
+                @_widget.is_target_ancestor = true
                 @_widget.widget_target = rest
             end
             template.do_widgets_before

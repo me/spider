@@ -11,7 +11,7 @@ module Spider
         include HTTPMixin
         
         attr_accessor :parent
-        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :target_mode
+        attr_accessor :request, :scene, :widgets, :template, :id, :id_path, :containing_template, :is_target_ancestor, :is_target_descendant
         attr_reader :attributes, :widget_attributes, :css_classes, :widgets_runtime_content
         attr_accessor :active
         
@@ -275,7 +275,7 @@ module Spider
         def before(action='')
             Spider.logger.debug("Widget #{self} before(#{action})")
             widget_init(action)
-            init_widgets unless @init_widgets_done
+            @before_done = true
             super
         end
         
@@ -283,17 +283,28 @@ module Spider
             Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
             return unless active?
+            Spider.logger.debug("Preparing widget #{self}")
             prepare
             prepare_scene(@scene)
             @before_done = true
         end
         
         
-        def active?            
-            return @active unless @active.nil?
-            return @active = true if @is_target
-            return @active = false if attributes[:"sp:target-only"] == "true"
-            @active = (!@request.params['_wt'] || @target_mode)
+        # Active widgets get prepared. When calling a deep widget, the ancestors will be active.
+        def active?
+            return true if @active
+            return true unless target_mode? || attributes[:"sp:target-only"]
+            return true if @is_target || @is_target_ancestor
+            return true if @is_target_descendant && !attributes[:"sp:target-only"]
+            return false
+        end
+        
+        # When in target mode, a widget will be run only if it is the target, or one of its subwidgets
+        def run?
+            return true unless target_mode? || attributes[:"sp:target-only"]
+            return true if @is_target # || @is_target_ancestor
+            return true if @is_target_descendant && !attributes[:"sp:target-only"]
+            return false
         end
         
         def active=(val)
@@ -342,6 +353,7 @@ module Spider
                 @css_classes += @attributes[:class].split(/\s+/)
             end
         end
+
         
         # Recursively instantiates the subwidgets.
         def prepare(action='')
@@ -370,12 +382,13 @@ module Spider
             end
             @widgets.each do |id, w| 
                 w.parent = self
+                w.is_target_descendant = true if @is_target || @is_target_descendant
                 w.active = true if run?
             end
             if !@is_target && @widget_target
                 first, rest = @widget_target.split('/', 2)
                 @_widget = find_widget(first)
-                @_widget.target_mode = true
+                @_widget.is_target_ancestor = true
                 @_widget.widget_target = rest
                 @_widget.is_target = true unless rest
                 @_widget_rest = rest
@@ -428,10 +441,6 @@ module Spider
             @did_run
         end
         
-        def run?
-            @is_target || (!@target_mode && !attributes[:"sp:target-only"])
-        end
-        
         def init_widget_done?
             @init_widget_done
         end
@@ -444,7 +453,7 @@ module Spider
         def render
             prepare_scene(@scene)
             set_scene_vars(@scene)
-            @template.render(@scene) unless @target_mode && !@is_target
+            @template.render(@scene) unless @is_target_ancestor && !@is_target
         end
         
         def execute(action='', *params)
