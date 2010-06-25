@@ -57,7 +57,6 @@ module Spider; module ControllerMixins
                 return redirect(url)
             end
             full_path = pub_path+'/'+path
-            raise Spider::Controller::NotFound.new(path) unless File.exist?(full_path)
             output_static(full_path)
         end
         
@@ -66,7 +65,6 @@ module Spider; module ControllerMixins
             parts = path.split('/public/', 2)
             raise Spider::Controller::NotFound.new(path) unless parts[1]
             full_path = self.class.app.widgets_path+'/'+parts[0]+'/public/'+parts[1]
-            raise Spider::Controller::NotFound.new(path) unless File.exist?(full_path)
             output_static(full_path)
         end
         
