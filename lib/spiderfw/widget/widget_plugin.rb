@@ -9,7 +9,7 @@ module Spider
         
         module ModuleMethods
             
-            def self.plugin_name
+            def plugin_name
                 @plugin_name
             end
             
@@ -19,9 +19,13 @@ module Spider
                 @path = File.dirname(File.expand_path(caller[0].split(':')[0]))
             end
             
+            def overrides_path
+                @path+'/'+Inflector.underscore(self.to_s.split('::')[-1])+'.shtml'
+            end
+            
             def get_overrides
                 overrides = []
-                path = @path+'/'+Inflector.underscore(self.to_s.split('::')[-1])+'.shtml'
+                path = overrides_path
                 doc = open(path){ |f| Hpricot.XML(f) }
                 doc.root.each_child do |child|
                     next unless child.is_a?(Hpricot::Elem)

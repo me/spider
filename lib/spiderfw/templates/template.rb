@@ -24,6 +24,7 @@ module Spider
         attr_accessor :widgets, :compiled, :id_path
         attr_accessor :request, :response, :owner, :owner_class, :definer_class
         attr_accessor :mode # :widget, ...
+        attr_accessor :runtime_overrides
         attr_reader :overrides, :path, :subtemplates, :widgets
         
         @@registered = {}
@@ -177,6 +178,7 @@ module Spider
             @overrides = []
             @widgets_overrides = {}
             @widget_procs = {}
+            @runtime_overrides = []
         end
         
         # Sets the scene.
@@ -191,6 +193,16 @@ module Spider
             @path = real_path(path) if path
 #            debug("TEMPLATE LOADING #{@path}")
             cache_path = @path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
+            unless @runtime_overrides.empty?
+                cache_path_dir = File.dirname(cache_path)
+                cache_path_file = File.basename(cache_path, '.shtml')
+                suffix = @runtime_overrides.map{ |ro| ro[0].to_s }.sort.join('+')
+                cache_path = cache_path_dir+'/'+cache_path_file+'+'+suffix+'.shtml'
+                @runtime_overrides.each do |ro|
+                    @overrides += ro[1]
+                    @dependencies << ro[2]
+                end
+            end
             @compiled = self.class.cache.fetch(cache_path) do
                 compile(:mode => @mode)
             end

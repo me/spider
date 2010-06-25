@@ -26,6 +26,9 @@ module Spider
             def inherited(subclass)
                 subclass.instance_variable_set(:@attributes, attributes.clone)
                 subclass.instance_variable_set(:@scene_attributes, @scene_attributes.clone) if @scene_attributes
+                subclass.instance_variable_set(:@plugins, @plugins.clone) if @plugins
+                @subclasses ||= []
+                @subclasses << subclass
                 super
             end
             
@@ -170,7 +173,7 @@ module Spider
 
                 Hpricot::Elements[*overrides].remove
                 plugins.each do |plugin|
-                    name = plugin['name']
+                    name = plugin['name'].to_sym
                     mod = self.plugin(name)
                     next unless mod
                     overrides += mod.get_overrides
@@ -192,6 +195,7 @@ module Spider
             def add_plugin(name, mod)
                 @plugins ||= {}
                 @plugins[name] = mod
+                @subclasses.each{ |sub| sub.add_plugin(name, mod) } if @subclasses
             end
             
             def plugin(name)
@@ -234,6 +238,7 @@ module Spider
             @css_classes = []
             @widgets_runtime_content = {}
             @widget_procs = {}
+            @runtime_overrides = []
         end
         
         def full_id
@@ -359,6 +364,7 @@ module Spider
             end
             template.request = @request
             template.response = @response
+            template.runtime_overrides += @runtime_overrides
             template.init(@scene)
             template.widgets.each do |name, w|
                 add_widget(w)
@@ -544,6 +550,14 @@ module Spider
         end
         
         def parse_runtime_content(doc, src_path=nil)
+            doc.search('sp:plugin').each do |plugin|
+                # we don't call add_plugin here because the overrides don't have to be added at runtime, since
+                # they have already been processed when compiling the instance
+                name = plugin['name'].to_sym
+                mod = self.class.plugin(name)
+                next unless mod
+                self.extend(mod)
+            end
             # doc.search('sp:plugin').each do |plugin|
             #     name = plugin['name']
             #     mod = self.class.plugin(name)
@@ -689,7 +703,13 @@ module Spider
             @widget_procs[first.to_sym] ||= []
             @widget_procs[first.to_sym] << {:target => rest, :proc => proc }
         end
-            
+        
+        def add_plugin(name)
+            mod = self.class.plugin(name)
+            return unless mod
+            self.extend(mod)
+            @runtime_overrides << [name, mod.get_overrides, mod.overrides_path]
+        end
         
     end
     
