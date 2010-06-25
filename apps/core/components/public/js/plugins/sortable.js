@@ -3,13 +3,15 @@ Spider.Sortable = Spider.Plugin.extend({
 	
     makeSortable: function(options){
 		var options = $.extend({
-			listSelector: 'ul',
+			listSelector: '>ul',
 			items: '>li',			
 			update: this.handleSort.bind(this),
 			receive: this.handleReceive.bind(this)
 		}, options);
 		this.listEl = options.listEl;
 		if (!this.listEl) this.listEl = $(options.listSelector, this.el);
+        this.prevMinHeight = this.listEl.css('min-height');
+		this.listEl.css('min-height', '20px');
         if (this.el.hasClass('tree')){
             options = $.extend(options, {
     			//revert: true,
@@ -52,19 +54,40 @@ Spider.Sortable = Spider.Plugin.extend({
         else{
             this.listEl.sortable(options);
         }
+        this.sortableOptions = options;
     },
-
+    
+    disableSortable: function(){
+        if (this.listEl){
+            this.listEl.css('min-height', this.prevMinHeight);
+            this.listEl.sortable('destroy');
+        }
+    },
 	
     
     handleSort: function(e, ui){
 		if (ui.sender) return; // handled by handleReceive
-        var item = ui.item;
-        var pos = this.findLiPosition(item);
+		if (!$.contains(this.listEl.get(0), ui.item.get(0))) return; // handled by handleReceive
+        var mySortable = this.listEl.data('sortable');
+        var realTarget = null;
+		ui.item.parents().each(function(){
+            var $this = $(this);
+            var s = $this.data('sortable');
+            if (s){
+                if (s != mySortable) realTarget = $this;
+                return false;
+            }
+		});
+		if (realTarget){
+		    ui.sender = this.listEl;
+            return realTarget.parentWidget().handleReceive(e, ui);
+		}
+        var pos = this.findLiPosition(ui.item);
 		if (pos == -1) return;
 		if (this.listEl.data('sortable').fromOutside){ // hack to work around strange jquery ui behaviour...
 			return this.acceptFromSender(null, ui.item, pos);
 		}
-		this.remote('sort', this.getSortItemId(item), pos);
+		this.remote('sort', this.getSortItemId(ui.item), pos);
     },
 
 
@@ -106,7 +129,7 @@ Spider.Sortable = Spider.Plugin.extend({
 	
 	findLiPosition: function(item){
 		var cnt = 1;
-		var li = $('> li', this.listEl);
+		var li = $(this.sortableOptions.items, this.listEl);
         li.each(function(){
             if (this == item.get(0)) return false;
             cnt++;
@@ -118,7 +141,7 @@ Spider.Sortable = Spider.Plugin.extend({
 	getSortItemId: function(li){
 		var k = $('> .sort-key', li);
 		if (k.length > 0) return k.text();
-		return li.dataObjectKey();
+		return li.getDataObjectKey();
 	}
 	
 });
