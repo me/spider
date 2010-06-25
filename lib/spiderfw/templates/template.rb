@@ -640,7 +640,10 @@ module Spider
                 widget.instance_eval(wp[:proc])
             end
         end
-            
+        
+        def inspect
+            "#<#{self.class}:#{self.object_id} #{@path}>"
+        end
         
     end
     
