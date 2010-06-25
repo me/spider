@@ -24,6 +24,7 @@ module Spider
         attr_accessor :widgets, :compiled, :id_path
         attr_accessor :request, :response, :owner, :owner_class, :definer_class
         attr_accessor :mode # :widget, ...
+        attr_accessor :assets
         attr_accessor :runtime_overrides
         attr_reader :overrides, :path, :subtemplates, :widgets
         
@@ -222,13 +223,13 @@ module Spider
             res.each do |r|
                 r.set_attribute('class', 'to_delete')
                 pr = parse_asset(r.get_attribute('type'), r.get_attribute('src'), r.attributes.to_hash)
-                assets << pr
-                res_init += "@assets << { 
-                    :type => :#{pr[:type]}, 
-                    :src => '#{pr[:src]}',
-                    :path => '#{pr[:path]}',
-                    :if => '#{pr[:if]}'
-                }\n"
+                @assets << pr
+                # res_init += "@assets << { 
+                #     :type => :#{pr[:type]}, 
+                #     :src => '#{pr[:src]}',
+                #     :path => '#{pr[:path]}',
+                #     :if => '#{pr[:if]}'
+                # }\n"
             end
             root.search('.to_delete').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
@@ -241,6 +242,17 @@ module Spider
                 sub.owner_class = @subtemplate_owners[id]
                 compiled.subtemplates[id] = sub.compile(options.merge({:mode => :widget})) # FIXME! :mode => :widget is wrong,
                 # it's just a quick kludge
+            end
+            seen = {}
+            @assets.uniq.each do |ass|
+                next if seen[ass]
+                res_init += "@assets << { 
+                    :type => :#{ass[:type]}, 
+                    :src => '#{ass[:src]}',
+                    :path => '#{ass[:path]}',
+                    :if => '#{ass[:if]}'
+                }\n"
+                seen[ass] = true
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
@@ -607,7 +619,7 @@ module Spider
             res = []
             @assets.each do |ass|
                  # FIXME: is this the best place to check if? Maybe it's better to do it when printing resources?
-                res << ass unless !ass[:if].empty? && !@scene.instance_eval(ass[:if])
+                res << ass unless ass[:if] && !ass[:if].empty? && !@scene.instance_eval(ass[:if])
             end
             return res
         end
