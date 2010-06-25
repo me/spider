@@ -24,11 +24,13 @@ module Spider
         end
         
         def fresh?(path)
+            full_path = get_location(path)
             if Spider.config.get('template.cache.disable')
-                debug("Cache disabled, recreating #{path}")
+                Spider::Request.current[:compiled_templates] ||= {}
+                return true if Spider::Request.current[:compiled_templates][full_path]
+                debug("Cache disabled, recreating #{full_path}")
                 return false
             end
-            full_path = get_location(path)
             exists = File.exist?(full_path)
             if (Spider.config.get('template.cache.no_check') && exists)
                 return true
@@ -115,6 +117,10 @@ module Spider
                 File.open(sub_path, 'w') do |f|
                     f.puts(val)
                 end
+            end
+            if Spider.config.get('template.cache.disable')
+                Spider::Request.current[:compiled_templates] ||= {}
+                Spider::Request.current[:compiled_templates][path] = true
             end
         end
         
