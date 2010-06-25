@@ -154,7 +154,7 @@ module Spider
                         res += "\n$out << '"
                     end
                 end
-                res += scanner.rest
+                res += escape_text(scanner.rest)
                 return res
             end
             
