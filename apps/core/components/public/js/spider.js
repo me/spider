@@ -354,8 +354,17 @@ Spider.Widget = Class.extend({
 	},
 	
 	onWidget: function(id, callback){
-		if (!this.onWidgetCallbacks[id]) this.onWidgetCallbacks[id] = [];
-		this.onWidgetCallbacks[id].push(callback);
+        var idParts = id.split('/', 2);
+        if (idParts[1]){
+            return this.onWidget(idParts[0], function(w){
+                w.onWidget(idParts[1], callback);
+            });
+        }
+        if (this.widgets[id]) callback.call(this, this.widgets[id]);
+        else{
+            if (!this.onWidgetCallbacks[id]) this.onWidgetCallbacks[id] = [];
+    		this.onWidgetCallbacks[id].push(callback);
+        }
 	},
 	
 	parentWidget: function(){
