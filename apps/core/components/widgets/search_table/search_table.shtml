@@ -7,5 +7,5 @@
             <input type="submit" name="submit" value="Trova">
             <input type="submit" name="_w{ param_name(@widget) }[clear]" value="Pulisci">
         </form>
-    </tpl:prepend>
+    </tpl:before>
 </tpl:extend>
