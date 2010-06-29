@@ -492,7 +492,7 @@ module Spider; module Model; module Mappers
                     next unless element
                     next unless model.mapper.mapped?(element)
                     next unless element.model?
-                    join_info[k.to_s] = true if !v.nil? || comp != '='
+                    join_info[k.to_s] = true if !v.nil? || (comp != '=' && comp != 'like' && comp != 'ilike')
                     if v.is_a?(Spider::Model::Condition)
                         el_join_info = get_join_info(element.model, v) 
                         el_join_info.each do |jk, jv|
