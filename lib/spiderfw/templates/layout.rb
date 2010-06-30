@@ -45,7 +45,9 @@ module Spider
         end
         
         def all_assets
-            return @template.all_assets + self.assets
+            return @template.assets + self.assets
+        end
+        
         end
 
         

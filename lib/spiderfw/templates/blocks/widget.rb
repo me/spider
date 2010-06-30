@@ -43,18 +43,15 @@ module Spider; module TemplateBlocks
 
             template = nil
             overrides += @template.overrides_for(id)
+            template = klass.load_template(template_attr || klass.default_template)
             if (overrides.length > 0)
-                template = klass.load_template(template_attr || klass.default_template)
                 #template_name = klass.find_template(template_attr)
                 template.add_overrides overrides
                 @template.add_subtemplate(id, template, klass)
+            else
+                @template.add_widget_template(template, klass)
             end
-            if @el.get_attribute('sp:target-only')
-                template ||= klass.load_template(template_attr || klass.default_template)
-                template.mode = :widget
-                template.load
-                @template.assets = @template.instance_variable_get("@assets") + template.compiled.assets
-            end
+            # end
 
             init = ""
             t_param = 'nil'

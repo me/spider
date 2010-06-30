@@ -119,6 +119,31 @@ module Spider
                 Spider.find_resource(:views, path, cur_path, owner_classes, search_paths)
             end
             
+            def define_named_asset(name, assets, options={})
+                @named_assets ||= {}
+                @named_assets[name] = { :assets => assets, :options => options }
+            end
+            
+            def named_assets
+                @named_assets || {}
+            end
+            
+            def get_named_asset(name)
+                res = []
+                ass = self.named_assets[name]
+                deps = ass[:options][:depends]
+                deps = [deps] if deps && !deps.is_a?(Array)
+                if deps
+                    deps.each do |dep|
+                        res += get_named_asset(dep)
+                    end
+                end
+                ass[:assets].each do |a|
+                    res << {:type => a[0], :src => a[1], :app => a[2]}
+                end
+                res
+            end
+            
             # An array of possible override tags.
             # Overrides may be used when placing a widget in a template, or when including another template.
             # All except tpl:content may have the _search_ attribute, that is a CSS or XPath expression specifing
@@ -160,6 +185,20 @@ module Spider
                 @@overrides
             end
             
+            def parse_asset_element(el)
+                h = {}
+                el.attributes.to_hash.each do |k, v|
+                    h[k.to_sym] = v
+                end
+                h
+                # end
+                # {
+                #     :type => el.get_attribute('type'),
+                #     :src => el.get_attribute('src'),
+                #     :attributes => el.attributes.to_hash
+                # }
+            end
+            
         end
         
         # Returns the class override_tags
@@ -171,6 +210,7 @@ module Spider
             @path = path
             @widgets = {}
             @subtemplates = {}
+            @widget_templates = []
             @subtemplate_owners = {}
             @id_path = []
             @assets = []
@@ -217,42 +257,74 @@ module Spider
             el = process_tags(root)
             @overrides.each{ |o| apply_override(root, o) } if (@overrides)
             root.search('tpl:placeholder').remove # remove empty placeholders
+            owner_class = @owner ? @owner.class : @owner_class
+            @assets += owner_class.assets if owner_class
             res =  root.children ? root.children_of_type('tpl:asset') : []
             res_init = ""
-            assets = []
             res.each do |r|
+                @assets << Spider::Template.parse_asset_element(r)
                 r.set_attribute('class', 'to_delete')
-                pr = parse_asset(r.get_attribute('type'), r.get_attribute('src'), r.attributes.to_hash)
-                @assets << pr
-                # res_init += "@assets << { 
-                #     :type => :#{pr[:type]}, 
-                #     :src => '#{pr[:src]}',
-                #     :path => '#{pr[:path]}',
-                #     :if => '#{pr[:if]}'
-                # }\n"
             end
+            new_assets = []
+            @assets.each do |ass|
+                a = parse_asset(ass[:type], ass[:src], ass)
+                new_assets += a
+            end
+            @assets = new_assets
             root.search('.to_delete').remove
+            root.search('tpl:assets').each do |ass|
+                wattr = ass.get_attribute('widgets')
+                widgets = []
+                wattr.split(/,\s*/).each do |w|
+                    w_templates = nil
+                    if w =~ /(\.+)\((.+)\)/
+                        w = $1
+                        w_templates = $2.split('|')
+                    end
+                    klass = Spider::Template.get_registered_class(w)
+                    w_templates ||= [klass.default_template]
+                    w_templates.each do |wt| 
+                        t = klass.load_template(wt)
+                        add_widget_template(t, klass)
+                    end
+                end
+            end
+            root.search('tpl:assets').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
             options[:root] = true
             options[:owner] = @owner
             options[:owner_class] = @owner_class || @owner.class
             options[:template_path] = @path
+            options[:template] = self
             compiled.block = root_block.compile(options)
             subtemplates.each do |id, sub|
                 sub.owner_class = @subtemplate_owners[id]
-                compiled.subtemplates[id] = sub.compile(options.merge({:mode => :widget})) # FIXME! :mode => :widget is wrong,
-                # it's just a quick kludge
+                compiled.subtemplates[id] = sub.compile(options.merge({:mode => :widget})) # FIXME! :mode => :widget is wrong, it's just a quick kludge
+                @assets += compiled.subtemplates[id].assets
             end
+            @widget_templates.each do |wt|
+                wt.mode = :widget
+                wt.load
+                # sub_c = sub.compile(options.merge({:mode => :widget}))
+                @assets += wt.compiled.assets
+            end            
+            
             seen = {}
-            @assets.uniq.each do |ass|
-                next if seen[ass]
-                res_init += "@assets << { 
-                    :type => :#{ass[:type]}, 
-                    :src => '#{ass[:src]}',
-                    :path => '#{ass[:path]}',
-                    :if => '#{ass[:if]}'
-                }\n"
-                seen[ass] = true
+            # @assets.each_index do |i|
+            #     ass = @assets[i]
+            #     if ass[:name]
+            # end
+            @assets.each do |ass|
+                next if seen[ass.inspect]
+                res_init += "@assets << #{ass.inspect}\n"
+                # res_init += "@assets << {
+                #     :type => :#{ass[:type]}, 
+                #     :src => '#{ass[:src]}',
+                #     :path => '#{ass[:path]}',
+                #     :if => '#{ass[:if]}'"
+                # res_init += ",\n :compiled => '#{ass[:compressed]}'" if ass[:compressed]
+                # res_init += "}\n"
+                seen[ass.inspect] = true
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
@@ -263,12 +335,33 @@ module Spider
         # Processes an asset. Returns an hash with :type, :src, :path.
         def parse_asset(type, src, attributes={})
             # FIXME: use Spider.find_asset ?
+            type = type.to_sym if type
             ass = {:type => type}
-            if (attributes['app'])
-                owner_class = Spider.apps_by_path[attributes['app']]
+            if attributes[:name]
+                named = [Spider::Template.named_assets[attributes[:name]]]
+                raise "Can't find named asset #{attributes[:name]}" unless named
+                named.each do |nmd|
+                    deps = nmd[:options].delete(:depends)
+                    if deps
+                        deps = [deps] unless deps.is_a?(Array)
+                        deps.each{ |d| named.unshift( Spider::Template.named_assets[d]) }
+                    end
+                end
+                return named.map{ |nmd| 
+                    nmd[:assets].map{ |nmdass| 
+                        nmdattr = {:app => nmdass[2]}
+                        parse_asset(nmdass[0], nmdass[1], nmdattr)
+                    }
+                }.flatten
+            end
+            if attributes[:app]
+                owner_class = attributes[:app]
+                owner_class = Spider.apps_by_path[owner_class] unless owner_class.is_a?(Module)
             else
                 owner_class = (@owner ? @owner.class : @owner_class )
             end
+            ass[:app] = owner_class.app 
+            # FIXME! @definer_class is not correct for Spider::HomeController
             raise "Asset type not given for #{src}" unless type
             res = Spider.find_resource(type.to_sym, src, @path, [owner_class, @definer_class])
             controller = nil
@@ -278,15 +371,18 @@ module Spider
                 controller = owner_class
             end
             ass[:path] = res.path if res
+            base_url = nil
             if controller.respond_to?(:pub_url)
                 if src[0].chr == '/'
                     # strips the app path from the src. FIXME: should probably be done somewhere else
                     src = src[(2+controller.app.relative_path.length)..-1]
                 end
-                ass[:src] = controller.pub_url + '/' + src
+                base_url = controller.pub_url+'/'
+                
             else
-                ass[:src] = src
+                base_url = ''
             end
+            ass[:src] = base_url + src
             ass_info = self.class.asset_types[type]
             if (ass_info && ass_info[:processor])
                 processor = TemplateAssets.const_get(ass_info[:processor])
@@ -295,7 +391,12 @@ module Spider
             if attributes['sp:if']
                 ass[:if] = Spider::TemplateBlocks::Block.vars_to_scene(attributes['sp:if']).gsub("'", "\\'") 
             end
-            return ass
+            if attributes[:compressed]
+                compressed_res = Spider.find_resource(type.to_sym, attributes[:compressed], @path, [owner_class, @definer_class])
+                ass[:compressed_path] = compressed_res.path
+                ass[:compressed] = base_url+attributes[:compressed]
+            end
+            return [ass]
         end
         
         # Returns the root node of the template at given path.
@@ -344,7 +445,8 @@ module Spider
                 root.children_of_type('tpl:asset').each do |ass|
                     ass_src = ass.get_attribute('src')
                     unless ass_src[0].chr == '/'
-                        ass.set_attribute('src', "/#{ext_app.relative_path}/#{ass_src}")
+                        # ass.set_attribute('src', "/#{ext_app.relative_path}/#{ass_src}")
+                        ass.set_attribute('app', ext_app.relative_path)
                     end
                 end
                 @overrides += orig_overrides
@@ -354,15 +456,26 @@ module Spider
                     end
                 end
             else
+                assets_html = ""
                 root.search('tpl:include').each do |incl|
-                    src = real_path(incl.get_attribute('src'))
+                    resource = Spider.find_resource(:views, incl.get_attribute('src'), File.dirname(@path), [@owner.class, @definer_class])
+                    src = resource.path
                     @dependencies << src
                     incl_el = self.get_el(src)
                     assets = incl_el.children ? incl_el.children_of_type('tpl:asset') : []
-                    assets_html = ""
-                    assets.each{ |ass| assets_html += ass.to_html }
-                    incl.swap(assets_html+self.get_el(src).to_html)
+                      assets.each{ |ass| 
+                          ass.set_attribute('class', 'to_delete')
+                          ass_src = ass.get_attribute('src')
+                          unless ass_src[0].chr == '/'
+                              # ass.set_attribute('src', "/#{resource.definer.relative_path}/#{ass_src}")
+                              ass.set_attribute('app', resource.definer.relative_path)
+                          end
+                          assets_html += ass.to_html 
+                      }
+                    incl.swap(self.get_el(src).to_html)
                 end
+                root.search('.to_delete').remove
+                root.innerHTML = assets_html + root.innerHTML
             end
             return root
         end
@@ -527,6 +640,11 @@ module Spider
             @subtemplate_owners[id] = owner
         end
         
+        def add_widget_template(template, owner_class)
+            template.owner_class = owner_class
+            @widget_templates << template
+        end
+        
         
         def load_subtemplate(id) # :nodoc:
             load unless loaded?
@@ -546,7 +664,6 @@ module Spider
                     else
                         ov.remove_attribute('widget')
                     end
- #                   debugger
                     @widgets_overrides[first] ||= []
                     @widgets_overrides[first] << ov
                 else
@@ -556,7 +673,6 @@ module Spider
         end
         
         def overrides_for(widget_id)
-#            debugger
             @widgets_overrides[widget_id] || []
         end
         
@@ -615,7 +731,7 @@ module Spider
         end
         
         # Template assets.
-        def assets
+        def conditional_assets
             res = []
             @assets.each do |ass|
                  # FIXME: is this the best place to check if? Maybe it's better to do it when printing resources?
@@ -624,18 +740,18 @@ module Spider
             return res
         end
         
-        # Assets for the template and contained widgets.
-        def all_assets
-            res = [] 
-            seen = {}
-            @widgets.each do |id, w|
-#                next if seen[w.class]
-                seen[w.class] = true
-                res += w.assets
-            end
-            res += assets
-            return res
-        end
+#         # Assets for the template and contained widgets.
+#         def all_assets
+#             res = [] 
+#             seen = {}
+#             @widgets.each do |id, w|
+# #                next if seen[w.class]
+#                 seen[w.class] = true
+#                 res += w.assets
+#             end
+#             res += assets
+#             return res
+#         end
         
         def with_widget(path, &proc)
             first, rest = path.split('/', 2)

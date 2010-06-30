@@ -506,6 +506,10 @@ module Spider; module ControllerMixins
                 Spider::Inflector.underscore(self.to_s.split('::')[-1])
             end
             
+            def assets
+                []
+            end
+            
         end
         
     end

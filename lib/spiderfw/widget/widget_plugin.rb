@@ -34,6 +34,13 @@ module Spider
                 return overrides
             end
             
+            def get_assets
+                path = overrides_path
+                return open(path){ |f| Hpricot.XML(f) }.root.children_of_type('tpl:asset').map{ |el|
+                    Spider::Template.parse_asset_element(el)
+                }
+            end
+            
         end
         
     end

@@ -27,6 +27,7 @@ module Spider
                 subclass.instance_variable_set(:@attributes, attributes.clone)
                 subclass.instance_variable_set(:@scene_attributes, @scene_attributes.clone) if @scene_attributes
                 subclass.instance_variable_set(:@plugins, @plugins.clone) if @plugins
+                subclass.instance_variable_set(:@default_assets, @default_assets.clone) if @default_assets
                 @subclasses ||= []
                 @subclasses << subclass
                 super
@@ -172,12 +173,6 @@ module Spider
                 end
 
                 Hpricot::Elements[*overrides].remove
-                plugins.each do |plugin|
-                    name = plugin['name'].to_sym
-                    mod = self.plugin(name)
-                    next unless mod
-                    overrides += mod.get_overrides
-                end
                 return [doc.to_s, overrides]
             end
             
@@ -203,11 +198,52 @@ module Spider
                 @plugins[name]
             end
             
+            Spider::Template.define_named_asset 'jquery', [
+                [:js, 'js/jquery/jquery-1.4.2.js', Spider::Components]
+            ]
+            Spider::Template.define_named_asset 'spider', [
+                [:js, 'js/inheritance.js', Spider::Components],
+                [:js, 'js/spider.js', Spider::Components],
+                [:js, 'js/jquery/plugins/jquery.query-2.1.6.js', Spider::Components],
+                [:js, 'js/jquery/plugins/jquery.form.js', Spider::Components],
+                [:js, 'js/plugins/plugin.js', Spider::Components],
+                [:css, 'css/spider.css', Spider::Components]
+            ], :depends => ['jquery']
+            
+            def default_asset(ass)
+                @default_assets ||= []
+                @default_assets << ass
+            end
+            
+            def assets
+                r = []
+                if @default_assets
+                    @default_assets.each do |ass|
+                        if ass.is_a?(Hash)
+                            ass[:app] ||= self.class.app
+                            r << ass
+                        else
+                            r += Spider::Template.get_named_asset(ass)
+                        end
+                    end
+                end
+                if @plugins
+                    @plugins.each do |name, mod|
+                        r += mod.get_assets
+                    end
+                end
+                r
+            end
+            
         end
         
         i_attribute :use_template
         attribute :"sp:target-only"
         attribute :class
+        
+        default_asset 'jquery'
+        default_asset 'spider'
+        
         
         def initialize(request, response, scene=nil)
             super
@@ -217,23 +253,23 @@ module Spider
             @id_path = []
             @widget_attributes = {}
             locale = @request.locale.language
-            include_js = [
-                '/js/jquery/jquery-1.4.2.js', '/js/inheritance.js', '/js/spider.js', '/js/jquery/plugins/jquery.query-2.1.6.js',
-                '/js/jquery/plugins/jquery.form.js',
-                '/js/plugins/plugin.js'
-            ]
-            # include_js << [
-            #     '/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js',
-            #     #'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js',
-            #     "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
+            # include_js = [
+            #     '/js/jquery/jquery-1.4.2.js', '/js/inheritance.js', '/js/spider.js', '/js/jquery/plugins/jquery.query-2.1.6.js',
+            #     '/js/jquery/plugins/jquery.form.js',
+            #     '/js/plugins/plugin.js'
             # ]
-            include_css = [
-                '/css/spider.css', '/js/jquery/jquery-ui/css/smoothness/jquery-ui-1.7.2.custom.css', 
-            ]
+            # # include_js << [
+            # #     '/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js',
+            # #     #'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js',
+            # #     "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
+            # # ]
+            # include_css = [
+            #     '/css/spider.css', '/js/jquery/jquery-ui/css/smoothness/jquery-ui-1.7.2.custom.css', 
+            # ]
             @assets = []
-            include_js.each{ |js| @assets << {:type => :js, :src => Spider::Components.pub_url+js, :path => Spider::Components.pub_path+js}}
-            include_css.each{ |css| @assets << {:type => :css, :src => Spider::Components.pub_url+css, :path => Spider::Components.pub_path+css}}
-            
+            # include_js.each{ |js| @assets << {:type => :js, :src => Spider::Components.pub_url+js, :path => Spider::Components.pub_path+js}}
+            # include_css.each{ |css| @assets << {:type => :css, :src => Spider::Components.pub_url+css, :path => Spider::Components.pub_path+css}}
+            # 
             @use_template ||= self.class.default_template
             @css_classes = []
             @widgets_runtime_content = {}
@@ -662,7 +698,7 @@ module Spider
             end
             return w
         end
-        
+                
         def prepare_scene(scene)
             scene = super
             
