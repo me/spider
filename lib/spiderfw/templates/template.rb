@@ -444,7 +444,7 @@ module Spider
                 root = get_el(ext)
                 root.children_of_type('tpl:asset').each do |ass|
                     ass_src = ass.get_attribute('src')
-                    unless ass_src[0].chr == '/'
+                    if ass_src && ass_src[0].chr != '/'
                         # ass.set_attribute('src', "/#{ext_app.relative_path}/#{ass_src}")
                         ass.set_attribute('app', ext_app.relative_path)
                     end
@@ -463,17 +463,19 @@ module Spider
                     @dependencies << src
                     incl_el = self.get_el(src)
                     assets = incl_el.children ? incl_el.children_of_type('tpl:asset') : []
-                      assets.each{ |ass| 
-                          ass.set_attribute('class', 'to_delete')
-                          ass_src = ass.get_attribute('src')
-                          unless ass_src[0].chr == '/'
-                              # ass.set_attribute('src', "/#{resource.definer.relative_path}/#{ass_src}")
-                              ass.set_attribute('app', resource.definer.relative_path)
-                          end
-                          assets_html += ass.to_html 
-                      }
-                    incl.swap(self.get_el(src).to_html)
+                    assets.each{ |ass| 
+                        ass.set_attribute('class', 'to_delete')
+                        ass_src = ass.get_attribute('src')
+                        if ass_src && ass_src[0].chr != '/'
+                            # ass.set_attribute('src', "/#{resource.definer.relative_path}/#{ass_src}")
+                            ass.set_attribute('app', resource.definer.relative_path)
+                        end
+                        assets_html += ass.to_html 
+                    }
+                    incl_el.search('.to_delete').remove
+                    incl.swap(incl_el.to_html)
                 end
+                
                 root.search('.to_delete').remove
                 root.innerHTML = assets_html + root.innerHTML
             end
