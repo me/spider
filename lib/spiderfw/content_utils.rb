@@ -3,7 +3,7 @@ require 'find'
 
 module Spider
     
-    module StaticContent
+    module ContentUtils
         
         def self.publish
             Spider.apps.each do |name, app|
@@ -76,6 +76,28 @@ module Spider
         
         def self.md5sum(file)
             Digest::MD5.hexdigest(File.read(file))
+        end
+        
+        def self.resolve_css_includes(file)
+            files = [file]
+            includes_regexp = /^\s*@import(?:\surl\(|\s)(['"]?)([^\?'"\)\s]+)(\?(?:[^'"\)]*))?\1\)?(?:[^?;]*);?/im
+            content_regexp = /\/*|^[\.\#a-zA-Z\:]/
+            dir = File.dirname(file)
+            IO.foreach(file) do |line|
+                catch(:done) do
+                    throw :done if line =~ content_regexp
+                    if line =~ includes_regexp
+                        absolute = nil
+                        if ($2[0].chr == '/')
+                            absolute = $2
+                        else
+                            absolute = File.expand_path(File.join(dir, $2))
+                        end
+                        files += resolve_css_includes(absolute)
+                    end
+                end
+            end
+            files
         end
         
     end
