@@ -99,7 +99,6 @@ module Spider
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
     config_option 'log.rotate.age', _("Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"), :default => 'daily'
     config_option 'log.rotate.size', _("Maximum logfile size (only applies when log.rotate.age is a number)"), :default => 1048576
-#                    :process => lambda{ |v| v.upcase }
 
 
     config_option 'orgs', _("A list of organizations"), :type => :conf
@@ -134,6 +133,13 @@ module Spider
     config_option 'devel.trace.extended', _("Use ruby-debug to provide extended traces"), :default => true
     config_option 'devel.trace.show_locals', _("Show locals in debug traces"), :default => true
     config_option 'devel.trace.show_instance_variables', _("Show locals in debug traces"), :default => true
+    
+    config_option 'javascript.compress', _("Compress JavaScript files"), 
+        :default => Proc.new{ Spider.config.get('runmode') == 'production' ? true : false }
+    config_option 'css.combine', _("Combine CSS files"), 
+        :default => Proc.new{ Spider.config.get('runmode') == 'production' ? true : false }
+    config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
+        :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
     
     
 end

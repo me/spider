@@ -286,6 +286,7 @@ module Spider; module ControllerMixins
                 end
             end
             @rendering_error = true
+            @scene.__is_error_page = true
             render "errors/#{error_page}", :layout => "errors/error"
             super
         end
