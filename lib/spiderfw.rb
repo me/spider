@@ -336,6 +336,14 @@ module Spider
             }
         end
         
+        def path
+            $SPIDER_PATH
+        end
+        
+        def relative_path
+            '/spider'
+        end
+        
         # Returns the full path of a resource.
         # resource_type may be :views, or any other type registered with #register_resource_type
         # path is the path of the resource, relative to the resource folder
