@@ -159,7 +159,7 @@ module Spider; module Model; module Storage; module Db
                  end
                  if (!query[:joins].empty?)
                      data_tables_sql = query[:order_on_different_table] ? tables_sql : query[:tables].join(', ')
-                     pk_sql = query[:primary_keys].join(', ')
+                     pk_sql = query[:primary_keys].reject{ |pk| pk.is_a?(Db::FieldExpression) }.join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
                      data_sql = "SELECT #{keys} FROM #{data_tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql}) order by #{order}"

@@ -570,7 +570,11 @@ module Spider; module Model; module Storage; module Db
                 to_t = join[:as] || join[:to]
                 sql_on = join[:keys].map{ |from_f, to_f|
                     to_field = to_f.is_a?(FieldExpression) ? to_f.expression : "#{to_t}.#{to_f.name}"
-                    "#{from_f} = #{to_field}"
+                    if from_f.is_a?(FieldExpression)
+                        "#{to_field} = #{from_f.expression}"
+                    else
+                        "#{from_f} = #{to_field}"
+                    end
                 }.join(' AND ')
                 if (join[:condition])
                     condition_sql, condition_values = sql_condition({:condition => join[:condition]})
