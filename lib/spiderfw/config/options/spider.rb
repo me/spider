@@ -133,6 +133,8 @@ module Spider
         :default => lambda{ Spider.conf.get('site.admin.email') }
        
         
+    config_option 'errors.send_email', _("Send an e-mail to the technical administrator when errors occur"), :type => Spider::DataTypes::Bool,
+         :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
     
     config_option 'devel.trace.extended', _("Use ruby-debug to provide extended traces"), :default => true
     config_option 'devel.trace.show_locals', _("Show locals in debug traces"), :default => true

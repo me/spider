@@ -287,8 +287,30 @@ module Spider; module ControllerMixins
             end
             @rendering_error = true
             @scene.__is_error_page = true
+            if Spider.const_defined?(:Messenger) && Spider.conf.get('errors.send_email') && Spider.conf.get('site.tech_admin.email')
+                begin
+                    send_error_email(exc)
+                rescue => exc2
+                end
+            end
             render "errors/#{error_page}", :layout => "errors/error"
             super
+        end
+        
+        def send_error_email(exc)
+            scene = Spider::Scene.new
+            scene.exception = exc
+            subject = _("Site error")
+            if Spider.conf.get('orgs.default.name')
+                subject = "#{Spider.conf.get('orgs.default.name')} - #{subject}"
+            elsif @request.env.key?('HTTP_HOST')
+                subject = "#{@request.env['HTTP_HOST']} - #{subject}" 
+            end
+            headers = {'Subject' => subject}
+            from = Spider.conf.get('orgs.default.auto_from_email') || Spider.conf.get('site.tech_admin.email')
+            Spider::Messenger::MessengerHelper.email(
+                self.class, 'error', scene, from, Spider.conf.get('site.tech_admin.email'), headers
+            )
         end
         
         def build_backtrace(exc)
