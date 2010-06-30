@@ -141,9 +141,9 @@ module Spider
     config_option 'devel.trace.show_instance_variables', _("Show locals in debug traces"), :default => true
     
     config_option 'javascript.compress', _("Compress JavaScript files"), 
-        :default => Proc.new{ Spider.config.get('runmode') == 'production' ? true : false }
+        :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
     config_option 'css.combine', _("Combine CSS files"), 
-        :default => Proc.new{ Spider.config.get('runmode') == 'production' ? true : false }
+        :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
     config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
         :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
     
