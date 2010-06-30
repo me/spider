@@ -367,6 +367,15 @@ Spider.Widget = Class.extend({
         }
 	},
 	
+	removeOnWidget: function(id, callback){
+	    for (var i=0; i < this.onWidgetCallbacks[id].length; i++){
+	        if (this.onWidgetCallbacks[id][i] == callback){
+                this.onWidgetCallbacks[id].splice(i, 1);
+                return;
+	        }
+	    }
+	},
+	
 	parentWidget: function(){
         var pathParts = this.path.split('/');
         return $W(pathParts.slice(0, pathParts.length -1).join('/'));
