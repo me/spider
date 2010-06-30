@@ -43,7 +43,7 @@ task :makemo, [:app] do |t, args|
         next if args[:app] && !check_app_path(path, args[:app])
         if File.directory?(path+'/po')
             Dir.chdir(path)
-            GetText.create_mofiles(:verbose => true, :po_root => './po', :mo_root => $SPIDER_PATH+'/data/locale')
+            GetText.create_mofiles(:verbose => true, :po_root => './po', :mo_root => "#{path}/data/locale")
         end
     end
 end

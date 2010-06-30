@@ -75,6 +75,7 @@ module Spider
             end
             @logger.close(STDERR)
             @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
+            GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
                 GetText.bindtextdomain(mod.short_name) if File.directory?(mod.path+'/po')
                 mod.app_init if mod.respond_to?(:app_init)
@@ -227,6 +228,11 @@ module Spider
             last_name = path.split('/')[-1]
             app_files = ['_init.rb', last_name+'.rb', 'config/options.rb', 'cmd.rb']
             app_files.each{ |f| require path+'/'+f if File.exist?(path+'/'+f)}
+            # if File.exist?("#{path}/data/locale")
+            #     ENV['GETTEXT_PATH'] += ',' if ENV['GETTEXT_PATH']
+            #     ENV['GETTEXT_PATH'] += "#{path}/data/locale" 
+            # end
+            GetText::LocalePath.add_default_rule("#{path}/data/locale/%{lang}/LC_MESSAGES/%{name}.mo")
         end
         
         def load_apps(*l)
