@@ -263,7 +263,7 @@ module Spider; module ControllerMixins
                 @scene.exception_uuid = exc.uuid
                 @scene.email_subject += " (#{exc.uuid})"
             end
-            @scene.admin_email = Spider.conf.get('site.admin.email')
+            @scene.admin_email = Spider.conf.get('site.tech_admin.email')
             if (Spider.runmode == 'devel')
                 begin
                     @scene.devel = true

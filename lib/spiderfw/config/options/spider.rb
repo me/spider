@@ -129,6 +129,10 @@ module Spider
     
     config_option 'site.admin.name', _("Name of the site administrator")
     config_option 'site.admin.email', _("Email of the site administrator")
+    config_option 'site.tech_admin.email', _("Email of the site technical administrator"), 
+        :default => lambda{ Spider.conf.get('site.admin.email') }
+       
+        
     
     config_option 'devel.trace.extended', _("Use ruby-debug to provide extended traces"), :default => true
     config_option 'devel.trace.show_locals', _("Show locals in debug traces"), :default => true
