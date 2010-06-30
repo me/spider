@@ -238,7 +238,7 @@ module Spider; module ControllerMixins
             return obj
         end
         
-        def try_rescue(exc)
+        def try_rescue(exc)            
             exc.uuid = UUIDTools::UUID.random_create.to_s if exc.respond_to?(:uuid=)
             format = self.class.output_format(:error) || :html
             return super unless @executed_format == :html
@@ -293,7 +293,7 @@ module Spider; module ControllerMixins
         
         def build_backtrace(exc)
             bt = []
-            if Debugger && Debugger.started? && Debugger.post_mortem?
+            if Object.const_defined?(:Debugger) && Debugger.started? && Debugger.post_mortem?
                 use_debugger = true
                 context = exc.__debug_context
                 ct_first_file = context.frame_file(0)
@@ -313,67 +313,70 @@ module Spider; module ControllerMixins
             end
             context = exc.__debug_context
             0.upto(Debugger.current_context.stack_size - 2) do |i|
-                file = context.frame_file(i)
-                line = context.frame_line(i)
-                klass = context.frame_class(i)
-                method = context.frame_method(i)
-                args = context.frame_args(i)
-                locals = context.frame_locals(i)
-                frame_self = context.frame_self(i)
-                dest = context.frame_self(i-1) unless i == 0
-                ex_method = context.frame_method(i-1) unless i == 0
-                in_method = context.frame_method(i)
-#s                ex_args = context.frame_args(i+1)
-                str = "#{file}:#{line}: in #{in_method}"
-                #str = exc.backtrace[i]
+                begin
+                    file = context.frame_file(i)
+                    line = context.frame_line(i)
+                    klass = context.frame_class(i)
+                    method = context.frame_method(i)
+                    args = context.frame_args(i)
+                    locals = context.frame_locals(i)
+                    frame_self = context.frame_self(i)
+                    dest = context.frame_self(i-1) unless i == 0
+                    ex_method = context.frame_method(i-1) unless i == 0
+                    in_method = context.frame_method(i)
+    #s                ex_args = context.frame_args(i+1)
+                    str = "#{file}:#{line}: in #{in_method}"
+                    #str = exc.backtrace[i]
                 
-                self_str = frame_self
-#                self_str = "#<#{frame_self.class}:#{frame_self.object_id}>"
-                if (dest)
-                    dest_str = dest.is_a?(Class) ? dest.inspect : "#<#{dest.class}:#{dest.object_id}>"
-                else
-                    dest_str = ""
-                end
-                self_str = frame_self.is_a?(Class) ? frame_self.inspect : "#<#{frame_self.class}:#{frame_self.object_id}>"
-                if (i == -1)
-                    info = ""
-                else
-                    # if (frame_self == dest)
-                    #                        info = "#{dest_str}"
-                    #                    else
-                    #                        info = "#{self_str}: #{dest_str}"
-                    #                    end
-                    info = "#{self_str}: #{dest_str}"
-                    info += ".#{ex_method}("
-                    info += args.map{ |arg|
-                        val = locals[arg]
-                        arg_str = "#{arg}##{val.class}"
-                        val_str = nil
-                        if (val.is_a?(String))
-                            if (val.length > 20)
-                                val_str = (val[0..20]+'...').inspect
-                            else
+                    self_str = frame_self
+    #                self_str = "#<#{frame_self.class}:#{frame_self.object_id}>"
+                    if (dest)
+                        dest_str = dest.is_a?(Class) ? dest.inspect : "#<#{dest.class}:#{dest.object_id}>"
+                    else
+                        dest_str = ""
+                    end
+                    self_str = frame_self.is_a?(Class) ? frame_self.inspect : "#<#{frame_self.class}:#{frame_self.object_id}>"
+                    if (i == -1)
+                        info = ""
+                    else
+                        # if (frame_self == dest)
+                        #                        info = "#{dest_str}"
+                        #                    else
+                        #                        info = "#{self_str}: #{dest_str}"
+                        #                    end
+                        info = "#{self_str}: #{dest_str}"
+                        info += ".#{ex_method}("
+                        info += args.map{ |arg|
+                            val = locals[arg]
+                            arg_str = "#{arg}##{val.class}"
+                            val_str = nil
+                            if (val.is_a?(String))
+                                if (val.length > 20)
+                                    val_str = (val[0..20]+'...').inspect
+                                else
+                                    val_str = val.inspect
+                                end
+                            elsif (val.is_a?(Symbol) || val.is_a?(Fixnum) || val.is_a?(Float) || val.is_a?(BigDecimal) || val.is_a?(Date) || val.is_a?(Time))
                                 val_str = val.inspect
                             end
-                        elsif (val.is_a?(Symbol) || val.is_a?(Fixnum) || val.is_a?(Float) || val.is_a?(BigDecimal) || val.is_a?(Date) || val.is_a?(Time))
-                            val_str = val.inspect
-                        end
-                        arg_str += "=#{val_str}" if val_str
-                        arg_str
-                    }.join(', ')
-                    info += ")"
+                            arg_str += "=#{val_str}" if val_str
+                            arg_str
+                        }.join(', ')
+                        info += ")"
+                    end
+                    if (Spider.conf.get('devel.trace.show_instance_variables'))
+                        iv = {}
+                        frame_self.instance_variables.each{ |var| iv[var] = frame_self.instance_variable_get(var) }
+                        iv.reject{ |k, v| v.nil? }
+                    end
+                    locals = nil unless Spider.conf.get('devel.trace.show_locals')
+                    bt << {
+                        :text => str, :info => info, 
+                        :path => File.expand_path(file), :line => line, :method => method, :klass => klass, :locals => locals,
+                        :instance_variables => iv
+                    }
+                rescue => exc2
                 end
-                if (Spider.conf.get('devel.trace.show_instance_variables'))
-                    iv = {}
-                    frame_self.instance_variables.each{ |var| iv[var] = frame_self.instance_variable_get(var) }
-                    iv.reject{ |k, v| v.nil? }
-                end
-                locals = nil unless Spider.conf.get('devel.trace.show_locals')
-                bt << {
-                    :text => str, :info => info, 
-                    :path => File.expand_path(file), :line => line, :method => method, :klass => klass, :locals => locals,
-                    :instance_variables => iv
-                }
             end
             return bt
         end
