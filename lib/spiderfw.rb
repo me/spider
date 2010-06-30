@@ -232,6 +232,7 @@ module Spider
             #     ENV['GETTEXT_PATH'] += ',' if ENV['GETTEXT_PATH']
             #     ENV['GETTEXT_PATH'] += "#{path}/data/locale" 
             # end
+            # GETTEXT_PATH is broken at the moment in gettext 2.1.0
             GetText::LocalePath.add_default_rule("#{path}/data/locale/%{lang}/LC_MESSAGES/%{name}.mo")
         end
         

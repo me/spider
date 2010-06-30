@@ -11,7 +11,7 @@ msgstr ""
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: lib/spiderfw/cmd/cmd.rb:21
@@ -443,78 +443,102 @@ msgstr "Numero di vecchi file di log da tenere, OPPURE frequenza di rotazione (d
 msgid "Maximum logfile size (only applies when log.rotate.age is a number)"
 msgstr "Dimensione massima del file di log (applicabile solo se log.rotate.age è un numero)"
 
-#: lib/spiderfw/config/options/spider.rb:105
+#: lib/spiderfw/config/options/spider.rb:104
 msgid "A list of organizations"
 msgstr "Una lista di organizzazioni"
 
-#: lib/spiderfw/config/options/spider.rb:106
+#: lib/spiderfw/config/options/spider.rb:105
 msgid "Descriptive name of the organization"
 msgstr "Nome descrittivo dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:107
+#: lib/spiderfw/config/options/spider.rb:106
 msgid "Country code of the organization"
 msgstr "Codice nazione dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:108
+#: lib/spiderfw/config/options/spider.rb:107
 msgid "State of the organization"
 msgstr "Provincia dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:109
+#: lib/spiderfw/config/options/spider.rb:108
 msgid "Name of the city"
 msgstr "Nome della città"
 
-#: lib/spiderfw/config/options/spider.rb:110
+#: lib/spiderfw/config/options/spider.rb:109
 msgid "Common name (e.g. domain) of the organization"
 msgstr "Common name (p.es. il dominio) dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:111
+#: lib/spiderfw/config/options/spider.rb:110
 msgid "Main e-mail address of the organization"
 msgstr "Indirizzo e-mail principale dell'organizzazione"
 
-#: lib/spiderfw/config/options/spider.rb:112
+#: lib/spiderfw/config/options/spider.rb:111
 msgid "Email address used as 'From' for automatic e-mails"
 msgstr "Indirizzo Email utilizzato come 'From' per le e-mail automatiche"
 
-#: lib/spiderfw/config/options/spider.rb:114
+#: lib/spiderfw/config/options/spider.rb:113
 msgid "Organizational Unit (e.g. department)"
 msgstr "Unità Organizzativa (p.es. il dipartimento)"
 
-#: lib/spiderfw/config/options/spider.rb:115
+#: lib/spiderfw/config/options/spider.rb:114
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
 msgstr "Percorso della chiave pubblica (di default config/certs/nome_org/public.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:117
+#: lib/spiderfw/config/options/spider.rb:116
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr "Percorso del certificato (di default config/certs/nome_org/cert.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:119
+#: lib/spiderfw/config/options/spider.rb:118
 msgid "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
 msgstr "Percorso della chiave privata (di default config/certs/nome_org/private/key.pem)"
 
-#: lib/spiderfw/config/options/spider.rb:131
+#: lib/spiderfw/config/options/spider.rb:130
 msgid "Name of the site administrator"
 msgstr "Nome dell'amministratore del sito"
 
-#: lib/spiderfw/config/options/spider.rb:132
+#: lib/spiderfw/config/options/spider.rb:131
 msgid "Email of the site administrator"
 msgstr "Indirizzo e-mail dell'amministratore del sito"
 
-#: lib/spiderfw/config/options/spider.rb:134
+#: lib/spiderfw/config/options/spider.rb:132
+msgid "Email of the site technical administrator"
+msgstr "Indirizzo e-mail dell'amministratore tecnico del sito"
+
+#: lib/spiderfw/config/options/spider.rb:136
+msgid "Send an e-mail to the technical administrator when errors occur"
+msgstr "Invia un'e-mail all'amministratore quando accade un errore"
+
+#: lib/spiderfw/config/options/spider.rb:139
 msgid "Use ruby-debug to provide extended traces"
 msgstr "Usa ruby-debug per creare trace estesi"
 
-#: lib/spiderfw/config/options/spider.rb:135
-#: lib/spiderfw/config/options/spider.rb:136
+#: lib/spiderfw/config/options/spider.rb:140
+#: lib/spiderfw/config/options/spider.rb:141
 msgid "Show locals in debug traces"
 msgstr "Mostra le variabili locali nei trace"
 
-#: lib/spiderfw/controller/mixins/visual.rb:245
+#: lib/spiderfw/config/options/spider.rb:143
+msgid "Compress JavaScript files"
+msgstr "Comprimi i file JavaScript"
+
+#: lib/spiderfw/config/options/spider.rb:145
+msgid "Combine CSS files"
+msgstr "Combina i file CSS"
+
+#: lib/spiderfw/config/options/spider.rb:147
+msgid "Use cache busters for CSS urls"
+msgstr "Usa cache busters per le url dei CSS"
+
+#: lib/spiderfw/controller/mixins/visual.rb:250
 msgid "Page not found"
 msgstr "Pagina non trovata"
 
-#: lib/spiderfw/controller/mixins/visual.rb:252
+#: lib/spiderfw/controller/mixins/visual.rb:257
 msgid "An error occurred"
 msgstr "Si è verificato un errore"
+
+#: lib/spiderfw/controller/mixins/visual.rb:303
+msgid "Site error"
+msgstr "Errore del sito"
 
 #: lib/spiderfw/i18n/i18n.rb:141
 #: lib/spiderfw/i18n/i18n.rb:147
@@ -572,11 +596,11 @@ msgstr "circa 1 anno"
 msgid "over %d years"
 msgstr "più di %d anni"
 
-#: lib/spiderfw/model/base_model.rb:1287
+#: lib/spiderfw/model/base_model.rb:1294
 msgid "'%s' is not a valid date"
 msgstr "%s non è una data valida"
 
-#: lib/spiderfw/model/base_model.rb:1339
+#: lib/spiderfw/model/base_model.rb:1348
 msgid "'%s' is not in the correct format"
 msgstr "%s non è nel formato corretto"
 
@@ -592,11 +616,11 @@ msgstr "Creato"
 msgid "Modified"
 msgstr "Modificato"
 
-#: lib/spiderfw/model/mappers/mapper.rb:1024
+#: lib/spiderfw/model/mappers/mapper.rb:1027
 msgid "Element %s is required"
 msgstr "L'elemento %s è obbligatorio"
 
-#: lib/spiderfw/model/mappers/mapper.rb:1028
+#: lib/spiderfw/model/mappers/mapper.rb:1031
 msgid "Another item with the same %s is already present"
 msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 

@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Spider 0.5.9
+"Project-Id-Version: Spider 0.5.13
 \n"
-"POT-Creation-Date: 2010-06-09 20:42+0200\n"
+"POT-Creation-Date: 2010-06-30 20:23+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -449,78 +449,102 @@ msgstr ""
 msgid "Maximum logfile size (only applies when log.rotate.age is a number)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:105
+#: lib/spiderfw/config/options/spider.rb:104
 msgid "A list of organizations"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:106
+#: lib/spiderfw/config/options/spider.rb:105
 msgid "Descriptive name of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:107
+#: lib/spiderfw/config/options/spider.rb:106
 msgid "Country code of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:108
+#: lib/spiderfw/config/options/spider.rb:107
 msgid "State of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:109
+#: lib/spiderfw/config/options/spider.rb:108
 msgid "Name of the city"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:110
+#: lib/spiderfw/config/options/spider.rb:109
 msgid "Common name (e.g. domain) of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:111
+#: lib/spiderfw/config/options/spider.rb:110
 msgid "Main e-mail address of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:112
+#: lib/spiderfw/config/options/spider.rb:111
 msgid "Email address used as 'From' for automatic e-mails"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:114
+#: lib/spiderfw/config/options/spider.rb:113
 msgid "Organizational Unit (e.g. department)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:115
+#: lib/spiderfw/config/options/spider.rb:114
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:117
+#: lib/spiderfw/config/options/spider.rb:116
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:119
+#: lib/spiderfw/config/options/spider.rb:118
 msgid ""
 "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:131
+#: lib/spiderfw/config/options/spider.rb:130
 msgid "Name of the site administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:132
+#: lib/spiderfw/config/options/spider.rb:131
 msgid "Email of the site administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:134
+#: lib/spiderfw/config/options/spider.rb:132
+msgid "Email of the site technical administrator"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:136
+msgid "Send an e-mail to the technical administrator when errors occur"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:139
 msgid "Use ruby-debug to provide extended traces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:135
-#: lib/spiderfw/config/options/spider.rb:136
+#: lib/spiderfw/config/options/spider.rb:140
+#: lib/spiderfw/config/options/spider.rb:141
 msgid "Show locals in debug traces"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:245
+#: lib/spiderfw/config/options/spider.rb:143
+msgid "Compress JavaScript files"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:145
+msgid "Combine CSS files"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:147
+msgid "Use cache busters for CSS urls"
+msgstr ""
+
+#: lib/spiderfw/controller/mixins/visual.rb:250
 msgid "Page not found"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:252
+#: lib/spiderfw/controller/mixins/visual.rb:257
 msgid "An error occurred"
+msgstr ""
+
+#: lib/spiderfw/controller/mixins/visual.rb:303
+msgid "Site error"
 msgstr ""
 
 #: lib/spiderfw/i18n/i18n.rb:141 lib/spiderfw/i18n/i18n.rb:147
@@ -576,11 +600,11 @@ msgstr ""
 msgid "over %d years"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1287
+#: lib/spiderfw/model/base_model.rb:1294
 msgid "'%s' is not a valid date"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1339
+#: lib/spiderfw/model/base_model.rb:1348
 msgid "'%s' is not in the correct format"
 msgstr ""
 
@@ -596,11 +620,11 @@ msgstr ""
 msgid "Modified"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:1024
+#: lib/spiderfw/model/mappers/mapper.rb:1027
 msgid "Element %s is required"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:1028
+#: lib/spiderfw/model/mappers/mapper.rb:1031
 msgid "Another item with the same %s is already present"
 msgstr ""
 
