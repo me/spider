@@ -210,6 +210,11 @@ module Spider
                 [:css, 'css/spider.css', Spider::Components]
             ], :depends => ['jquery']
             
+            Spider::Template.define_named_asset 'jquery-ui', [
+                [:js, 'js/jquery/jquery-ui-1.8.2/development-bundle/ui/jquery-ui-1.8.2.custom.js', Spider::Components],
+                [:css, 'js/jquery/jquery-ui-1.8.2/css/smoothness/jquery-ui-1.8.2.custom.css', Spider::Components]
+            ]
+            
             def default_asset(ass)
                 @default_assets ||= []
                 @default_assets << ass
