@@ -123,7 +123,7 @@ module Spider
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
         def shutdown
             return unless Thread.current == Thread.main
-            Debugger.post_mortem = false if Debugger && Debugger.post_mortem?
+            Debugger.post_mortem = false if const_defined?(:Debugger) && Debugger.post_mortem?
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
             end
