@@ -482,8 +482,7 @@ module Spider
             raise "Can't change runmode" if @runmode
             @runmode = mode
             @configuration.include_set(mode)
-            case mode
-            when 'devel'
+            if mode == 'devel' || File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                 init_debug
             end
             if (mode != 'production')
@@ -495,7 +494,11 @@ module Spider
             if (RUBY_VERSION_PARTS[1] == '8')
                 begin
                     require 'ruby-debug'
-                    if (Spider.conf.get('devel.trace.extended'))
+                    if File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
+                        Debugger.wait_connection = true
+                        Debugger.start_remote
+                        File.delete(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
+                    elsif (Spider.conf.get('devel.trace.extended'))
                         require 'spiderfw/utils/monkey/debugger'
                         Debugger.start
                         Debugger.post_mortem
