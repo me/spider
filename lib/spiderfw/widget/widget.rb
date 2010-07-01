@@ -198,23 +198,6 @@ module Spider
                 @plugins[name]
             end
             
-            Spider::Template.define_named_asset 'jquery', [
-                [:js, 'js/jquery/jquery-1.4.2.js', Spider::Components]
-            ]
-            Spider::Template.define_named_asset 'spider', [
-                [:js, 'js/inheritance.js', Spider::Components],
-                [:js, 'js/spider.js', Spider::Components],
-                [:js, 'js/jquery/plugins/jquery.query-2.1.6.js', Spider::Components],
-                [:js, 'js/jquery/plugins/jquery.form.js', Spider::Components],
-                [:js, 'js/plugins/plugin.js', Spider::Components],
-                [:css, 'css/spider.css', Spider::Components]
-            ], :depends => ['jquery']
-            
-            Spider::Template.define_named_asset 'jquery-ui', [
-                [:js, 'js/jquery/jquery-ui-1.8.2/development-bundle/ui/jquery-ui-1.8.2.custom.js', Spider::Components],
-                [:css, 'js/jquery/jquery-ui-1.8.2/css/smoothness/jquery-ui-1.8.2.custom.css', Spider::Components]
-            ]
-            
             def default_asset(ass)
                 @default_assets ||= []
                 @default_assets << ass

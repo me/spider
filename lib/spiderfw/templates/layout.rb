@@ -23,13 +23,18 @@ module Spider
             seen = {}
             js = []
             css = []
+            runtime = []
             all_assets.each do |res|
                 next if seen[res[:src]]
                 seen[res[:src]] = true
                 @template_assets[res[:type].to_sym] ||= []
                 @template_assets[res[:type].to_sym] << res[:src]
-                js << res if Spider.conf.get('javascript.compress') && res[:type].to_sym == :js
-                css << res if Spider.conf.get('css.compress') && res[:type].to_sym == :css
+                if res[:runtime]
+                    runtime << res
+                else
+                    js << res if Spider.conf.get('javascript.compress') && res[:type].to_sym == :js
+                    css << res if Spider.conf.get('css.compress') && res[:type].to_sym == :css
+                end
             end
             if Spider.conf.get('javascript.compress') && !@scene.__is_error_page
                 compressed = compress_javascript(js)
@@ -42,6 +47,9 @@ module Spider
                 @template_assets[:css] = combined.map{ |c|
                     Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+c
                 }
+            end
+            runtime.each do |rt|
+                @template_assets[rt[:type]] << Spider::Template.runtime_assets[rt[:runtime]].call(@request, @response, @scene)
             end
             @content[:yield_to] = @template
             @scene.assets = @template_assets

@@ -10,6 +10,8 @@ end
 
 Spider::Template.register_namespace('core', Spider::Components)
 
+require 'apps/core/components/assets'
+
 require 'apps/core/components/widgets/table/table'
 require 'apps/core/components/widgets/search_table/search_table'
 require 'apps/core/components/widgets/crud/crud'

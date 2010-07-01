@@ -128,6 +128,15 @@ module Spider
                 @named_assets || {}
             end
             
+            def define_runtime_asset(name, &proc)
+                @runtime_assets ||= {}
+                @runtime_assets[name] = proc
+            end
+            
+            def runtime_assets
+                @runtime_assets || {}
+            end
+            
             def get_named_asset(name)
                 res = []
                 ass = self.named_assets[name]
@@ -338,8 +347,9 @@ module Spider
             type = type.to_sym if type
             ass = {:type => type}
             if attributes[:name]
-                named = [Spider::Template.named_assets[attributes[:name]]]
+                named = Spider::Template.named_assets[attributes[:name]]
                 raise "Can't find named asset #{attributes[:name]}" unless named
+                named = [named]
                 named.each do |nmd|
                     deps = nmd[:options].delete(:depends)
                     if deps
@@ -353,6 +363,10 @@ module Spider
                         parse_asset(nmdass[0], nmdass[1], nmdattr)
                     }
                 }.flatten
+            end
+            if attributes[:app] == :runtime
+                ass[:runtime] = src
+                return [ass]
             end
             if attributes[:app]
                 owner_class = attributes[:app]
@@ -438,7 +452,11 @@ module Spider
                     ext_search_paths = ext_owner.template_paths
                 end 
                 ext = self.class.real_path(ext_src, @path, ext_owner, ext_search_paths)
-                assets = root.children ? root.children_of_type('tpl:asset') : []
+                assets = []
+                if root.children
+                    assets = root.children_of_type('tpl:asset')
+                    assets += root.children_of_type('tpl:assets')
+                end
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
@@ -472,6 +490,11 @@ module Spider
                         end
                         assets_html += ass.to_html 
                     }
+                    if incl_el.children
+                        incl_el.children_of_type('tpl:assets').each do |asss|
+                            assets_html += asss.to_html
+                        end
+                    end
                     incl_el.search('.to_delete').remove
                     incl.swap(incl_el.to_html)
                 end
