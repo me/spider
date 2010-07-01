@@ -105,7 +105,7 @@ module Spider
                     curr.each do |f|
                         name = File.basename(f)
                         if name =~ /(\d+)\.js$/
-                            version = $1 if $1 > version
+                            version = $1.to_i if $1.to_i > version
                             File.unlink(f)
                         end
                     end
@@ -221,7 +221,7 @@ module Spider
                     curr.each do |f|
                         name = File.basename(f)
                         if name =~ /(\d+)\.js$/
-                            version = $1 if $1 > version
+                            version = $1.to_i if $1.to_i > version
                             File.unlink(f)
                         end
                     end
