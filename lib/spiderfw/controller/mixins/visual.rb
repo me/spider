@@ -162,7 +162,8 @@ module Spider; module ControllerMixins
             return template
         end
         
-        def init_template(template, options={})
+        def init_template(template=nil, options={})
+            return get_template unless template
             prepare_template(template) unless template.owner # if called directly
             template.init(scene)
             if (@request.params['_action'])
