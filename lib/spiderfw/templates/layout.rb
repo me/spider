@@ -73,11 +73,12 @@ module Spider
             res = []
             compress = {}
             compressed = []
+            cname = File.basename(@path, '.layout.shtml')
             assets.each do |ass|
                 if ass[:compressed]
                     compressed << ass[:compressed_path]
                 else
-                    name = ass[:compress] || 'compressed'
+                    name = ass[:compress] || cname
                     compress[name] ||= []
                     compress[name] << ass
                 end
@@ -100,7 +101,7 @@ module Spider
                     end
                 end
                 version = 0
-                curr = Dir.glob(pub_dest+'/._*.js')
+                curr = Dir.glob(pub_dest+"/._#{name}.*.js")
                 unless curr.empty?
                     curr.each do |f|
                         name = File.basename(f)
@@ -139,8 +140,9 @@ module Spider
         def compress_css(assets)
             res = []
             combine = {}
+            cname = File.basename(@path, '.layout.shtml')
             assets.each do |ass|
-                name = ass[:combine] || 'compressed'
+                name = ass[:combine] || cname
                 combine[name] ||= []
                 combine[name] << ass
             end
@@ -216,7 +218,7 @@ module Spider
                 end
                 
                 version = 0
-                curr = Dir.glob(pub_dest+'/._*.css')
+                curr = Dir.glob(pub_dest+"/._#{name}.*.css")                
                 unless curr.empty?
                     curr.each do |f|
                         name = File.basename(f)
