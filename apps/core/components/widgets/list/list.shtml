@@ -1,6 +1,6 @@
 <div id="list" class="model { @model_class }">
-    <tpl:asset type="js" src="js/jquery/plugins/treeview/jquery.treeview.js" />
-    <tpl:asset type="js" src="js/jquery/plugins/treeview/jquery.treeview.sortable.js" />
+    <!--- <tpl:asset type="js" src="js/jquery/plugins/treeview/jquery.treeview.js" />
+    <tpl:asset type="js" src="js/jquery/plugins/treeview/jquery.treeview.sortable.js" /> -->
     <tpl:asset type="css" src="js/jquery/plugins/treeview/jquery.treeview.css" />
     <tpl:asset type="css" src="css/list.css" />
     <tpl:asset type="js" src="js/plugins/sortable.js" />

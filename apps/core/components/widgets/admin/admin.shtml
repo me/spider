@@ -1,4 +1,5 @@
 <div class="{ @widget[:css_class] }">
+    <tpl:assets widgets="core:crud" />
     <tpl:asset type="css" src="css/admin.css" />
     <div class="heading">
 	    <div class="title">

@@ -1,4 +1,5 @@
 <div class="{ @widget[:css_class] }">
+    <tpl:assets widgets="core:table,forms:form" />
     <tpl:asset type="css" src="css/crud.css" />
     <div sp:if="@saved" class="flash">
         Salvataggio effettuato
