@@ -190,26 +190,30 @@ module Spider
                             FileUtils.mkdir_p(File.dirname(url_dest))
                             cachebuster = Spider.conf.get('css.cachebuster')
                             new_url = "#{app_relative_path}/#{url}"
-                            mtime = File.mtime(url_src).to_i
-                            if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest)
-                                if cachebuster == :soft
-                                    File.cp(url_src, url_dest)
-                                    new_url += "?cb=#{mtime}"
-                                elsif cachebuster == :hard || cachebuster == :hardcopy
-                                    url_dir = File.dirname(url)
-                                    url_ext = File.extname(url)
-                                    url_basename = File.basename(url, url_ext)
-                                    url_dest_dir = File.dirname(url_dest)
-                                    cb_file_name = "#{url_basename}-cb#{mtime}#{url_ext}"
-                                    new_url = "#{url_dir}/#{cb_file_name}"
-                                    if cachebuster == :hard
+                            if File.exist?(url_src)
+                                mtime = File.mtime(url_src).to_i
+                                if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest).to_i
+                                    if cachebuster == :soft
                                         File.cp(url_src, url_dest)
-                                    else
-                                        File.cp(url_src, "#{url_dest_dir}/#{cb_file_name}")
+                                        new_url += "?cb=#{mtime}"
+                                    elsif cachebuster == :hard || cachebuster == :hardcopy
+                                        url_dir = File.dirname(url)
+                                        url_ext = File.extname(url)
+                                        url_basename = File.basename(url, url_ext)
+                                        url_dest_dir = File.dirname(url_dest)
+                                        cb_file_name = "#{url_basename}-cb#{mtime}#{url_ext}"
+                                        new_url = "#{url_dir}/#{cb_file_name}"
+                                        if cachebuster == :hard
+                                            File.cp(url_src, url_dest)
+                                        else
+                                            File.cp(url_src, "#{url_dest_dir}/#{cb_file_name}")
+                                        end
                                     end
+                                else
+                                    File.cp(url_src, url_dest)
                                 end
                             else
-                                File.cp(url_src, url_dest)
+                                Spider.logger.error("CSS referenced file not found: #{url_src}")
                             end
                             src.gsub!(/\([\s"']*#{url}[\s"']*\)/m, "(#{new_url})")
                         end
