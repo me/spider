@@ -142,7 +142,7 @@ module Spider
     
     config_option 'javascript.compress', _("Compress JavaScript files"), 
         :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
-    config_option 'css.combine', _("Combine CSS files"), 
+    config_option 'css.compress', _("Combine CSS files"), 
         :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
     config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
         :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
