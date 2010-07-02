@@ -25,6 +25,7 @@ module Spider
             css = []
             runtime = []
             all_assets.each do |res|
+                next if !res[:src] || res[:src].empty?
                 next if seen[res[:src]]
                 seen[res[:src]] = true
                 @template_assets[res[:type].to_sym] ||= []
