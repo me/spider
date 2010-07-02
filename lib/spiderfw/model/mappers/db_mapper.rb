@@ -94,9 +94,12 @@ module Spider; module Model; module Mappers
                     if (!element.multiple?)
                         next if (save_mode == :update && element.primary_key?)
                         next if (element.model? && !schema.has_foreign_fields?(element.name))
-                        next if (element.model? && (!(element_val = obj.get(element)) || !obj.get(element).primary_keys_set?))
+                        element_val = obj.get(element)
+                        # next if (element.model? && (!(element_val = obj.get(element)) || !))
                         next if (element.integrated?)
-                        if (element.model?)
+                        element_val = nil if element.model? && element_val.is_a?(BaseModel) && !element_val.primary_keys_set?
+                        
+                        if (element.model? && element_val)
                             element.model.primary_keys.each do |key|
                                 # FIXME! only works with one primary key
                                 if (key.model?)
@@ -112,7 +115,7 @@ module Spider; module Model; module Mappers
                             end
                         else
                             store_key = schema.field(element.name)
-                            values[store_key] = map_save_value(element.type, obj.send(element.name), save_mode)
+                            values[store_key] = map_save_value(element.type, element_val, save_mode)
                         end
                     end
                 end
