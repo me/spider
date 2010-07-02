@@ -7,6 +7,10 @@ module Spider; module TemplateBlocks
         def compile(options={})
             c = ""
             init = ""
+            if @doctype
+                c = "$out << '#{@doctype.raw_string}'\n" 
+                c += "$out << 10.chr\n" #newline
+            end
             start = get_start(options)
             c += start
             is_root = options[:root]

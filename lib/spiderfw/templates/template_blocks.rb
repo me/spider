@@ -77,6 +77,7 @@ module Spider
         
         class Block
             attr_reader :el, :template, :allowed_blocks
+            attr_accessor :doctype
             
             def initialize(el, template=nil, allowed_blocks=nil)
                 @el = el

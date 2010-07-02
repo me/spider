@@ -262,7 +262,8 @@ module Spider
         def compile(options={})
             compiled = CompiledTemplate.new
             compiled.source_path = @path
-            root = get_el(@path)
+            doc = open(@path){ |f| Hpricot.XML(f) }
+            root = get_el(doc)
             el = process_tags(root)
             @overrides.each{ |o| apply_override(root, o) } if (@overrides)
             root.search('tpl:placeholder').remove # remove empty placeholders
@@ -300,6 +301,9 @@ module Spider
             end
             root.search('tpl:assets').remove
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
+            if doc.children && doc.children[0].is_a?(Hpricot::DocType)
+                root_block.doctype = doc.children[0]
+            end
             options[:root] = true
             options[:owner] = @owner
             options[:owner_class] = @owner_class || @owner.class
@@ -415,9 +419,16 @@ module Spider
         
         # Returns the root node of the template at given path.
         # Will apply overrides and process extends and inclusions.
-        def get_el(path=nil)
-            path ||= @path
-            doc = open(path){ |f| Hpricot.XML(f) }
+        def get_el(path_or_doc=nil)
+            path = nil
+            doc = nil
+            if path_or_doc.is_a?(Hpricot::Doc)
+                doc = path_or_doc
+            else
+                path = path_or_doc
+                path ||= @path
+                doc = open(path){ |f| Hpricot.XML(f) }
+            end
             root = doc.root
             overrides = []
             orig_overrides = @overrides
