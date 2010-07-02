@@ -1602,10 +1602,11 @@ module Spider; module Model
         end
         
         # Sets all values of obj on the current object, cloning them if possible
-        def merge!(obj)
+        def merge!(obj, only=nil)
             obj.class.elements_array.select{ |el| 
                 obj.element_has_value?(el) && !el.integrated? && !el.attributes[:computed_from]
             }.each do |el|
+                next if only && !only.key?(el.name)
                 val = obj.get(el)
                 if (!val.is_a?(BaseModel) && val.respond_to?(:clone))
                     begin; val = val.clone; rescue TypeError; end;

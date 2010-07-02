@@ -554,7 +554,7 @@ module Spider; module Model
                     result.each do |row|
                         obj =  map(query.request, row, @model) # set.model ?!?
                         next unless obj
-                        merge_object(set, obj)
+                        merge_object(set, obj, query.request)
                         @raw_data[obj.object_id] = row
                     end
                 end
@@ -575,13 +575,15 @@ module Spider; module Model
         end
         
         
-        def merge_object(set, obj) # :nodoc:
+        def merge_object(set, obj, request) # :nodoc:
             search = {} 
             @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
             obj_res = set.find(search)  # FIXME: find a better way
             if (obj_res && obj_res[0])
-                obj_res[0].merge!(obj)
-                obj.loaded_elements.each{ |name, bool| set.element_loaded(name) }
+                obj_res[0].merge!(obj, request)
+                obj.loaded_elements.each do |name, bool| 
+                    set.element_loaded(name) if request.key?(name)
+                end
             else
                 set << obj
             end
@@ -601,7 +603,7 @@ module Spider; module Model
             res = @model.superclass.mapper.find(q)
             res.change_model(@model)
             res.each do |obj|
-                merge_object(set, obj)
+                merge_object(set, obj, query.request)
             end
             return set
         end
