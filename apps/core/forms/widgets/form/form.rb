@@ -74,6 +74,11 @@ module Spider; module Forms
             @pk = nil if @pk == 'new'
             @pk = Spider::HTTP.urldecode(@pk) if @pk && @pk.is_a?(String) && !@pk.empty?
             @model = const_get_full(@model) if @model.is_a?(String)
+            if @model.method_defined?(:to_subclass) # FIXME: this is a quick hack, standardize
+                @obj ||= load
+                @obj = @obj.to_subclass
+                @model = @obj.class
+            end
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
                 @requested_elements = @elements
