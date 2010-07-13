@@ -21,7 +21,7 @@ module Spider; module ControllerMixins
             @layout ||= @dispatcher_layout
             format = nil
             req_format = self.is_a?(Widget) && @is_target && @request.params['_wf'] ? @request.params['_wf'].to_sym : @request.format
-            if (req_format)
+            if (req_format && self.class.output_formats[@executed_method])
                 format = req_format if self.class.output_format?(@executed_method, req_format)
                 if (format)
                     format_params = self.class.output_format_params(@executed_method, format)
@@ -421,6 +421,10 @@ module Spider; module ControllerMixins
                 end
                 return @default_output_format unless @output_formats[method] && @output_formats[method][0]
                 return @output_formats[method][0]
+            end
+            
+            def output_formats
+                @output_formats || {}
             end
             
             def output_format?(method, format)
