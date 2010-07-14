@@ -55,20 +55,66 @@ module Spider
                 end
             end
             
+            def enquire_loggers(method)
+                @loggers.each{ |dest, l| return true if l.send(method) }
+                return false                
+            end
+            
             def debug(*args)
                 send_to_loggers(:debug, *args)
             end
-        
+            
+            def debug?
+                enquire_loggers(:debug?)
+            end
+
             def info(*args)
                 send_to_loggers(:info, *args)
+            end
+            
+            def info?
+                enquire_loggers(:info?)
             end
         
             def warn(*args)
                 send_to_loggers(:warn, *args)
             end
             
+            def warn?
+                enquire_loggers(:warn?)
+            end
+            
+            
             def error(*args)
                 send_to_loggers(:error, *args)
+            end
+            
+            def error?
+                enquire_loggers(:error?)
+            end
+            
+            def fatal(*args)
+                send_to_loggers(:fatal, *args)
+            end
+            
+            def fatal?
+                enquire_loggers(:fatal?)
+            end
+            
+            def datetime_format
+                @loggers.each do |d, l|
+                    return l.datetime_format
+                end
+            end
+            
+            def datetime_format=(datetime_format)
+                @loggers.each do |d, l|
+                    l.datetime_format=(datetime_format)
+                end
+            end
+            
+            def unknown(*args)
+                send_to_loggers(:unknown, *args)
             end
 
         end
@@ -87,6 +133,34 @@ module Spider
         
         def error(*args)
             Spider::Logger.error(*args)
+        end
+        
+        def fatal(*args)
+            Spider::Logger.fatal(*args)
+        end
+        
+        def unknown(*args)
+            Spider::Logger.unknown(*args)
+        end
+        
+        def debug?
+            Spider::Logger.debug?
+        end
+        
+        def info?
+            Spider::Logger.info?
+        end
+        
+        def warn?
+            Spider::Logger.warn?
+        end
+        
+        def error?
+            Spider::Logger.error?
+        end
+        
+        def fatal?
+            Spider::Logger.fatal?
         end
         
         
