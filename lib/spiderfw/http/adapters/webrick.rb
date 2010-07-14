@@ -35,6 +35,7 @@ module Spider; module HTTP
                 options[:SSLPrivateKey] = OpenSSL::PKey::RSA.new(File.open(opts[:ssl_private_key]).read)
 #                options[:SSLCertName] = [ [ "CN",WEBrick::Utils::getservername ] ]
             end
+            options[:Logger] = Spider.logger
             @server = ::WEBrick::HTTPServer.new(options)
             @server.mount("/", WEBrickServlet)
             @server.start
