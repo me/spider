@@ -13,7 +13,7 @@ module Spider; module TemplateBlocks
             init = ""
             rep_type = nil
             rep = nil
-            ['sp:each', 'sp:each_index'].each do |name|
+            ['sp:each', 'sp:each_index', 'sp:each_pair', 'sp:each_with_index'].each do |name|
                 if (@el.has_attribute?(name))
                     rep_type = name[3..-1]
                     rep = @el.get_attribute(name)
