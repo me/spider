@@ -20,8 +20,11 @@ module Spider
                 block = :TagIf
             elsif !skip_attributes && el.has_attribute?('sp:attr-if')
                 block = :AttrIf
-            elsif !skip_attributes && (el.has_attribute?('sp:each') || el.has_attribute?('sp:each_index'))
+            elsif !skip_attributes && (el.has_attribute?('sp:each') || el.has_attribute?('sp:each_index') \
+                                    || el.has_attribute?('sp:each_pair') || el.has_attribute?('sp:each_with_index'))
                 block = :Each
+            elsif el.name == 'tpl:output'
+                block = :Output
             elsif el.name == 'sp:render'
                 block = :Render
             elsif el.name == 'sp:run'
@@ -216,4 +219,6 @@ require 'spiderfw/templates/blocks/widget'
 require 'spiderfw/templates/blocks/run'
 require 'spiderfw/templates/blocks/debugger'
 require 'spiderfw/templates/blocks/parent_context'
+require 'spiderfw/templates/blocks/output'
+
 
