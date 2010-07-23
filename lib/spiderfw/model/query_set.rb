@@ -331,10 +331,7 @@ module Spider; module Model
             @objects = []
             @index_lookup.each_key{ |k| @index_lookup[k] = {} }
         end
-        
-        # Remove when merging
-        alias :map_array :map
-        
+                
         # Iterates on currently loaded objects
         def each_current
             @objects.each { |obj| yield obj }
@@ -602,6 +599,10 @@ module Spider; module Model
         
         def to_a
             self.map{ |row| row }
+        end
+        
+        def reverse
+            self.to_a.reverse
         end
         
         def map_current

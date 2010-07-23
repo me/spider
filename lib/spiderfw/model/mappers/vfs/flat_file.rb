@@ -24,7 +24,7 @@ module Spider; module Model; module VFS
         end
         
         def self.ls
-            @model.all.map_array{ |obj| obj_file_name(obj) }
+            @model.all.map{ |obj| obj_file_name(obj) }
         end
         
         
