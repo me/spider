@@ -36,15 +36,18 @@ module Spider; module Model
                attributes[:association] = :tree
                attributes[:multiple] = true
                attributes[:reverse] ||= :"#{name}_parent"
-               attributes[:reverse_attributes] = {:association => :tree_parent}.merge(attributes[:reverse_attributes] || {})
+               attributes[:reverse_attributes] = {
+                   :association => :tree_parent,
+                   :tree_element => name
+               }.merge(attributes[:reverse_attributes] || {})
                attributes[:tree_left] ||= :"#{name}_left"
                attributes[:tree_right] ||= :"#{name}_right"
                attributes[:tree_depth] ||= :"#{name}_depth"
                choice(attributes[:reverse], self, attributes[:reverse_attributes])
                element(name, self, attributes)
-               element(attributes[:tree_left], Fixnum, :hidden => true)
-               element(attributes[:tree_right], Fixnum, :hidden => true)
-               element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true)
+               element(attributes[:tree_left], Fixnum, :hidden => true, :tree_element => name)
+               element(attributes[:tree_right], Fixnum, :hidden => true, :tree_element => name)
+               element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true, :tree_element => name)
 #               sequence(name)
                qs_module ||= Module.new
                
@@ -144,6 +147,18 @@ module Spider; module Model
                end
 
            end
+           
+            
+            def remove_element(el)
+                el = el.name if el.is_a?(Spider::Model::Element)
+                element = @elements[el] if @elements
+                return super if !element || element.attributes[:association] != :tree
+                remove_element(element.attributes[:reverse])
+                remove_element(element.attributes[:tree_left])
+                remove_element(element.attributes[:tree_right])
+                remove_element(element.attributes[:tree_depth])
+                return super
+            end
             
         end
 
