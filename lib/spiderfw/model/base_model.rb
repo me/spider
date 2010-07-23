@@ -1880,6 +1880,18 @@ module Spider; module Model
             # end
         end
         
+        def respond_to?(symbol, include_private=false)
+            return true if super
+            if (self.class.attributes[:integrated_models])
+                self.class.attributes[:integrated_models].each do |model, name|
+                    if (model.method_defined?(symbol))
+                        return true
+                    end
+                end
+            end
+            return false
+        end
+        
         # Returns a descriptive string for the object.
         # By default this method returns the value of the first String element, if any; otherwise,
         # the string representation of the first element of any type.
