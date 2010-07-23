@@ -65,6 +65,9 @@ module Spider; module Model
         # If _parent is a model instance, which element points to this one
         attr_accessor :_parent_element
         
+        # If this object is used as a superclass in class_table_inheritance, points to the current subclass
+        attr_accessor :_subclass_object
+        
         class <<self
             # An Hash of model attributes. They can be used freely.
             attr_reader :attributes
@@ -1150,6 +1153,9 @@ module Spider; module Model
                     obj.reset_modified_elements(*element.attributes[:set].keys)
                     # FIXME: is it always ok to not set the element as modified? But otherwise sub objects
                     # are always saved (and that's definitely no good)
+                end
+                if element.type == self.class.superclass && self.class.extended_models[element.type] && self.class.extended_models[element.type] == element.name
+                    obj._subclass_object = self
                 end
             else
                 obj = prepare_value(element, obj)
