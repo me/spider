@@ -94,6 +94,8 @@ module Spider; module Model
             subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
             subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
+            em = subclass.const_set(:ElementMethods, Module.new)
+            subclass.send(:include, em)
         end
         
         def self.subclasses
