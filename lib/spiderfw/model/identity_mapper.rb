@@ -12,6 +12,7 @@ module Spider; module Model
         # If passed a block, will activate the IdentityMapper, yield, and then deactivate it.
         def initialize(&proc)
             @objects = {}
+            @pks = {}
             if (proc)
                 Thread.current[:identity_mapper] = self
                 yield self
@@ -57,6 +58,7 @@ module Spider; module Model
                 raise IdentityMapperException, "Can't get without all primary keys" unless obj.primary_keys_set?
                 pks = {}
                 obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
+                pks.extend(HashComparison)
                 @objects[obj.class] ||= {}
                 if (check && (existent = @objects[obj.class][pks]) && existent.object_id != obj.object_id)
                     existent.merge!(obj)
@@ -67,6 +69,13 @@ module Spider; module Model
                     return obj
                 end
             end
+        end
+        
+        def has?(obj)
+            pks = {}
+            obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
+            pks.extend(HashComparison)
+            @objects[obj.class][pks]
         end
         
         def delete(klass, obj_id)
