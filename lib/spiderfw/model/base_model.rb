@@ -657,7 +657,7 @@ module Spider; module Model
             if (model == superclass) # first undo table per class inheritance
                 @elements = {}
                 @elements_order = []
-                @extended_models.delete(model) if @extended_models
+                @extended_models.delete(model.superclass) if @extended_models
             end
             primary_keys.each{ |k| remove_element(k) } if (params[:replace_pks])
             model.primary_keys.each{ |k| remove_element(k) }
