@@ -184,6 +184,7 @@ module Spider; module Model
             name = name.to_sym
             @elements ||= {}
             @elements_order ||= []
+            raise "Element called #{name} already exists in #{self}" if @elements[name]
             if type.class == Class
                 default_attributes = case type.name
                 when 'String'
