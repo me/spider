@@ -547,8 +547,17 @@ module Spider; module Model
                 end
                 attributes.delete(:primary_key) unless (params[:keep_pks])
                 attributes.delete(:required)
+                attributes.delete(:integrate)
+                attributes.delete(:local_pk)
                 name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
                 element(name, el.type, attributes)
+            end
+        end
+        
+        def self.remove_integrate(element_name)
+            element = element_name.is_a?(Element) ? element_name : self.elements[element_name]
+            self.elements_array.select{ |el| el.attributes[:integrated_from] && el.attributes[:integrated_from].name == element.name }.each do |el|
+                self.remove_element(el)
             end
         end
         
