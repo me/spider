@@ -457,6 +457,7 @@ module Spider; module Model
             end
             if (@subclasses)
                 @subclasses.each do |sub|
+                    next if sub.elements[name] # if subclass already defined an element with this name, don't overwrite it
                     sub.elements[name] = @elements[name].clone
                     sub.elements_order << name
                 end
