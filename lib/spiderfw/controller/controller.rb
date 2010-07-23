@@ -196,7 +196,6 @@ module Spider
             # return if self.is_a?(Spider::Widget) # FIXME: this is obviously wrong. Widgets must override the behaviour
             # # somewhere else, or probably just not inherit controller.
             debug("Controller #{self} executing #{action} with arguments #{arguments}")
-            @call_path = action
             # before(action, *arguments)
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
@@ -223,6 +222,7 @@ module Spider
         end
         
         def before(action='', *arguments)
+            @call_path = action
             catch(:done) do
                 debug("#{self} before")
                 do_dispatch(:before, action, *arguments)
@@ -275,6 +275,7 @@ module Spider
             }
             scene.controller = {
                 :request_path => request_path,
+                :class => self.class
             }
             scene.content = {}
             return scene
