@@ -1639,7 +1639,6 @@ module Spider; module Model
                 end
                 set_loaded_value(el, val)
             end
-            @loaded_elements.merge!(obj.loaded_elements)
         end
         
         # Returns a deep copy of the object
