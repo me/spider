@@ -483,11 +483,17 @@ module Spider; module Model
         def self.remove_element(el)
             return unless @elements
             el = el.name if el.is_a?(Element)
+            element = @elements[el]
+            self.const_get(:ElementMethods).send(:remove_method, :"#{el}") rescue NameError
+            self.const_get(:ElementMethods).send(:remove_method, :"#{el}=") rescue NameError
             @elements.delete(el)
             @elements_order.delete(el)
             @primary_keys.delete_if{ |pk| pk.name == el}
-            remove_method(:"#{el}") rescue NameError
-            remove_method(:"#{el}=") rescue NameError
+            # if (@subclasses)
+            #     @subclasses.each do |sub|
+            #         sub.remove_element(el)
+            #     end
+            # end
         end
         
         def self.element_defined(el)
