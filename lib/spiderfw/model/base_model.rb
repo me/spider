@@ -264,6 +264,7 @@ module Spider; module Model
                 if (create_junction)
                     assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel))
                     assoc_type.attributes[:sub_model] = self
+                    assoc_type.attributes[:sub_model_element] = name
                     assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true) if attributes[:junction_id]
                     assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice) # FIXME: must check if reverse exists?
                     # FIXME! fix in case of clashes with existent elements
