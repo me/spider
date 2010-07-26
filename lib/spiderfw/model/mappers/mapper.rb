@@ -334,6 +334,7 @@ module Spider; module Model
                         element.mapper.bulk_update({our_element => nil}, condition)
                     end
                 end
+                val = [val] unless val.is_a?(Enumerable) # one to one relationships
                 val.each do |v|
                     if v.get(our_element) != obj
                         v.set(our_element, obj)
