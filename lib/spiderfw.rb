@@ -38,6 +38,8 @@ module Spider
         attr_reader :paths
         # Current Home
         attr_reader :home
+        # Registered resource types
+        attr_reader :resource_types
         
         # Initializes the runtime environment. This method is called when spider is required. Apps may implement
         # an app_init method, that will be called after Spider::init is done.

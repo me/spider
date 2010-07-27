@@ -20,11 +20,27 @@ module Spider; module CASServer::CAS
           message
       end
   end
+  
+  def generate_ticket_string(prefix)
+      saml = Spider.conf.get('cas.saml_compliant_tickets')
+      if saml
+          client_hostname = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_HOST'] || @request.env['REMOTE_ADDR']
+          if saml == '1'
+              "#{prefix[0..1]}#{client_hostname[0..19].ljust(20)}#{CASServer::Utils.random_string(20).ljust(20)}"
+          elsif saml == '2'
+              "#{prefix[0..1]}#{CASServer::Utils.random_string(20).ljust(20)}#{client_hostname}"
+          elsif saml == '4'
+              "#{prefix[0..1]}00#{client_hostname[0..19].ljust(20)}#{CASServer::Utils.random_string(20).ljust(20)}"
+          end
+      else
+          "#{prefix}-#{CASServer::Utils.random_string}"
+      end
+  end
 
   def generate_login_ticket
     # 3.5 (login ticket)
     lt = LoginTicket.new
-    lt.ticket = "LT-" + CASServer::Utils.random_string
+    lt.ticket = generate_ticket_string("LT")
     lt.client_hostname = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_HOST'] || @request.env['REMOTE_ADDR']
     lt.save
     $LOG.debug("Generated login ticket '#{lt.ticket}' for client" +
@@ -41,7 +57,7 @@ module Spider; module CASServer::CAS
   def generate_ticket_granting_ticket(username, extra_attributes = {})
     # 3.6 (ticket granting cookie/ticket)
     tgt = TicketGrantingTicket.new
-    tgt.ticket = "TGC-" + CASServer::Utils.random_string
+    tgt.ticket = generate_ticket_string("TGC")
     tgt.username = username
     tgt.extra_attributes = extra_attributes
     tgt.client_hostname = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_HOST'] || @request.env['REMOTE_ADDR']
@@ -55,7 +71,7 @@ module Spider; module CASServer::CAS
   def generate_service_ticket(service, username, tgt)
     # 3.1 (service ticket)
     st = ServiceTicket.new
-    st.ticket = "ST-" + CASServer::Utils.random_string
+    st.ticket = generate_ticket_string("ST")
     st.service = service
     st.username = username
     st.ticket_granting_ticket = tgt
@@ -69,7 +85,7 @@ module Spider; module CASServer::CAS
   def generate_proxy_ticket(target_service, pgt)
     # 3.2 (proxy ticket)
     pt = ProxyTicket.new
-    pt.ticket = "PT-" + CASServer::Utils.random_string
+    pt.ticket = generate_ticket_string("PT")
     pt.service = target_service
     pt.username = pgt.service_ticket.username
     pt.proxy_granting_ticket_id = pgt.id
@@ -204,6 +220,38 @@ module Spider; module CASServer::CAS
     
     
     [st, error]
+  end
+  
+  def validate_service_ticket_saml(ticket, allow_proxy_tickets = false)
+      $LOG.debug("Validating service/proxy ticket '#{ticket}' for SAML1")
+
+      if ticket.nil?
+        error = Error.new(:INVALID_REQUEST, "Ticket parameter was missing in the request.")
+        $LOG.warn("#{error.code} - #{error.message}")
+      elsif st = ServiceTicket.load(:ticket => ticket)
+        if st.consumed
+          error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' has already been used up.")
+          $LOG.warn("#{error.code} - #{error.message}")
+        elsif st.kind_of?(CASServer::Models::ProxyTicket) && !allow_proxy_tickets
+          error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' is a proxy ticket, but only service tickets are allowed here.")
+          $LOG.warn("#{error.code} - #{error.message}")
+        elsif DateTime.now - st.obj_created > Spider.conf.get('cas.service_ticket_expiry')
+          error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' has expired.")
+          $LOG.warn("Ticket '#{ticket}' has expired.")
+        else
+          $LOG.info("Ticket '#{ticket}' form SAML1 for user '#{st.username}' successfully validated.")
+        end
+      else
+        error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' not recognized.")
+        $LOG.warn("#{error.code} - #{error.message}")
+      end
+
+      if st
+        st.consume!
+      end
+
+
+      [st, error]
   end
   
   def validate_proxy_ticket(service, ticket)

@@ -147,9 +147,11 @@ module Spider; module Model
                     obj.set(el, obj.get(el)) if el.attributes[:default] && !obj.element_modified?(el)
                 end
             end
+            done_extended = []
             if (@model.extended_models)
                 @model.extended_models.each do |m, el|
                     sub = obj.get(el)
+                    done_extended << el
                     if mode == :update || sub.class.auto_primary_keys?
                         sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
                     else
@@ -157,7 +159,8 @@ module Spider; module Model
                     end
                 end
             end
-            @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
+            @model.elements_array.select{ |el| !el.integrated? && el.attributes[:integrated_model] }.each do |el|
+                next if done_extended.include?(el.name)
                 sub_obj = obj.get(el)
                 sub_obj.save if sub_obj && sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
@@ -880,7 +883,7 @@ module Spider; module Model
             # normalize condition values; converts objects and primary key values to correct conditions on keys
             condition.each_with_comparison do |k, v, comp|
                 next if k.is_a?(QueryFuncs::Function)
-                element = model.elements[k.to_sym]
+                element = model.get_element(k)
                 if (v && !v.is_a?(Condition) && element.model?)
                     condition.delete(element.name)
                     if v.is_a?(BaseModel)

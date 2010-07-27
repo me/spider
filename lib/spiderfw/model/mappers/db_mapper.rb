@@ -854,6 +854,7 @@ module Spider; module Model; module Mappers
             when 'Float'
                 return value ? value.to_f : nil
             when 'Spider::DataTypes::Bool'
+                return value if value.nil?
                 return value == 1 ? true : false
             end
             return nil unless value

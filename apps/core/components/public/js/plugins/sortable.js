@@ -6,7 +6,8 @@ Spider.Sortable = Spider.Plugin.extend({
 			listSelector: '>ul',
 			items: '>li',			
 			update: this.handleSort.bind(this),
-			receive: this.handleReceive.bind(this)
+			receive: this.handleReceive.bind(this),
+			onSort: function(){}
 		}, options);
 		this.listEl = options.listEl;
 		if (!this.listEl) this.listEl = $(options.listSelector, this.el);
@@ -87,7 +88,7 @@ Spider.Sortable = Spider.Plugin.extend({
 		if (this.listEl.data('sortable').fromOutside){ // hack to work around strange jquery ui behaviour...
 			return this.acceptFromSender(null, ui.item, pos);
 		}
-		this.remote('sort', this.getSortItemId(ui.item), pos);
+		this.remote('sort', this.getSortItemId(ui.item), pos, this.sortableOptions.onSort.bind(this));
     },
 
 
@@ -104,7 +105,7 @@ Spider.Sortable = Spider.Plugin.extend({
     handleTreeUpdate: function(e, ui){
         var parentId = ui.item.parents('li.tree').eq(0).dataObjectKey();
         var prevId = ui.item.prev('li.tree').dataObjectKey();
-        this.remote('tree_sort', this.getItemId(ui.item), parentId, prevId);
+        this.remote('tree_sort', this.getItemId(ui.item), parentId, prevId, this.sortableOptions.onSort.bind(this));
     },
     
     handleTreeDrop: function(e, ui){
