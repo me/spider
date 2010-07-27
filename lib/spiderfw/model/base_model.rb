@@ -2134,6 +2134,69 @@ module Spider; module Model
             return obj
         end
         
+        def dump_to_hash
+            h = {}
+            def obj_pks(obj, klass)
+                unless obj
+                    return klass.primary_keys.length > 1 ? [] : nil
+                end
+                pks = obj.primary_keys
+                return pks[0] if pks.length == 1
+                return pks
+            end 
+
+            self.class.elements_array.each do |el|
+                next unless mapper.have_references?(el) || (el.junction? && el.model.attributes[:sub_model] == self.class)
+                if (el.model?)
+                    obj = get(el)
+                    if !obj
+                       h[el.name] = nil 
+                    elsif (el.multiple?)
+                        h[el.name] = obj.map{ |o| obj_pks(o, el.model) }
+                    else
+                        h[el.name] = obj_pks(obj, el.model)
+                    end
+                else
+                    val = get(el)
+                    if val
+                        case val.class.name.to_sym
+                        when :Date, :DateTime, :Time
+                            val = val.strftime
+                        end
+                    end
+                    h[el.name] = val
+                end
+            end
+            h
+        end
+        
+        def dump_to_all_data_hash(options={}, h={}, seen={})
+            Spider::Model.with_identity_mapper do |im|
+                clname = self.class.name.to_sym
+                seen[clname] ||= {}
+                return if seen[clname][self.primary_keys]
+                seen[clname][self.primary_keys] = true
+                h[clname] ||= []
+                h[clname] << self.dump_to_hash
+                self.class.elements_array.each do |el|
+                    next unless el.model?
+                    next if el.model < Spider::Model::InlineModel
+                    next if options[:models] && !options[:models].include?(el.type)
+                    next if options[:except_models] && options[:except_models].include?(el.type)
+                    el_clname == el.type.name.to_sym
+                    next if options[:elements] && (options[:elements][el_clname] && !options[:elements][el_clname].include?(el.name))
+                    next if options[:except_elements] && (options[:except_elements][el_clname] && options[:except_elements][el_clname].include?(el.name))
+                    val = self.get(el)
+                    next unless val
+                    val = [val] unless val.is_a?(Enumerable)
+                    val.each do |v|
+                        v.dump_to_all_data_hash(options, h, seen)
+                    end
+                end
+            end
+            h
+        end
+        
         def self.transaction
             yield
         end
