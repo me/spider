@@ -139,7 +139,6 @@ module Spider; module Model; module Storage; module Db
                  end
              end
              keys = sql_keys(query)
-             order = sql_order(query)
              tables_sql, tables_values = sql_tables(query)
              sql = "SELECT #{keys} FROM #{tables_sql} "
              bind_vars += tables_values
@@ -162,7 +161,8 @@ module Spider; module Model; module Storage; module Db
                      pk_sql = query[:primary_keys].reject{ |pk| pk.is_a?(Db::FieldExpression) }.join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
                      distinct_sql += " WHERE #{where}" if where && !where.empty?
-                     data_sql = "SELECT #{keys} FROM #{data_tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql}) order by #{order}"
+                     data_sql = "SELECT #{keys} FROM #{data_tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql})"
+                     data_sql += " order by #{order}" unless order.blank?
                  else
                      data_sql = "#{sql} order by #{order}"
                  end
