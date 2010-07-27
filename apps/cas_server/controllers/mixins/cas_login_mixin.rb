@@ -228,8 +228,7 @@ module Spider; module CASServer
 
         end
         
-
-
+        __.xml
         def saml_validate
             @error = nil
             @success = false
