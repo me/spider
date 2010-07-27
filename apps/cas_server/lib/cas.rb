@@ -186,10 +186,10 @@ module Spider; module CASServer::CAS
     [tgt, error]
   end
 
-  def validate_service_ticket(service, ticket, allow_proxy_tickets = false)
+  def validate_service_ticket(service, ticket, allow_proxy_tickets = false, allow_nil_service=false)
     $LOG.debug("Validating service/proxy ticket '#{ticket}' for service '#{service}'")
   
-    if service.nil? or ticket.nil?
+    if (service.nil? && !allow_nil_service) or ticket.nil?
       error = Error.new(:INVALID_REQUEST, "Ticket or service parameter was missing in the request.")
       $LOG.warn("#{error.code} - #{error.message}")
     elsif st = ServiceTicket.load(:ticket => ticket)
@@ -202,7 +202,7 @@ module Spider; module CASServer::CAS
       elsif DateTime.now - st.obj_created > Spider.conf.get('cas.service_ticket_expiry')
         error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' has expired.")
         $LOG.warn("Ticket '#{ticket}' has expired.")
-      elsif !st.matches_service? service
+      elsif service && !st.matches_service?(service)
         error = Error.new(:INVALID_SERVICE, "The ticket '#{ticket}' belonging to user '#{st.username}' is valid,"+
           " but the requested service '#{service}' does not match the service '#{st.service}' associated with this ticket.")
         $LOG.warn("#{error.code} - #{error.message}")
@@ -220,38 +220,6 @@ module Spider; module CASServer::CAS
     
     
     [st, error]
-  end
-  
-  def validate_service_ticket_saml(ticket, allow_proxy_tickets = false)
-      $LOG.debug("Validating service/proxy ticket '#{ticket}' for SAML1")
-
-      if ticket.nil?
-        error = Error.new(:INVALID_REQUEST, "Ticket parameter was missing in the request.")
-        $LOG.warn("#{error.code} - #{error.message}")
-      elsif st = ServiceTicket.load(:ticket => ticket)
-        if st.consumed
-          error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' has already been used up.")
-          $LOG.warn("#{error.code} - #{error.message}")
-        elsif st.kind_of?(CASServer::Models::ProxyTicket) && !allow_proxy_tickets
-          error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' is a proxy ticket, but only service tickets are allowed here.")
-          $LOG.warn("#{error.code} - #{error.message}")
-        elsif DateTime.now - st.obj_created > Spider.conf.get('cas.service_ticket_expiry')
-          error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' has expired.")
-          $LOG.warn("Ticket '#{ticket}' has expired.")
-        else
-          $LOG.info("Ticket '#{ticket}' form SAML1 for user '#{st.username}' successfully validated.")
-        end
-      else
-        error = Error.new(:INVALID_TICKET, "Ticket '#{ticket}' not recognized.")
-        $LOG.warn("#{error.code} - #{error.message}")
-      end
-
-      if st
-        st.consume!
-      end
-
-
-      [st, error]
   end
   
   def validate_proxy_ticket(service, ticket)
@@ -326,7 +294,7 @@ module Spider; module CASServer::CAS
     end
   end
   
-  def service_uri_with_ticket(service, st)
+  def service_uri_with_ticket(service, st, saml=false)
     raise ArgumentError, "Second argument must be a ServiceTicket!" unless st.kind_of? CASServer::Models::ServiceTicket
     
     # This will choke with a URI::InvalidURIError if service URI is not properly URI-escaped...
@@ -343,7 +311,13 @@ module Spider; module CASServer::CAS
       query_separator = "?"
     end
     
-    service_with_ticket = service + query_separator + "ticket=" + st.ticket
+    service_with_ticket = service + query_separator
+    if saml
+        service_with_ticket += 'SAMLart='
+    else
+        service_with_ticket += "ticket=" 
+    end
+    service_with_ticket += st.ticket
     service_with_ticket
   end
   

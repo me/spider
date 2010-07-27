@@ -27,7 +27,13 @@ module Spider; module CASServer
         end
 
         def before(action='', *arguments)
-            @service = clean_service_url(@request.params['service'])
+            is_saml = false
+            if @request.params['service']
+                @service = clean_service_url(@request.params['service'])
+            elsif Spider.conf.get('cas.saml1_1_compatible') && @request.params['TARGET']
+                @service = clean_service_url(@request.params['TARGET'])
+                is_saml = true
+            end
             @renew = @request.params['renew']
             @gateway = @request.params['gateway'] == 'true' || @request.params['gateway'] == '1'
             if tgc = @request.cookies['tgc']
@@ -49,7 +55,7 @@ module Spider; module CASServer
                 if @service #&& cas_service_allowed?(@service)
                     if !@renew && tgt && !tgt_error
                         st = generate_service_ticket(@service, tgt.username, tgt)
-                        service_with_ticket = service_uri_with_ticket(@service, st)
+                        service_with_ticket = service_uri_with_ticket(@service, st, is_saml)
                         $LOG.info("User '#{tgt.username}' authenticated based on ticket granting cookie. Redirecting to service '#{@service}'.")
                         return redirect(service_with_ticket, 303) # response code 303 means "See Other" (see Appendix B in CAS Protocol spec)
                     elsif @gateway
@@ -131,7 +137,8 @@ module Spider; module CASServer
                     service_with_ticket = service_uri_with_ticket(@service, @st)
 
                     $LOG.info("Redirecting authenticated user '#{user.identifier}' at '#{@st.client_hostname}' to service '#{@service}'")
-                    return redirect(service_with_ticket, 303) # response code 303 means "See Other" (see Appendix B in CAS Protocol spec)
+                    resp_code = Spider.conf.get('cas.saml1_1_compatible') ? 302 : 303
+                    return redirect(service_with_ticket, resp_code) # response code 303 means "See Other" (see Appendix B in CAS Protocol spec)
                 rescue URI::InvalidURIError
                     $LOG.error("The service '#{@service}' is not a valid URI!")
                     @message = {:type => 'mistake', :message => _("The target service your browser supplied appears to be invalid. Please contact your system administrator for help.")}
@@ -240,6 +247,7 @@ module Spider; module CASServer
             end
             client_hostname = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_HOST'] || @request.env['REMOTE_ADDR']
             raise CASSAMLError, "SOAP Envelope not found" unless doc.root && doc.root.name == 'Envelope' && doc.root.namespace == SOAP_ENVELOPE_NS
+            @service = clean_service_url(@request.params['service'] || @request.params['TARGET'])
             ns = {'SOAP-ENV' => SOAP_ENVELOPE_NS, 'samlp' => SAML1_NS }
             body = REXML::XPath.first(doc, "//SOAP-ENV:Body", ns)
             raise CASSAMLError, "SOAP Body not found" unless body
@@ -251,7 +259,7 @@ module Spider; module CASServer
             artifact = REXML::XPath.first(body, "//samlp:AssertionArtifact", ns)
             raise CASSAMLError, "SAML AssertionArtifact not found" unless artifact
             @ticket = artifact.text.strip
-            st, @error = validate_service_ticket_saml(@ticket)
+            st, @error = validate_service_ticket(@service, @ticket, false, true)
             @success = st && !@error
             
             raise CASSAMLError, "Error validating the service ticket: #{@error}" unless @success
