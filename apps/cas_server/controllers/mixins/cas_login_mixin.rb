@@ -248,6 +248,7 @@ module Spider; module CASServer
             client_hostname = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_HOST'] || @request.env['REMOTE_ADDR']
             raise CASSAMLError, "SOAP Envelope not found" unless doc.root && doc.root.name == 'Envelope' && doc.root.namespace == SOAP_ENVELOPE_NS
             @service = clean_service_url(@request.params['service'] || @request.params['TARGET'])
+            @service = nil if @service.blank?
             ns = {'SOAP-ENV' => SOAP_ENVELOPE_NS, 'samlp' => SAML1_NS }
             body = REXML::XPath.first(doc, "//SOAP-ENV:Body", ns)
             raise CASSAMLError, "SOAP Body not found" unless body
