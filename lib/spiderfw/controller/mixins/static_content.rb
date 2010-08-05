@@ -74,7 +74,12 @@ module Spider; module ControllerMixins
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
             stat = File.lstat(full_path)
             if @request.env['HTTP_IF_MODIFIED_SINCE']
-                if_modified = Time.httpdate(@request.env['HTTP_IF_MODIFIED_SINCE'])
+                if_modified = nil
+                begin
+                  if_modified = Time.httpdate(@request.env['HTTP_IF_MODIFIED_SINCE'])
+                rescue ArgumentError # Passenger with IE6 has this header wrong
+                  if_modified = 0
+                end
                 if stat.mtime <= if_modified
                     debug("Not modified #{full_path}")
                     raise HTTPStatus.new(Spider::HTTP::NOT_MODIFIED) 
