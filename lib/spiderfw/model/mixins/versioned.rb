@@ -146,8 +146,9 @@ module Spider; module Model
            
            def version_contents
                no_content_assocs = [:choice, :multiple_choice]
+
                self.elements_array.select{ |el|
-                   !el.attributes[:added_reverse] && !no_content_assocs.include?(el.association)
+                   el.attributes[:version_content] || mapper.have_references?(el.name) || (!el.attributes[:added_reverse] && !no_content_assocs.include?(el.association))
                }
            end
            
@@ -226,7 +227,7 @@ module Spider; module Model
                     elsif self.respond_to?(:prepare_version_object)
                         obj = self.prepare_version_object(el, obj)
                     end
-                    if self.class.mapper.have_references?(el)
+                    if is_version_content && self.class.mapper.have_references?(el)
                         if (el.multiple?)
                             h[el.name] = obj.map{ |o| o.v_sha1 }
                         else
@@ -284,7 +285,6 @@ module Spider; module Model
                 next if el.name == :history
                 next if params[:except] && params[:except].include?(el.name)
                 next if el.integrated?
-                is_version_content = version_contents.include?(el)
                 
                 if (el.model?)
                     obj = get(el)
@@ -337,6 +337,7 @@ module Spider; module Model
                 vobj = vmod.static()
                 vobj.set(mod.elements[:history].reverse, self)
                 ve = mod.version_element
+                version_contents = self.class.version_contents
             
                 self.class.elements_array.each do |el|
                     next unless vmod.elements[el.name]
@@ -345,9 +346,10 @@ module Spider; module Model
                     # vobj.set(el.name, self.get(el))
                     # vel = mod.version_element(el)
                     if el.model?
+                        is_version_content = version_contents.include?(el)
                         if mod.mapper.have_references?(el)
                             el_val = self.get(el)
-                            if el_val && el.model.respond_to?(:version_element)
+                            if is_version_content && el_val && el.model.respond_to?(:version_element)
                                 if self.respond_to?(:prepare_version_object)
                                     el_val = self.prepare_version_object(el, el_val) 
                                 end
