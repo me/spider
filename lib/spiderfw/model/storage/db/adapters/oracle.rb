@@ -164,7 +164,8 @@ module Spider; module Model; module Storage; module Db
                      data_sql = "SELECT #{keys} FROM #{data_tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql})"
                      data_sql += " order by #{order}" unless order.blank?
                  else
-                     data_sql = "#{sql} order by #{order}"
+                     data_sql = sql
+                     data_sql += " order by #{order}" unless order.blank?
                  end
                  count_sql = "SELECT /*+ FIRST_ROWS(n) */ a.*, ROWNUM oci8_row_num FROM (#{data_sql}) a"
                  if limit
