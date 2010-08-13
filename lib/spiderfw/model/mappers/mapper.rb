@@ -283,12 +283,15 @@ module Spider; module Model
             if (element.attributes[:junction])
                 their_element = element.attributes[:junction_their_element]
                 if (val.model != element.model) # dereferenced junction
+                    val = [val] unless val.is_a?(Enumerable)
                     unless (mode == :insert)
                         current = obj.get_new
                         current_val = current.get(element)
+                        current_val = [current_val] unless current_val.is_a?(Enumerable)
                         condition = Condition.and
                         val_condition = Condition.or
                         current_val.each do |row|
+
                             next if val.include?(row)
                             val_condition[their_element] = row
                         end
