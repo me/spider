@@ -54,6 +54,10 @@ class WebServerCommand < CmdParse::Command
                 if (@ssl)
                     @ssl_cert ||= Spider.conf.get('orgs.default.cert')
                     @ssl_key ||= Spider.conf.get('orgs.default.private_key')
+                    raise "SSL Certificate not set" unless @ssl_cert
+                    raise "SSL Key not set" unless @ssl_key
+                    raise "SSL Certificate (#{@ssl_cert}) not found" unless File.file?(@ssl_cert)
+                    raise "SSL Key (#{@ssl_key}) not found" unless File.file?(@ssl_key)
                     ssl_thread = Thread.new do
                         ssl_server = Spider::HTTP.const_get(servers[@server_name]).new
                         ssl_server.start(:port => @ssl, :ssl => true, :ssl_cert => @ssl_cert, :ssl_private_key => @ssl_key)
