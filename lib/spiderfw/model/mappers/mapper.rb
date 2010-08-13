@@ -133,7 +133,7 @@ module Spider; module Model
                         obj.set(el, set_data)
                     end
                 end
-                if (el.required? && (mode == :insert || obj.element_modified?(el)) && !obj.element_has_value?(el))
+                if (!el.integrated? && el.required? && (mode == :insert || obj.element_modified?(el)) && !obj.element_has_value?(el))
                     raise RequiredError.new(el) 
                 end
                 if (el.unique? && !el.integrated? && obj.element_modified?(el))
