@@ -620,7 +620,7 @@ module Spider; module Model; module Storage; module Db
         def sql_update(update)
             curr[:last_query_type] = :update
             values = []
-            tables = update[:table]
+            tables = update[:table].to_s
             if (update[:joins] && update[:joins][update[:table]])
                 join_str, join_values = sql_tables_join(update, update[:table])
                 tables += " "+join_str
