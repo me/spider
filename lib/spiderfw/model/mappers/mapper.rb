@@ -586,7 +586,9 @@ module Spider; module Model
             search = {} 
             @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
             obj_res = set.find(search)  # FIXME: find a better way
+            obj_res._no_parent = true
             if (obj_res && obj_res[0])
+                obj_res[0].set_parent(set, nil)
                 obj_res[0].merge!(obj, request)
                 obj.loaded_elements.each do |name, bool| 
                     set.element_loaded(name) if request.key?(name)

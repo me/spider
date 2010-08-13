@@ -11,6 +11,8 @@ module Spider; module Model
         attr_accessor :_parent
         # Element inside the _parent pointing to this QuerySet.
         attr_accessor :_parent_element
+        # Disables parent setting for this QuerySet
+        attr_accessor :_no_parent
         # Raw data returned by the mapper, if requested.
         attr_reader :raw_data
         # An Hash of autoloaded elements.
@@ -186,7 +188,7 @@ module Spider; module Model
             array_index = (index - start) + 1
             load_to_index(index) unless (@objects[array_index] && (!@fetch_window || @window_current_start == start)) || loaded?(index) || !autoload?
             val = @objects[array_index]
-            val.set_parent(self, nil) if val
+            val.set_parent(self, nil) if val && !@_no_parent
             return val
         end
         
