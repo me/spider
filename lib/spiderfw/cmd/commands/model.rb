@@ -6,6 +6,7 @@ class ModelCommand < CmdParse::Command
         @short_desc = _("Manage models")
         @apps = []
         @force = false
+        @no_fkc = true
 
         sync_cmd = CmdParse::Command.new( 'sync', false )
         sync_cmd.short_desc = _("Sync models")
@@ -23,6 +24,7 @@ class ModelCommand < CmdParse::Command
             }
             opt.on("--non-managed", _("Process also non managed models"), "-m"){ |m| @non_managed = true}
             opt.on("--no-fk-constraints", _("Don't create foreign key constraints"), "-c"){ |c| @no_fkc = true }
+            opt.on("--fk-constraints", _("Create foreign key constraints"), "-C" ){ |c| @no_fkc = false } 
         end
         
         sync_cmd.set_execution_block do |req_models|
