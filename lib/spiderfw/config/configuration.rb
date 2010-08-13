@@ -183,6 +183,7 @@ module Spider
             end
             o = @options
             params[:action] ||= proc if proc
+            params[:type] ||= String
             first, rest = name.split('.', 2)
             while (rest)
                 o = (o[first] ||= {})
