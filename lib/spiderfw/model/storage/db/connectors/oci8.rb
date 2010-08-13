@@ -139,7 +139,11 @@ module Spider; module Model; module Storage; module Db; module Connectors
                 rollback! if in_transaction?
                 #curr[:conn].logoff
                 release
-                raise
+                if (exc.message =~ /ORA-00001/)
+                    raise Spider::Model::Storage::DuplicateKey
+                else
+                    raise exc
+                end
             ensure
                 cursor.close if cursor
                 release if curr[:conn] && !in_transaction?
