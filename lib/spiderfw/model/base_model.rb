@@ -2052,6 +2052,7 @@ module Spider; module Model
             end
             Spider::Model.with_identity_mapper do |im|
                 where.keys.each do |name|
+                    next unless where[name]
                     if (where[name].is_a?(Proc))
                         val = where[name].call(self, name)
                     else
