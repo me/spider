@@ -1,0 +1,17 @@
+--- old/development-bundle/ui/jquery.ui.autocomplete.js
++++ new/development-bundle/ui/jquery.ui.autocomplete.js
+@@ -70,7 +70,13 @@
+ 					//passthrough - ENTER and TAB both select the current element
+ 				case keyCode.TAB:
+ 					if ( !self.menu.active ) {
+-						return;
++					    if (!self.menu.element.is( ":visible" )) return;
++					    var firstItem = self.menu.element.children().eq(0);
++					    if (firstItem){
++					        self.menu.activate(event, firstItem);
++					        return false;
++					    } 
++                        else return;
+ 					}
+ 					self.menu.select( event );
+ 					break;
