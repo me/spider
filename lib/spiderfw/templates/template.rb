@@ -351,21 +351,10 @@ module Spider
             type = type.to_sym if type
             ass = {:type => type}
             if attributes[:name]
-                named = Spider::Template.named_assets[attributes[:name]]
+                named = Spider::Template.get_named_asset(attributes[:name])
                 raise "Can't find named asset #{attributes[:name]}" unless named
-                named = [named]
-                named.each do |nmd|
-                    deps = nmd[:options].delete(:depends)
-                    if deps
-                        deps = [deps] unless deps.is_a?(Array)
-                        deps.each{ |d| named.unshift( Spider::Template.named_assets[d]) }
-                    end
-                end
-                return named.map{ |nmd| 
-                    nmd[:assets].map{ |nmdass| 
-                        nmdattr = {:app => nmdass[2]}
-                        parse_asset(nmdass[0], nmdass[1], nmdattr)
-                    }
+                return named.map{ |nmdass| 
+                    parse_asset(nmdass[:type], nmdass[:src], nmdass)
                 }.flatten
             end
             if attributes[:app] == :runtime
