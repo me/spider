@@ -390,20 +390,8 @@ module Spider
             end
         end
         
-        # Instantiates this widget's own subwidgets.
         def init_widgets(template=@template)
-            if (self.class.scene_attributes)
-                self.class.scene_attributes.each do |name|
-                    @scene[name] = instance_variable_get("@#{name}")
-                end
-            end
-            template.request = @request
-            template.response = @response
-            template.runtime_overrides += @runtime_overrides
-            template.init(@scene)
-            template.widgets.each do |name, w|
-                add_widget(w)
-            end
+            load_widgets(template)
             @widgets.each do |id, w| 
                 w.parent = self
                 w.is_target_descendant = true if @is_target || @is_target_descendant
@@ -418,6 +406,23 @@ module Spider
                 @_widget_rest = rest
             end
             @init_widgets_done = true
+            
+        end
+        
+        # Instantiates this widget's own subwidgets.
+        def load_widgets(template=@template)
+            if (self.class.scene_attributes)
+                self.class.scene_attributes.each do |name|
+                    @scene[name] = instance_variable_get("@#{name}")
+                end
+            end
+            template.request = @request
+            template.response = @response
+            template.runtime_overrides += @runtime_overrides
+            template.init(@scene)
+            template.widgets.each do |name, w|
+                add_widget(w)
+            end
         end
         
         def set_widget_attributes
