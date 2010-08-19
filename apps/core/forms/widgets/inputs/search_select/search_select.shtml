@@ -1,15 +1,14 @@
 <div class="input{ @multiple ? ' multiple' : '' }">
-	<tpl:asset type="js" app="core/components" src="js/jquery/plugins/jquery-autocomplete/jquery.autocomplete.js" />
+    <tpl:asset type="js" name="jquery-ui-autocomplete" />
 	<tpl:asset type="js" src="input.js" />
 	<tpl:asset type="js" src="search_select.js" />
-	<tpl:asset type="css" app="core/components" src="js/jquery/plugins/jquery-autocomplete/jquery.autocomplete.css" />
     <div sp:if="@no_result" class="notice">
         Nessun risultato trovato per "{ @text_query }".
     </div>
     <div sp:if="@next_step == :text" class="add_box">
         <span sp:if="@multiple" class="add_text">Aggiungi:</span>
         <input type="text" name="{ @name }[text]" value="" size="{ @size }" />
-		<input sp:if="!@multiple" type="hidden" name="_w{ @widget[:param] }[clear]" value="true">
+		<input sp:if="!@multiple" class="clear-hidden" type="hidden" name="_w{ @widget[:param] }[clear]" value="">
     </div>
     <div sp:if="@next_step == :select" class="notice">
         Per favore, affina la ricerca:
@@ -20,8 +19,9 @@
             { @data[i].to_s }
         </option>
     </select>
-    <div sp:if="@value_desc">
-        { @value_desc } 
+    <div sp:if="@value_desc" class="value-desc{ (@clear ? ' changing' : '') }">
+        <tpl:pass sp:if="@clear">({ @value_desc })</tpl:pass>
+        <tpl:pass sp:if="!@clear">{ @value_desc }</tpl:pass>
         <span sp:if="!@next_step">
 			<span class="change_action">
             (<span class="action_text">Cambia</span> <input type="checkbox" name="{ @name }[clear]" value="1">)
@@ -37,6 +37,6 @@
 	<!---
 	<core:search-table class="search_table" id="table" sp:target-only="true" queryset="@data" row_limit="5" num_elements="3" />
 	-->
-	<input sp:if="@multiple" type="hidden" name="{ @value_param }" sp:each="@keys |key|" value="{ key }">
-	<input sp:if="!@multiple" type="hidden" name="{ @value_param }" value="{ @key }">
+	<input sp:if="@multiple" class="hidden-val" type="hidden" name="{ @value_param }" sp:each="@keys |key|" value="{ key }" />
+	<input sp:if="!@multiple" class="hidden-val" type="hidden" name="{ @value_param }" value="{ @key }" />
 </div>

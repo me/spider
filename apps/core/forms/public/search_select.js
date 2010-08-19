@@ -61,30 +61,57 @@ Spider.defineWidget('Spider.Forms.SearchSelect', 'Spider.Forms.Input', {
 		// 				table.el.hide();
 		// 			}
 		// 		});
-		$('.add_box input', this.el).attr('name', 'autocomplete-box').autocomplete(this.backend.urlForMethod('jquery_autocomplete'), {
-			extraParams: function(){
-				var current = $('.values_list', w.el).spiderWidget().keys();
+		$('.add_box input[type=text]', this.el).attr('name', 'autocomplete-box').autocomplete({
+		    source: function(request, response){
+                var url = w.backend.urlForMethod('jquery_autocomplete');
+                var current = [];
+                var vl = $('.values_list', w.el).spiderWidget();
+                if (vl) current = vl.keys();
 				var params = {};
 				for (var i=0; i<current.length; i++){
 					params['not['+i+']'] = current[i];
 				}
-				return params;
-			}
+                var data = {};
+                $.extend(data, params, {
+                    q: request.term
+                });
+				$.ajax({
+				    // try to leverage ajaxQueue plugin to abort previous requests
+    				mode: "abort",
+    				// limit abortion to this input
+					port: "autocomplete" + w.fullId,
+					dataType: 'json',
+					url: url,
+                    data: data,
+    				success: function(data) {
+                        response(data);
+    				}
+                });
+		    },
+		    select: function(e, ui){
+		        var w = $(this).parentWidget();
+		        var data = ui.item;
+    			if (!data) return;
+    			if (w.multiple){
+    				w.added.push(data.value);
+    				for (var i=0; i<this.removed; i++){
+    					if (this.removed[i] == data.value) this.removed.splice(i, 1);
+    				}
+    				w.reload({add: w.added});
+    			}
+    			else{
+    				$('input[type=hidden].hidden-val', w.el).val(data.value);
+    			}
+    			w.trigger('change', w.val());
+                $(e.target).val(data.label);
+                return false;
+		    },
+		    focus: function(e, ui){
+                if (ui.item) $(e.target).val(ui.item.label);
+                else $(e.target).val('');
+                return false;
+		    }
 			
-		}).result(function(event, data, formatted){
-			var w = $(this).parentWidget();
-			if (!data) return;
-			if (w.multiple){
-				w.added.push(data[1]);
-				for (var i=0; i<this.removed; i++){
-					if (this.removed[i] == data[1]) this.removed.splice(i, 1);
-				}
-				w.reload({add: w.added});
-			}
-			else{
-				$('input[type=hidden]', w.el).val(data[1]);
-			}
-			w.trigger('change', w.val());
 		});
 	},
 	

@@ -4,6 +4,7 @@ module Spider; module Forms
         tag 'search-select'
         i_attr_accessor :model
         is_attr_accessor :blank_option, :type => TrueClass, :default => true
+        attribute :limit, :type => Fixnum, :default => 5
         
         def prepare_value(params)
             return nil
@@ -27,8 +28,9 @@ module Spider; module Forms
         
         def prepare
             @modified = true
-            self.value = params['value']
-            if (params['clear'])
+            self.value = params['value'] if params['value']
+            @scene.value_desc = @value.to_s
+            unless (params['clear'].blank?)
                 self.value = nil
                 @scene.next_step = :text
                 @scene.clear = true
@@ -102,9 +104,7 @@ module Spider; module Forms
         end
         
         def run
-            if (@value && !@multiple)
-                @scene.value_desc = @value.to_s
-            else
+            unless (@value && !@multiple)
                 @scene.next_step ||= :text
             end
             if (@value)
@@ -153,14 +153,12 @@ module Spider; module Forms
             return cond
         end
                 
-        __.text
+        __.json
         def jquery_autocomplete
             cond = search_condition(@request.params['q'])
             return unless cond
-            @search_results = @model.find(cond).limit(@request.params['limit'])
-            @search_results.each do |row|
-                $out << "#{row.to_s}|#{obj_to_key_str(row)}\n"
-            end
+            @search_results = @model.where(cond).limit(@request.params['limit'] || @attributes[:limit])
+            $out << @search_results.map{ |row| {:label => row.to_s, :value => obj_to_key_str(row) } }.to_json
         end
 
     end

@@ -22,9 +22,11 @@ module Spider; module Forms
         
         def prepare_value(p)
             if (p && p['value'])
-                self.value = p['value']
+                p['value']
+            elsif p.is_a?(Hash)
+                nil
             else
-                self.value = nil
+                p
             end
         end
         
@@ -60,7 +62,10 @@ module Spider; module Forms
         def value=(val)
             debug("SETTING SELECT VALUE TO")
             debug(val)
-            return if (val.nil? || (val.is_a?(String) && val.empty?))
+            if (val.nil? || (val.is_a?(String) && val.empty?))
+                @value = nil
+                return
+            end
             if (val.is_a?(@model) || val.is_a?(Spider::Model::QuerySet))
                 return super
             else
