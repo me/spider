@@ -140,7 +140,7 @@ module Spider; module Forms
             save(@submit_action) if @submit_action
         end
         
-        def init_widgets
+        def load_widgets(template=@template)
             super
             if (@action == :sub)
                 @crud = Spider::Components::Crud.new(@request, @response)
