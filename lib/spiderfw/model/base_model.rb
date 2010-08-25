@@ -1380,6 +1380,7 @@ module Spider; module Model
                 value = prepare_child(element.name, value)
                 current = instance_variable_get("@#{element_name}")
                 current.set_parent(nil, nil) if current && current.is_a?(BaseModel)
+                value.set_parent(self, element.name) if value.is_a?(BaseModel)
                 instance_variable_set("@#{element_name}", value)
             end
             value.loaded = true if (value.is_a?(QuerySet))
