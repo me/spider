@@ -122,6 +122,13 @@ module Spider; module Model
             @polymorph = res.polymorph
         end
         
+        def conditions_array
+            self.hash_clone.map do |k, v|
+                k = k.to_sym if k.respond_to?(:to_sym)
+                [k, v, (@comparisons[k] || '==')]
+            end
+        end
+        
         # Yields each key, value and comparison.
         def each_with_comparison
             self.each do |k, v|
@@ -334,6 +341,8 @@ module Spider; module Model
         def uniq!
             @subconditions.uniq!
         end
+        
+        alias :hash_clone :clone
         
         # Returns a deep copy.
         def clone

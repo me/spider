@@ -761,7 +761,7 @@ module Spider; module Model
             conditions = {}
             return conditions if condition.polymorph && polymorphs.include?(condition.polymorph)
             model = condition.polymorph ? condition.polymorph : @model
-            condition.each_with_comparison do |el, val, comp|
+            condition.conditions_array.each do |el, val, comp|
                 if (!model.has_element?(el))
                     polymorphs.each do |polym|
                         if (polym.has_element?(el))
@@ -833,7 +833,7 @@ module Spider; module Model
             
             # This handles integrated elements, junctions, and prepares types
             def basic_preprocess(condition) # :nodoc:
-                condition.each_with_comparison do |k, v, c|
+                condition.conditions_array.each do |k, v, c|
                     next if k.is_a?(Spider::QueryFuncs::Function)
                     next unless element = model.elements[k]
                     if (element.integrated?)
@@ -887,7 +887,7 @@ module Spider; module Model
             end
             
             # normalize condition values; converts objects and primary key values to correct conditions on keys
-            condition.each_with_comparison do |k, v, comp|
+            condition.conditions_array.each do |k, v, comp|
                 next if k.is_a?(QueryFuncs::Function)
                 element = model.get_element(k)
                 if (v && !v.is_a?(Condition) && element.model?)
