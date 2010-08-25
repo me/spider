@@ -28,13 +28,17 @@ module Spider; module Model; module Mappers
             return [] unless @model.data && @model.data.length > 0
             primary_key = nil
             desc = nil
+            alt_desc = nil
             @model.elements.each do |name, el|
                 if el.primary_key?
                     primary_key = el.name
-                else
+                elsif el.attributes[:desc]
                     desc = el.name
+                else
+                    alt_desc ||= el.name if el.type == String
                 end
             end
+            desc ||= alt_desc
             raise MapperError, "Model has no primary key or no description element" unless primary_key && desc
             res =  @model.data.map{ |id, val| {primary_key => id, desc => val} }.select do |row|
                 check_condition(query.condition, row)
