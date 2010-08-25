@@ -288,51 +288,6 @@ Spider.Widget = Class.extend({
 		return info;
 	},
 	
-	bind: function(eventName, callback){
-		var handleObj = {
-			callback: callback
-		};
-		if ( eventName.indexOf(".") > -1 ) {
-			var namespaces = eventName.split(".");
-			eventName = namespaces.shift();
-			handleObj.namespace = namespaces.slice(0).sort().join(".");
-		}
-		if (!this.events[eventName]) this.events[eventName] = [];
-		this.events[eventName].push(handleObj);
-	},
-	
-	on: function(eventName, callback){ return this.bind(eventName, callback); },
-	
-	trigger: function(eventName){
-		if ( eventName.indexOf(".") > -1 ) {
-			var namespaces = eventName.split(".");
-			eventName = namespaces.shift();
-			namespace = namespaces.slice(0).sort().join(".");
-		}
-		if (!this.events[eventName]) return;
-		var args = Array.prototype.slice.call(arguments, 1); 
-		for (var i=0; i < this.events[eventName].length; i++){
-			this.events[eventName][i].callback.apply(this, args);
-		}
-	},
-	
-	unbind: function(eventName){
-		var namespace = null;
-		if ( eventName.indexOf(".") > -1 ) {
-			var namespaces = eventName.split(".");
-			eventName = namespaces.shift();
-			namespace = namespaces.slice(0).sort().join(".");
-		}
-		if (namespace){
-			for (var i=0; i<this.events[eventName].length; i++){
-				if (this.events[eventName][i].namespace == namespace){
-					this.events[eventName].splice(i);
-				}
-			}
-		}
-		else this.events[eventName] = [];
-	},
-	
 	plugin: function(pClass, prop){
 		if (prop) pClass = pClass.extend(prop);
 		this.plugins[pClass] = new pClass(this);
@@ -684,3 +639,54 @@ jQuery.parseISODate = function(iso){
     else return null;
 };
 
+Spider.EventTarget = {
+    bind: function(eventName, callback){
+        if (!this.events) this.events = {};
+		var handleObj = {
+			callback: callback
+		};
+		if ( eventName.indexOf(".") > -1 ) {
+			var namespaces = eventName.split(".");
+			eventName = namespaces.shift();
+			handleObj.namespace = namespaces.slice(0).sort().join(".");
+		}
+		if (!this.events[eventName]) this.events[eventName] = [];
+		this.events[eventName].push(handleObj);
+	},
+	
+	on: function(eventName, callback){ return this.bind(eventName, callback); },
+	
+	trigger: function(eventName){
+	    if (!this.events) this.events = {};
+		if ( eventName.indexOf(".") > -1 ) {
+			var namespaces = eventName.split(".");
+			eventName = namespaces.shift();
+			namespace = namespaces.slice(0).sort().join(".");
+		}
+		if (!this.events[eventName]) return;
+		var args = Array.prototype.slice.call(arguments, 1); 
+		for (var i=0; i < this.events[eventName].length; i++){
+			this.events[eventName][i].callback.apply(this, args);
+		}
+	},
+	
+	unbind: function(eventName){
+	    if (!this.events) this.events = {};
+		var namespace = null;
+		if ( eventName.indexOf(".") > -1 ) {
+			var namespaces = eventName.split(".");
+			eventName = namespaces.shift();
+			namespace = namespaces.slice(0).sort().join(".");
+		}
+		if (namespace){
+			for (var i=0; i<this.events[eventName].length; i++){
+				if (this.events[eventName][i].namespace == namespace){
+					this.events[eventName].splice(i);
+				}
+			}
+		}
+		else this.events[eventName] = [];
+	}
+};
+
+$.extend(Spider.Widget.prototype, Spider.EventTarget);
