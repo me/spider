@@ -1186,7 +1186,9 @@ module Spider; module Model
                                 }
                                 obj = qs
                             elsif (!element.attributes[:keep_junction] && obj.model == element.model)
+                                instance_variable_set("@#{element.name}_junction", obj)
                                 qs = QuerySet.new(element.type, obj.map{ |el_obj| el_obj.get(element.attributes[:junction_their_element])})
+
                                 obj = qs
                             end 
                         end
