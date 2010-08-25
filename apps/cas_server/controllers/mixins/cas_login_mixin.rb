@@ -208,10 +208,8 @@ module Spider; module CASServer
             @scene.continue_url = @continue_url
             if (@gateway && @service)
                 redirect(@service, 303)
-            elsif (@continue_url)
-                render 'logout'
             else
-                render 'login'
+                super
             end
         end
 
