@@ -48,6 +48,7 @@ class WebServerCommand < CmdParse::Command
             start = lambda{
                 Spider.startup
                 if Spider.conf.get('devel.trace.extended')
+                    require 'ruby-debug'
                     require 'spiderfw/utils/monkey/debugger'
                     Debugger.start
                     Debugger.post_mortem
