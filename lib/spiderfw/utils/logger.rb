@@ -41,7 +41,7 @@ module Spider
             end
                 
             # Sends a method to all loggers.
-            def send_to_loggers(action, *args)
+            def send_to_loggers(action, *args, &proc)
                 return if $SAFE > 1
                 return unless @loggers
                 if args[0].is_a?(String)
@@ -49,7 +49,7 @@ module Spider
                 end
                 @loggers.each do |dest, logger| 
                     begin
-                        logger.send(action, *args) 
+                        logger.send(action, *args, &proc) 
                     rescue => exc
                     end
                 end
@@ -60,24 +60,24 @@ module Spider
                 return false                
             end
             
-            def debug(*args)
-                send_to_loggers(:debug, *args)
+            def debug(*args, &proc)
+                send_to_loggers(:debug, *args, &proc)
             end
             
             def debug?
                 enquire_loggers(:debug?)
             end
 
-            def info(*args)
-                send_to_loggers(:info, *args)
+            def info(*args, &proc)
+                send_to_loggers(:info, *args, &proc)
             end
             
             def info?
                 enquire_loggers(:info?)
             end
         
-            def warn(*args)
-                send_to_loggers(:warn, *args)
+            def warn(*args, &proc)
+                send_to_loggers(:warn, *args, &proc)
             end
             
             def warn?
@@ -85,16 +85,16 @@ module Spider
             end
             
             
-            def error(*args)
-                send_to_loggers(:error, *args)
+            def error(*args, &proc)
+                send_to_loggers(:error, *args, &proc)
             end
             
             def error?
                 enquire_loggers(:error?)
             end
             
-            def fatal(*args)
-                send_to_loggers(:fatal, *args)
+            def fatal(*args, &proc)
+                send_to_loggers(:fatal, *args, &proc)
             end
             
             def fatal?
@@ -113,34 +113,34 @@ module Spider
                 end
             end
             
-            def unknown(*args)
-                send_to_loggers(:unknown, *args)
+            def unknown(*args, &proc)
+                send_to_loggers(:unknown, *args, &proc)
             end
 
         end
         
-        def debug(*args)
-            Spider::Logger.debug(*args)
+        def debug(*args, &proc)
+            Spider::Logger.debug(*args, &proc)
         end
         
-        def info(*args)
-            Spider::Logger.info(*args)
+        def info(*args, &proc)
+            Spider::Logger.info(*args, &proc)
         end
         
-        def warn(*args)
-            Spider::Logger.warn(*args)
+        def warn(*args, &proc)
+            Spider::Logger.warn(*args, &proc)
         end
         
-        def error(*args)
-            Spider::Logger.error(*args)
+        def error(*args, &proc)
+            Spider::Logger.error(*args, &proc)
         end
         
-        def fatal(*args)
-            Spider::Logger.fatal(*args)
+        def fatal(*args, &proc)
+            Spider::Logger.fatal(*args, &proc)
         end
         
-        def unknown(*args)
-            Spider::Logger.unknown(*args)
+        def unknown(*args, &proc)
+            Spider::Logger.unknown(*args, &proc)
         end
         
         def debug?
