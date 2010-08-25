@@ -47,6 +47,7 @@ module Spider
                 
             }
             return klass if base_types.include?(klass)
+            return klass if klass <= Spider::Model::BaseModel
             return t if t = map_types[klass]
             return klass.maps_to if (klass.subclass_of?(Spider::DataType) && klass.maps_to)
             return klass.superclass if klass.superclass
