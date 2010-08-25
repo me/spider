@@ -30,7 +30,11 @@ class Date
     
     # Custom clone for home_run gem
     def clone
-        self.class.civil(self.year, self.month, self.day, self.hour, self.min, self.sec, self.offset)
+        if self.respond_to?(:hour)
+            self.class.civil(self.year, self.month, self.day, self.hour, self.min, self.sec, self.offset)
+        else
+            self.class.civil(self.year, self.month, self.day)
+        end
     end
 
     private
