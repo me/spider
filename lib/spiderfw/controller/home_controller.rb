@@ -8,8 +8,8 @@ module Spider
         def self.route_app(app)
             #app_path = app.name.gsub('::', '/')
             app_path = app.route_url
-            Spider::Logger.debug("ROUTING #{app_path} TO #{app.controller}")
             route(app_path, app.controller, :ignore_case => true)
+            self.app_routes << [app_path, app.controller]
         end
 
         def self.pub_path
@@ -24,6 +24,15 @@ module Spider
             path = self.pub_path+'/apps'
             path += '/'+app.short_name if app
             path
+        end
+        
+        def self.app_routes
+            @app_routes ||= []
+        end
+        
+        def self.print_app_routes
+            max_length = app_routes.inject(0){ |m, r| m > r[0].length ? m : r[0].length }
+            app_routes.map{ |r| "#{r[0].ljust(max_length+3)} -> #{r[1]}"}.sort.join("\n")
         end
 
     end

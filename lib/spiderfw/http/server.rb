@@ -24,6 +24,7 @@ module Spider; module HTTP
         
         def start(opts={})
             @options = opts
+            Spider.logger.info{ "Routes: \n"+Spider::HomeController.print_app_routes }
             start_server(opts)
         end
         
