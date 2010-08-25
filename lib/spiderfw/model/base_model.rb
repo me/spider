@@ -54,6 +54,7 @@ module Spider; module Model
         include Spider::Logger
         include DataTypes
         include Spider::QueryFuncs
+        include EventSource
         # include StateMachine
         
         # The BaseModel class itself. Used when dealing with proxy objects.
