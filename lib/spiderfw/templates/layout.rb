@@ -25,17 +25,19 @@ module Spider
             css = []
             runtime = []
             all_assets.each do |res|
+                if res[:runtime]
+                    next if seen[res[:runtime]]
+                    seen[res[:runtime]] = true
+                    runtime << res
+                    next
+                end
                 next if !res[:src] || res[:src].empty?
                 next if seen[res[:src]]
                 seen[res[:src]] = true
                 @template_assets[res[:type].to_sym] ||= []
                 @template_assets[res[:type].to_sym] << res[:src]
-                if res[:runtime]
-                    runtime << res
-                else
-                    js << res if Spider.conf.get('javascript.compress') && res[:type].to_sym == :js
-                    css << res if Spider.conf.get('css.compress') && res[:type].to_sym == :css
-                end
+                js << res if Spider.conf.get('javascript.compress') && res[:type].to_sym == :js
+                css << res if Spider.conf.get('css.compress') && res[:type].to_sym == :css
             end
             if Spider.conf.get('javascript.compress') && !@scene.__is_error_page
                 compressed = compress_javascript(js)
