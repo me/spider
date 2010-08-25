@@ -40,7 +40,6 @@ module Spider; module Components
                 tab.innerHTML = ''
             end
             tabs_override += '</tpl:override>'
-            debugger
             overrides << Hpricot(tabs_override).root
             return doc.to_s, overrides
         end
