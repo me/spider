@@ -179,6 +179,9 @@ module Spider; module Model
         #                             :order attribute; if it is a Fixnum, it will mean the position in the ordering.
         # :default::                  (Proc or value) default value for the element. If it is a Proc, it will be passed
         #                             the object.
+        # :desc::                     (true or Fixnum) Use this element for the to_s string. Multiple elements
+        #                             with the :desc attribute will be joined by spaces; order may be specified if 
+        #                             a Fixnum is used for the parameter 
         # 
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
         # See also Element.
@@ -653,7 +656,7 @@ module Spider; module Model
                     if (val.class == Hash)
                         # TODO: allow passing of multiple values like {:element1 => 'el1', :element2 => 'el2'}
                     else
-                        element(:desc, val.class)
+                        element(:desc, val.class, :desc => true)
                     end
                     break
                 end
@@ -1931,6 +1934,21 @@ module Spider; module Model
         # the string representation of the first element of any type.
         # Descendant classes may well provide a better representation.
         def to_s
+            desc_elements = self.class.elements_array.select{ |el| el.attributes[:desc] }
+            unless desc_elements.empty?
+                return desc_elements.sort{ |a, b| 
+                    ad = a.attributes[:desc]; bd = b.attributes[:desc]
+                    if ad == true && bd == true
+                        0
+                    elsif bd == true
+                        -1
+                    elsif ad == true
+                        1
+                    else
+                        ad <=> bd
+                    end
+                }.map{ |el| self.get(el).to_s }.join(' ')
+            end
             self.class.each_element do |el|
                 if ((el.type == String || el.type == Text) && !el.primary_key?)
                     v = get(el)
