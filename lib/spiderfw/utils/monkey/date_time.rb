@@ -27,6 +27,11 @@ class Date
         options[:return] = self <= DateTime ? :datetime : :date 
         Spider::I18n.parse_dt(locale, string, format, options)
     end
+    
+    # Custom clone for home_run gem
+    def clone
+        self.class.civil(self.year, self.month, self.day, self.hour, self.min, self.sec, self.offset)
+    end
 
     private
     def to_time(dest, method)
