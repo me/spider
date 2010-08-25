@@ -90,7 +90,7 @@ module Spider; module Model; module Storage; module Db
          def sql_drop_primary_key(table_name)
              constraint_name = nil
              connection do |conn|
-                 res = conn.exec("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS cons, user_cons_columns cols 
+                 res = conn.exec("SELECT cons.CONSTRAINT_NAME FROM USER_CONSTRAINTS cons, user_cons_columns cols 
                                     WHERE cons.constraint_type = 'P'
                                     AND cons.constraint_name = cols.constraint_name
                                     AND cols.table_name = '#{table_name}'")
@@ -278,7 +278,7 @@ module Spider; module Model; module Storage; module Db
                  FROM user_constraints cons, user_cons_columns cols
                  WHERE cons.constraint_type = 'P'
                  AND cons.constraint_name = cols.constraint_name
-                 AND cols.table_name = '#{table}'")
+                 AND cols.table_name = '#{table}'".split("\n").join(' '))
                  res.each do |h|
                      primary_keys << h['COLUMN_NAME']
                  end
@@ -294,7 +294,7 @@ module Spider; module Model; module Storage; module Db
                        on cc.r_constraint_name = cols.constraint_name 
                       and cons.position = cols.position
                  WHERE cc.constraint_type = 'R'
-                 AND cons.table_name = '#{table}'")
+                 AND cons.table_name = '#{table}'".split("\n").join(' '))
                  res.each do |h|
                      fk_name = h['CONSTRAINT_NAME']
                      o_foreign_keys[fk_name] ||= {:table => h['REFERENCED_TABLE'], :columns => {}}
