@@ -1,5 +1,6 @@
 require 'spiderfw/model/mixins/state_machine'
 require 'spiderfw/model/element'
+require 'spiderfw/model/integrated_element'
 require 'iconv'
 
 module Spider; module Model
@@ -286,7 +287,9 @@ module Spider; module Model
                 end
             end
             
-            @elements[name] = Element.new(name, type, attributes)
+            
+            add_element(Element.new(name, type, attributes))
+            
             
             if (attributes[:add_reverse] && attributes[:add_reverse].is_a?(Symbol))
                 attributes[:add_reverse] = {:name => attributes[:add_reverse]}
@@ -339,16 +342,7 @@ module Spider; module Model
             end
             
             
-            
-            if (attributes[:element_position])
-                @elements_order.insert(attributes[:element_position], name)
-            else
-                @elements_order << name
-            end
-            @primary_keys ||= []
-            if attributes[:primary_key] && !@primary_keys.include?(@elements[name])
-                @primary_keys << @elements[name] 
-            end
+
             
             # class element getter
             unless respond_to?(name)
@@ -359,18 +353,41 @@ module Spider; module Model
                 end
             end
             
-            ivar = :"@#{ name }"
+            define_element_methods(name)
             
+            attr_reader "#{name}_junction" if attributes[:junction] && !attributes[:keep_junction]
+            
+            if (attributes[:integrate])
+                integrate_params = attributes[:integrate].is_a?(Hash) ? attributes[:integrate] : {}
+                integrate(name, integrate_params)
+            end
+            if (@subclasses)
+                @subclasses.each do |sub|
+                    next if sub.elements[name] # if subclass already defined an element with this name, don't overwrite it
+                    sub.elements[name] = @elements[name].clone
+                    sub.elements_order << name
+                end
+            end
+            element_defined(@elements[name])
+            return @elements[name]
+
+        end
+        
+        
+        def self.define_element_methods(name)
+            ivar = :"@#{ name }"
+
             unless self.const_defined?(:ElementMethods)
                 em = self.const_set(:ElementMethods, Module.new)
                 include em
-                
+
             end
             element_methods = self.const_get(:ElementMethods)
 
             #instance variable getter
             element_methods.send(:define_method, name) do
                 element = self.class.elements[name]
+                raise "Internal error! Element method #{name} exists, but element not found" unless element
                 return element.attributes[:fixed] if element.attributes[:fixed]
                 if (element.integrated?)
                     integrated = get(element.integrated_from.name)
@@ -383,7 +400,7 @@ module Spider; module Model
                     return val
                 end
 
-#                Spider.logger.debug("Element not loaded #{name} (i'm #{self.class} #{self.object_id})")
+                #                Spider.logger.debug("Element not loaded #{name} (i'm #{self.class} #{self.object_id})")
                 if autoload? && primary_keys_set?
                     if (autoload? == :save_mode)
                         mapper.load_element!(self, element)
@@ -405,12 +422,13 @@ module Spider; module Model
                 val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
                 return val
             end
-            
-            alias_method :"#{name}?", name if type <= Spider::DataTypes::Bool
+
+            alias_method :"#{name}?", name if self.elements[name].type <= Spider::DataTypes::Bool
 
             #instance_variable_setter
             element_methods.send(:define_method, "#{name}=") do |val|
                 element = self.class.elements[name]
+                raise "Internal error! Element method #{name}= exists, but element not found" unless element
                 return if element.attributes[:fixed]
                 was_loaded = element_loaded?(element)
                 #@_autoload = false unless element.primary_key?
@@ -451,28 +469,17 @@ module Spider; module Model
                 instance_variable_set(ivar, val)
                 #extend_element(name)
             end
-            
-            if (attributes[:integrate])
-                integrate_params = attributes[:integrate].is_a?(Hash) ? attributes[:integrate] : {}
-                integrate(name, integrate_params)
-            end
-            if (@subclasses)
-                @subclasses.each do |sub|
-                    next if sub.elements[name] # if subclass already defined an element with this name, don't overwrite it
-                    sub.elements[name] = @elements[name].clone
-                    sub.elements_order << name
-                end
-            end
-            element_defined(@elements[name])
-            return @elements[name]
-
         end
         
         def self.add_element(el)
             @elements ||= {}
             @elements[el.name] = el
             @elements_order ||= []
-            @elements_order << el.name
+            if (el.attributes[:element_position])
+                @elements_order.insert(el.attributes[:element_position], el.name)
+            else
+                @elements_order << el.name
+            end            
             @primary_keys ||= []
             if el.attributes[:primary_key] && !@primary_keys.include?(el)
                 @primary_keys << el
@@ -485,11 +492,19 @@ module Spider; module Model
             return unless @elements
             el = el.name if el.is_a?(Element)
             element = @elements[el]
+            if self.attributes[:integrated_from_elements]
+                self.attributes[:integrated_from_elements].each do |mod, iel|
+                    i = mod.elements[el]
+                    mod.remove_element(el) if i && i.integrated? && i.integrated_from.name == iel
+                end
+            end
+            self.elements_array.select{ |e| e.integrated_from == el}.each{ |e| remove_element(e) }
             self.const_get(:ElementMethods).send(:remove_method, :"#{el}") rescue NameError
             self.const_get(:ElementMethods).send(:remove_method, :"#{el}=") rescue NameError
             @elements.delete(el)
             @elements_order.delete(el)
             @primary_keys.delete_if{ |pk| pk.name == el}
+
             # if (@subclasses)
             #     @subclasses.each do |sub|
             #         sub.remove_element(el)
@@ -535,31 +550,30 @@ module Spider; module Model
             model.each_element do |el|
                 next if params[:except].include?(el.name)
                 next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
-                attributes = el.attributes.clone.merge({
-                    :integrated_from => elements[element_name],
-                    :integrated_from_element => el.name
-                })
-                attributes.delete(:primary_key) if params[:no_pks]
-                attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
-                if (add_rev = attributes[:add_reverse] || attributes[:add_multiple_reverse])
-                    attributes[:reverse] = add_rev[:name]
-                    attributes.delete(:add_reverse)
-                    attributes.delete(:add_multiple_reverse)
-                end
-                attributes.delete(:primary_key) unless (params[:keep_pks])
-                attributes.delete(:required)
-                attributes.delete(:integrate)
-                attributes.delete(:local_pk)
+                integrated_attributes = {}
+                integrated_attributes[:primary_key] = false if params[:no_pks]
+                integrated_attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
+
+                integrated_attributes[:primary_key] = false unless (params[:keep_pks])
+                # attributes.delete(:required)
+                # attributes.delete(:integrate)
+                # attributes.delete(:local_pk)
+                integrated_attributes[:local_pk] = false
                 name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
-                element(name, el.type, attributes)
+                add_element(IntegratedElement.new(name, self, element_name, el.name, integrated_attributes))
+                define_element_methods(name)
             end
+            model.attributes[:integrated_from_elements] ||= []
+            model.attributes[:integrated_from_elements] << [self, element_name]
         end
         
         def self.remove_integrate(element_name)
             element = element_name.is_a?(Element) ? element_name : self.elements[element_name]
+            model = element.model
             self.elements_array.select{ |el| el.attributes[:integrated_from] && el.attributes[:integrated_from].name == element.name }.each do |el|
                 self.remove_element(el)
             end
+            model.attributes[:integrated_from_elements].reject!{ |item| item[0] == self }
         end
         
         # Sets additional attributes on the element
@@ -1234,7 +1248,7 @@ module Spider; module Model
         # Will call the associated getter.
         #   cat.get('favorite_food.name')
         def get(element)
-            element = element.name if (element.class == Spider::Model::Element)
+            element = element.name if element.is_a?(Element)
             first, rest = element.to_s.split('.', 2)
             if (rest)
                 sub_val = send(first)
@@ -1258,7 +1272,7 @@ module Spider; module Model
         # Will call the associated setter.
         #   cat.set('favorite_food.name', 'Salmon')
         def set(element, value, options={})
-            element = element.name if (element.class == Element)
+            element = element.name if element.is_a?(Element)
             first, rest = element.to_s.split('.', 2)
             if (rest)
                 first_val = send(first)
@@ -1370,13 +1384,13 @@ module Spider; module Model
         
         # Records that the element has been loaded.
         def element_loaded(element_name)
-            element_name = element_name.name if (element_name.class == Element)
+            element_name = self.class.get_element(element_name).name
             @loaded_elements[element_name] = true
         end
         
         # Returns true if the element has been loaded by the mapper.
         def element_loaded?(element)
-            element = element.name if (element.class == Element)
+            element = self.class.get_element(element).name
             return @loaded_elements[element]
         end        
 

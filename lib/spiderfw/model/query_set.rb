@@ -284,7 +284,7 @@ module Spider; module Model
         
         # Index objects by some elements.
         def index_by(*elements)
-            names = elements.map{ |el| (el.class == Spider::Model::Element) ? el.name.to_s : el.to_s }
+            names = elements.map{ |el| (el.is_a?(Spider::Model::Element)) ? el.name.to_s : el.to_s }
             index_name = names.sort.join(',')
             @index_lookup[index_name] = {}
             reindex
@@ -666,13 +666,13 @@ module Spider; module Model
         
         # Registers that the element has been loaded.
         def element_loaded(element)
-            element = element.name if (element.class == Element)
+            element = element.name if element.is_a?(Element)
             @loaded_elements[element] = true
         end
         
         # Returns whether the element has been loaded from the Storage.
         def element_loaded?(element)
-            element = element.name if (element.class == Element)
+            element = element.name if element.is_a?(Element)
             @loaded_elements[element]
         end
         

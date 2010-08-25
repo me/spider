@@ -31,7 +31,7 @@ module Spider; module Model
                 end
                 val = n
             end
-            key = key.name if key.class == Element
+            key = key.name if key.is_a?(Element)
             parts = key.to_s.split('.', 2)
             return super(key.to_sym, val) unless parts[1]
             parts[0] = parts[0].to_sym
@@ -41,7 +41,7 @@ module Spider; module Model
         
         def [](key)
             # TODO: deep
-            key = key.name if key.class == Element
+            key = key.name if key.is_a?(Element)
             super(key.to_sym)
         end
         

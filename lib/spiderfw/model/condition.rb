@@ -201,7 +201,7 @@ module Spider; module Model
         
         def [](key)
             # TODO: deep
-            key = key.name if key.class == Element
+            key = key.name if key.is_a?(Element)
             key = key.to_sym if key.respond_to?(:to_sym) # might be a QueryFunc
             super(key)
         end
