@@ -493,21 +493,16 @@ module Spider
         end
         
         def init_debug
-            if (RUBY_VERSION_PARTS[1] == '8')
-                begin
-                    require 'ruby-debug'
-                    if File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
-                        Debugger.wait_connection = true
-                        Debugger.start_remote
-                        File.delete(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
-                    elsif (Spider.conf.get('devel.trace.extended'))
-                        require 'spiderfw/utils/monkey/debugger'
-                        Debugger.start
-                        Debugger.post_mortem
-                    end
-                    require 'ruby-prof' 
-                rescue LoadError, RuntimeError; end
-            end
+            begin
+                require 'ruby-debug'
+                if File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
+                    Debugger.wait_connection = true
+                    Debugger.start_remote
+                    File.delete(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
+                else
+                    Debugger.start
+                end
+            rescue LoadError, RuntimeError; end
         end
         
         def locale

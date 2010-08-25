@@ -47,6 +47,11 @@ class WebServerCommand < CmdParse::Command
             ssl_server = nil
             start = lambda{
                 Spider.startup
+                if Spider.conf.get('devel.trace.extended')
+                    require 'spiderfw/utils/monkey/debugger'
+                    Debugger.start
+                    Debugger.post_mortem
+                end
                 
                 thread = Thread.new do
                     server.start(:port => @port, :cgi => @cgi)
