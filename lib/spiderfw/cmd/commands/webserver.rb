@@ -68,7 +68,7 @@ class WebServerCommand < CmdParse::Command
                         ssl_server.start(:port => @ssl, :ssl => true, :ssl_cert => @ssl_cert, :ssl_private_key => @ssl_key)
                     end
                 end
-                do_shutdown = lambda{
+                do_shutdown = lambda{ |arg|
                     server.shutdown
                     ssl_server.shutdown if ssl_server
                     Spider.shutdown
