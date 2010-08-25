@@ -554,8 +554,33 @@ module Spider; module Model
         
         # Prints an ASCII table
         def table
+            
+            # Functions for determining terminal size:
+            # Copyright (c) 2010 Gabriel Horner, MIT LICENSE
+            # http://github.com/cldwalker/hirb.git
+            
+            # Determines if a shell command exists by searching for it in ENV['PATH'].
+            def command_exists?(command)
+              ENV['PATH'].split(File::PATH_SEPARATOR).any? {|d| File.exists? File.join(d, command) }
+            end
+
+            # Returns [width, height] of terminal when detected, nil if not detected.
+            # Think of this as a simpler version of Highline's Highline::SystemExtensions.terminal_size()
+            def detect_terminal_size
+              if (ENV['COLUMNS'] =~ /^\d+$/) && (ENV['LINES'] =~ /^\d+$/)
+                [ENV['COLUMNS'].to_i, ENV['LINES'].to_i]
+              elsif (RUBY_PLATFORM =~ /java/ || !STDIN.tty?) && command_exists?('tput')
+                [`tput cols`.to_i, `tput lines`.to_i]
+              else
+                command_exists?('stty') ? `stty size`.scan(/\d+/).map { |s| s.to_i }.reverse : nil
+              end
+            rescue
+              nil
+            end
+            
+            
             return print("Empty\n") if length < 1
-            columns = ENV['COLUMNS'].to_i || 80
+            columns = detect_terminal_size[0]
             a = to_flat_array
             m_sizes = Hash.new(0) # one separator column
             a.each do |row|
@@ -577,12 +602,15 @@ module Spider; module Model
                     sizes[k] += 1; avail -= 1
                 end
             end
+            sizes.each do |k, v|
+                sizes[k] = v.floor
+            end
             print "\n"
             1.upto(columns) { print "-" }
             print "\n"
             elements.each do |el|
                 print "|"
-                print el.label[0..sizes[el.name]].ljust(sizes[el.name])
+                print el.label[0..sizes[el.name]-1].ljust(sizes[el.name])
             end
             print "\n"
             1.upto(columns) { print "-" }
@@ -590,7 +618,7 @@ module Spider; module Model
             a.each do |row|
                 elements.each do |el|
                     print "|"
-                    print row[el.name][0..sizes[el.name]].ljust(sizes[el.name])
+                    print row[el.name][0..sizes[el.name]-1].ljust(sizes[el.name])
                 end
                 print "\n"
             end
