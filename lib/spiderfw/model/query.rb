@@ -118,6 +118,10 @@ module Spider; module Model
            @request.with_superclass
        end
        
+       def first
+           self.limit = 1
+       end
+       
        ##############################
        # information methods        #
        ##############################
