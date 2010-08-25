@@ -119,6 +119,13 @@ module Spider
                 'http://'+self.env['HTTP_HOST']+uri
             end
             
+            def client_cert
+                return @client_certificate if @client_cert
+                unless self.env['SSL_CLIENT_CERT'].blank?
+                    @client_cert = OpenSSL::X509::Certificate.new(self.env['SSL_CLIENT_CERT'])
+                end
+            end
+            
         end
     
         
