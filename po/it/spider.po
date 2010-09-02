@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
-"POT-Creation-Date: \n"
+"Project-Id-Version: Spider 0.5.13\n"
+"POT-Creation-Date: 2010-09-02 17:33+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: \n"
@@ -92,7 +92,9 @@ msgstr "Gestisci i contenuti statici"
 
 #: lib/spiderfw/cmd/commands/content.rb:11
 msgid "Publish apps static content to home public folder"
-msgstr "Pubblica il contenuto statico delle applicazioni nella cartella public della home"
+msgstr ""
+"Pubblica il contenuto statico delle applicazioni nella cartella public della "
+"home"
 
 #: lib/spiderfw/cmd/commands/content.rb:23
 msgid "Compress Javascript files"
@@ -107,12 +109,17 @@ msgid "Create a new application"
 msgstr "Crea un'applicazione vuota"
 
 #: lib/spiderfw/cmd/commands/create.rb:15
-msgid "The path where to create the app (defaults to the app folder under the current path)"
-msgstr "Il percorso dove creare l'applicazione (di default la cartella app nel percorso corrente)"
+msgid ""
+"The path where to create the app (defaults to the app folder under the "
+"current path)"
+msgstr ""
+"Il percorso dove creare l'applicazione (di default la cartella app nel "
+"percorso corrente)"
 
 #: lib/spiderfw/cmd/commands/create.rb:19
 msgid "The module name; by default, the app name will be camelized"
-msgstr "Il nome del modulo; di default, il nome dell'applicazione sarà cammellizzato"
+msgstr ""
+"Il nome del modulo; di default, il nome dell'applicazione sarÃ  cammellizzato"
 
 #: lib/spiderfw/cmd/commands/create.rb:33
 msgid "Create an installation"
@@ -120,41 +127,46 @@ msgstr "Crea un'installazione"
 
 #: lib/spiderfw/cmd/commands/create.rb:36
 msgid "The path where to create the installation (defaults to the path)"
-msgstr "Il percorso dove creare l'installazione (di default il percorso corrente)"
+msgstr ""
+"Il percorso dove creare l'installazione (di default il percorso corrente)"
 
 #: lib/spiderfw/cmd/commands/model.rb:6
 msgid "Manage models"
 msgstr "Gestisci i modelli"
 
-#: lib/spiderfw/cmd/commands/model.rb:11
+#: lib/spiderfw/cmd/commands/model.rb:12
 msgid "Sync models"
 msgstr "Sincronizza i modelli"
 
-#: lib/spiderfw/cmd/commands/model.rb:13
+#: lib/spiderfw/cmd/commands/model.rb:14
 msgid "Force syncing"
 msgstr "Forza la sincronizzazione"
 
-#: lib/spiderfw/cmd/commands/model.rb:16
+#: lib/spiderfw/cmd/commands/model.rb:17
 msgid "Drop unused columns"
 msgstr "Esegui il drop delle colonne inutilizzate"
 
-#: lib/spiderfw/cmd/commands/model.rb:17
+#: lib/spiderfw/cmd/commands/model.rb:18
 msgid "Drop unused tables"
 msgstr "Esegui il drop delle tabelle inutilizzate"
 
-#: lib/spiderfw/cmd/commands/model.rb:21
+#: lib/spiderfw/cmd/commands/model.rb:22
 msgid "Update current sequences to max db value"
 msgstr "Aggiorna le sequenze esistenti al max in db"
 
-#: lib/spiderfw/cmd/commands/model.rb:24
+#: lib/spiderfw/cmd/commands/model.rb:25
 msgid "Process also non managed models"
 msgstr "Processa anche i modelli non gestiti"
 
-#: lib/spiderfw/cmd/commands/model.rb:25
+#: lib/spiderfw/cmd/commands/model.rb:26
 msgid "Don't create foreign key constraints"
 msgstr "Non creare i vincoli di chiave esterna"
 
-#: lib/spiderfw/cmd/commands/model.rb:65
+#: lib/spiderfw/cmd/commands/model.rb:27
+msgid "Create foreign key constraints"
+msgstr "Crea i vincoli di chiave esterna"
+
+#: lib/spiderfw/cmd/commands/model.rb:67
 msgid ""
 "The following tables are about to be dropped: \n"
 "%s"
@@ -162,36 +174,35 @@ msgstr ""
 "Le segenti tabelle stanno per essere cancellate: \n"
 "%s"
 
-#: lib/spiderfw/cmd/commands/model.rb:66
-msgid "Continue? yes/NO: "
-msgstr "Continuare? sì/NO"
-
 #: lib/spiderfw/cmd/commands/model.rb:68
-#: lib/spiderfw/cmd/commands/model.rb:70
-msgid "yes"
-msgstr "sì"
+msgid "Continue? yes/NO: "
+msgstr "Continuare? sÃ¬/NO"
 
-#: lib/spiderfw/cmd/commands/model.rb:69
+#: lib/spiderfw/cmd/commands/model.rb:70 lib/spiderfw/cmd/commands/model.rb:72
+msgid "yes"
+msgstr "sÃ¬"
+
+#: lib/spiderfw/cmd/commands/model.rb:71
 msgid "no"
 msgstr "no"
 
-#: lib/spiderfw/cmd/commands/model.rb:79
+#: lib/spiderfw/cmd/commands/model.rb:81
 msgid "Unable to modify the following fields:"
 msgstr "Impossibile modificare i seguenti campi:"
 
-#: lib/spiderfw/cmd/commands/model.rb:81
+#: lib/spiderfw/cmd/commands/model.rb:83
 msgid "(use -f to force)"
 msgstr "(usa -f per forzare)"
 
-#: lib/spiderfw/cmd/commands/model.rb:87
+#: lib/spiderfw/cmd/commands/model.rb:89
 msgid "Dump models"
 msgstr "Esegui il dump dei modelli"
 
-#: lib/spiderfw/cmd/commands/model.rb:89
+#: lib/spiderfw/cmd/commands/model.rb:91
 msgid "Overwrite existing files"
 msgstr "Sovrascrivi file esistenti"
 
-#: lib/spiderfw/cmd/commands/model.rb:92
+#: lib/spiderfw/cmd/commands/model.rb:94
 msgid "Specify dump path"
 msgstr "Specifica percorso per il dump"
 
@@ -201,13 +212,17 @@ msgstr "Esegui il setup di un'applicazione"
 
 #: lib/spiderfw/cmd/commands/setup.rb:14
 msgid "Assume a specific version is installed"
-msgstr "Assumi che una versione specifica è installata"
+msgstr "Assumi che una versione specifica Ã¨ installata"
 
 #: lib/spiderfw/cmd/commands/setup.rb:17
 msgid "Setup to a specific version"
 msgstr "Esegui il setup fino a una versione specifica"
 
 #: lib/spiderfw/cmd/commands/setup.rb:20
+msgid "Only run the setup script for the given version"
+msgstr "Esegui lo script di setup solo per la versione passata"
+
+#: lib/spiderfw/cmd/commands/setup.rb:23
 msgid "Setup all active apps"
 msgstr "Esegui il setup di tutte le applicazioni attive"
 
@@ -233,11 +248,12 @@ msgstr "La porta su cui deve stare in ascolto il webserver"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:24
 msgid "Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"
-msgstr "Che webserver usare; le possibilità sono 'webrick', 'mongrel' e 'thin'"
+msgstr ""
+"Che webserver usare; le possibilitÃ  sono 'webrick', 'mongrel' e 'thin'"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:25
 msgid "The webserver %s is not supported"
-msgstr "Il webserver %s non è supportato"
+msgstr "Il webserver %s non Ã¨ supportato"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:28
 msgid "Detach server process"
@@ -245,7 +261,9 @@ msgstr "Stacca il processo server dalla console"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:29
 msgid "Serve each request spawning a CGI subprocess. Useful in developement."
-msgstr "Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo sviluppo."
+msgstr ""
+"Servi ogni richesta eseguendo un nuovo processo CGI. Utile durante lo "
+"sviluppo."
 
 #: lib/spiderfw/cmd/commands/webserver.rb:32
 msgid "Listen to SSL requests"
@@ -269,7 +287,7 @@ msgstr "In ascolto sulla porta %s"
 
 #: lib/spiderfw/config/configuration.rb:85
 msgid "%s is not a configuration option"
-msgstr "%s non è un'opzione di configurazione"
+msgstr "%s non Ã¨ un'opzione di configurazione"
 
 #: lib/spiderfw/config/options/spider.rb:12
 msgid "The internal server to use"
@@ -301,7 +319,9 @@ msgstr "Modo da usare per servire file statici"
 
 #: lib/spiderfw/config/options/spider.rb:36
 msgid "Automatically publish content to the home's public folder"
-msgstr "Pubblica automaticamente il contenuto statico nella cartella pubblica della come"
+msgstr ""
+"Pubblica automaticamente il contenuto statico nella cartella pubblica della "
+"come"
 
 #: lib/spiderfw/config/options/spider.rb:39
 msgid "The text editor installed on the client"
@@ -416,8 +436,12 @@ msgid "Redirect standard output to the browser"
 msgstr "Ridirigi lo standard output al browser"
 
 #: lib/spiderfw/config/options/spider.rb:89
-msgid "If the request is proxyied, the urls used to reach spider, with the corresponding paths called by the proxy"
-msgstr "Se la richiesta è passata attraverso un proxy, gli url usati per raggiungere spider, con i corrispondenti percorsi chiamati dal proxy"
+msgid ""
+"If the request is proxyied, the urls used to reach spider, with the "
+"corresponding paths called by the proxy"
+msgstr ""
+"Se la richiesta Ã¨ passata attraverso un proxy, gli url usati per "
+"raggiungere spider, con i corrispondenti percorsi chiamati dal proxy"
 
 #: lib/spiderfw/config/options/spider.rb:91
 msgid "The charset to use for http requests"
@@ -433,15 +457,23 @@ msgstr "Logga gli errori su file"
 
 #: lib/spiderfw/config/options/spider.rb:97
 msgid "Log level to use for debug file (false for no debug)"
-msgstr "Livello di log da usare per il file di debug (false per disabilitare il debug)"
+msgstr ""
+"Livello di log da usare per il file di debug (false per disabilitare il "
+"debug)"
 
 #: lib/spiderfw/config/options/spider.rb:100
-msgid "Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"
-msgstr "Numero di vecchi file di log da tenere, OPPURE frequenza di rotazione (daily, weekly o monthly)"
+msgid ""
+"Number of old log files to keep, OR frequency of rotation (daily, weekly or "
+"monthly)"
+msgstr ""
+"Numero di vecchi file di log da tenere, OPPURE frequenza di rotazione "
+"(daily, weekly o monthly)"
 
 #: lib/spiderfw/config/options/spider.rb:101
 msgid "Maximum logfile size (only applies when log.rotate.age is a number)"
-msgstr "Dimensione massima del file di log (applicabile solo se log.rotate.age è un numero)"
+msgstr ""
+"Dimensione massima del file di log (applicabile solo se log.rotate.age Ã¨ un "
+"numero)"
 
 #: lib/spiderfw/config/options/spider.rb:104
 msgid "A list of organizations"
@@ -461,7 +493,7 @@ msgstr "Provincia dell'organizzazione"
 
 #: lib/spiderfw/config/options/spider.rb:108
 msgid "Name of the city"
-msgstr "Nome della città"
+msgstr "Nome della cittÃ "
 
 #: lib/spiderfw/config/options/spider.rb:109
 msgid "Common name (e.g. domain) of the organization"
@@ -477,19 +509,23 @@ msgstr "Indirizzo Email utilizzato come 'From' per le e-mail automatiche"
 
 #: lib/spiderfw/config/options/spider.rb:113
 msgid "Organizational Unit (e.g. department)"
-msgstr "Unità Organizzativa (p.es. il dipartimento)"
+msgstr "UnitÃ  Organizzativa (p.es. il dipartimento)"
 
 #: lib/spiderfw/config/options/spider.rb:114
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
-msgstr "Percorso della chiave pubblica (di default config/certs/nome_org/public.pem)"
+msgstr ""
+"Percorso della chiave pubblica (di default config/certs/nome_org/public.pem)"
 
 #: lib/spiderfw/config/options/spider.rb:116
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr "Percorso del certificato (di default config/certs/nome_org/cert.pem)"
 
 #: lib/spiderfw/config/options/spider.rb:118
-msgid "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
-msgstr "Percorso della chiave privata (di default config/certs/nome_org/private/key.pem)"
+msgid ""
+"Path to the private key (defaults to config/certs/org_name/private/key.pem)"
+msgstr ""
+"Percorso della chiave privata (di default config/certs/nome_org/private/key."
+"pem)"
 
 #: lib/spiderfw/config/options/spider.rb:130
 msgid "Name of the site administrator"
@@ -511,47 +547,44 @@ msgstr "Invia un'e-mail all'amministratore quando accade un errore"
 msgid "Use ruby-debug to provide extended traces"
 msgstr "Usa ruby-debug per creare trace estesi"
 
-#: lib/spiderfw/config/options/spider.rb:140
-#: lib/spiderfw/config/options/spider.rb:141
+#: lib/spiderfw/config/options/spider.rb:142
+#: lib/spiderfw/config/options/spider.rb:143
 msgid "Show locals in debug traces"
 msgstr "Mostra le variabili locali nei trace"
 
-#: lib/spiderfw/config/options/spider.rb:143
+#: lib/spiderfw/config/options/spider.rb:145
 msgid "Compress JavaScript files"
 msgstr "Comprimi i file JavaScript"
 
-#: lib/spiderfw/config/options/spider.rb:145
+#: lib/spiderfw/config/options/spider.rb:147
 msgid "Combine CSS files"
 msgstr "Combina i file CSS"
 
-#: lib/spiderfw/config/options/spider.rb:147
+#: lib/spiderfw/config/options/spider.rb:149
 msgid "Use cache busters for CSS urls"
 msgstr "Usa cache busters per le url dei CSS"
 
-#: lib/spiderfw/controller/mixins/visual.rb:250
+#: lib/spiderfw/controller/mixins/visual.rb:251
 msgid "Page not found"
 msgstr "Pagina non trovata"
 
-#: lib/spiderfw/controller/mixins/visual.rb:257
+#: lib/spiderfw/controller/mixins/visual.rb:258
 msgid "An error occurred"
-msgstr "Si è verificato un errore"
+msgstr "Si Ã¨ verificato un errore"
 
-#: lib/spiderfw/controller/mixins/visual.rb:303
+#: lib/spiderfw/controller/mixins/visual.rb:304
 msgid "Site error"
 msgstr "Errore del sito"
 
-#: lib/spiderfw/i18n/i18n.rb:141
-#: lib/spiderfw/i18n/i18n.rb:147
+#: lib/spiderfw/i18n/i18n.rb:141 lib/spiderfw/i18n/i18n.rb:147
 msgid "less than a minute"
 msgstr "meno di un minuto"
 
-#: lib/spiderfw/i18n/i18n.rb:141
-#: lib/spiderfw/i18n/i18n.rb:148
+#: lib/spiderfw/i18n/i18n.rb:141 lib/spiderfw/i18n/i18n.rb:148
 msgid "1 minute"
 msgstr "1 minuto"
 
-#: lib/spiderfw/i18n/i18n.rb:143
-#: lib/spiderfw/i18n/i18n.rb:144
+#: lib/spiderfw/i18n/i18n.rb:143 lib/spiderfw/i18n/i18n.rb:144
 #: lib/spiderfw/i18n/i18n.rb:145
 msgid "less than %s seconds"
 msgstr "meno di %s secondi"
@@ -594,19 +627,43 @@ msgstr "circa 1 anno"
 
 #: lib/spiderfw/i18n/i18n.rb:159
 msgid "over %d years"
-msgstr "più di %d anni"
+msgstr "piÃ¹ di %d anni"
 
-#: lib/spiderfw/model/base_model.rb:1294
+#: lib/spiderfw/model/base_model.rb:1377
 msgid "'%s' is not a valid date"
-msgstr "%s non è una data valida"
+msgstr "%s non Ã¨ una data valida"
 
-#: lib/spiderfw/model/base_model.rb:1348
+#: lib/spiderfw/model/base_model.rb:1432
 msgid "'%s' is not in the correct format"
-msgstr "%s non è nel formato corretto"
+msgstr "%s non Ã¨ nel formato corretto"
 
 #: lib/spiderfw/model/datatypes/email.rb:7
 msgid "%s is not a valid e-mail address"
-msgstr "%s non è un indirizzo e-mail valido"
+msgstr "%s non Ã¨ un indirizzo e-mail valido"
+
+#: lib/spiderfw/model/datatypes/time_span.rb:12
+msgid "hour"
+msgstr "ora"
+
+#: lib/spiderfw/model/datatypes/time_span.rb:12
+msgid "hours"
+msgstr "ore"
+
+#: lib/spiderfw/model/datatypes/time_span.rb:15
+msgid "minute"
+msgstr "minuto"
+
+#: lib/spiderfw/model/datatypes/time_span.rb:15
+msgid "minutes"
+msgstr "minuti"
+
+#: lib/spiderfw/model/datatypes/time_span.rb:18
+msgid "second"
+msgstr "secondo"
+
+#: lib/spiderfw/model/datatypes/time_span.rb:18
+msgid "seconds"
+msgstr "secondi"
 
 #: lib/spiderfw/model/extended_models/managed.rb:21
 msgid "Created"
@@ -616,31 +673,42 @@ msgstr "Creato"
 msgid "Modified"
 msgstr "Modificato"
 
-#: lib/spiderfw/model/mappers/mapper.rb:1027
+#: lib/spiderfw/model/mappers/mapper.rb:1042
 msgid "Element %s is required"
-msgstr "L'elemento %s è obbligatorio"
+msgstr "L'elemento %s Ã¨ obbligatorio"
 
-#: lib/spiderfw/model/mappers/mapper.rb:1031
+#: lib/spiderfw/model/mappers/mapper.rb:1046
 msgid "Another item with the same %s is already present"
-msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
+msgstr "Ã giÃ  presente un'altro oggetto con lo stesso elemento %s"
 
 #: views/errors/404.shtml:4
 msgid "We are sorry, but the required page was not found"
-msgstr "Siamo spiacenti, la pagina richiesta non è stata trovata"
+msgstr "Siamo spiacenti, la pagina richiesta non Ã¨ stata trovata"
 
 #: views/errors/error.layout.shtml:20
-msgid "If you need to contact the administrator to provide additional information, you may send an e-mail to"
-msgstr "Per contattare l'amministratore e fornire informazioni aggiuntive, è possibile inviare un'e-mail a"
+msgid ""
+"If you need to contact the administrator to provide additional information, "
+"you may send an e-mail to"
+msgstr ""
+"Per contattare l'amministratore e fornire informazioni aggiuntive, Ã¨ "
+"possibile inviare un'e-mail a"
 
 #: views/errors/error.layout.shtml:24
-msgid "The identifier of this error is %s. Please refer to it when requesting assistance."
-msgstr "L'identificatore dell'errore è %s. Per favore, fare riferimento a questo identificatore se si richiede assistenza."
+msgid ""
+"The identifier of this error is %s. Please refer to it when requesting "
+"assistance."
+msgstr ""
+"L'identificatore dell'errore Ã¨ %s. Per favore, fare riferimento a questo "
+"identificatore se si richiede assistenza."
 
 #: views/errors/error.layout.shtml:29
 msgid "Debug information"
 msgstr "Informazioni di debug"
 
 #: views/errors/error_generic.shtml:4
-msgid "We are sorry, an error occurred. The administrator of the site has been notified"
-msgstr "Siamo spiacenti, si è verificato un errore. L'amministratore del sito è stato informato"
-
+msgid ""
+"We are sorry, an error occurred. The administrator of the site has been "
+"notified"
+msgstr ""
+"Siamo spiacenti, si Ã¨ verificato un errore. L'amministratore del sito Ã¨ "
+"stato informato"
