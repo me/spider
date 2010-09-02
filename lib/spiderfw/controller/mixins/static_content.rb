@@ -90,6 +90,7 @@ module Spider; module ControllerMixins
                 ct = "httpd/unix-directory"
             else
                 ct = MIME::Types.type_for(full_path)
+                ct = ct.first if ct.is_a?(Array)
                 ct = ct.to_s if ct
                 ct ||= "application/octet-stream"
             end
