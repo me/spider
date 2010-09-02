@@ -794,14 +794,16 @@ module Spider; module Model
             @model.primary_keys.each do |key|
                 request[key] = true
             end
+            new_requests = []
             request.each do |k, v|
                 next unless element = @model.elements[k]
                 if (element.integrated?)
                     integrated_from = element.integrated_from
                     integrated_from_element = element.integrated_from_element
-                    request.request("#{integrated_from.name}.#{integrated_from_element}")
+                    new_requests << "#{integrated_from.name}.#{integrated_from_element}"
                 end
             end
+            new_requests.each{ |r| request.request(r) }
         end
         
         # Adds lazy groups to request.
