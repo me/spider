@@ -1590,8 +1590,9 @@ module Spider; module Model
                 element.attributes[:computed_from].each{ |el| return false unless element_has_value?(el) }
                 return true
             end
-            ivar = instance_variable_get(:"@#{element.name}")
-            return ivar == nil ? false : true
+            ivar = nil
+            ivar = instance_variable_get(:"@#{element.name}") if instance_variable_defined?(:"@#{element.name}")
+            return nil == ivar ? false : true
             # FIXME: is this needed?
             # if (!mapper.mapped?(element)
             #     return send("#{element_name}?") if (respond_to?("#{element_name}?"))
@@ -1790,6 +1791,7 @@ module Spider; module Model
         
         # Returns the current mapper, or instantiates a new one (base on the current storage, if set)
         def mapper
+            @storage ||= nil
             if (@storage)
                 @mapper ||= self.class.get_mapper(@storage)
             else
