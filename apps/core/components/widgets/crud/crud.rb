@@ -25,7 +25,7 @@ module Spider; module Components
                 @scene.ask_delete = true
             end
             super
-            transient_session[:table_params] = @widgets[:table].params if (@widgets[:table])
+            transient_session[:table_params] ||= @widgets[:table].params if (@widgets[:table])
             
             if (@action == :table)
                 if params['do_delete'] && params['selected'] && params['selected'].length > 0
