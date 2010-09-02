@@ -1617,6 +1617,7 @@ module Spider; module Model
         
         # Returns true if any of elements has been modified
         def elements_modified?(*elements)
+            elements = elements[0] if elements[0].is_a?(Array)
             elements.each{ |el| return true if element_modified?(el) }
             return false
         end
