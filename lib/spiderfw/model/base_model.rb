@@ -98,6 +98,7 @@ module Spider; module Model
             subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
             em = subclass.const_set(:ElementMethods, Module.new)
             subclass.send(:include, em)
+            super
         end
         
         def self.subclasses
