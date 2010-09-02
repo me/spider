@@ -16,7 +16,7 @@ module Spider; module TemplateBlocks
             init = ""
             attr_if = @el.get_attribute('sp:attr-if')
             @el.remove_attribute('sp:attr-if')
-            @el.set_attribute("tmp-attr-if", attr_if)
+            @el.set_attribute("tmp-attr-if", '---')
             compiled = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile(options)
             c, init = compiled.run_code, compiled.init_code
             cond, name, val = attr_if.split(',')
@@ -27,7 +27,7 @@ module Spider; module TemplateBlocks
             full_attr = val ? "#{name}=\"#{val}\"" : "#{name}"
             replace = "'+"+"( (#{cond}) ? '#{full_attr}' : '' )"+"+'"
 #            debug("ATTR IF REPLACe")
-            c.sub!('tmp-attr-if="'+attr_if+'"', replace)
+            c.sub!('tmp-attr-if="---"', replace)
             return CompiledBlock.new(init, c)
         end
         
