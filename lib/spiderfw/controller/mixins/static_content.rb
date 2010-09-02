@@ -81,7 +81,7 @@ module Spider; module ControllerMixins
                   if_modified = 0
                 end
                 if stat.mtime <= if_modified
-                    debug("Not modified #{full_path}")
+                    debug("Not modified since #{if_modified}: #{full_path}")
                     raise HTTPStatus.new(Spider::HTTP::NOT_MODIFIED) 
                     return
                 end
