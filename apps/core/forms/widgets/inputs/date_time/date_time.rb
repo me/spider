@@ -10,7 +10,12 @@ module Spider; module Forms
         def prepare_value(val)
             return val if val.respond_to?(:strftime)
             return nil unless val.is_a?(String) && !val.empty?
-            klass = @mode == :date ? ::Date : ::DateTime
+            klass = case @mode
+            when :date then Date
+            when :time then Time
+            else 
+                DateTime
+            end
             begin
                 return klass.lparse(val, :short)
             rescue => exc

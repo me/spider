@@ -231,8 +231,12 @@ module Spider; module Model; module Storage; module Db
              case type.name
              when 'String'
                  return value.to_s
-             when 'Date', 'DateTime'
+             when 'Date'
+                 return value.strftime("%Y-%m-%d")
+             when 'DateTime'
                  return value.strftime("%Y-%m-%dT%H:%M:%S")
+             when 'Time'
+                 return value.strftime("%H:%M:%S")
              when 'Fixnum'
                  return value.to_i
              end
@@ -247,6 +251,8 @@ module Spider; module Model; module Storage; module Db
                  return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second, @@time_offset)
              when 'Date'
                  return type.civil(value.year, value.month, value.day)
+             when 'Time'
+                 return type.local(2000, 1, 1, value.hour, value.minute, value.second)
              end
              return super(type, value)
          end
@@ -374,8 +380,12 @@ module Spider; module Model; module Storage; module Db
                  'INT'
              when 'Float'
                  'FLOAT'
-             when 'Date', 'DateTime'
+             when 'Date'
+                 'Date'
+             when 'DateTime'
                  'DATETIME'
+             when 'Time'
+                 'TIME'
              when 'Spider::DataTypes::Binary'
                  'BLOB'
              when 'Spider::DataTypes::Bool'

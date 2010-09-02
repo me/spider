@@ -7,6 +7,7 @@ require 'spiderfw/model/datatypes/password'
 require 'spiderfw/model/datatypes/uuid'
 require 'spiderfw/model/datatypes/serialized_object'
 require 'spiderfw/model/datatypes/file_path'
+require 'spiderfw/model/datatypes/time_span'
 
 
 module Spider

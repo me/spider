@@ -79,6 +79,9 @@ module Spider; module I18n
             elsif (options[:return] == :date)
                 format_string = date_format
                 klass = Date
+            elsif (options[:return] == :time)
+                format_string = time_format
+                klass = Time
             end
             replacements = [
                 [/y{1,4}/, '%Y'], # year      don't use two digits year [/y{1,2}/, '%y'],
@@ -92,7 +95,11 @@ module Spider; module I18n
                 [/z{1,4}/, '%Z'], [/Z{1,4}/, '%Z'], [/V{1,4}/, '%Z'] # time zone
             ]
             format_string = mgsub(format_string, replacements)
-            klass.strptime(string, format_string)
+            if options[:return] == :time
+                DateTime.strptime("01-01-2000T#{string}#{Time.now.strftime('%Z')}", "%d-%m-%YT#{format_string}%Z").to_local_time
+            else
+                klass.strptime(string, format_string)
+            end
         end
         
         

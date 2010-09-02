@@ -852,7 +852,7 @@ module Spider; module Model
                         rescue TypeError => exc
                             raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
                         end
-                    elsif element.type == DateTime && v && !v.is_a?(Date)
+                    elsif element.type == DateTime && v && !v.is_a?(Date) && !v.is_a?(Time)
                         condition.delete(k)
                         condition.set(k, c, DateTime.parse(v))
                     end

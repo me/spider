@@ -45,3 +45,21 @@ class Date
         dest.sec, usec)
     end
 end
+
+class Time
+    
+    def self.lparse(string, format = :default, locale=nil, options={})
+        locale ||= Spider.locale
+        options[:return] = :time
+        Spider::I18n.parse_dt(locale, string, format, options)
+    end
+    
+    # if RUBY_VERSION_PARTS[1] == '8'
+    #     
+    #     def self.strptime(string, format=nil)
+    #         Date.strptime(string, format).to_local_time
+    #     end
+    #     
+    # end
+    
+end

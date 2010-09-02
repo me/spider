@@ -225,6 +225,8 @@ module Spider; module Forms
                     when 'Date' then :date
                     when 'Time' then :time
                     end
+                elsif (el.type == Spider::DataTypes::TimeSpan)
+                    widget_type = TimeSpan
                 elsif (el.type == Spider::DataTypes::Password)
                     widget_type = Password
                 elsif (el.type == Spider::DataTypes::Bool)
