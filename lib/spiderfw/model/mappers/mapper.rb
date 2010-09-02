@@ -114,6 +114,7 @@ module Spider; module Model
         # This method is well suited for being overridden, to add custom preprocessing of the object; just
         # remember to call #super, or use #before_insert and #before_update instead.
         def before_save(obj, mode)
+            obj.trigger(:before_save, mode)
             normalize(obj)
             if (mode == :insert)
                 before_insert(obj)
