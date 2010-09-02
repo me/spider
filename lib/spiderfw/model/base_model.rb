@@ -1119,6 +1119,12 @@ module Spider; module Model
             return obj
         end
         
+        def self.create(values)
+            obj = self.static(values)
+            obj.save
+            return obj
+        end
+        
         def set_values(values)
             if (values.is_a? Hash)
                 values.keys.select{ |k| 
