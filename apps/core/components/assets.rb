@@ -16,8 +16,7 @@ Spider::Template.define_named_asset 'jquery', [
  
  Spider::Template.define_named_asset 'jquery-ui', [
      [:js, 'js/jquery/jquery-ui-1.8.4/development-bundle/ui/jquery-ui-1.8.4.custom.js', Spider::Components],
-     [:css, 'js/jquery/jquery-ui-1.8.4/css/Aristo/jquery-ui.custom.css', Spider::Components],
-     [:js, 'jquery-ui-datepicker-locale', :runtime]
+     [:css, 'js/jquery/jquery-ui-1.8.4/css/Aristo/jquery-ui.custom.css', Spider::Components]
  ], :depends => ['jquery']
  
 
