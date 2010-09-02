@@ -656,6 +656,10 @@ module Spider; module Model
             @objects.reject!(&proc)
         end
         
+        def empty!
+            @object = []
+        end
+        
         def to_s
             self.map{ |o| o.to_s }.join(', ')
         end
