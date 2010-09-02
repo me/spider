@@ -7,6 +7,17 @@ module Spider
         end
         
         module ClassMethods
+            
+            def inherited(sub)
+                if @event_handlers
+                    @event_handlers.each do |event_name, arr|
+                        arr.each do |proc|
+                            sub.on(event_name, &proc)
+                        end
+                    end
+                end
+                super
+            end
         
             def on(event_name, &proc)
                 @event_handlers ||= {}
