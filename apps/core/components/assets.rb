@@ -15,9 +15,11 @@ Spider::Template.define_named_asset 'jquery', [
  end
  
  Spider::Template.define_named_asset 'jquery-ui', [
-     [:js, 'js/jquery/jquery-ui-1.8.4/development-bundle/ui/jquery-ui-1.8.4.custom.js', Spider::Components],
-     [:css, 'js/jquery/jquery-ui-1.8.4/css/Aristo/jquery-ui.custom.css', Spider::Components]
- ], :depends => ['jquery']
+ ], :depends => ['jquery', 'jquery-ui-core', 'jquery-ui-draggable', 'jquery-ui-droppable', 'jquery-ui-resizable', 
+     'jquery-ui-selectable', 'jquery-ui-sortable', 'jquery-ui-accordion', 'jquery-ui-autocomplete', 
+     'jquery-ui-button', 'jquery-ui-dialog', 'jquery-ui-slider', 'jquery-ui-tabs', 'jquery-ui-datepicker', 
+     'jquery-ui-progressbar', 'jquery-effects']
+
  
 
  
