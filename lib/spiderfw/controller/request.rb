@@ -11,6 +11,14 @@ module Spider
             Thread.current[:spider_request]
         end
         
+        def self.current=(val)
+            Thread.current[:spider_request] = val
+        end
+        
+        def self.reset_current
+            Thread.current[:spider_request] = nil
+        end
+        
         
         def initialize(env)
             Spider::Logger.debug("REQUEST:")

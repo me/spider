@@ -57,7 +57,7 @@ module Spider
         
         # FIXME: Tread global variables are no good in no-threaded mode
         def self.unit_of_work #:nodoc:
-            Thread.current[:unit_of_work]
+            Spider.current[:unit_of_work]
         end
         
         # Returns the identity-mapped object
@@ -85,14 +85,12 @@ module Spider
             end
         end
         
-        # FIXME: no good
         def self.identity_mapper #:nodoc:
-            Thread.current[:identity_mapper]
+            Spider.current[:identity_mapper]
         end
         
-        # FIXME: no good
         def self.identity_mapper=(im) #:nodoc:
-            Thread.current[:identity_mapper] = im
+            Spider.current[:identity_mapper] = im
         end
         
         # Creates a new unit of work with the proc

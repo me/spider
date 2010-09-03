@@ -6,11 +6,11 @@ module Spider
         include Spider::App
         
         def self.current_user
-            Thread.current[:current_user]
+            Spider.current[:current_user]
         end
         
         def self.current_user=(uid)
-            Thread.current[:current_user] = User.new(uid)
+            Spider.current[:current_user] = User.new(uid)
         end
         
         class Unauthorized < SecurityError

@@ -132,20 +132,17 @@ module Spider
             end
         end
         
-        def thread_current
-            Thread.current[:spider] ||= {}
-        end
-        
-        def reset_thread_current
-            Thread.current[:spider] = {}
+        def current
+            Spider::Request.current
         end
         
         def request_started
             @request_mutex.lock if (@request_mutex)
+            Spider::Request.current = {}
         end
         
         def request_finished
-            reset_thread_current
+            Spider::Request.reset_current
             @request_mutex.unlock if (@request_mutex)
         end
         

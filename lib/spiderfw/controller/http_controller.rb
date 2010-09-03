@@ -75,8 +75,10 @@ module Spider
         def ensure(action='', *arguments)
             dispatch(:ensure, action, *arguments)
             $stdout = @previous_stdout
-            @uploaded_files.each do |f|
-                f.close
+            if @uploaded_files
+                @uploaded_files.each do |f|
+                    f.close
+                end
             end
         end
         

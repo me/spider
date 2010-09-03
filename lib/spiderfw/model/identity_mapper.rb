@@ -14,9 +14,9 @@ module Spider; module Model
             @objects = {}
             @pks = {}
             if (proc)
-                Thread.current[:identity_mapper] = self
+                Spider.current[:identity_mapper] = self
                 yield self
-                Thread.current[:identity_mapper] = nil
+                Spider.current[:identity_mapper] = nil
             end
         end
         

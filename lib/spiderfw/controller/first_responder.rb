@@ -12,7 +12,6 @@ module Spider
             #     RubyProf.start
             #     @profiling_started = true
             # end
-            Thread.current[:spider_request] = {}
             catch :done do
                 begin
                     super
@@ -54,6 +53,7 @@ module Spider
             # end
             
         end
+        
         
     end
     
