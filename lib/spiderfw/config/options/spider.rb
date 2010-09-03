@@ -21,14 +21,13 @@ module Spider
         },
         :type => String, :choices => ['webrick', 'mongrel', 'thin']
     }
-    config_option 'webserver.show_traces', _("Whether to show the stack trace on error"), {
+    config_option 'webserver.show_traces', _("Whether to show the stack trace on error"), :type => Spider::DataTypes::Bool,
         :default => Proc.new{ ['test', 'devel'].include?(Spider.config.get('runmode')) ? true : false  }
-    }
-    config_option 'webserver.reload_sources', _("Reload application and spider sources on each request"), {
+    config_option 'webserver.reload_sources', _("Reload application and spider sources on each request"), 
+        :type => Spider::DataTypes::Bool,
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
-    }
     config_option 'webserver.port', _("Port to use for the http server"), :type => Fixnum, :default => 8080
-    config_option 'webserver.force_threads', _("Force threading on non-threaded adapters"),
+    config_option 'webserver.force_threads', _("Force threading on non-threaded adapters"), :type => Spider::DataTypes::Bool,
         :default => Proc.new{ RUBY_VERSION_PARTS[1] == '8' ? true : false }
     config_option 'webserver.timeout', _("Time allowed for each request (in seconds)"), :type=> Fixnum, :default => nil
     config_option 'static_content.mode', _("Mode to use for serving static files"), :type => String,
@@ -39,10 +38,12 @@ module Spider
     config_option 'client.text_editor', _("The text editor installed on the client")
     
     # Templates
-    config_option 'template.cache.disable', _("Refresh template cache every time"), { :default => false }
-    config_option 'template.cache.reload_on_restart', _("Refresh template cache when server restarts"), { :default => true }
-    config_option 'template.cache.no_check', _("Never recompile templates"), { :default => true }
-    config_option 'template.cache.check_files', _("Check on every request if templates are changed"), { :default => true }
+    config_option 'template.cache.disable', _("Refresh template cache every time"), :default => false, :type => Spider::DataTypes::Bool
+    config_option 'template.cache.reload_on_restart', _("Refresh template cache when server restarts"), :default => true,
+        :type => Spider::DataTypes::Bool
+    config_option 'template.cache.no_check', _("Never recompile templates"), :default => true, :type => Spider::DataTypes::Bool
+    config_option 'template.cache.check_files', _("Check on every request if templates are changed"), :default => true,
+        :type => Spider::DataTypes::Bool
     
     
     #config_option 'template.safe', _("Run templates in safe mode"), { :default => false }
@@ -53,17 +54,16 @@ module Spider
     config_option 'storage.db.pool.timeout', _("Timout in seconds to obtain a connection"), :type => Fixnum, :default => 5
     config_option 'storage.db.pool.retry', _("How many times to retry acquiring a connection"), :type => Fixnum, :default => 5
     
-    config_option 'storage.db.replace_debug_vars', _("Replace bound variables in debug sql"), {
+    config_option 'storage.db.replace_debug_vars', _("Replace bound variables in debug sql"), :type => Spider::DataTypes::Bool,
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
-    }
     
     config_option 'storages', _("A list of named storages"), :type => :conf
     config_option 'storages.x.url', _("Connection url to the storage"), :type => String, :required => true
     config_option 'storages.x.encoding', _("Encoding the DB uses"), :type => String
     config_option 'storages.x.enable_transactions', _("Whether to enable transactions on the db"), :type => Spider::DataTypes::Bool, :default => true
     
-    config_option 'debugger.start', _("Start the debugger")
-    config_option 'profiling.enable', _("Enable on-request profiling")
+    config_option 'debugger.start', _("Start the debugger"), :type => Spider::DataTypes::Bool
+    config_option 'profiling.enable', _("Enable on-request profiling"), :type => Spider::DataTypes::Bool
     config_option 'request.mutex', _("Respond to requests sequentially"), :default => false
     
     config_option 'locale', _("The locale to use") do |val|
@@ -75,8 +75,8 @@ module Spider
     config_option 'runner.sleep', _("Sleep time for the periodic runner"), :default => 10
     
     config_option 'session.store', _("Where to store the session"), :default => 'file', :choices => ['memory', 'file', 'memcached']
-    config_option('session.life', _("Lifetime in seconds of the sessions"), :default => 3600, :type => Fixnum)
-    config_option('session.purge_check', _("Number of seconds to wait before session purge check"), :default => 10, :type => Fixnum)
+    config_option 'session.life', _("Lifetime in seconds of the sessions"), :default => 3600, :type => Fixnum
+    config_option 'session.purge_check', _("Number of seconds to wait before session purge check"), :default => 10, :type => Fixnum
     config_option 'session.file.path', _("The folder where to store file sessions"), :default => lambda{ return Spider.paths[:var]+'/sessions' }
     
     config_option 'shared_store.type', _("Which shared store to use"), :default => 'memory'
@@ -85,7 +85,7 @@ module Spider
     # TODO: implement in webrick/others, check if has a performance gain
     config_option 'http.auto_headers', _("Automatically send headers on first output"), 
         :type => Spider::DataTypes::Bool, :default => true
-    config_option 'http.seize_stdout', _("Redirect standard output to the browser"), :default => false
+    config_option 'http.seize_stdout', _("Redirect standard output to the browser"), :default => false, :type => Spider::DataTypes::Bool
     config_option 'http.proxy_mapping', _("If the request is proxyied, the urls used to reach spider, with the corresponding paths called by the proxy"),
         :type => Hash
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
