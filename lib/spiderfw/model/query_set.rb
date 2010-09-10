@@ -485,6 +485,10 @@ module Spider; module Model
         def save
             no_autoload(false){ each{ |obj| obj.save } }
         end
+        
+        def save!
+            no_autoload(false){ each{ |obj| obj.save! } }
+        end
 
         # Calls #BaseModel.insert on each object in the QuerySet.        
         def insert
