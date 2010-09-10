@@ -439,11 +439,16 @@ module Spider; module Model
                 if (element.integrated?)
                     integrated_obj = get(element.integrated_from)
                     unless integrated_obj
-                        integrated_obj = instantiate_element(element.integrated_from.name)
+                        integrated_obj = instantiate_element(element.integrated_from.name) 
                         set(element.integrated_from, integrated_obj)
                     end
                     #integrated_obj.autoload = false
-                    res = integrated_obj.send("#{element.integrated_from_element}=", val)
+                    begin
+                        res = integrated_obj.send("#{element.integrated_from_element}=", val)
+                    rescue IdentityMapperException
+                        set(element.integrated_from, Spider::Model.get(integrated_obj))
+                        get(element.integrated_from).merge!(integrated_obj)
+                    end
                     @modified_elements[name] = true unless element.primary_key?
                     return res
                 end
@@ -1104,11 +1109,33 @@ module Spider; module Model
             @all_values_observers = []
             @_extra = {}
             @model = self.class
-            @all_values_observers << Proc.new do |element, new_value|
+            @_primary_keys_set = false
+            @all_values_observers << Proc.new do |obj, element_name, new_value|
                 @_has_values = true
-                Spider::Model.unit_of_work.add(self) if (Spider::Model.unit_of_work)
+                unless @_primary_keys_set
+                    if self.class.elements[element_name].primary_key? && primary_keys_set?
+                        @_primary_keys_set = true
+                        if Spider::Model.identity_mapper
+                            Spider::Model.identity_mapper.put(self, true, true)
+                        else
+                            Spider::Model.unit_of_work.add(self) if Spider::Model.unit_of_work
+                        end
+                    end
+                end
             end
             set_values(values) if values
+            # if primary_keys_set?
+            #     @_primary_keys_set = true
+            #     if Spider::Model.identity_mapper
+            #         Spider::Model.identity_mapper.put(self, true)
+            #     else
+            #         Spider::Model.unit_of_work.add(self) if Spider::Model.unit_of_work
+            #     end
+            # else
+            #     #nil
+            # end
+                
+            
         end
         
         # Returns an instance of the Model with #autoload set to false
@@ -1123,6 +1150,15 @@ module Spider; module Model
             obj = self.static(values)
             obj.save
             return obj
+        end
+        
+        def self.get(values)
+            return self.new(values) unless Spider::Model.identity_mapper
+            curr = Spider::Model.identity_mapper.get(self, values)
+            return curr if curr
+            obj = self.new(values)
+            Spider::Model.identity_mapper.put(obj)
+            obj
         end
         
         def set_values(values)
@@ -1174,7 +1210,7 @@ module Spider; module Model
                     val.autoload = autoload?
                 end
             end
-            return prepare_child(name, val)
+            prepare_child(name, val)
         end
         
         # Prepares an object that is being set as a child.
@@ -1443,9 +1479,8 @@ module Spider; module Model
                 sup_poly = polymorphic_become(sup)
                 return sup_poly.polymorphic_become(model)
             end
-            obj = model.new
             el = self.class.polymorphic_models[model][:through]
-            obj.set(el, self)
+            obj = model.get(el => self)
             obj.element_loaded(el)
             return obj
         end
@@ -1699,8 +1734,11 @@ module Spider; module Model
         
         # Returns a new instance with the same primary keys
         def get_new
-            obj = self.class.new
-            self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            obj = nil
+            Spider::Model.no_identity_mapper do
+                obj = self.class.new
+                self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            end
             return obj
         end
         
