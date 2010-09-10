@@ -1742,7 +1742,8 @@ module Spider; module Model
             }.each do |el|
                 next if only && !only.key?(el.name)
                 val = obj.get_no_load(el)
-                if (!val.is_a?(BaseModel) && val.respond_to?(:clone))
+                if (val && !val.is_a?(BaseModel) && val.respond_to?(:clone) && \
+                    !val.is_a?(Fixnum) && !val.is_a?(TrueClass) && !val.is_a?(FalseClass))
                     begin; val = val.clone; rescue TypeError; end;
                 end
                 set_loaded_value(el, val)
