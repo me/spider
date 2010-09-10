@@ -1971,13 +1971,13 @@ module Spider; module Model
                 had_wow = false
                 @unit_of_work = Spider::Model.start_unit_of_work
             end
-            Spider.current[:unit_of_work].add(self)
-            Spider.current[:unit_of_work]
             unless Spider::Model.identity_mapper
                 @uow_identity_mapper = Spider::Model::IdentityMapper.new
-                @uow_identity_mapper.put(self) if self.primary_keys_set?
                 Spider.current[:identity_mapper] = @uow_identity_mapper
+                @uow_identity_mapper.put(self) if self.primary_keys_set?
             end
+#            Spider.current[:unit_of_work].add(self)
+            Spider.current[:unit_of_work]
             return had_uow
         end
         
