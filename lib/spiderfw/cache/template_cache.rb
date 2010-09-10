@@ -28,7 +28,7 @@ module Spider
             if Spider.config.get('template.cache.disable')
                 Spider::Request.current[:compiled_templates] ||= {}
                 return true if Spider::Request.current[:compiled_templates][full_path]
-                debug("Cache disabled, recreating #{full_path}")
+                #debug("Cache disabled, recreating #{full_path}")
                 return false
             end
             exists = File.exist?(full_path)
@@ -49,7 +49,7 @@ module Spider
             # TODO: maybe insert here an (optional) tamper check 
             # that looks if the cache mtime is later then the saved time
             Marshal.load(IO.read(check_file)).each do |check, time|
-                debug("Template file #{check} changed, refreshing cache")
+                #debug("Template file #{check} changed, refreshing cache")
                 return false if File.mtime(check) > time
             end
             lock_file.flock(File::LOCK_UN)
@@ -61,7 +61,7 @@ module Spider
         end
         
         def refresh(path, &block)
-            debug("Refreshing cache for #{path}")
+            #debug("Refreshing cache for #{path}")
             res = block.call()
             write_cache(path, res)
             return res
@@ -86,7 +86,7 @@ module Spider
         end
         
         def load_cache(template_path)
-            debug("Using cached #{template_path}")
+            # debug("Using cached #{template_path}")
             full_path = get_location(template_path)
             lock_file = File.new(full_path)
             lock_file.flock(File::LOCK_SH)

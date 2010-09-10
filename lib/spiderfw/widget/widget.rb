@@ -297,17 +297,17 @@ module Spider
         end
         
         def before(action='')
-            Spider.logger.debug("Widget #{self} before(#{action})")
+            #Spider.logger.debug("Widget #{self} before(#{action})")
             widget_init(action)
             @before_done = true
             super
         end
         
         def widget_before(action='')
-            Spider.logger.debug("Widget #{self} widget_before(#{action})")
+            #Spider.logger.debug("Widget #{self} widget_before(#{action})")
             widget_init(action)
             return unless active?
-            Spider.logger.debug("Preparing widget #{self}")
+            #Spider.logger.debug("Preparing widget #{self}")
             prepare
             prepare_scene(@scene)
             @before_done = true

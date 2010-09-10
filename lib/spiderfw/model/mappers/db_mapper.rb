@@ -709,7 +709,7 @@ module Spider; module Model; module Mappers
             current_model = @model
             joins = []
             el = nil
-            Spider::Logger.debug("GETTING DEEP JOIN TO #{dotted_element} (#{@model})")
+#            Spider::Logger.debug("GETTING DEEP JOIN TO #{dotted_element} (#{@model})")
             parts.each do |part|
                 el = current_model.elements[part]
                 raise "Can't find element #{part} in model #{current_model}" unless el
@@ -1170,9 +1170,9 @@ module Spider; module Model; module Mappers
                     field_attributes = fields[field][:attributes]
                     field_attributes ||= {}
                     if (!@storage.schema_field_equal?(current_fields[field], fields[field]))
-                        Spider.logger.debug("DIFFERENT: #{field}")
-                        Spider.logger.debug(current_fields[field])
-                        Spider.logger.debug(fields[field])
+                        # Spider.logger.debug("DIFFERENT: #{field}")
+                        # Spider.logger.debug(current_fields[field])
+                        # Spider.logger.debug(fields[field])
                         unless @storage.safe_schema_conversion?(current_fields[field], fields[field]) || force
                             unsafe << field 
                         end
