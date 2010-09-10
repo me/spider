@@ -38,11 +38,6 @@ module Spider; module Model; module Mappers
             super
         end            
         
-        def save_all(root) #:nodoc:
-            @storage.start_transaction
-            super
-            @storage.commit
-        end
         
         def do_insert(obj) #:nodoc:
             if (obj.model.managed? || !obj.primary_keys_set?)
@@ -261,7 +256,7 @@ module Spider; module Model; module Mappers
                         pks[key.name] = map_back_value(key.type, key_val)
                     end
 #                    begin
-                    data[element_name] = keys_set ? Spider::Model.get(element.model, pks) : nil
+                    data[element_name] = keys_set ? Spider::Model.get(element.model, pks, true) : nil
 #                    rescue IdentityMapperException
                         # null keys, nothing to set
 #                    end
@@ -270,7 +265,7 @@ module Spider; module Model; module Mappers
                 end
             end
             begin
-                obj = Spider::Model.get(model, data)
+                obj = Spider::Model.get(model, data, true)
             rescue IdentityMapperException => exc
                 # This should not happen
                 Spider::Logger.warn("Row in DB without primary keys for model #{model}; won't be mapped:")
@@ -891,22 +886,27 @@ module Spider; module Model; module Mappers
             when :keys
                 deps << [task, MapperTask.new(obj, :save)] unless obj.primary_keys_set? || (!obj.mapper || !obj.mapper.class.write?)
             when :save
+                @model.primary_keys.each do |key|
+                    if key.integrated? && !obj.element_has_value?(key)
+                        deps << [task, MapperTask.new(obj.get(key.integrated_from), :save)]
+                    end
+                end
                 elements = @model.elements.select{ |n, el| el.model? && obj.element_has_value?(el) && obj.element_modified?(el)}
                 # n <-> n and n|1 <-> 1
                 elements.select{ |n, el| !el.has_single_reverse? }.each do |name, element|
-                    if (element.multiple?)
-                        set = obj.send(element.name)
-                        set.each do |set_obj|
-                            deps << [task, MapperTask.new(set_obj, :keys)]
-                        end
-                    else
-                        deps << [task, MapperTask.new(obj.send(element.name), :keys)]
+                    set = obj.send(element.name)
+                    set = [set] unless set.is_a?(Enumerable)
+                    set.each do |set_obj|
+                        # set_obj.set(el.reverse, obj) if el.reverse
+                        deps << [task, MapperTask.new(set_obj, :keys)]                        
                     end
                 end
-                elements.select{ |n, el| el.multiple? && el.has_single_reverse? }.each do |name, element|
+                elements.select{ |n, el| el.has_single_reverse? }.each do |name, element|
                     if (element.model? && element.type.mapper && element.type.mapper.class.write?)
                         set = obj.send(element.name)
+                        set = [set] unless set.is_a?(Enumerable)
                         set.each do |set_obj|
+                            # set_obj.set(el.reverse, obj) if el.reverse
                             sub_task = MapperTask.new(set_obj, :save)
                             deps << [sub_task, MapperTask.new(obj, :keys)]
                         end
