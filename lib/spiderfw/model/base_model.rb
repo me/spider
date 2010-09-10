@@ -519,7 +519,7 @@ module Spider; module Model
                     mod.remove_element(el) if i && i.integrated? && i.integrated_from.name == iel
                 end
             end
-            self.elements_array.select{ |e| e.integrated_from == el}.each{ |e| remove_element(e) }
+            self.elements_array.select{ |e| e.integrated? && e.integrated_from.name == el}.each{ |e| remove_element(e) }
             self.const_get(:ElementMethods).send(:remove_method, :"#{el}") rescue NameError
             self.const_get(:ElementMethods).send(:remove_method, :"#{el}=") rescue NameError
             @elements.delete(el)
