@@ -8,7 +8,11 @@ module Spider; module HTTP
         
         
         def body(&proc)
-            @rack_input.each{ |buf| yield buf }
+            if block_given?
+                @rack_input.each{ |buf| yield buf }
+            else
+                @rack_input
+            end
         end
         
         
