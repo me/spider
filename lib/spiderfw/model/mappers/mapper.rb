@@ -59,6 +59,7 @@ module Spider; module Model
         
         # Calls the given action. Used by UnitOfWork tasks.
         def execute_action(action, object) # :nodoc:
+            @unit_of_work_task = true
             case action
             when :save
                 save(object)
@@ -67,6 +68,7 @@ module Spider; module Model
             else
                 raise MapperError, "#{action} action not implemented"
             end
+            @unit_of_work_task = false
         end
         
         # Converts hashes and arrays to QuerySets and BaseModel instances.
@@ -149,21 +151,23 @@ module Spider; module Model
                 end
             end
             done_extended = []
-            if (@model.extended_models)
-                @model.extended_models.each do |m, el|
-                    sub = obj.get(el)
-                    done_extended << el
-                    if mode == :update || sub.class.auto_primary_keys?
-                        sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
-                    else
-                        sub.insert unless sub.in_storage?
+            unless @unit_of_work_task
+                if (@model.extended_models)
+                    @model.extended_models.each do |m, el|
+                        sub = obj.get(el)
+                        done_extended << el
+                        if mode == :update || sub.class.auto_primary_keys?
+                            sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
+                        else
+                            sub.insert unless sub.in_storage?
+                        end
                     end
                 end
-            end
-            @model.elements_array.select{ |el| !el.integrated? && el.attributes[:integrated_model] }.each do |el|
-                next if done_extended.include?(el.name)
-                sub_obj = obj.get(el)
-                sub_obj.save if sub_obj && sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
+                @model.elements_array.select{ |el| !el.integrated? && el.attributes[:integrated_model] }.each do |el|
+                    next if done_extended.include?(el.name)
+                    sub_obj = obj.get(el)
+                    sub_obj.save if sub_obj && sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
+                end
             end
         end
         
@@ -235,12 +239,17 @@ module Spider; module Model
             obj.trigger(:saved, save_mode)
             true
         end
+        
 
         # Elements that are associated to this one externally.
         def association_elements
-             @model.elements_array.select{ |el| 
+             els = @model.elements_array.select{ |el| 
                  mapped?(el) && !el.integrated? && !have_references?(el) && !(el.attributes[:added_reverse] && el.type == @model)
              }
+             if @unit_of_work_task
+                 els = els.select{ |el| el.attributes[:junction] && !el.attributes[:keep_junction] }
+             end
+             els
         end
         
         # Saves object associations.
@@ -306,7 +315,7 @@ module Spider; module Model
                     val.each do |row|
                         next if current_val && current_val.include?(row)
                         junction = element.model.new({ our_element => obj, their_element => row })
-                        junction.insert
+                        junction.mapper.insert(junction)
                     end                    
                 else
                     unless mode == :insert
@@ -322,7 +331,7 @@ module Spider; module Model
                     end
                     val.set(our_element, obj)
                     if element.attributes[:junction_id]
-                        val.save
+                        val.save!
                     else
                         val.insert
                     end
@@ -346,7 +355,7 @@ module Spider; module Model
                 val.each do |v|
                     if v.get(our_element) != obj
                         v.set(our_element, obj)
-                        v.save
+                        v.mapper.save(v)
                     end
                 end
             end
@@ -674,7 +683,7 @@ module Spider; module Model
         
         # Loads an external element, according to query, and merges the result into an object or QuerySet.
         def get_external_element(element, query, objects)
-            Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
+#            Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
             return load_element(objects, element) if (have_references?(element))
             return nil if objects.empty?
             index_by = []
