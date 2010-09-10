@@ -91,22 +91,21 @@ module Spider; module Model
                 obj.each do |item|
                     add(item)
                 end
+                return
+            end
+            if curr = @objects[obj.object_id]
+                curr[:action] = :delete if action == :delete
             else
-                if curr = @objects[obj.object_id]
-                    curr[:action] = :delete if action == :delete
-                else
-                    has_other = false
-                    @new_objects.each do |cur|
-                        if cur.class == obj.class && cur.primary_keys == obj.primary_keys
-                            has_other = cur
-                            break
-                        end
+                has_other = false
+                @new_objects.each do |cur|
+                    if cur.class == obj.class && cur.primary_keys == obj.primary_keys
+                        has_other = cur
+                        break
                     end
-                    @new_objects << obj
-                    @objects[obj.object_id] = {:action => action, :obj => obj }
-                    traverse(obj, action)
                 end
-                
+                @new_objects << obj
+                @objects[obj.object_id] = {:action => action, :obj => obj }
+                traverse(obj, action)
             end
         end
         
