@@ -15,7 +15,8 @@ module Spider; module Model; module Storage; module Db
         @safe_conversions = {
             'TEXT' => ['LONGTEXT'],
             'INT' => ['TEXT', 'LONGTEXT', 'REAL'],
-            'REAL' => ['TEXT']
+            'REAL' => ['TEXT'],
+            'DATETIME' => ['DATE', 'TIME']
         }
         @capabilities = {
             :autoincrement => false,

@@ -16,11 +16,11 @@ module Spider; module Model; module Storage; module Db
             :foreign_keys => true
         }
         @reserved_keywords = superclass.reserved_keywords
-        @safe_conversions = {
+        @safe_conversions = DbStorage.safe_conversions.merge({
             'CHAR' => ['VARCHAR', 'CLOB'],
             'VARCHAR' => ['CLOB'],
             'NUMBER' => ['VARCHAR']
-        }
+        })
         @type_synonyms = {
             'BLOB' => ['TEXT']
         }
@@ -381,7 +381,7 @@ module Spider; module Model; module Storage; module Db
              when 'Float'
                  'FLOAT'
              when 'Date'
-                 'Date'
+                 'DATE'
              when 'DateTime'
                  'DATETIME'
              when 'Time'
