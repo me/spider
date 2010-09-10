@@ -229,6 +229,9 @@ module Spider
             
         end
         
+        class TypeError < ArgumentError
+        end
+        
         def self.sort(models)
 
             sorter = Sorter.new(models)

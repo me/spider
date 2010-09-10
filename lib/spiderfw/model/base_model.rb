@@ -481,6 +481,13 @@ module Spider; module Model
                 old_val = instance_variable_get(ivar)
                 @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
+                if val && element.model? && !self.class.attributes[:no_type_check]
+                    klass = val.is_a?(QuerySet) ? val.model : val.class
+                    if val && !(klass <= element.type || klass <= element.model)
+                        raise TypeError, "Object #{val} (#{klass}) is of the wrong type for element #{element.name} in #{self.class} (expected #{element.model})"
+                    end
+                end
+                val
                 #extend_element(name)
             end
         end
