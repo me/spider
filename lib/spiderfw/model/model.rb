@@ -54,15 +54,11 @@ module Spider
             return klass.superclass if klass.superclass
             return nil
         end
-        
-        # FIXME: Tread global variables are no good in no-threaded mode
-        def self.unit_of_work #:nodoc:
-            Spider.current[:unit_of_work]
-        end
+
         
         # Returns the identity-mapped object
-        def self.get(model, val)
-            if (!val.is_a?(Hash))
+        def self.get(model, val=nil, set_loaded=false)
+            if (val && !val.is_a?(Hash))
                 if (model.primary_keys.length == 1)
                     val = {model.primary_keys[0].name => val}
                 else
@@ -70,7 +66,7 @@ module Spider
                 end
             end
             if identity_mapper
-                return identity_mapper.get(model, val)
+                return identity_mapper.get(model, val, set_loaded)
             else
                 return model.new(val)
             end
@@ -93,12 +89,38 @@ module Spider
             Spider.current[:identity_mapper] = im
         end
         
-        # Creates a new unit of work with the proc
-        def self.with_unit_of_work(&proc) #:nodoc: TODO: test
-            return if unit_of_work
-            UnitOfWork.new(&proc)
+        def self.start_unit_of_work
+            uow = UnitOfWork.new
+            uow.start
         end
         
+        def self.stop_unit_of_work
+            Spider.current[:unit_of_work].stop
+        end
+        
+        def self.unit_of_work(&proc) #:nodoc:
+            uow = Spider.current[:unit_of_work]
+            if !uow
+                if proc
+                    uow = UnitOfWork.new(&proc)
+                end
+            end
+            return uow
+        end
+        
+        def self.with_unit_of_work(&proc)
+            with_identity_mapper do
+                return unit_of_work(&proc)
+            end
+        end
+        
+        def self.no_identity_mapper(&proc)
+            im = self.identity_mapper
+            self.identity_mapper = nil
+            yield
+            self.identity_mapper = im
+        end
+                
         # Executes the block in the context of the main IdentityMapper.
         def self.with_identity_mapper(&proc)
             if identity_mapper
