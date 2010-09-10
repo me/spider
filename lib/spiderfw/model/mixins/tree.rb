@@ -236,6 +236,7 @@ module Spider; module Model
                 end
                 obj.set(left_el, left)
                 obj.set(right_el, cur)
+                cur
             end
             
             def tree_insert_node_under(tree_el, obj, parent)
