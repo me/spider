@@ -7,30 +7,71 @@ module Spider; module Model
         
         def initialize(&proc)
             @objects = {}
+            @to_delete = {}
+            @new_objects = []
             if (proc)
-                Spider.current[:unit_of_work] = self
+                start
                 yield self
-                Spider.current[:unit_of_work] = nil
+                stop
             end
         end
         
-        def run() #(&proc)
+        def start
+            Spider.current[:unit_of_work] = self
+        end
+        
+        def stop
+            Spider.current[:unit_of_work] = nil
+        end
+        
+        def run #(&proc)
             #proc.call
             @tasks = {}
             @processed_tasks = {}
-            @objects.each do |obj_id, obj|
+            while objs = new_objects
+                objs.each do |obj|
+                    action = @objects[obj.object_id][:action]
+                    if action == :save
+                        next unless obj.mapper && obj.mapper.class.write?
+                        next unless obj.modified?
+                        obj.save_mode do
+                            obj.before_save
+                        end
+                    elsif action == :delete
+                        obj.before_delete
+                    end
+                end
+            end
+            @objects.each do |obj_id, o|
+                obj = o[:obj]
+                action = o[:action]
+                next unless action == :save
                 next unless obj.mapper && obj.mapper.class.write?
+                next unless obj.modified?
                 task = Spider::Model::MapperTask.new(obj, :save)
                 @tasks[task] ||= task
                 find_dependencies(task)
             end
             tasks = tsort()
-            tasks.each{ |task| p task}
+            Spider.logger.debug("Tasks:")
+            tasks.each do |task| 
+                Spider.logger.debug "-- #{task.action} on #{task.object.class} #{task.object.primary_keys}"
+            end
+            
             tasks.each do |task|
-                Spider::Logger.debug("Executing task #{task.inspect}")
+                #Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
             end
+            @objects.each do |obj_id, o|
+                next unless o[:action] == :delete
+                obj = o[:obj]
+                obj.mapper.delete(obj)
+            end
+            @objects = {}
+            @new_objects = []
         end
+        
+        alias :commit :run
         
         def find_dependencies(model_task)
             return if (@processed_tasks[model_task])
@@ -45,14 +86,47 @@ module Spider; module Model
         end
                 
         
-        def add(obj)
+        def add(obj, action = :save)
             if (obj.class == QuerySet)
                 obj.each do |item|
-                    @objects[item.object_id] = item
+                    add(item)
                 end
             else
-                @objects[obj.object_id] = obj
+                if curr = @objects[obj.object_id]
+                    curr[:action] = :delete if action == :delete
+                else
+                    has_other = false
+                    @new_objects.each do |cur|
+                        if cur.class == obj.class && cur.primary_keys == obj.primary_keys
+                            has_other = cur
+                            break
+                        end
+                    end
+                    @new_objects << obj
+                    @objects[obj.object_id] = {:action => action, :obj => obj }
+                    traverse(obj, action)
+                end
+                
             end
+        end
+        
+        def traverse(obj, action)
+            obj.class.elements_array.each do |el|
+                next unless obj.element_has_value?(el)
+                next unless el.model?
+                add(obj.get(el), action)
+            end
+            
+        end
+        
+        def to_delete(obj)
+            
+        end
+        
+        def new_objects
+            objects = @new_objects.clone
+            @new_objects = []
+            objects.length > 0 ? objects : nil
         end
         
         
