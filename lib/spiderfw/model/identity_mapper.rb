@@ -14,9 +14,10 @@ module Spider; module Model
             @objects = {}
             @pks = {}
             if (proc)
-                Spider.current[:identity_mapper] = self
+                prev_im = Spider::Model.identity_mapper
+                Spider::Model.identity_mapper = self
                 yield self
-                Spider.current[:identity_mapper] = nil
+                Spider::Model.identity_mapper = prev_im
             end
         end
         
@@ -24,23 +25,44 @@ module Spider; module Model
         # If an object with the same primary keys is found, it will be used; otherwise, a new instance will be
         # created.
         # In any case, the given values will be set on the object, before it is returned.
-        def get(model, values)
+        #---
+        # FIXME: refactor avoiding set_loaded
+        def get(model, values=nil, set_loaded=false)
+            
+            if !values && model.is_a?(BaseModel)
+                curr = has?(model)
+                return curr ? curr : put(model)
+            end
+            
             @objects[model] ||= {}
             pks = {}
             has_pks = false
             model.primary_keys.each do |k| 
                 # dereference integrated primary keys
-                pks[k.name] = (k.integrated? && values[k.integrated_from.name]) ? 
+                v = (k.integrated? && values[k.integrated_from.name]) ? 
                     values[k.integrated_from.name].get(k.integrated_from_element) :
                     values[k.name]
-                has_pks = true if pks[k.name]
+                has_pks = true if v
+                pks[k.name] = model.prepare_value(k, v)
             end
             raise IdentityMapperException, "Can't get without all primary keys" unless has_pks
             pks.extend(HashComparison)
-            obj = (@objects[model][pks] ||= model.new(pks))
+            current = @objects[model][pks]
+            obj = nil
+            if current
+                obj = current
+            else
+                obj = model.new(pks)
+                #@objects[model][pks] = obj
+            end
+            # obj = (@objects[model][pks] ||= model.new(pks))
             pks.each{ |k, v| obj.element_loaded(k) }
             values.reject{|k,v| model.elements[k].primary_key? }.each do |k, v|
-                obj.set_loaded_value(k, v)
+                if set_loaded
+                    obj.set_loaded_value(k, v)
+                else
+                    obj.set(k, v)
+                end
             end
 #            Spider::Logger.debug("RETURNING #{obj.class} #{obj.object_id}")
             return obj
@@ -49,7 +71,7 @@ module Spider; module Model
         # Puts an object into the identity mapper.
         # If check is true, it will first check if the object exists, and if found merge it with the given obj;
         # if check is false, if a object with the same primary keys exists it will be overwritten.
-        def put(obj, check=false)
+        def put(obj, check=false, fail_if_exists=false)
             return nil unless obj
             if (obj.is_a?(QuerySet))
                 obj.each_current_index{ |i| obj[i] = put(obj[i], check) }
@@ -61,21 +83,44 @@ module Spider; module Model
                 pks.extend(HashComparison)
                 @objects[obj.class] ||= {}
                 if (check && (existent = @objects[obj.class][pks]) && existent.object_id != obj.object_id)
+                    # debugger if fail_if_exists
+                    raise IdentityMapperException, "A different instance of the same object already exists in the identity mapper" if fail_if_exists
                     existent.merge!(obj)
                     return existent
                 else
                     @objects[obj.class][pks] = obj
                     @pks[obj.object_id] = pks
+                    traverse(obj)
+                    uow = Spider::Model.unit_of_work
+                    uow.add(obj) if uow
                     return obj
                 end
             end
         end
         
+        def traverse(obj, check=false, fail_if_exists=false)
+            obj.class.elements_array.each do |el|
+                next unless obj.element_has_value?(el)
+                next unless el.model?
+                subs = obj.get(el)
+                subs = [subs] unless subs.is_a?(Enumerable)
+                subs.each do |sub|
+                    put(sub, check, fail_if_exists) if sub && has?(sub).object_id != sub.object_id
+                end
+            end
+            
+        end
+        
+        def put!(obj)
+            put(obj, true, true)
+        end
+        
+        
         def has?(obj)
             pks = {}
             obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
             pks.extend(HashComparison)
-            @objects[obj.class][pks]
+            @objects[obj.class] && @objects[obj.class][pks]
         end
         
         def delete(klass, obj_id)
