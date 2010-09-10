@@ -1372,7 +1372,7 @@ module Spider; module Model
         
         # Prepares a value going to be set on the object. Will convert the value to the
         # appropriate type.
-        def prepare_value(element, value)
+        def self.prepare_value(element, value)
             element = self.class.elements[element] unless element.is_a?(Element)
             if (element.type < Spider::DataType)
                 value = element.type.from_value(value) unless value.is_a?(element.type)
@@ -1411,6 +1411,10 @@ module Spider; module Model
                 end
             end
             value
+        end
+        
+        def prepare_value(element, value)
+            self.class.prepare_value(element, value)
         end
         
         # Sets a value without calling the associated setter; used by the mapper.
