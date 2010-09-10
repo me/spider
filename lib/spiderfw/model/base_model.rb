@@ -365,6 +365,11 @@ module Spider; module Model
                 integrate_params = attributes[:integrate].is_a?(Hash) ? attributes[:integrate] : {}
                 integrate(name, integrate_params)
             end
+            if self.attributes[:integrated_from_elements]
+                self.attributes[:integrated_from_elements].each do |imod, iel|
+                    imod.integrate_element(iel, self.elements[name]) unless imod.elements[name]
+                end
+            end
             if (@subclasses)
                 @subclasses.each do |sub|
                     next if sub.elements[name] # if subclass already defined an element with this name, don't overwrite it
@@ -559,21 +564,26 @@ module Spider; module Model
             model.each_element do |el|
                 next if params[:except].include?(el.name)
                 next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
-                integrated_attributes = {}
-                integrated_attributes[:primary_key] = false if params[:no_pks]
-                integrated_attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
-
-                integrated_attributes[:primary_key] = false unless (params[:keep_pks])
-                # attributes.delete(:required)
-                # attributes.delete(:integrate)
-                # attributes.delete(:local_pk)
-                integrated_attributes[:local_pk] = false
-                name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
-                add_element(IntegratedElement.new(name, self, element_name, el.name, integrated_attributes))
-                define_element_methods(name)
+                integrate_element(element_name, el, params)
             end
             model.attributes[:integrated_from_elements] ||= []
             model.attributes[:integrated_from_elements] << [self, element_name]
+        end
+        
+        def self.integrate_element(element_name, element_element, params={})
+            el = element_element
+            integrated_attributes = {}
+            integrated_attributes[:primary_key] = false if params[:no_pks]
+            integrated_attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
+
+            integrated_attributes[:primary_key] = false unless (params[:keep_pks])
+            # attributes.delete(:required)
+            # attributes.delete(:integrate)
+            # attributes.delete(:local_pk)
+            integrated_attributes[:local_pk] = false
+            name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
+            add_element(IntegratedElement.new(name, self, element_name, el.name, integrated_attributes))
+            define_element_methods(name)
         end
         
         def self.remove_integrate(element_name)
