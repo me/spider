@@ -108,10 +108,21 @@ module Spider
             return uow
         end
         
+        def self.unit_of_work=(uow)
+            Spider.current[:unit_of_work] = uow
+        end
+        
         def self.with_unit_of_work(&proc)
             with_identity_mapper do
                 return unit_of_work(&proc)
             end
+        end
+        
+        def self.no_unit_of_work(&proc)
+            uow = self.unit_of_work
+            self.unit_of_work = nil
+            yield
+            self.unit_of_work = uow
         end
         
         def self.no_identity_mapper(&proc)
@@ -119,6 +130,17 @@ module Spider
             self.identity_mapper = nil
             yield
             self.identity_mapper = im
+        end
+        
+        def self.no_context(&proc)
+            uow = self.unit_of_work
+            self.unit_of_work = nil
+            im = self.identity_mapper
+            self.identity_mapper = nil
+            yield
+            self.identity_mapper = im
+            self.unit_of_work = uow
+            
         end
                 
         # Executes the block in the context of the main IdentityMapper.
