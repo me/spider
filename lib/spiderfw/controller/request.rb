@@ -8,7 +8,7 @@ module Spider
         BUFSIZE = 1024*4
         
         def self.current
-            Thread.current[:spider_request]
+            Thread.current[:spider_request] ||= {}
         end
         
         def self.current=(val)
