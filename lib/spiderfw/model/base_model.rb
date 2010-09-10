@@ -1813,8 +1813,33 @@ module Spider; module Model
         # Saves the object to the storage
         # (see Mapper#save)
         def save
+            if @unit_of_work
+                @unit_of_work.add(self)
+                return
+            end
+            save_mode do
+                before_save unless Spider.current[:unit_of_work]
+                if Spider.current[:unit_of_work]
+                    Spider.current[:unit_of_work].add(self)
+                    if @unit_of_work
+                        @unit_of_work.commit
+                        Spider::Model.stop_unit_of_work
+                        if @uow_identity_mapper
+                            Spider.current[:identity_mapper] = nil
+                            @uow_identity_mapper = nil
+                        end
+                        @unit_of_work = nil
+                    end
+                    return
+                else
+                    save!
+                end
+            end
+            self
+        end
+                
+        def save!
             mapper.save(self)
-            reset_modified_elements
             self
         end
         
@@ -1845,7 +1870,52 @@ module Spider; module Model
         # Deletes the object from the storage
         # (see Mapper#delete).
         def delete
+            if @unit_of_work
+                @unit_of_work.add(self, :delete)
+                return
+            end
+            before_delete unless Spider.current[:unit_of_work]
+            if Spider.current[:unit_of_work]
+                Spider.current[:unit_of_work].add(self, :delete)
+                if @unit_of_work
+                    @unit_of_work.commit
+                    @unit_of_work.stop
+                    if @uow_identity_mapper
+                        Spider.current[:identity_mapper] = nil
+                        @uow_identity_mapper = nil
+                    end
+                    @unit_of_work = nil
+                end
+                return
+            else
+                delete!
+            end
+        end
+        
+        def delete!
             mapper.delete(self)
+        end
+        
+        def before_delete
+        end
+        
+        def before_save
+        end
+        
+        def use_unit_of_work
+            had_uow = true
+            unless Spider.current[:unit_of_work]
+                had_wow = false
+                @unit_of_work = Spider::Model.start_unit_of_work
+            end
+            Spider.current[:unit_of_work].add(self)
+            Spider.current[:unit_of_work]
+            unless Spider::Model.identity_mapper
+                @uow_identity_mapper = Spider::Model::IdentityMapper.new
+                @uow_identity_mapper.put(self) if self.primary_keys_set?
+                Spider.current[:identity_mapper] = @uow_identity_mapper
+            end
+            return had_uow
         end
         
         # Loads the object from the storage
