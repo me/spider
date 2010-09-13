@@ -119,7 +119,7 @@ msgstr ""
 #: lib/spiderfw/cmd/commands/create.rb:19
 msgid "The module name; by default, the app name will be camelized"
 msgstr ""
-"Il nome del modulo; di default, il nome dell'applicazione sarÃ  cammellizzato"
+"Il nome del modulo; di default, il nome dell'applicazione sarà  cammellizzato"
 
 #: lib/spiderfw/cmd/commands/create.rb:33
 msgid "Create an installation"
@@ -176,11 +176,11 @@ msgstr ""
 
 #: lib/spiderfw/cmd/commands/model.rb:68
 msgid "Continue? yes/NO: "
-msgstr "Continuare? sÃ¬/NO"
+msgstr "Continuare? sì/NO"
 
 #: lib/spiderfw/cmd/commands/model.rb:70 lib/spiderfw/cmd/commands/model.rb:72
 msgid "yes"
-msgstr "sÃ¬"
+msgstr "sì"
 
 #: lib/spiderfw/cmd/commands/model.rb:71
 msgid "no"
@@ -212,7 +212,7 @@ msgstr "Esegui il setup di un'applicazione"
 
 #: lib/spiderfw/cmd/commands/setup.rb:14
 msgid "Assume a specific version is installed"
-msgstr "Assumi che una versione specifica Ã¨ installata"
+msgstr "Assumi che una versione specifica è installata"
 
 #: lib/spiderfw/cmd/commands/setup.rb:17
 msgid "Setup to a specific version"
@@ -249,11 +249,11 @@ msgstr "La porta su cui deve stare in ascolto il webserver"
 #: lib/spiderfw/cmd/commands/webserver.rb:24
 msgid "Which webserver to use; the choices are 'webrick', 'mongrel' and 'thin'"
 msgstr ""
-"Che webserver usare; le possibilitÃ  sono 'webrick', 'mongrel' e 'thin'"
+"Che webserver usare; le possibilità  sono 'webrick', 'mongrel' e 'thin'"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:25
 msgid "The webserver %s is not supported"
-msgstr "Il webserver %s non Ã¨ supportato"
+msgstr "Il webserver %s non è supportato"
 
 #: lib/spiderfw/cmd/commands/webserver.rb:28
 msgid "Detach server process"
@@ -287,7 +287,7 @@ msgstr "In ascolto sulla porta %s"
 
 #: lib/spiderfw/config/configuration.rb:85
 msgid "%s is not a configuration option"
-msgstr "%s non Ã¨ un'opzione di configurazione"
+msgstr "%s non è un'opzione di configurazione"
 
 #: lib/spiderfw/config/options/spider.rb:12
 msgid "The internal server to use"
@@ -440,7 +440,7 @@ msgid ""
 "If the request is proxyied, the urls used to reach spider, with the "
 "corresponding paths called by the proxy"
 msgstr ""
-"Se la richiesta Ã¨ passata attraverso un proxy, gli url usati per "
+"Se la richiesta è passata attraverso un proxy, gli url usati per "
 "raggiungere spider, con i corrispondenti percorsi chiamati dal proxy"
 
 #: lib/spiderfw/config/options/spider.rb:91
@@ -472,7 +472,7 @@ msgstr ""
 #: lib/spiderfw/config/options/spider.rb:101
 msgid "Maximum logfile size (only applies when log.rotate.age is a number)"
 msgstr ""
-"Dimensione massima del file di log (applicabile solo se log.rotate.age Ã¨ un "
+"Dimensione massima del file di log (applicabile solo se log.rotate.age è un "
 "numero)"
 
 #: lib/spiderfw/config/options/spider.rb:104
@@ -493,7 +493,7 @@ msgstr "Provincia dell'organizzazione"
 
 #: lib/spiderfw/config/options/spider.rb:108
 msgid "Name of the city"
-msgstr "Nome della cittÃ "
+msgstr "Nome della città "
 
 #: lib/spiderfw/config/options/spider.rb:109
 msgid "Common name (e.g. domain) of the organization"
@@ -509,7 +509,7 @@ msgstr "Indirizzo Email utilizzato come 'From' per le e-mail automatiche"
 
 #: lib/spiderfw/config/options/spider.rb:113
 msgid "Organizational Unit (e.g. department)"
-msgstr "UnitÃ  Organizzativa (p.es. il dipartimento)"
+msgstr "Unità  Organizzativa (p.es. il dipartimento)"
 
 #: lib/spiderfw/config/options/spider.rb:114
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
@@ -570,7 +570,7 @@ msgstr "Pagina non trovata"
 
 #: lib/spiderfw/controller/mixins/visual.rb:258
 msgid "An error occurred"
-msgstr "Si Ã¨ verificato un errore"
+msgstr "Si è verificato un errore"
 
 #: lib/spiderfw/controller/mixins/visual.rb:304
 msgid "Site error"
@@ -627,19 +627,19 @@ msgstr "circa 1 anno"
 
 #: lib/spiderfw/i18n/i18n.rb:159
 msgid "over %d years"
-msgstr "piÃ¹ di %d anni"
+msgstr "più di %d anni"
 
 #: lib/spiderfw/model/base_model.rb:1377
 msgid "'%s' is not a valid date"
-msgstr "%s non Ã¨ una data valida"
+msgstr "%s non è una data valida"
 
 #: lib/spiderfw/model/base_model.rb:1432
 msgid "'%s' is not in the correct format"
-msgstr "%s non Ã¨ nel formato corretto"
+msgstr "%s non è nel formato corretto"
 
 #: lib/spiderfw/model/datatypes/email.rb:7
 msgid "%s is not a valid e-mail address"
-msgstr "%s non Ã¨ un indirizzo e-mail valido"
+msgstr "%s non è un indirizzo e-mail valido"
 
 #: lib/spiderfw/model/datatypes/time_span.rb:12
 msgid "hour"
@@ -675,22 +675,22 @@ msgstr "Modificato"
 
 #: lib/spiderfw/model/mappers/mapper.rb:1042
 msgid "Element %s is required"
-msgstr "L'elemento %s Ã¨ obbligatorio"
+msgstr "L'elemento %s è obbligatorio"
 
 #: lib/spiderfw/model/mappers/mapper.rb:1046
 msgid "Another item with the same %s is already present"
-msgstr "Ã giÃ  presente un'altro oggetto con lo stesso elemento %s"
+msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 
 #: views/errors/404.shtml:4
 msgid "We are sorry, but the required page was not found"
-msgstr "Siamo spiacenti, la pagina richiesta non Ã¨ stata trovata"
+msgstr "Siamo spiacenti, la pagina richiesta non è stata trovata"
 
 #: views/errors/error.layout.shtml:20
 msgid ""
 "If you need to contact the administrator to provide additional information, "
 "you may send an e-mail to"
 msgstr ""
-"Per contattare l'amministratore e fornire informazioni aggiuntive, Ã¨ "
+"Per contattare l'amministratore e fornire informazioni aggiuntive, è "
 "possibile inviare un'e-mail a"
 
 #: views/errors/error.layout.shtml:24
@@ -698,7 +698,7 @@ msgid ""
 "The identifier of this error is %s. Please refer to it when requesting "
 "assistance."
 msgstr ""
-"L'identificatore dell'errore Ã¨ %s. Per favore, fare riferimento a questo "
+"L'identificatore dell'errore è %s. Per favore, fare riferimento a questo "
 "identificatore se si richiede assistenza."
 
 #: views/errors/error.layout.shtml:29
@@ -710,5 +710,5 @@ msgid ""
 "We are sorry, an error occurred. The administrator of the site has been "
 "notified"
 msgstr ""
-"Siamo spiacenti, si Ã¨ verificato un errore. L'amministratore del sito Ã¨ "
+"Siamo spiacenti, si è verificato un errore. L'amministratore del sito è "
 "stato informato"
