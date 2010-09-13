@@ -300,6 +300,7 @@ module Spider; module ControllerMixins
         
         def send_error_email(exc)
             scene = Spider::Scene.new
+            scene.request = @request.env
             scene.exception = exc
             subject = _("Site error")
             if Spider.conf.get('orgs.default.name')
