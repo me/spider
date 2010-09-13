@@ -690,3 +690,10 @@ Spider.EventTarget = {
 };
 
 $.extend(Spider.Widget.prototype, Spider.EventTarget);
+
+if(!window.console) {
+  window.console = new function() {
+    this.log = function(str) {};
+    this.dir = function(str) {};
+  };
+}
