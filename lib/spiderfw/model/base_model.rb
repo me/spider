@@ -676,6 +676,7 @@ module Spider; module Model
             model = self.const_set(Spider::Inflector.camelize(name), Class.new(InlineModel))
             model.instance_eval do
                 hash.each do |key, val|
+                    key = key.to_s if key.is_a?(Symbol)
                     element(:id, key.class, :primary_key => true)
                     if (val.class == Hash)
                         # TODO: allow passing of multiple values like {:element1 => 'el1', :element2 => 'el2'}
