@@ -481,6 +481,7 @@ module Spider; module Model
                 old_val = instance_variable_get(ivar)
                 @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
+                set_reverse(element, val) if element.model?
                 if val && element.model? && !self.class.attributes[:no_type_check]
                     klass = val.is_a?(QuerySet) ? val.model : val.class
                     if val && !(klass <= element.type || klass <= element.model)
@@ -1317,6 +1318,17 @@ module Spider; module Model
             @_parent_element = element
         end
         
+        def set_reverse(element, obj)
+            return unless element.model? && obj
+            if element.has_single_reverse? && (!element.attributes[:junction] || element.attributes[:keep_junction])
+                unless element.multiple?
+                    val = obj.get_no_load(element.reverse)
+                    return if val && val.object_id == self.object_id
+                end
+                obj.set(element.reverse, self)
+            end
+        end
+        
         
         #################################################
         #   Get and set                                 #
@@ -1463,6 +1475,7 @@ module Spider; module Model
             end
             value.loaded = true if (value.is_a?(QuerySet))
             element_loaded(element_name)
+            set_reverse(element, value) if element.model?
             @modified_elements[element_name] = false
         end
         
