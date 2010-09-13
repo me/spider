@@ -17,6 +17,9 @@ class SetupCommand < CmdParse::Command
             opt.on("--to [VERSION]", _("Setup to a specific version"), "-t"){ |to|
                 @to = Gem::Version.new(to)
             }
+            opt.on("--version [VERSION]", _("Only run the setup script for the given version"), "-v"){ |v|
+                @version = Gem::Version.new(v)
+            }
             opt.on("--all", _("Setup all active apps")){ |all|
                 @all = true
             }
@@ -25,8 +28,8 @@ class SetupCommand < CmdParse::Command
         set_execution_block do |apps|
             require 'spiderfw'
             apps = Spider.apps.keys if @all
-            if (apps.length > 1) && (@to || @from)
-                raise "Can't use --from or --to with multiple apps"
+            if (apps.length > 1) && (@to || @from || @version)
+                raise "Can't use --from, --to or --version with multiple apps"
             end
             apps.each do |name|
                 Spider.load_app(name) unless Spider.apps[name]
@@ -35,15 +38,38 @@ class SetupCommand < CmdParse::Command
                 current = @from || app.installed_version
                 new_version = @to || app.version
                 next unless File.exist?(path)
-                Dir.entries(path).sort.each do |entry|
-                    next if (entry[0].chr == '.')
-                    task = Spider::SetupTask.load("#{path}/#{entry}")
-                    next unless task
-                    next if current && task.version < current
-                    next if new_version && task.version > new_version
-                    Spider.logger.info("Running setup task #{path+'/'+entry}")
-                    task.up
+                tasks = []
+                if @version
+                    tasks = ["#{@version}.rb"]
+                else
+                    tasks = Dir.entries(path).reject{ |p| p[0].chr == '.'}.sort{ |a, b| 
+                        va = Gem::Version.new(File.basename(a, '.rb'))
+                        vb = Gem::Version.new(File.basename(b, '.rb'))
+                        va <=> vb
+                    }
+                    if @from || @to
+                        tasks.reject!{ |t|
+                            v = Gem::Version.new(File.basename(t, '.rb'))
+                            true if @from && v < @from
+                            true if @to && v > @to
+                            false
+                        }
+                    end
                 end
+                done_tasks = []
+                Spider::Model::Managed.no_set_dates = true
+                tasks.each do |task|
+                    Spider.logger.info("Running setup task #{path+'/'+task}")
+                    t = Spider::SetupTask.load("#{path}/#{task}")
+                    begin
+                        done_tasks << t
+                        t.do_up
+                    rescue => exc
+                        done_tasks.each{ |dt| dt.do_down } # FIXME: rescue and log errors in down
+                        raise
+                    end
+                end
+                Spider::Model::Managed.no_set_dates = false
                 app.installed_version = app.version
             end 
         end
