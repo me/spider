@@ -48,7 +48,8 @@ module Spider; module Messenger
                     end
                 end
             end
-            mail_headers, mail_body = mail.to_s.split("\r\n\r\n")
+            mail_headers, mail_body = mail.to_s.split("\r\n\r\n", 2)
+            mail_headers += "\r\n"
             Messenger.email(from, to, mail_headers, mail_body, params)
         end
     end
