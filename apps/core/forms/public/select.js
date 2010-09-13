@@ -3,11 +3,17 @@ Spider.defineWidget('Spider.Forms.Select', 'Spider.Forms.Input', {
 	autoInit: true,
 	
 	ready: function(){
-		if (this.el.is('select[multiple]')) this.el.asmSelect({
-			removeLabel: 'togli',
-			highlightAddedLabel: 'Aggiunto: ',
-			highlightRemovedLabel: 'Tolto: '
-		});
+		if (this.el.is('select[multiple]')){
+            this.el.attr('title', 'Aggiungi...');
+		    this.el.asmSelect({
+    			removeLabel: 'togli',
+    			highlightAddedLabel: 'Aggiunto: ',
+    			highlightRemovedLabel: 'Tolto: '
+    		});
+            $('.asmSelect option:first', this.el.parent()).addClass('asmSelectTitle')
+                .attr("selected", false)
+				.attr("disabled", true);
+		} 
 	},
 	
 	onConnectedChange: function(connected, val){

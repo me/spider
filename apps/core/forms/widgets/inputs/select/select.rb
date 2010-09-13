@@ -4,7 +4,7 @@ module Spider; module Forms
         tag 'select'
         i_attr_accessor :model
         is_attr_accessor :multiple
-        is_attr_accessor :blank_option, :type => TrueClass, :default => true
+        is_attr_accessor :blank_option, :type => TrueClass, :default => nil
         is_attr_accessor :condition
         attr_accessor :data
         
@@ -28,6 +28,12 @@ module Spider; module Forms
             else
                 p
             end
+        end
+        
+        def prepare
+            super
+            @blank_option = (@multiple ? false : true) if @blank_option.nil?
+            @scene.blank_option = blank_option
         end
         
         def run
