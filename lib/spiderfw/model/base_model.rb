@@ -1038,6 +1038,17 @@ module Spider; module Model
             return mapper
         end
 
+        # Syncs the schema with the storage.
+        def self.sync_schema(options={})
+            options = ({
+                :force => false,
+                :drop_fields => false,
+                :update_sequences => false,
+                :no_foreign_key_constraints => true
+            }).merge(options)
+            Spider::Model.sync_schema(self, options[:force], options)
+        end
+
         # Executes #self.where, and calls QuerySet#load on the result.
         # Returns nil if the result is empty, the QuerySet otherwise
         # See #self.where for parameter syntax
