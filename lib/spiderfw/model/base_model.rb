@@ -205,7 +205,7 @@ module Spider; module Model
             # if (type.class == Class && Model.base_type(type)) 
             #                 type = Model.base_type(type)
             #             els
-            if (type.class == Hash)
+            if (type.class <= Hash)
                 type = create_inline_model(name, type)
                 attributes[:inline] = true
             end
