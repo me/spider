@@ -9,7 +9,7 @@ module Spider; module Model
         def self.included(model)
             model.extend(ClassMethods)
             model.mapper_include(Mapper)
-            model.element(:v_sha1, String, :length => 40) unless model.elements[:v_sha1]
+            model.element(:v_sha1, String, :length => 40, :hidden => true) unless model.elements[:v_sha1]
             
             #model.versioning
             par = model.containing_module
@@ -30,7 +30,7 @@ module Spider; module Model
             vmod.primary_keys.each do |pk|
                  vmod.element_attributes(pk.name, :primary_key => false)
              end
-            vmod.element(:v_sha1, String, :primary_key => true, :length => 40, :version_pk => true) 
+            vmod.element(:v_sha1, String, :primary_key => true, :length => 40, :version_pk => true, :hidden => true) 
             local_pk = "id_versioned_#{model.short_name.downcase}"
             vmod.element(local_pk, Fixnum, :autoincrement => true, :local_pk => true, :hidden => true)
             vmod
@@ -70,7 +70,7 @@ module Spider; module Model
               end
               # vmod.remove_element(:v_sha1)
               self.remove_element(:history) # may exist from superclass
-              vmod.element(:v_original, self, :add_multiple_reverse => {:name => :history, :version_history => true}, :hidden => true)
+              vmod.element(:v_original, self, :add_multiple_reverse => {:name => :history, :version_history => true, :hidden => true}, :hidden => true)
               vmod.element(:version_date, DateTime)
               vmod.element(:version_comment, String)
               vmod.remove_element(:history)
