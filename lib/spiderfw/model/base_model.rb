@@ -1288,9 +1288,6 @@ module Spider; module Model
                 if element.type == self.class.superclass && self.class.extended_models[element.type] && self.class.extended_models[element.type] == element.name
                     obj._subclass_object = self
                 end
-                if element.has_single_reverse? && (!element.attributes[:junction] || element.attributes[:keep_junction])
-                    obj.set(element.reverse, self)
-                end
             else
                 obj = prepare_value(element, obj)
             end
