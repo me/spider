@@ -445,7 +445,7 @@ module Spider
                     ext_app = ext_widget.app
                 elsif ext_app
                     ext_app = Spider.apps_by_path[ext_app]
-                    ext_owner = ext_widget
+                    ext_owner = ext_app
                 end
                 ext_search_paths = nil
                 if (ext_owner && ext_owner.respond_to?(:template_paths))

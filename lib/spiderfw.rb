@@ -370,6 +370,7 @@ module Spider
                 return nil
             end
             
+            search_paths ||= []
             owner_classes.each do |owner_class| # FIXME: refactor
                 next if owner_class.is_a?(Spider::Home) # home is already checked for other owner_classes
                                                         # FIXME: maybe it shouldn't get here?
@@ -403,14 +404,18 @@ module Spider
                             break
                         end
                     end
-                elsif (owner_class.is_a?(Spider::App))
+                elsif owner_class <= Spider::App
                     app = owner_class
                 else
                     app = owner_class.app if (owner_class && owner_class.app)
                 end
                 return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
                 raise "Can't find owner app for resource #{path}" unless app
-                search_locations = [["#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}", @home]]
+                search_locations = []
+                root_search = "#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}"
+                unless cur_path && cur_path == File.join(root_search, path)
+                    search_locations = [[root_search, @home]]
+                end
                 if app.respond_to?("#{resource_type}_path")
                     search_locations << [app.send("#{resource_type}_path"), app]
                 else
