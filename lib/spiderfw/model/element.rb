@@ -5,7 +5,8 @@ require 'spiderfw/model/type'
 module Spider; module Model
 
     class Element
-        attr_reader :name, :attributes
+        attr_reader :name
+        attr_accessor :attributes
 
         def initialize(name, type, attributes={})
             @name = name

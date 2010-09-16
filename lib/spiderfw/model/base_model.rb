@@ -608,7 +608,7 @@ module Spider; module Model
         # _Warning:_ for attributes which are parsed by the BaseModel during element definition,
         # this will not have the desired effect; remove and redefine the element instead.
         def self.element_attributes(element_name, attributes)
-            elements[element_name].attributes.merge!(attributes)
+            elements[element_name].attributes = elements[element_name].attributes.merge(attributes)
             if attributes[:primary_key] && !@primary_keys.include?(elements[element_name])
                 @primary_keys << elements[element_name]
             elsif !attributes[:primary_key]

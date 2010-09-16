@@ -28,9 +28,9 @@ module Spider; module Model
         end
         
         def attributes
-            debugger unless target_element
             target_element.attributes.merge(@attributes)
         end
+        
         
         def clone
             self.class.new(@name, @owner, @integrated_element, @integrated_element_element, @attributes.clone)
