@@ -1,4 +1,5 @@
 <div class="login-page">
+    <h3 sp:if="@login_title">{ @login_title }</h3>
     <div class='error' sp:if='@failed_login'>
         Login errata
     </div>
