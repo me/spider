@@ -139,8 +139,9 @@ module Spider
             
             def get_named_asset(name)
                 res = []
-                ass = self.named_assets[name]
-                deps = ass[:options][:depends]
+                ass = self.named_assets[name] 
+                raise "Named asset #{name} is not defined" unless ass
+                deps = ass[:options][:depends] if ass[:options]
                 deps = [deps] if deps && !deps.is_a?(Array)
                 if deps
                     deps.each do |dep|
