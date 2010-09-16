@@ -108,6 +108,7 @@ module Spider
             return uow
         end
         
+        
         def self.unit_of_work=(uow)
             Spider.current[:unit_of_work] = uow
         end
@@ -151,6 +152,18 @@ module Spider
                 IdentityMapper.new do |im|
                     yield im
                 end
+            end
+        end
+        
+        def self.in_unit(&proc)
+            uow = self.unit_of_work
+            self.start_unit_of_work unless uow
+            self.with_identity_mapper do
+                yield
+            end
+            unless uow
+                self.unit_of_work.commit
+                self.stop_unit_of_work 
             end
         end
         
