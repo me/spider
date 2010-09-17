@@ -319,9 +319,16 @@ module Spider
         
         # Sets routes on the #controller for the given apps.
         def route_apps(*apps)
+            options = {}
+            if apps[-1].is_a?(Hash)
+                options = apps.pop
+            end
             @route_apps = apps.empty? ? true : apps
             if (@route_apps)
                 apps_to_route = @route_apps == true ? self.apps.values : @route_apps.map{ |name| self.apps[name] }
+            end
+            if options[:except]
+                apps_to_route.reject{ |app| options[:except].include?(app) }
             end
             if (apps_to_route)
                 apps_to_route.each{ |app| @home.controller.route_app(app) }
