@@ -160,11 +160,12 @@ module Spider
             self.start_unit_of_work unless uow
             self.with_identity_mapper do
                 yield
+                unless uow
+                    self.unit_of_work.commit
+                    self.stop_unit_of_work 
+                end
             end
-            unless uow
-                self.unit_of_work.commit
-                self.stop_unit_of_work 
-            end
+            
         end
         
         # Syncs the schema with the storage.
