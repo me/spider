@@ -105,7 +105,7 @@ module Spider; module Model
                 subs = obj.get(el)
                 subs = [subs] unless subs.is_a?(Enumerable)
                 subs.each do |sub|
-                    put(sub, check, fail_if_exists) if sub && has?(sub).object_id != sub.object_id
+                    put(sub, check, fail_if_exists) if sub && sub.primary_keys_set? && has?(sub).object_id != sub.object_id
                 end
             end
             
