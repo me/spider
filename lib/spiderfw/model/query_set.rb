@@ -206,15 +206,16 @@ module Spider; module Model
         
         # Checks contained objects' loaded elements.
         def update_loaded_elements
+
             return if currently_empty?
             f_loaded = {}
+            @loaded_elements = {}
+            @loaded_elements.merge!(@objects[0].loaded_elements)
             self.each_current do |obj|
-                @loaded_elements.each do |el|
+                @loaded_elements.each do |el, val|
                     f_loaded[el] = false unless obj.loaded_elements[el]
                 end
             end
-            @loaded_elements = {}
-            @loaded_elements.merge!(@objects[0].loaded_elements)
             @loaded_elements.merge!(f_loaded)
         end
         
