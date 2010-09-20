@@ -27,6 +27,11 @@ module Spider
             end
         end
         
+        def merge!(other)
+            @table.merge!(other.instance_variable_get("@table"))
+            self
+        end
+        
     end
     
     
