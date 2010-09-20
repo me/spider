@@ -751,6 +751,16 @@ module Spider; module Model
             return self
         end
         
+        def page(page, rows)
+            @query.page(page, rows)
+            self
+        end
+        
+        def pages
+            return nil unless @query.limit
+            (self.total_rows.to_f / @query.limit).ceil
+        end
+        
         # def unit_of_work
         #     return Spider::Model.unit_of_work
         # end

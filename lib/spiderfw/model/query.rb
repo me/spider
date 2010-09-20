@@ -19,6 +19,8 @@ module Spider; module Model
         attr_reader :condition
         # The Request instance
         attr_reader :request
+        attr_reader :page_rows
+        attr_reader :page
         
         # Instantiates a new query, calling Condition#where on the condition.
         def self.where(*params)
@@ -120,6 +122,17 @@ module Spider; module Model
        
        def first
            self.limit = 1
+       end
+       
+       def page(page, rows)
+           page = page.to_i
+           page = 1 if page == 0
+           @page_rows = rows
+           @page = page
+           offset = ((page - 1) * rows)
+           self.limit = rows
+           self.offset = offset
+           self
        end
        
        ##############################
