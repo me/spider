@@ -704,6 +704,11 @@ module Spider
             if (@parent && @parent.respond_to?(:scene) && @parent.scene)
                 scene._parent = @parent.scene
             end
+            par = @parent
+            while par && par.is_a?(Widget)
+                par = par.parent
+            end
+            scene.controller_scene = par.scene if par
             scene.extend(WidgetScene)
             return scene
         end
