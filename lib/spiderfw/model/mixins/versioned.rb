@@ -9,7 +9,9 @@ module Spider; module Model
         def self.included(model)
             model.extend(ClassMethods)
             model.mapper_include(Mapper)
-            model.element(:v_sha1, String, :length => 40, :hidden => true) unless model.elements[:v_sha1]
+            unless model.elements[:v_sha1] || model.attributes[:sub_model]
+                model.element(:v_sha1, String, :length => 40, :hidden => true) 
+            end
             
             #model.versioning
             par = model.containing_module
