@@ -1529,7 +1529,8 @@ module Spider; module Model
                 return sup_poly.polymorphic_become(model)
             end
             el = self.class.polymorphic_models[model][:through]
-            obj = model.get(el => self)
+            obj = model.new(el => self)
+            obj = Spider::Model.identity_mapper.get(obj) if Spider::Model.identity_mapper
             obj.element_loaded(el)
             return obj
         end
