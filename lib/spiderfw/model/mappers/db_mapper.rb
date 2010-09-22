@@ -94,15 +94,15 @@ module Spider; module Model; module Mappers
                         next if (element.integrated?)
                         element_val = nil if element.model? && element_val.is_a?(BaseModel) && !element_val.primary_keys_set?
                         
-                        if (element.model? && element_val)
+                        if (element.model?)
                             element.model.primary_keys.each do |key|
                                 # FIXME! only works with one primary key
                                 if (key.model?)
                                     key_type = key.model.primary_keys[0].type
-                                    key_value = element_val.get(key.name).get(key.model.primary_keys[0])
+                                    key_value = element_val ? element_val.get(key.name).get(key.model.primary_keys[0]) : nil
                                 else
                                     key_type = key.model? ? key.model.primary_keys[0].type : key.type
-                                    key_value = element_val.get(key.name)
+                                    key_value = element_val ? element_val.get(key.name) : nil
                                 end
                                 store_key = schema.foreign_key_field(element.name, key.name)
                                 next if store_key.is_a?(FieldExpression)
