@@ -9,7 +9,8 @@ module Spider; module Model
         def self.included(model)
             model.extend(ClassMethods)
             model.mapper_include(Mapper)
-            unless model.elements[:v_sha1] || model.attributes[:sub_model]
+            model.remove_element(:v_sha1) if model.elements[:v_sha1] && model.elements[:v_sha1].integrated?
+            unless model.elements[:v_sha1] #|| model.attributes[:sub_model]
                 model.element(:v_sha1, String, :length => 40, :hidden => true) 
             end
             
@@ -171,8 +172,10 @@ module Spider; module Model
                @version_models[branch] = model
            end
            
+           # Returns the elements that concurr to define the objects version
            def version_contents
-               no_content_assocs = [:choice, :multiple_choice]
+               #no_content_assocs = [:choice, :multiple_choice]
+               no_content_assocs = []
 
                self.elements_array.select{ |el|
                    el.attributes[:version_content] || mapper.have_references?(el.name) || (!el.attributes[:added_reverse] && !no_content_assocs.include?(el.association))
@@ -190,26 +193,105 @@ module Spider; module Model
         end
         
         module Mapper
-           
-           # def save_done(obj, mode)
-           #     obj.set(obj.class.version_element, obj.version_sha1)
-           #     obj.reset_modified_elements
-           #     obj.set_modified(:v_sha1 => true)
-           #     obj.mapper.do_update(obj)
-           #     super
-           # end
-           
-           # def save_done(obj, mode)
-           #     obj.save_version if mode == :insert
-           #     super
-           # end
             
+            def get_dependencies(obj, action)
+
+                deps = []
+                version_contents = obj.class.version_contents
+                task = MapperTask.new(obj, action)
+                case action
+                when :save_version
+                    #Spider.logger.debug("PROCESSING DEPS ON #{obj}")
+                    version_contents.each do |vc|
+                        next unless vc.model?
+                        next if vc.integrated?
+                        set = obj.send(vc.name)
+                        next unless set
+                        set = obj.prepare_version_object(vc.name, set) if obj.respond_to?(:prepare_version_object)
+                        next if set == self
+                        set = self.instance_variable_get("@#{vc.name}_junction") if vc.junction? && !vc.attributes[:keep_junction]
+                        next unless set
+                        set = [set] unless vc.multiple?
+                        set.each do |set_obj|
+                            s_obj = set_obj
+                            if have_references?(vc)
+                                #Spider.logger.debug("Version on #{obj} (#{obj.class}) depends on #{set_obj} (#{set_obj.class})")
+                                deps << [task, MapperTask.new(set_obj, :save_version)]
+                            elsif vc.junction?
+                                dejunct = set_obj.get(vc.attributes[:junction_their_element])
+                                dejunct = obj.class.prepare_junction_version_object(vc.name, dejunct) if obj.class.respond_to?(:prepare_junction_version_object)
+                                dejunct_task = MapperTask.new(dejunct, :save_version)
+                                junction_task = MapperTask.new(set_obj, :save_version)
+                                deps << [junction_task, dejunct_task] if dejunct.class < Spider::Model::Versioned
+                                deps << [junction_task, task]
+                            else
+                                #Spider.logger.debug("Version on #{set_obj} (#{set_obj.class}) depends on #{obj} (#{obj.class})")
+                                deps << [MapperTask.new(set_obj, :save_version), task]
+                            end
+                        end
+                    end
+                else
+                    return super
+                end
+                deps
+            end
+            
+            def execute_action(action, object, params) # :nodoc:
+                return super unless [:save_version, :save_junction_version].include?(action)
+                @unit_of_work_task = true
+                case action
+                when :save_version
+                    save_version(object)
+                when :save_junction_version
+                    save_junction_version(object)
+                end
+                @unit_of_work_task = false
+            end
+            
+            def save_version(object)
+                mod = @model
+                vmod = mod.version_model
+                vobj = vmod.static()
+                ve = mod.version_element
+                current_sha1 = object.get(ve)
+                new_sha1 = object.version_sha1
+                # debugger
+                # debugger
+                return if current_sha1 == new_sha1
+                # debugger
+                object.v_sha1 = new_sha1
+                vobj = Spider::Model.get(vmod, :v_sha1 => new_sha1)
+                vobj.autoload(false)
+                object.populate_version_object(vobj)
+                vobj.autoload(false)
+                
+                vobj.set(mod.elements[:history].reverse, object)
+                vobj.set(:version_date, DateTime.now)
+                # vobj.set(:version_comment, comment)
+                object.mapper.do_update(object)
+                begin
+                    vobj.mapper.insert(vobj)
+                    #vobj.insert
+                rescue Spider::Model::Storage::DuplicateKey
+                    Spider.logger.error("Duplicate version for #{self}")
+                end
+                object.autoload(true)
+            end
+            
+            def save_junction_version(object)
+                vmod = @model.version_model
+                vobj = vmod.static
+                object.class.elements_array.select{ |el| el.attributes[:junction_reference] }.each do |el|
+                    val = object.get(el)
+                    vobj.set(el, val.get(:v_sha1))
+                end
+                vobj.mapper.do_insert(vobj)
+            end
+
         end
         
         def version_sha1
             yaml = YAML::dump(self.version_flatout)
-            # Spider.logger.debug("YAML for #{self.class}, #{self}:")
-            #  Spider.logger.debug(yaml)
             sha1 = Digest::SHA1.hexdigest(yaml)
         end
         
@@ -219,7 +301,6 @@ module Spider; module Model
         end
         
         def version_flatout(params={})
-            #return YAML::dump(self)
             h = {}
             def v_obj_pks(obj, klass, use_sha)
                 if use_sha && obj.respond_to?(:v_sha1)
@@ -252,7 +333,7 @@ module Spider; module Model
                     if self.class.attributes[:sub_model] && self.class.attributes[:sub_model].respond_to?(:prepare_junction_version_object)
                         obj = self.class.attributes[:sub_model].prepare_junction_version_object(self.class.attributes[:sub_model_element], obj)
                     elsif self.respond_to?(:prepare_version_object)
-                        obj = self.prepare_version_object(el, obj)
+                        obj = self.prepare_version_object(el.name, obj)
                     end
                     if is_version_content && self.class.mapper.have_references?(el)
                         if (el.multiple?)
@@ -260,12 +341,7 @@ module Spider; module Model
                         else
                             h[el.name] = obj.v_sha1
                         end
-                    elsif is_version_content # && !model.mapper.have_references?(el) && !el.attributes[:integrated_model]
-                        # if (el.multiple?)
-                        #     h[el.name] = obj.map{ |o| o.to_yaml_h(:except => exclude_elements) }
-                        # else
-                        #     h[el.name] = obj.to_yaml_h(:except => exclude_elements)
-                        # end
+                    elsif is_version_content && el.type < Spider::Model::Versioned
                         if (el.multiple?)
                             h[el.name] = obj.map{ |o| o.version_content_hash(:except_objects => [self]) }
                         else
@@ -319,18 +395,12 @@ module Spider; module Model
                     if self.class.attributes[:sub_model] && self.class.attributes[:sub_model].respond_to?(:prepare_junction_version_object)
                         obj =  self.class.attributes[:sub_model].prepare_junction_version_object(self.class.attributes[:sub_model_element], obj)
                     elsif self.respond_to?(:prepare_version_object)
-                        obj = self.prepare_version_object(el, obj)
+                        obj = self.prepare_version_object(el.name, obj)
                     end
                     next if params[:except_objects].include?(obj)
                     
                     if !obj
                        h[el.name] = nil
-                   # elsif self.class.mapper.have_references?(el)
-                   #     if (el.multiple?)
-                   #         h[el.name] = obj.map{ |o| o.v_sha1 }
-                   #     else
-                   #         h[el.name] = obj.v_sha1
-                   #     end   
                     elsif el.type.method_defined?(:version_content_hash)
                         if (el.multiple?)
                             h[el.name] = obj.reject{ |o| 
@@ -355,172 +425,49 @@ module Spider; module Model
             h
         end
         
-        def save_version(comment=nil)
-            return if @__version_saved
-            Spider::Model.with_identity_mapper do |im|
-                Spider.logger.debug("SAVING VERSION FOR #{self.class} #{self}")
-                mod = self.class
-                vmod = mod.version_model
-                vobj = vmod.static()
-                vobj.set(mod.elements[:history].reverse, self)
-                ve = mod.version_element
-                version_contents = self.class.version_contents
-            
-                self.class.elements_array.each do |el|
-                    next unless vmod.elements[el.name]
-                    next if el.model? && el.type.attributes[:version_model]
-                    next if el.integrated?
-                    # vobj.set(el.name, self.get(el))
-                    # vel = mod.version_element(el)
-                    if el.model?
-                        is_version_content = version_contents.include?(el)
-                        if mod.mapper.have_references?(el)
-                            el_val = self.get(el)
-                            if is_version_content && el_val && el.model.respond_to?(:version_element)
-                                if self.respond_to?(:prepare_version_object)
-                                    el_val = self.prepare_version_object(el, el_val) 
-                                end
-                                Spider.logger.debug("Doing save_version for referenced #{el}")
-                                el_val.save_version
-                                vobj.set(el.name, el_val.get(el.model.version_element))
-                                if self.class.attributes[:sub_model] && self.class.attributes[:sub_model].respond_to?(:prepare_junction_version_object)
-                                    prep_val = self.class.attributes[:sub_model].prepare_junction_version_object(self.class.attributes[:sub_model_element], el_val)
-                                    prep_val.save_version
-                                end
-                            else
-                                vobj.set(el.name, el_val)
-                            end
-                        elsif !(el.model < Versioned) && !el.multiple? #!(el.model < Versioned && !el.multiple?)
-                            #debugger unless vobj.class.elements[el.name].model < Versioned
-                            vobj.set(el.name, self.get(el))
-                        # elsif !(el.type < Versioned)
-                        #                             el_val = self.get(el)
-                        #                             if el.multiple?
-                        #                                 el_val.each{ |el_v| vobj.get(el.name) << el_v }
-                        #                             else
-                        #                                 
-                        #                                 vobj.set(el.name, el_val)
-                        #                                 
-                        #                             end
-                        end
-                    else
-                        el_val = self.get(el)
-                        vobj.set(el.name, el_val)
-                    end
-                end
-                # debugger
-
-                current_sha1 = self.get(ve)
-                new_sha1 = self.version_sha1
-                return if current_sha1 == new_sha1
-                # @@already_saved ||= {}
-                # @@already_saved[self.class] ||= {}
-                # debugger if @@already_saved[self.class][self.primary_keys]
-                # @@already_saved[self.class][self.primary_keys] = self.version_flatout
-                self.set(ve, new_sha1)
-                self.set_modified(ve => true)
-                # debugger unless self.primary_keys_set?
-                im.put(self)
-                self.mapper.do_update(self)
-                
-                Spider::Model.no_identity_mapper do
-                    vobj.set(:v_sha1, new_sha1)
-                    vobj = im.put(vobj, true)
-                end
-            
-                vobj.set(:version_date, DateTime.now)
-                vobj.set(:version_comment, comment)
-            
-            
-                begin
-                    vobj.mapper.do_insert(vobj)
-                rescue Spider::Model::Storage::DuplicateKey
-                    Spider.logger.error("Duplicate version for #{self}")
-                end
-            
-                update_version_contents(vobj)
-                
-                @__version_saved = true
-                
-                trigger(:version_saved)
-            
-            end
-
-        end
-        
-        def update_version_contents(vobj)
+        def populate_version_object(vobj)
             mod = self.class
             vmod = mod.version_model
+            version_contents = self.class.version_contents
             
             self.class.elements_array.each do |el|
-
                 next unless vmod.elements[el.name]
+                next if el.model? && el.type.attributes[:version_model]
                 next if el.integrated?
-                next unless el.model?
-                next if el.type.attributes[:version_model]
-                
-                next unless vmod.elements[el.name].model < Spider::Model::Versioned
-                
-                # vobj.set(el.name, self.get(el))
-                # vel = mod.version_element(el)
-                if el.model?
-                    if mod.mapper.have_references?(el)
-
-                    end
-                    if !vmod.mapper.have_references?(el) && el.reverse
-                        # cond = Spider::Model::Condition.and
-                        # cond[el.reverse] = self
-                        # ass = el.model.where(cond)
-                        # if self.respond_to?(:prepare_version_object)
-                        #     ass = self.prepare_version_object(el, ass)
-                        # end
-                        # Spider.logger.debug("Doing save_version for related #{el}")
-                        # 
-                        # ass.each do |row|
-                        #     row.save_version
-                        # end
-                        
-                        ass = self.get(el)
-                        # debugger if el.junction?
-                        ass = self.instance_variable_get("@#{el.name}_junction") if el.junction? && !el.attributes[:keep_junction]
-                        next unless ass
-                        if self.respond_to?(:prepare_version_object)
-                            ass = self.prepare_version_object(el, ass)
-                        end
-                        ass = [ass] unless ass.is_a?(Enumerable)
-                        ass.each do |row|
-                            
-                            # if el.junction? && !row.class.attributes[:version_model]
-                            #     debugger
-                            #     jobj = el.model.new
-                            #     jobj.set(el.attributes[:junction_their_element], row)
-                            #     jobj.set(el.attributes[:reverse], self)
-                            #     jobj.save_version
-                            # else
-                                row.save_version
-                           # end
-                        end
-                        
-                    end
+                next if el.multiple? && el.model.respond_to?(:version_element)
+                is_version_content = version_contents.include?(el)
+                #debugger if el.name == :news_list
+                el_val = self.get(el)
+                if self.respond_to?(:prepare_version_object)
+                    el_val = self.prepare_version_object(el.name, el_val) 
                 end
-            end
-            self.class.elements_array.each do |el|
-                vel = vmod.elements[el.name]
-                next unless vel
-                if el.multiple? && !(vel.model < Spider::Model::Versioned)
-                    # debugger
+                #next unless mod.mapper.have_references?(el)
+                if el_val && el.multiple?
+                    if !el.model.respond_to?(:version_element)
+                        el_val.each do |v|
+                            vobj.get(el.name) << v
+                        end
+                    end
+                elsif el.model? && el_val && el.model.respond_to?(:version_element) # && is_version_content 
                     
-                    self.get(el).each do |row|
-                        junction = vel.model.new
-                        junction.set(vel.attributes[:reverse], vobj)
-                        junction.set(vel.attributes[:junction_their_element], self)
-                        junction.insert
-                    end
+                    vobj.set(el.name, el_val.get(el.model.version_element))
+                            # if self.class.attributes[:sub_model] && self.class.attributes[:sub_model].respond_to?(:prepare_junction_version_object)
+                            #     prep_val = self.class.attributes[:sub_model].prepare_junction_version_object(self.class.attributes[:sub_model_element], el_val)
+                            #     prep_val.save_version
+                            # end
+                else
+                    vobj.set(el.name, el_val)
                 end
             end
-            # debugger if do_save
-            # vobj.update if do_save
-            vobj
+        end
+        
+        def save_version(comment=nil)
+            obj = nil
+            Spider::Model.in_unit do |uow|
+                obj = Spider::Model.identity_mapper.put(self)
+                uow.add(obj, :save_version)
+            end
+            obj.trigger(:version_saved)
         end
 
         
