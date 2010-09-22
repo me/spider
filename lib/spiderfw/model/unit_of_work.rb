@@ -65,12 +65,6 @@ module Spider; module Model
                 #Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
             end
-            @objects.each do |obj_id, obj|
-                @actions[obj_id].each do |action, params|
-                    next unless action == :delete
-                    obj.mapper.delete(obj)
-                end
-            end
             @objects = {}
             @new_objects = []
         end
@@ -101,12 +95,18 @@ module Spider; module Model
                 return
             end
             curr = @actions[obj.object_id]
-            return if curr && curr.map{ |c| c[0] }.include?(action) # FIXME: params?
+            if curr && (curr_act = curr.select{ |c| c[0] == action }).length > 0
+                curr_act[1] = params
+                return
+            end
+            if action == :delete # FIXME: abstract
+                @actions[obj.object_id] = []
+            end
             @actions[obj.object_id] ||= []
             @actions[obj.object_id] << [action, params]
             @objects[obj.object_id] = obj
             @new_objects << obj unless curr
-            traverse(obj, action, params)
+            traverse(obj, action, params) if action == :save
         end
         
         def traverse(obj, action, params)

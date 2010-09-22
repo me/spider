@@ -71,6 +71,8 @@ module Spider; module Model
                 end
             when :keys
                 # do nothing; keys will be set by save
+            when :delete
+                delete(object)
             else
                 raise MapperError, "#{action} action not implemented"
             end
