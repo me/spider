@@ -133,7 +133,6 @@ module Spider; module HTTP
                     controller.execute(path)
                     Spider::Logger.debug("Response:")
                     Spider::Logger.debug(controller.response)
-                    controller.after(path)
                     Spider::Logger.debug("Controller #{controller} DONE")
                 end
                 if (Spider.conf.get('webserver.timeout'))
@@ -145,13 +144,21 @@ module Spider; module HTTP
                 end
             rescue => exc
                 Spider.logger.error(exc)
-                controller.ensure() if controller
+                controller.ensure if controller
+                controller = nil
             ensure
                 MongrelIO.send_headers(controller_response, response) unless response.header_sent
                 Spider::Logger.debug("---- Closing Mongrel Response ---- ")
+                response.socket.flush
                 response.finished
+                response.socket.close
                 Spider.request_finished
             end
+            if controller
+                controller.after(path)
+                controller.ensure
+            end
+            
             
             
         end
