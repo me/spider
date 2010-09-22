@@ -1241,6 +1241,7 @@ module Spider; module Model
                 end
             end
             val = prepare_child(name, val)
+            instance_variable_set("@#{name}", val)
             set_reverse(element, val) if element.model?
             val
         end
