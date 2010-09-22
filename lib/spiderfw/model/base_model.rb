@@ -272,9 +272,9 @@ module Spider; module Model
                     assoc_type.attributes[:sub_model] = self
                     assoc_type.attributes[:sub_model_element] = name
                     assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true) if attributes[:junction_id]
-                    assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice) # FIXME: must check if reverse exists?
+                    assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice, :junction_reference => true) # FIXME: must check if reverse exists?
                     # FIXME! fix in case of clashes with existent elements
-                    assoc_type.element(other_name, orig_type, :association => :choice)
+                    assoc_type.element(other_name, orig_type, :association => :choice, :junction_reference => true)
                     assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
                     if (proc)                                   #        to be hidden, but the integrated el instead
                         attributes[:extended] = true
