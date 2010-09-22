@@ -112,7 +112,7 @@ module Spider; module ControllerMixins
             if @visual_params[:redirect]
                 redirect(@visual_params[:redirect])
             end
-            if @executed_format == :json && @visual_params[:scene] || @visual_params[:return] # FIXME: move in JSON mixin?
+            if @executed_format == :json && (@visual_params[:scene] || @visual_params[:return]) # FIXME: move in JSON mixin?
                 if (@visual_params[:return])
                     $out << @visual_params[:return].to_json
                 elsif (@visual_params[:scene].is_a?(Array))
