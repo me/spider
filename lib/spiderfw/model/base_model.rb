@@ -1240,7 +1240,9 @@ module Spider; module Model
                     val.autoload = autoload?
                 end
             end
-            prepare_child(name, val)
+            val = prepare_child(name, val)
+            set_reverse(element, val) if element.model?
+            val
         end
         
         # Prepares an object that is being set as a child.
