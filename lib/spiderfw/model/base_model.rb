@@ -1569,7 +1569,8 @@ module Spider; module Model
             @_tmp_autoload_walk = true
             @_autoload = a
             if (traverse)
-                self.class.elements_array.select{ |el| el.model? && element_has_value?(el.name)}.each do |el|
+                self.class.elements_array.select{ |el| el.model? && \
+                    (element_has_value?(el.name) || el.attributes[:extended_model])}.each do |el|
                     val = get(el)
                     val.autoload = a if val.respond_to?(:autoload=)
                 end
@@ -1935,11 +1936,37 @@ module Spider; module Model
             self
         end
         
+        def insert
+            if @unit_of_work
+                @unit_of_work.add(self)
+                return
+            end
+            save_mode do
+                before_save unless Spider.current[:unit_of_work]
+                if Spider.current[:unit_of_work]
+                    Spider.current[:unit_of_work].add(self, :save, :force => :insert)
+                    if @unit_of_work
+                        @unit_of_work.commit
+                        Spider::Model.stop_unit_of_work
+                        if @uow_identity_mapper
+                            Spider.current[:identity_mapper] = nil
+                            @uow_identity_mapper = nil
+                        end
+                        @unit_of_work = nil
+                    end
+                    return
+                else
+                    insert!
+                end
+            end
+            self
+        end
+        
         # Inserts the object in the storage
         # Note: if the object is already present in the storage and unique indexes are enforced,
         # this will raise an error.
         # (See Mapper#insert).
-        def insert
+        def insert!
             mapper.insert(self)
             reset_modified_elements
         end
@@ -2081,7 +2108,8 @@ module Spider; module Model
                     end
                 end
             end
-            super
+            raise NoMethodError, "undefined method `#{method}' for #{self.class}"
+            #super
             # end
         end
         
