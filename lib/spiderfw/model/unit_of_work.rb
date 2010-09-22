@@ -7,6 +7,7 @@ module Spider; module Model
         
         def initialize(&proc)
             @objects = {}
+            @actions = {}
             @to_delete = {}
             @new_objects = []
             if (proc)
@@ -30,27 +31,29 @@ module Spider; module Model
             @processed_tasks = {}
             while objs = new_objects
                 objs.each do |obj|
-                    action = @objects[obj.object_id][:action]
-                    if action == :save
-                        next unless obj.mapper && obj.mapper.class.write?
-                        next unless obj.modified?
-                        obj.save_mode do
-                            obj.before_save
+                    @actions[obj.object_id].each do |action, params|
+                        if action == :save
+                            next unless obj.mapper && obj.mapper.class.write?
+                            next unless obj.modified?
+                            obj.save_mode do
+                                obj.before_save
+                            end
+                        elsif action == :delete
+                            obj.before_delete
                         end
-                    elsif action == :delete
-                        obj.before_delete
                     end
                 end
             end
-            @objects.each do |obj_id, o|
-                obj = o[:obj]
-                action = o[:action]
-                next unless action == :save
-                next unless obj.mapper && obj.mapper.class.write?
-                next unless obj.modified?
-                task = Spider::Model::MapperTask.new(obj, :save)
-                @tasks[task] ||= task
-                find_dependencies(task)
+            @objects.each do |obj_id, obj|
+                @actions[obj_id].each do |action, params|
+                    if action == :save
+                        next unless obj.mapper && obj.mapper.class.write?
+                        next unless obj.modified?
+                    end
+                    task = Spider::Model::MapperTask.new(obj, action, params)
+                    @tasks[task] ||= task
+                    find_dependencies(task)
+                end
             end
             tasks = tsort()
             Spider.logger.debug("Tasks:")
@@ -62,10 +65,11 @@ module Spider; module Model
                 #Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
             end
-            @objects.each do |obj_id, o|
-                next unless o[:action] == :delete
-                obj = o[:obj]
-                obj.mapper.delete(obj)
+            @objects.each do |obj_id, obj|
+                @actions[obj_id].each do |action, params|
+                    next unless action == :delete
+                    obj.mapper.delete(obj)
+                end
             end
             @objects = {}
             @new_objects = []
@@ -76,44 +80,40 @@ module Spider; module Model
         def find_dependencies(model_task)
             return if (@processed_tasks[model_task])
             @processed_tasks[model_task] = true
-            dependencies = model_task.object.mapper.get_dependencies(model_task.object, model_task.action)
+            dependencies = model_task.object.mapper.get_dependencies(model_task.object, model_task.action).uniq
             dependencies.each do |dep|
+                had0 = @tasks[dep[0]]
                 @tasks[dep[0]] ||= dep[0]
+                had1 = @tasks[dep[1]]
                 @tasks[dep[1]] ||= dep[1]
                 @tasks[dep[0]] << @tasks[dep[1]]
-                find_dependencies(dep[1])
+                find_dependencies(dep[0]) unless had0
+                find_dependencies(dep[1]) unless had1
             end
         end
                 
         
-        def add(obj, action = :save)
+        def add(obj, action = :save, params = {})
             if (obj.class == QuerySet)
                 obj.each do |item|
-                    add(item)
+                    add(item, action, params)
                 end
                 return
             end
-            if curr = @objects[obj.object_id]
-                curr[:action] = :delete if action == :delete
-            else
-                has_other = false
-                @new_objects.each do |cur|
-                    if cur.class == obj.class && cur.primary_keys == obj.primary_keys
-                        has_other = cur
-                        break
-                    end
-                end
-                @new_objects << obj
-                @objects[obj.object_id] = {:action => action, :obj => obj }
-                traverse(obj, action)
-            end
+            curr = @actions[obj.object_id]
+            return if curr && curr.map{ |c| c[0] }.include?(action) # FIXME: params?
+            @actions[obj.object_id] ||= []
+            @actions[obj.object_id] << [action, params]
+            @objects[obj.object_id] = obj
+            @new_objects << obj unless curr
+            traverse(obj, action, params)
         end
         
-        def traverse(obj, action)
+        def traverse(obj, action, params)
             obj.class.elements_array.each do |el|
                 next unless obj.element_has_value?(el)
                 next unless el.model?
-                add(obj.get(el), action)
+                add(obj.get(el), action, params)
             end
             
         end

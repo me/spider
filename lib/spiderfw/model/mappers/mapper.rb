@@ -58,11 +58,17 @@ module Spider; module Model
         end
         
         # Calls the given action. Used by UnitOfWork tasks.
-        def execute_action(action, object) # :nodoc:
+        def execute_action(action, object, params={}) # :nodoc:
             @unit_of_work_task = true
             case action
             when :save
-                save(object)
+                if params[:force] == :insert
+                    insert(object)
+                elsif params[:force] == :update
+                    update(object)
+                else
+                    save(object)
+                end
             when :keys
                 # do nothing; keys will be set by save
             else
@@ -951,9 +957,10 @@ module Spider; module Model
     class MapperTask
         attr_reader :dependencies, :object, :action
        
-        def initialize(object, action)
+        def initialize(object, action, params={})
             @object = object
             @action = action
+            @params = params
             @dependencies = []
         end
         
@@ -963,7 +970,7 @@ module Spider; module Model
         
         def execute()
             Spider::Logger.debug "Executing #{@action} on #{@object}"
-            @object.mapper.execute_action(@action, @object)
+            @object.mapper.execute_action(@action, @object, @params)
         end
         
         def eql?(task)
@@ -986,12 +993,13 @@ module Spider; module Model
         
         def inspect
             if (@action && @object)
-                str = "#{@action} on #{@object} (#{object.class})\n"
+                str = "#{@action} on #{@object} (#{object.class})"
                 if (@dependencies.length > 0)
-                    str += "-dependencies:\n"
-                    @dependencies.each do |dep|
-                        str += "---#{dep.action} on #{dep.object}\n"
-                    end
+                    str += " (dependencies: #{@dependencies.map{ |dep| "#{dep.action} on #{dep.object.class} #{dep.object}"}.join(', ')})"
+                    # str += "-dependencies:\n"
+                    #                    @dependencies.each do |dep|
+                    #                        str += "---#{dep.action} on #{dep.object}\n"
+                    #                    end
                 end
             else
                 str = "Root Task"
