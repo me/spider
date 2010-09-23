@@ -1762,17 +1762,13 @@ module Spider; module Model
             return @_has_values
         end
         
-        # Sets all values of obj on the current object, cloning them if possible
+        # Sets all values of obj on the current object
         def merge!(obj, only=nil)
             obj.class.elements_array.select{ |el| 
                 (only || obj.element_has_value?(el)) && !el.integrated? && !el.attributes[:computed_from]
             }.each do |el|
                 next if only && !only.key?(el.name)
                 val = obj.get_no_load(el)
-                if (val && !val.is_a?(BaseModel) && val.respond_to?(:clone) && \
-                    !val.is_a?(Fixnum) && !val.is_a?(TrueClass) && !val.is_a?(FalseClass) && !val.is_a?(Bignum))
-                    begin; val = val.clone; rescue TypeError; end;
-                end
                 set_loaded_value(el, val)
             end
         end
