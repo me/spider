@@ -47,6 +47,20 @@ module Spider
 
             @request.http_method = @request.env['REQUEST_METHOD'].upcase.to_sym
             @request.http_host = @request.env['HTTP_HOST']
+            if @request.env['HTTP_CACHE_CONTROL']
+                parts = @request.env['HTTP_CACHE_CONTROL'].split(';')
+                parts.each do |part|
+                    if part == 'no-cache'
+                        @request.cache_control[:no_cache] = true
+                    else
+                        key, val = part.split('=')
+                        @request.cache_control[key] = val
+                    end
+                end
+            end
+            if @request.env['HTTP_PRAGMA'] == 'no-cache'
+                @request.cache_control[:no_cache] = true
+            end
             Locale.clear
             Locale.init(:driver => :cgi)
             Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
@@ -63,6 +77,7 @@ module Spider
             # FIXME: cache stripped action?
             action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
             super(action, *arguments)
+            #@response.headers['Date'] ||= Time.now.httpdate
         end
         
         def after(action='', *arguments)
@@ -126,6 +141,10 @@ module Spider
                 unless self.env['SSL_CLIENT_CERT'].blank?
                     @client_cert = OpenSSL::X509::Certificate.new(self.env['SSL_CLIENT_CERT'])
                 end
+            end
+            
+            def cache_control
+                @cache_control ||= {}
             end
             
         end
