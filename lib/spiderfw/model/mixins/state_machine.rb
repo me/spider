@@ -9,6 +9,12 @@ module Spider; module Model
 
         module ClassMethods
             attr_reader :state_events
+            
+            def inherited(sub)
+                super
+                sub.extend(Spider::Model::StateMachine::ClassMethods)
+                sub.instance_variable_set("@state_events", @state_events.clone) if @state_events
+            end
 
             class StateEvent
                 attr_reader :transitions
