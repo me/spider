@@ -92,6 +92,11 @@ module Spider; module Auth
             def user=(val)
                 @user = val
             end
+            
+            def auth(user_class)
+                return user_class.restore_from_session(self.session)
+            end
+            
         end
 
         module ClassMethods
