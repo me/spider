@@ -124,6 +124,9 @@ module Spider; module Components
                         list = "<ul>"
                         if(row[el])
                             row[el][0..2].each{ |sub|
+                                if sub && element.junction? && element.model.attributes[:sub_model] != @model
+                                    sub = sub.get(element.attributes[:junction_their_element]) 
+                                end
                                 sub_desc = sub.nil? ? '' : sub.to_s
                                 sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
                                 list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
