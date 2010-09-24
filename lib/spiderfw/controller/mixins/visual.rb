@@ -27,7 +27,7 @@ module Spider; module ControllerMixins
                     format_params = self.class.output_format_params(@executed_method, format)
                 end
                 if @executed_method && !format || (format_params && format_params[:widgets] && !target_mode?)
-                    raise Spider::Controller::NotFound.new("#{action}.#{@request.format}") 
+                    #raise Spider::Controller::NotFound.new("#{action}.#{@request.format}") 
                 end
             end
             format ||= self.class.output_format(@executed_method)
