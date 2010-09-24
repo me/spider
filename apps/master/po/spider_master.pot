@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Master \n"
-"POT-Creation-Date: 2010-09-24 20:25+0200\n"
+"POT-Creation-Date: 2010-09-24 20:50+0200\n"
 "PO-Revision-Date: 2010-09-24 20:25+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,8 +16,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: controllers/master_controller.rb:48 views/customers.shtml:3 views/index.shtml:2
-#: views/master.layout.shtml:18
+#: controllers/master_controller.rb:48 views/customers.shtml:3
+#: views/index.shtml:2 views/master.layout.shtml:18
 msgid "Customers"
 msgstr ""
 
@@ -86,7 +86,10 @@ msgid "Alert me when %s exceeds %s"
 msgstr ""
 
 #: models/scout_plugin_trigger.rb:110
-msgid "Alert me when %s goes %s more than %s over the preceding %s (relative to %s), \n                as long as the value is at least %s"
+msgid ""
+"Alert me when %s goes %s more than %s over the preceding %s (relative to %"
+"s), \n"
+"                as long as the value is at least %s"
 msgstr ""
 
 #: models/scout_plugin_trigger.rb:116
@@ -126,7 +129,7 @@ msgstr ""
 msgid "New installation for %s"
 msgstr ""
 
-#: views/installation.shtml:9 views/plugin_edit.shtml:7
+#: views/installation.shtml:9 views/plugin_edit.shtml:10
 msgid "Name"
 msgstr ""
 
@@ -154,27 +157,31 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: views/plugin_edit.shtml:2
-msgid "Edit Plugin Settings"
-msgstr ""
-
-#: views/plugin_edit.shtml:2
-msgid "plugin %s for %s"
-msgstr ""
-
 #: views/plugin_edit.shtml:3
+msgid "Edit plugin \"%s\""
+msgstr ""
+
+#: views/plugin_edit.shtml:4
 msgid "Back to plugin details"
 msgstr ""
 
-#: views/plugin_edit.shtml:21
+#: views/plugin_edit.shtml:15
+msgid "Settings"
+msgstr ""
+
+#: views/plugin_edit.shtml:28
+msgid "Advanced options"
+msgstr ""
+
+#: views/plugin_edit.shtml:30
 msgid "Interval"
 msgstr ""
 
-#: views/plugin_edit.shtml:25
+#: views/plugin_edit.shtml:34
 msgid "Timeout"
 msgstr ""
 
-#: views/plugin_edit.shtml:29
+#: views/plugin_edit.shtml:38
 msgid "Update"
 msgstr ""
 
@@ -186,7 +193,8 @@ msgstr ""
 msgid "Servant"
 msgstr ""
 
-#: views/plugin_instance.shtml:12 views/servant.shtml:14 views/trigger_edit.shtml:8
+#: views/plugin_instance.shtml:12 views/servant.shtml:14
+#: views/trigger_edit.shtml:8
 msgid "Customer"
 msgstr ""
 

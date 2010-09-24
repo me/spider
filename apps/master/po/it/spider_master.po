@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Master\n"
-"POT-Creation-Date: 2010-09-24 20:25+0200\n"
-"PO-Revision-Date: 2010-09-24 20:33+0100\n"
+"POT-Creation-Date: 2010-09-24 20:50+0200\n"
+"PO-Revision-Date: 2010-09-24 20:51+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -141,7 +141,7 @@ msgid "New installation for %s"
 msgstr "Nuova installazione per %s"
 
 #: views/installation.shtml:9
-#: views/plugin_edit.shtml:7
+#: views/plugin_edit.shtml:10
 msgid "Name"
 msgstr "Nome"
 
@@ -169,27 +169,31 @@ msgstr "Destinazioni"
 msgid "Home"
 msgstr "Home"
 
-#: views/plugin_edit.shtml:2
-msgid "Edit Plugin Settings"
-msgstr "Modifica Impostazioni Plugin"
-
-#: views/plugin_edit.shtml:2
-msgid "plugin %s for %s"
-msgstr "plugin %s per %s"
-
 #: views/plugin_edit.shtml:3
+msgid "Edit plugin \"%s\""
+msgstr "Modifica plugin \"%s\""
+
+#: views/plugin_edit.shtml:4
 msgid "Back to plugin details"
 msgstr "Torna ai dettagli del plugin"
 
-#: views/plugin_edit.shtml:21
+#: views/plugin_edit.shtml:15
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: views/plugin_edit.shtml:28
+msgid "Advanced options"
+msgstr "Opzioni avanzate"
+
+#: views/plugin_edit.shtml:30
 msgid "Interval"
 msgstr "Intervallo"
 
-#: views/plugin_edit.shtml:25
+#: views/plugin_edit.shtml:34
 msgid "Timeout"
 msgstr "Timeout"
 
-#: views/plugin_edit.shtml:29
+#: views/plugin_edit.shtml:38
 msgid "Update"
 msgstr "Aggiorna"
 
@@ -342,4 +346,7 @@ msgstr "Valore Minimo"
 #: views/trigger_edit.shtml:98
 msgid "Submit"
 msgstr "Salva"
+
+#~ msgid "plugin %s for %s"
+#~ msgstr "plugin %s per %s"
 

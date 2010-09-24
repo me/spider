@@ -208,3 +208,31 @@ div.info-block a{
 .triggers ul li{
 	margin-top: 3px;
 }
+
+.plugin.settings .row{
+	overflow: hidden;
+}
+
+.plugin.settings .row label{
+	display: block;
+	float: left;
+	width: 8em;
+}
+
+.plugin.settings .notes{
+	margin: 5px 5px;
+	padding: 2px 10px;
+	border: 1px solid #bdbdbd;
+	color: #5f5f5f;
+}
+
+.plugin.settings input[type=text]{
+	width:  30em;
+}
+
+.plugin.settings fieldset {
+  padding: 1em;
+  border: 1px solid #939393;
+  margin-bottom: 10px;
+}
+
