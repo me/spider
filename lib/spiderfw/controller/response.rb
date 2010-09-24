@@ -20,15 +20,21 @@ module Spider
             self.class.send(:attr_accessor, key) # FIXME: threadsafety
         end
         
+        def no_cookies
+            @no_cookies = true
+        end
+        
         def prepare_headers
-            @headers['Set-Cookie'] ||= []
-            @cookies.each do |k, v|
-                h = "#{k}=#{v}"
-                h += '; expires='+v.expires.strftime("%a, %b %d %Y %H:%M:%S %Z") if (v.expires.respond_to?(:strftime))
-                h += "; path=#{v.path}" if (v.path)
-                h += "; domain=#{v.domain}" if (v.domain)
-                h += "; secure" if (v.secure)
-                @headers['Set-Cookie'] << h
+            unless @no_cookies
+                @headers['Set-Cookie'] ||= []
+                @cookies.each do |k, v|
+                    h = "#{k}=#{v}"
+                    h += '; expires='+v.expires.strftime("%a, %b %d %Y %H:%M:%S %Z") if (v.expires.respond_to?(:strftime))
+                    h += "; path=#{v.path}" if (v.path)
+                    h += "; domain=#{v.domain}" if (v.domain)
+                    h += "; secure" if (v.secure)
+                    @headers['Set-Cookie'] << h
+                end
             end
             Spider::Logger.debug("HEADERS:")
             Spider::Logger.debug(@headers)

@@ -73,15 +73,23 @@ module Spider; module ControllerMixins
             mode = Spider.conf.get('static_content.mode')
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)
             stat = File.lstat(full_path)
-            if @request.env['HTTP_IF_MODIFIED_SINCE']
+            mtime = stat.mtime
+            now = Time.now
+            if @request.env['HTTP_IF_MODIFIED_SINCE'] && !@request.cache_control[:no_cache]
                 if_modified = nil
                 begin
                   if_modified = Time.httpdate(@request.env['HTTP_IF_MODIFIED_SINCE'])
                 rescue ArgumentError # Passenger with IE6 has this header wrong
                   if_modified = 0
                 end
-                if stat.mtime <= if_modified
+                max_age = nil
+                fresh = true
+                if fresh && mtime <= if_modified
                     debug("Not modified since #{if_modified}: #{full_path}")
+                    #@response.status = Spider::HTTP::NOT_MODIFIED
+                    @response.headers.delete("Content-Type")
+                    @response.headers['Date'] = mtime.httpdate
+                    @response.no_cookies
                     raise HTTPStatus.new(Spider::HTTP::NOT_MODIFIED) 
                     return
                 end
@@ -96,7 +104,7 @@ module Spider; module ControllerMixins
             end
             @response.headers['Content-Type'] = ct
             @response.headers['Content-Length'] = stat.size
-            @response.headers['Last-Modified'] = stat.mtime.httpdate
+            @response.headers['Last-Modified'] = mtime.httpdate
             
             if mode == 'x-sendfile'
                 @response.headers['X-Sendfile'] = full_path
