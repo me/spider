@@ -1,0 +1,11 @@
+<div>
+    <h3>Servants</h3>
+    <div class="actions">
+        <a href="{ Master.url }/servants/new">_(New servant)</a>
+    </div>
+    <ul>
+        <li sp:each="@servants |servant|">
+            <a href="{ Master.url }/servants/{ servant.id }">{ servant.name }</a>
+        </li>
+    </ul>
+</div>

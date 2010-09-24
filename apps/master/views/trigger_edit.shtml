@@ -1,0 +1,100 @@
+<div class="trigger-edit">
+    <div class="page-title title-block">
+        <h2 sp:if="@trigger.id">_(Edit Trigger %s) % @trigger.label</h2>
+        <h2 sp:if="!@trigger.id">_(New Trigger for plugin %s) % @instance.name</h2>
+    </div>
+    <form method="post" class="spider forms form">
+        <div class="row" sp:if="@servant.customer">
+            <label>_(Customer):</label>
+            <span class="data">{ @servant.customer.name }</span>
+        </div>
+        <div class="row">
+            <label>_(Servant):</label>
+            <span class="data">{ @servant.name }</span>
+        </div>
+         <div class="row">
+            <label>_(Plugin):</label>
+            <span class="data">{ @trigger.plugin_instance.name }</span>
+        </div>
+         <div class="row" sp:if="@trigger.data">
+            <label>_(Data series):</label>
+            <span class="data">{ @trigger.label }</span>
+        </div>
+        <div class="row" sp:if="!@trigger.data">
+            <label for="data_series">_(Data series):</label>
+            <select id="data_series" name="data_series">
+                <option sp:each="@plugin.metadata |id, s|" value="{ id }">{ s["label"] }</option>
+            </select>
+        </div>
+        <div class="row" sp:if="!@trigger.trigger_type">
+            <label for="trigger_type">_(Trigger type):</label>
+            <select id="trigger_type" name="trigger_type">
+                <option value="peak">_(peak)</option>
+                <option value="plateau">_(plateau)</option>
+                <option value="trend">_(trend)</option>
+            </select>
+        </div>
+        <input type="hidden" sp:if="@trigger.trigger_type && !@trigger.id" name="trigger_type" value="{ @trigger.trigger_type.id }" />
+        <input type="hidden" sp:if="@trigger.data && !@trigger.id" name="data" value="{ @trigger.data }" />
+        <tpl:pass sp:if="@trigger.trigger_type">
+            <tpl:pass sp:if="@trigger.trigger_type.id == 'peak'">
+                <div class="row">
+                    <label for="max_value">_(Max Value):</label>
+                    <input type="text" id="max_value" name="max_value" size="4" value="{ @trigger.max_value }">
+                </div>
+            </tpl:pass>
+            <tpl:pass sp:if="@trigger.trigger_type.id == 'plateau'">
+                <div class="row">
+                    <label for="duration">_(Duration):</label>
+                    <input type="text" id="duration" name="duration" size="4" value="{ @trigger.duration }"> _(minutes)
+                </div>
+                <div class="row">
+                    <label for="max_value">_(Max Value):</label>
+                    <input type="text" id="max_value" name="max_value" size="4" value="{ @trigger.max_value }">
+                </div>
+            </tpl:pass>
+            <tpl:pass sp:if="@trigger.trigger_type.id == 'trend'">
+                <div class="row">
+                    <label>_(Trigger):</label>
+                    <div class="box">
+                        <div class="box-row">
+                            _(Alert me to changes going)
+                            <select id="direction" name="direction">
+                                <option value="up" sp:attr-if="(@trigger['direction.id'] == 'up'),selected">_(up)</option>
+                                <option value="down" sp:attr-if="(@trigger['direction.id'] == 'down'),selected">_(down)</option>
+                                <option value="either" sp:attr-if="(@trigger['direction.id'] == 'either'),selected">_(up or down)</option>
+                            </select>
+                        </div>
+                        <div class="box-row">
+                            _(during the span of)
+                            <input type="text" id="duration" name="duration" size="4" value="{ @trigger.duration }">
+                        </div>
+                        <div class="box-row">
+                            _(relative to)
+                             <select id="window_reference" name="window_reference">
+                                <option value="last_day" sp:attr-if="(@trigger['window_reference.id'] == 'last_day'),selected">
+                                    _(yesterday's average)
+                                </option>
+                                <option value="last_week" sp:attr-if="(@trigger['window_reference.id'] == 'last_week'),selected">
+                                    _(previous 7-day average)
+                                </option>
+                                <option value="preceding_window" sp:attr-if="(@trigger['window_reference.id'] == 'preceding_window'),selected">
+                                    _(preceding window)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <label for="percentage_change">_(when change is at least):</label>
+                    <input type="text" id="percentage_change" name="percentage_change" size="4" value="{ @trigger.percentage_change }">%
+                </div>
+                <div class="row">
+                    <label for="min_value">_(Minimum Value):</label>
+                    <input type="text" id="min_value" name="min_value" size="4" value="{ @trigger.min_value }">%
+                </div>
+            </tpl:pass>
+        </tpl:pass>
+        <input type="submit" name="submit" value="_(Submit)">
+    </form>
+</div>

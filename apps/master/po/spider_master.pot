@@ -1,0 +1,323 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Spider::Master \n"
+"POT-Creation-Date: 2010-09-24 20:25+0200\n"
+"PO-Revision-Date: 2010-09-24 20:25+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: controllers/master_controller.rb:48 views/customers.shtml:3 views/index.shtml:2
+#: views/master.layout.shtml:18
+msgid "Customers"
+msgstr ""
+
+#: controllers/master_controller.rb:79
+msgid "No customer"
+msgstr ""
+
+#: controllers/master_controller.rb:81
+msgid "User can't access this customer"
+msgstr ""
+
+#: controllers/master_controller.rb:100
+msgid "User can't list customers"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:6
+msgid "Peak trigger"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:7
+msgid "Plateau trigger"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:8
+msgid "Trend trigger"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:13
+msgid "Up"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:14
+msgid "Down"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:15
+msgid "Either"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:20 views/trigger_edit.shtml:76
+msgid "yesterday's average"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:21 views/trigger_edit.shtml:79
+msgid "previous 7-day average"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:22 views/trigger_edit.shtml:82
+msgid "preceding window"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:25
+msgid "normal"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:26
+msgid "fired"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:90 models/scout_plugin_trigger.rb:98
+msgid "%d minutes"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:108
+msgid "Alert me when %s exceeds %s"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:110
+msgid "Alert me when %s goes %s more than %s over the preceding %s (relative to %s), \n                as long as the value is at least %s"
+msgstr ""
+
+#: models/scout_plugin_trigger.rb:116
+msgid "Alert me when %s stays above %s for %s or more"
+msgstr ""
+
+#: views/admin.layout.shtml:5
+msgid "\"Administration\""
+msgstr ""
+
+#: views/customer.shtml:6
+msgid "New customer"
+msgstr ""
+
+#: views/customer.shtml:8 views/servant.shtml:6
+msgid "Edit"
+msgstr ""
+
+#: views/customer.shtml:21 views/index.shtml:3 views/master.layout.shtml:19
+msgid "Servants"
+msgstr ""
+
+#: views/customer.shtml:21 views/customer.shtml:32 views/customers.shtml:3
+#: views/plugin_instance.shtml:20
+msgid "Add"
+msgstr ""
+
+#: views/customer.shtml:32
+msgid "Installations"
+msgstr ""
+
+#: views/installation.shtml:3
+msgid "Back to customer"
+msgstr ""
+
+#: views/installation.shtml:6
+msgid "New installation for %s"
+msgstr ""
+
+#: views/installation.shtml:9 views/plugin_edit.shtml:7
+msgid "Name"
+msgstr ""
+
+#: views/installation.shtml:16
+msgid "Installation \"%s\" for %s"
+msgstr ""
+
+#: views/installation.shtml:18
+msgid "Edit installation"
+msgstr ""
+
+#: views/installation.shtml:20
+msgid "Apps"
+msgstr ""
+
+#: views/installation.shtml:28
+msgid "Save"
+msgstr ""
+
+#: views/installation.shtml:32
+msgid "Targets"
+msgstr ""
+
+#: views/master.layout.shtml:17
+msgid "Home"
+msgstr ""
+
+#: views/plugin_edit.shtml:2
+msgid "Edit Plugin Settings"
+msgstr ""
+
+#: views/plugin_edit.shtml:2
+msgid "plugin %s for %s"
+msgstr ""
+
+#: views/plugin_edit.shtml:3
+msgid "Back to plugin details"
+msgstr ""
+
+#: views/plugin_edit.shtml:21
+msgid "Interval"
+msgstr ""
+
+#: views/plugin_edit.shtml:25
+msgid "Timeout"
+msgstr ""
+
+#: views/plugin_edit.shtml:29
+msgid "Update"
+msgstr ""
+
+#: views/plugin_instance.shtml:4
+msgid "Edit settings"
+msgstr ""
+
+#: views/plugin_instance.shtml:8 views/trigger_edit.shtml:12
+msgid "Servant"
+msgstr ""
+
+#: views/plugin_instance.shtml:12 views/servant.shtml:14 views/trigger_edit.shtml:8
+msgid "Customer"
+msgstr ""
+
+#: views/plugin_instance.shtml:20
+msgid "Triggers"
+msgstr ""
+
+#: views/plugin_instance.shtml:25
+msgid "edit"
+msgstr ""
+
+#: views/servant.shtml:23 views/servants.shtml:4
+msgid "New servant"
+msgstr ""
+
+#: views/servant.shtml:23
+msgid "for customer %s"
+msgstr ""
+
+#: views/servant.shtml:31
+msgid "Plugins"
+msgstr ""
+
+#: views/servant.shtml:34
+msgid "Add plugin"
+msgstr ""
+
+#: views/servant.shtml:49
+msgid "Remove"
+msgstr ""
+
+#: views/servant.shtml:57
+msgid "Servant %s"
+msgstr ""
+
+#: views/servant.shtml:60
+msgid "Last check"
+msgstr ""
+
+#: views/servant.shtml:65
+msgid "Manage resources"
+msgstr ""
+
+#: views/servant.shtml:68
+msgid "Resources"
+msgstr ""
+
+#: views/servant.shtml:81
+msgid "System details"
+msgstr ""
+
+#: views/trigger_edit.shtml:3
+msgid "Edit Trigger %s"
+msgstr ""
+
+#: views/trigger_edit.shtml:4
+msgid "New Trigger for plugin %s"
+msgstr ""
+
+#: views/trigger_edit.shtml:16
+msgid "Plugin"
+msgstr ""
+
+#: views/trigger_edit.shtml:20 views/trigger_edit.shtml:24
+msgid "Data series"
+msgstr ""
+
+#: views/trigger_edit.shtml:30
+msgid "Trigger type"
+msgstr ""
+
+#: views/trigger_edit.shtml:32
+msgid "peak"
+msgstr ""
+
+#: views/trigger_edit.shtml:33
+msgid "plateau"
+msgstr ""
+
+#: views/trigger_edit.shtml:34
+msgid "trend"
+msgstr ""
+
+#: views/trigger_edit.shtml:42 views/trigger_edit.shtml:52
+msgid "Max Value"
+msgstr ""
+
+#: views/trigger_edit.shtml:48
+msgid "Duration"
+msgstr ""
+
+#: views/trigger_edit.shtml:49
+msgid "minutes"
+msgstr ""
+
+#: views/trigger_edit.shtml:58
+msgid "Trigger"
+msgstr ""
+
+#: views/trigger_edit.shtml:61
+msgid "Alert me to changes going"
+msgstr ""
+
+#: views/trigger_edit.shtml:63
+msgid "up"
+msgstr ""
+
+#: views/trigger_edit.shtml:64
+msgid "down"
+msgstr ""
+
+#: views/trigger_edit.shtml:65
+msgid "up or down"
+msgstr ""
+
+#: views/trigger_edit.shtml:69
+msgid "during the span of"
+msgstr ""
+
+#: views/trigger_edit.shtml:73
+msgid "relative to"
+msgstr ""
+
+#: views/trigger_edit.shtml:89
+msgid "when change is at least"
+msgstr ""
+
+#: views/trigger_edit.shtml:93
+msgid "Minimum Value"
+msgstr ""
+
+#: views/trigger_edit.shtml:98
+msgid "Submit"
+msgstr ""

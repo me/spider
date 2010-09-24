@@ -1,0 +1,4 @@
+<div>
+    <a href="{ Master.url }/customers">_(Customers)</a>
+    <a href="{ Master.url }/servants">_(Servants)</a>
+</div>

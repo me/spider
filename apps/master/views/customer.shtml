@@ -1,0 +1,43 @@
+<div>
+    <div class="page-title title-block">
+        <tpl:pass sp:if="@customer">
+            <h2>{ @customer.name }</h2>
+        </tpl:pass>
+        <h2 sp:if="!@customer">_(New customer)</h2>
+        <tpl:pass sp:if="!@edit">
+            <a href="?edit" class="manage edit">_(Edit)</a>
+        </tpl:pass>
+    </div>
+    <table class="info-block main">
+        <tr>
+            <td class="label">Uuuid:</td><td class="data">{ @customer.uuid }</td>
+        </tr>
+    </table>
+    <tpl:pass sp:if="@edit">
+        <forms:form id="customer_form" model="Spider::Master::Customer" pk="@pk" auto_redirect="true"/>
+    </tpl:pass>
+    <tpl:pass sp:if="@customer && !@edit">
+        <div class="list-title title-block">
+            <h3>_(Servants):</h3><a sp:if="@user.can_manage_customers?" href="{ @customer.id }/servants/new" class="add manage">_(Add)</a>
+        </div>
+        <table class="list-table">
+            <tr sp:each="@customer.servants |servant|">
+                <td>
+                    <a href="{ customer.id }/servants/{ servant.id }">{ servant.name }</a>
+                </td>
+            </tr>
+        </table>
+        <tpl:pass sp:if="false">
+            <div class="list-title title-block">
+                <h3>_(Installations):</h3><a href="{ @customer.id }/installations/new" class="add manage">_(Add)</a>
+            </div>
+            <table class="list-table">
+                <tr sp:each="@customer.installs |installation|">
+                    <td>
+                        <a href="{ @customer.id }/installations/{ installation.id }">{ installation.name }</a>
+                    </td>
+                </tr>
+            </table>
+        </tpl:pass>
+    </tpl:pass>
+</div>

@@ -1,0 +1,36 @@
+<div>
+    <div class="actions">
+        <a href="{ Master.url }/customers/{ @customer.id }">_(Back to customer)</a>
+    </div>
+    <div sp:if="!@installation">
+        <h3>_(New installation for %s) % @customer.name</h3>
+        <form action="" method="POST">
+            <div class="row">
+                <label for="installation_name">_(Name):</label>
+                <input type="text" name="installation_name" id="installation_name">
+                <input type="submit" name="installation_create" value="Ok">
+            </div>
+        </form>
+    </div>
+    <div sp:if="@installation">
+        <h3 sp:if="@installation">_(Installation "%s" for %s) % [@installation.name, @customer.name] </h3>
+        <core:tabs id="install_tabs">
+            <tab id="edit" label="_(Edit installation)">
+                <div class="apps">
+                    <h4>_(Apps)</h4>
+                    <form action="" method="POST">
+                        <ul>
+                            <li sp:each="@apps |app|">
+                                <input type="checkbox" name="apps[{ app.app_id }]" value="true" sp:attr-if="@install_apps.include?(app.app_id),checked">
+                                { app.name }
+                            </li>
+                        </ul>
+                        <input type="submit" name="save_apps" value="_(Save)">
+                    </form>
+                </div>
+            </tab>
+            <tab id="targets" label="_(Targets)">
+            </tab>
+        </core:tabs>
+    </div>
+</div>

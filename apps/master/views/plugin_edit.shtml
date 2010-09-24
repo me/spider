@@ -1,0 +1,32 @@
+<div>
+    <h3>_(Edit Plugin Settings): _(plugin %s for %s) % @instance.name,@servant.name</h3>
+    <a href=".">_(Back to plugin details)</a>
+    <div class="settings">
+        <form method="post">
+            <div class="row">
+                <label for="name">_(Name):</label>
+                <input type="text" name="name" id="name" value="{ @instance.name }">
+            </div>
+            <div class="row" sp:each="@plugin.options |option_id, option|">
+                <label for="option_{ option_id }">
+                    { option["name"] }
+                </label>
+                <input type="text" name="settings[{ option_id }]" value="{ @instance.settings[option_id] }">
+                <div class="notes" sp:if="option['notes']">
+                    { option["notes"] }
+                </div>
+            </div>
+            <div class="advanced-options">
+                <div class="row">
+                    <label for="poll_interval">_(Interval):</label>
+                    <input type="text" name="poll_interval" id="poll_interval" value="{ @instance.poll_interval }">
+                </div>
+                <div class="row">
+                    <label for="timeout">_(Timeout):</label>
+                    <input type="text" name="timeout" id="timeout" value="{ @instance.timeout }">
+                </div>
+            </div>
+            <input type="submit" name="submit" value="_(Update)">
+        </form>
+    </div>
+</div>

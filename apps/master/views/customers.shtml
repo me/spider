@@ -1,0 +1,12 @@
+<div>
+    <div class="list-title title-block">
+        <h3>_(Customers):</h3><a sp:if="@user.can_manage_customers?" href="{ Master.url }/customers/new" class="add manage">_(Add)</a>
+    </div>
+    <table class="list-table">
+        <tr sp:each="@customers |customer|">
+            <td>
+                <a href="{ Master.url }/customers/{ customer.id }">{ customer.name }</a>
+            </td>
+        </tr>
+    </table>
+</div>

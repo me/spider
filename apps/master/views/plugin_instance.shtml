@@ -1,0 +1,30 @@
+<div>
+    <div class="page-title title-block">
+        <h2>{ @instance.name }</h2>
+        <a href="{ @instance.id }/edit" class="manage edit">_(Edit settings)</a>
+    </div>
+    <div class="info-block main">
+        <div class="row">
+            <label>_(Servant):</label>
+            <a href="{ Master.url }/servants/{ @servant.id }">{ @servant.name }</a>
+        </div>
+        <div class="row" sp:if="@servant.customer">
+            <label>_(Customer):</label>
+            <a href="{ Master.url }/customers/{ @servant.customer.id }">
+                { @servant.customer }
+            </a>
+        </div>
+    </div>
+    <div class="triggers">
+        <div class="list-title title-block">
+            <h3>_(Triggers):</h3> <a href="{ @instance.id }/triggers/new" class="add manage">_(Add)</a>
+         </div>
+        <ul>
+            <li sp:each="@instance.triggers |trigger|">
+                { trigger.description_html }
+                <a href="{ @instance.id }/triggers/{ trigger.id }" class="manage edit">_(edit)</a>
+                <a href="?remove_trigger={ trigger.id }" class="manage remove">remove</a>
+            </li>
+        </ul>
+    </div>
+</div>

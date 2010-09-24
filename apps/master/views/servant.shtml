@@ -1,0 +1,87 @@
+<div>
+    <tpl:pass sp:if="@servant">
+        <div class="page-title title-block">
+            <h2>{ @servant.name }</h2>
+            <tpl:pass sp:if="!@edit">
+                <a href="?edit" class="manage edit">_(Edit)</a>
+            </tpl:pass>
+        </div>
+        <div class="info-block main">
+            <div class="row">
+                <label>Uuid:</label> { @servant.uuid }
+            </div>
+            <div class="row" sp:if="@servant.customer">
+                <label>_(Customer):</label>
+                <a href="{ Master.url }/customers/{ @servant.customer.id }">
+                    { @servant.customer }
+                </a>
+            </div>
+        </div>
+    </tpl:pass>
+    <div class="page-title title-block">
+        <h2 sp:if="!@servant">
+            _(New servant) <tpl:pass sp:if="@customer">_(for customer %s) % @customer.name</tpl:pass>
+        </h2>
+    </div>
+    <tpl:pass sp:if="@edit">
+        <forms:form id="servant_form" model="Spider::Master::Servant" pk="@pk" auto_redirect="true"/>
+    </tpl:pass>
+    <tpl:pass sp:if="!@edit">
+        <div class="list-title title-block">
+            <h3>_(Plugins):</h3>
+            <div class="add manage">
+                <span class="manage-label">
+                    _(Add plugin):
+                </span>
+                <form method="post">
+                    <select name="plugin">
+                        <option></option>
+                        <option sp:each="@available_plugins |plugin|" value="{ plugin.id }">{ plugin.name }</option>
+                    </select>
+                    <input type="submit" name="submit_add_plugin" value="Ok">
+                </form>
+            </div>
+        </div>
+        <table class="list-table">
+            <tr sp:each="@servant.scout_plugins |plugin|">
+                <td>
+                    <a href="{ Master.url }/servants/{ @servant.id }/plugins/{ plugin.id }">{ plugin.name }</a>
+                    <a href="{ @servant.id }?remove_plugin={ plugin.id }" class="manage remove">_(Remove)</a>
+                </td>
+            </tr>
+        </table>
+    </tpl:pass>
+    
+<!---
+    <tpl:pass sp:if="@servant">
+    <h3>_(Servant %s) % @servant.name </h3>
+    <h5>Uuuid: { @servant.uuid }</h5>
+    <div>
+        _(Last check): 
+        { @servant.last_check.lformat(:short) }
+    </div>
+
+    <div id="links">
+        <a href="resources">_(Manage resources)</a>
+    </div>
+    <div id="resources">
+        <h4>_(Resources)</h4>
+        <ul>
+            <li sp:each="@servant.resources_by_type |type, resources|">
+                { type }
+                <ul>
+                    <li sp:each="resources |name, resource|">
+                        { name }: { resource.description }
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <h4>_(System details)</h4>
+        <pre class="json">
+            { servant.system_status }
+        </pre>
+    </div>
+    -->
+</div>

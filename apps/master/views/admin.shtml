@@ -1,0 +1,5 @@
+<sp:template>
+    <core:admin id="admin">
+        <admin:app>Spider::Master</admin:app>
+    </core:admin>
+</sp:template>

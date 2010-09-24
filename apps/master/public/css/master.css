@@ -1,0 +1,210 @@
+/* @override http://localhost:8989/spider/master/public/css/master.css */
+
+
+#top{
+	height: 65px;
+	background: #4e4e4e url(img/web.png) no-repeat 30px;
+}
+
+#top-content, #main{
+	width: 960px;
+	margin-left: 40px;
+	margin-right: 40px;
+	margin: auto;
+}
+
+#top h1{
+	
+	
+}
+
+#top-nav, #navigation{
+	margin-left: 50px;
+	margin-right: 50px;
+}
+
+#content{
+	padding: 20px 80px;
+	
+}
+
+#top-nav{
+	overflow: hidden;
+}
+
+#top li{
+	float: left;
+	list-style-type: none;
+	margin: 5px 5px 5px 0;
+	padding: 5px 10px 0 5px;
+}
+
+#top li:hover{
+	background-color: #2e2e2e;
+}
+
+#top a{
+	color: #afafaf;
+	text-decoration: none;
+}
+
+#navigation{
+	font-size: .9em;
+}
+
+#navigation .arrow{
+	color: gray;
+	font-size: .9em;
+}
+
+.actions{
+	display: block;
+	background-color: #fdf9b2;
+	padding: 5px 20px;
+	overflow: hidden;
+	list-style-type: none;
+	margin-bottom: 10px;
+}
+
+.actions a{
+		color: #7e7e7e;
+
+}
+
+.actions li{
+	float: left;
+}
+
+.title-block{
+	overflow: hidden;
+}
+
+.title-block h2, .title-block h3{
+	float: left;
+}
+
+.title-block h3{
+	font-size: 1.1em;
+}
+
+.title-block h2{
+	font-size: 1.3em;
+}
+
+a.manage{
+	color: gray;
+	margin-left: 15px;
+}
+
+.title-block a.manage{
+	margin-left: 30px;
+	margin-top: 3px;
+	float: left;
+	text-decoration: none;
+	
+}
+
+.title-block div.manage{
+	float: left;
+}
+
+.title-block div.manage form, .title-block div.manage select, 
+.title-block div.manage input, .title-block span.manage-label{
+	float: left;
+	display: block;
+	margin-left: 10px;
+}
+
+.title-block span.manage-label{
+	color: gray;
+}
+
+.page-title{
+	margin-bottom: 10px;
+}
+
+.page-title a.manage{
+	margin-top: 5px;
+}
+
+
+.list-table{
+	margin: 20px 5px;
+	width: 100%;
+}
+
+.list-table a{
+	text-decoration: none;
+}
+
+.list-table td{
+	width: 1%;
+	padding: 5px;
+	border-bottom: 1px solid gray;
+}
+
+.info-block{
+	width: 100%;
+	margin: 5px 3px 20px 3px;
+	background-color: #e9ecdb;
+}
+
+.info-block .row{
+	overflow: hidden;
+}
+
+.info-block td{
+	padding: 2px 10px;
+}
+
+.info-block td.label{
+	width: 1%;
+}
+
+div.info-block{
+	padding: 5px;
+}
+
+div.info-block .row{
+	margin-bottom: 5px;
+}
+
+div.info-block label{
+	float: left;
+	width: 5em;
+	margin-right: 20px;
+}
+
+div.info-block a{
+	text-decoration: none;
+}
+
+.spider-master .spider.forms.form .fields{
+	margin: 0;
+}
+
+.spider-master .spider.forms.form .row.buttons{
+	text-align: left;
+}
+
+.spider-master .spider.forms.form .row{
+	margin-bottom: 6px;
+	padding-bottom: 5px;
+	border-bottom: 1px solid #c8c8c8;
+}
+
+.spider-master .spider.forms.form label{
+	width: 10em;
+}
+
+.spider-master .spider.forms.form .row.buttons{
+	border-bottom: 0;
+}
+
+.triggers ul{
+	margin-top: 15px;
+}
+
+.triggers ul li{
+	margin-top: 3px;
+}
