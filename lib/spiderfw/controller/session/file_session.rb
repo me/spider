@@ -38,7 +38,7 @@ module Spider
                     begin
                         data = Marshal.restore(f.read)
                     rescue => exc
-                        Spider::Logger.error("Corrupt session")
+                        Spider::Logger.error("Corrupt session: #{exc.message}")
                         data = {}
                     end
                     mtime = f.mtime

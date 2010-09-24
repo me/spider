@@ -75,7 +75,7 @@ module Spider; module Auth
                 base = request_path+'/'+base unless base[0].chr == '/'
                 base += '?'
                 redir_url = base + 'redirect='+URI.escape(@request.path)
-                @request.session.flash[:unauthorized_exception] = exc
+                @request.session.flash[:unauthorized_exception] = {:class => exc.class.name, :message => exc.message}
                 redirect(redir_url, Spider::HTTP::TEMPORARY_REDIRECT)
             else
                 super
