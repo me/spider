@@ -427,8 +427,9 @@ module Spider; module Model
                     else
                         val = element.attributes[:default]
                     end
+                    val = element.model.new(val) if element.model? && !val.is_a?(BaseModel)
                 end
-                val.set_parent(self, name) if element.model? && val && !val._parent # FIXME!!!
+                val.set_parent(self, name) if element.model? && val && val.respond_to?(:parent) && !val._parent # FIXME!!!
                 return val
             end
 
