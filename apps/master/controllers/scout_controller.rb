@@ -38,12 +38,14 @@ module Spider; module Master
             res = Zlib::GzipReader.new(@request.body).read
             res = JSON.parse(res)
             statuses = {}
+            reports = {}
             res["reports"].each do |rep|
                 statuses[rep["plugin_id"]] = :ok
-                report = ScoutReport.create(
+                reports[rep["plugin_id"]] ||= ScoutReport.create(
                     :plugin_instance => rep["plugin_id"], 
                     :created_at => DateTime.parse(rep["created_at"])
                 )
+                report = reports[rep["plugin_id"]]
                 rep["fields"].each do |name, val|
                     field = ScoutReportField.create(:name => name, :value => val, :report => report)
                 end
@@ -58,6 +60,9 @@ module Spider; module Master
                 last.limit = 1
                 statuses[err["plugin_id"]] = :error
                 next if last[0] && last[0].subject == subject && last[0].body == body
+                subject = err["fields"]["subject"]
+                instance = ScoutPluginInstance.new(err["plugin_id"])
+                subject = "#{instance.servant} - #{subject}"
                 error = ScoutError.create(
                     :plugin_instance => err["plugin_id"],
                     :subject => err["fields"]["subject"],
