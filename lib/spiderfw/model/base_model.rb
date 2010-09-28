@@ -1470,7 +1470,7 @@ module Spider; module Model
         end
         
         # Sets a value without calling the associated setter; used by the mapper.
-        def set_loaded_value(element, value)
+        def set_loaded_value(element, value, mark_loaded=true)
             element_name = element.is_a?(Element) ? element.name : element
             element = self.class.elements[element_name]
             if (element.integrated?)
@@ -1483,7 +1483,7 @@ module Spider; module Model
                 instance_variable_set("@#{element_name}", value)
             end
             value.loaded = true if (value.is_a?(QuerySet))
-            element_loaded(element_name)
+            element_loaded(element_name) if mark_loaded
             set_reverse(element, value) if element.model?
             @modified_elements[element_name] = false
         end
@@ -1777,7 +1777,7 @@ module Spider; module Model
             }.each do |el|
                 next if only && !only.key?(el.name)
                 val = obj.get_no_load(el)
-                set_loaded_value(el, val)
+                set_loaded_value(el, val, false)
             end
         end
         
