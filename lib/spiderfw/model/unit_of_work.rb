@@ -51,11 +51,12 @@ module Spider; module Model
                         next unless obj.modified?
                     end
                     task = Spider::Model::MapperTask.new(obj, action, params)
-                    @tasks[task] ||= task
+                    @tasks[task] = task
                     find_dependencies(task)
                 end
             end
             tasks = tsort()
+            
             Spider.logger.debug("Tasks:")
             tasks.each do |task| 
                 Spider.logger.debug "-- #{task.action} on #{task.object.class} #{task.object.primary_keys}"
@@ -96,7 +97,7 @@ module Spider; module Model
             end
             curr = @actions[obj.object_id]
             if curr && (curr_act = curr.select{ |c| c[0] == action }).length > 0
-                curr_act[1] = params
+                curr_act.each{ |c| c[1] = params}
                 return
             end
             if action == :delete # FIXME: abstract
