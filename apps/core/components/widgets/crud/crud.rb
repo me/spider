@@ -111,7 +111,10 @@ module Spider; module Components
         end
         
         def delete_rows
-            @model.mapper.delete({ @model.primary_keys[0].name => params['selected'].keys})
+            params['selected'].keys.each do |key|
+                obj = @model.get(@model.primary_keys[0].name => key)
+                obj.delete
+            end
         end
         
     end
