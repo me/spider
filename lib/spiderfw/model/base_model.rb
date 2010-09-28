@@ -1185,6 +1185,13 @@ module Spider; module Model
         
         def self.get(values)
             return self.new(values) unless Spider::Model.identity_mapper
+            if values.is_a?(Array)
+                vals = {}
+                self.primary_keys.each_with_index do |k, i|
+                    vals[k.name] = values[i]
+                end
+                values = vals
+            end
             curr = Spider::Model.identity_mapper.get(self, values)
             return curr if curr
             obj = self.new(values)
