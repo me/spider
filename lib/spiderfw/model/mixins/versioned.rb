@@ -153,7 +153,8 @@ module Spider; module Model
                           @version_elements[el.name] = el.name
                       end
                   end
-              end              
+              end
+              vmod.elements_array.each{ |el| el.attributes[:unique] = false if el.attributes[:unique] }              
            end
            
            def version_element(el=nil)
