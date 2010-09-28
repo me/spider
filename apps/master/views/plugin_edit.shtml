@@ -34,7 +34,7 @@
                     <label for="timeout">_(Timeout):</label>
                     <input type="text" name="timeout" id="timeout" value="{ @instance.timeout }">
                 </div>
-            </div>
+            </fieldset>
             <input type="submit" name="submit" value="_(Update)">
         </form>
     </div>

@@ -10,7 +10,6 @@ module Spider; module Master
            
            def before_save(obj, mode)
                return super unless mode == :insert && obj.plugin_instance
-               debugger
                obj.plugin_instance.report_admins.each do |adm|
                    next unless adm.email
                    Spider::Messenger.email(
@@ -19,6 +18,7 @@ module Spider; module Master
                         }, obj.body
                    )
                end
+               super
 
            end
            

@@ -14,6 +14,11 @@ module Spider; module Master
         __.json
         def plan
             last_modified = (@servant.scout_plan_changed || @servant.obj_modified).to_local_time
+            @servant.scout_plugins.each do |instance|
+                stat = File.lstat(instance.plugin.rb_path)
+                mtime = stat.mtime
+                last_modified = mtime if mtime > last_modified
+            end 
             if @request.env['HTTP_IF_MODIFIED_SINCE']
                 if_modified = nil
                 begin
@@ -32,8 +37,9 @@ module Spider; module Master
         def checkin
             res = Zlib::GzipReader.new(@request.body).read
             res = JSON.parse(res)
-            debugger
+            statuses = {}
             res["reports"].each do |rep|
+                statuses[rep["plugin_id"]] = :ok
                 report = ScoutReport.create(
                     :plugin_instance => rep["plugin_id"], 
                     :created_at => DateTime.parse(rep["created_at"])
@@ -42,13 +48,28 @@ module Spider; module Master
                     field = ScoutReportField.create(:name => name, :value => val, :report => report)
                 end
             end
+            res["alerts"].each do |alert|
+                statuses[alert["plugin_id"]] = :alert
+            end
             res["errors"].each do |err|
+                subject = err["fields"]["subject"]
+                body = err["fields"]["body"]
+                last = ScoutError.where(:plugin_instance => err["plugin_id"]).order_by(:obj_created, :desc)
+                last.limit = 1
+                statuses[err["plugin_id"]] = :error
+                next if last[0] && last[0].subject == subject && last[0].body == body
                 error = ScoutError.create(
                     :plugin_instance => err["plugin_id"],
                     :subject => err["fields"]["subject"],
                     :body => err["fields"]["body"]
                 )
             end
+            statuses.each do |id, val|
+                i = ScoutPluginInstance.new(id)
+                i.status = val
+                i.save
+            end
+
         end
         
     end

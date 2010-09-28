@@ -37,11 +37,17 @@ module Spider; module Master
             @plugin_class = Object.const_get(@class_name)
         end
         
+        def rb_path
+            find unless @path
+            @rb_path
+        end
+        
         def options
             return @options if @options
             load
-            return {} unless @plugin_class.const_defined?("OPTIONS")
-            @options = YAML.load(@plugin_class.const_get("OPTIONS"))
+            @options = YAML.load(@plugin_class.const_get("OPTIONS")) if @plugin_class.const_defined?("OPTIONS")
+            @options ||= {}
+            @options.merge!(self.yaml_data["options"]) if self.yaml_data["options"]
             @options.each do |id, opt|
                 opt["name"] ||= id
             end

@@ -57,7 +57,7 @@ module Spider; module Master
         def format_value(val, units, precision)
             str = "#{val.lformat(precision)}"
             str += " " unless units == "%"
-            str += units
+            str += units if units
         end
         
         def report_admins
@@ -128,6 +128,7 @@ module Spider; module Master
                         )
                     end
                 end
+                super
             end
         end
         

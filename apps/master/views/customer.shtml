@@ -8,7 +8,7 @@
             <a href="?edit" class="manage edit">_(Edit)</a>
         </tpl:pass>
     </div>
-    <table class="info-block main">
+    <table class="info-block main" sp:if="@customer">
         <tr>
             <td class="label">Uuuid:</td><td class="data">{ @customer.uuid }</td>
         </tr>

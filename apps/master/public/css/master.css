@@ -236,3 +236,15 @@ div.info-block a{
   margin-bottom: 10px;
 }
 
+.status{
+    float: left;
+    margin: 0 15px;
+}
+
+.status.ok{
+    color: green;
+}
+
+.status.error{
+    color: red;
+}

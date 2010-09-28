@@ -22,6 +22,7 @@ module Spider; module Master
                         obj.admins << adm
                     end
                 end
+                super
             end
             
         end

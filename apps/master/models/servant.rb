@@ -8,6 +8,7 @@ module Spider; module Master
         element :name, String
         element :last_check, DateTime, :read_only => true
         element :system_status, Text, :read_only => true
+        element :scout_poll_interval, Fixnum, :default => 5
         # element :url, String
         many :commands, Master::Command, :add_reverse => :servant
         element_query :pending_commands, :commands, :condition => Spider::Model::Condition.new{ |c| c.status == 'pending' }
@@ -60,16 +61,14 @@ module Spider; module Master
             end
             plan["directives"] = { # FIXME
                 "take_snapshots" => true,
-                "interval" => 1
+                "interval" => self.scout_poll_interval 
             }
             plan
         end
         
         
         def report_admins
-            return [] unless self.customer
-            no_admins = self.dont_report_to.map{ |adm| adm.id }
-            admins = self.customer.admins.map{ |adm| adm.admin }.reject{ |adm| no_admins.include?(adm.id) }
+            self.admins.reject{ |adm| !adm.receive_notifications }.map{ |adm| adm.admin }
         end
         
         with_mapper do
@@ -78,7 +77,7 @@ module Spider; module Master
                  if mode == :insert
                      if obj.customer
                          obj.customer.admins.each do |customer_adm|
-                             obj.admins << Customer::Admins.new(
+                             obj.admins << Servant::Admins.new(
                                 :admin => customer_adm.admin,
                                 :receive_notifications => customer_adm.receive_notifications,
                                 :manage_plugins => customer_adm.manage_plugins
@@ -91,6 +90,7 @@ module Spider; module Master
                          end
                      end
                  end
+                 super
              end
 
          end

@@ -1,9 +1,30 @@
 <div>
     <div class="page-title title-block">
         <h2>{ @instance.name }</h2>
+        <div class="status { @instance['status.id'] }">{ @instance.status }</div>
         <a href="{ @instance.id }/edit" class="manage edit">_(Edit settings)</a>
     </div>
+    <div class="plugin error" sp:if="@instance.status.id.to_sym == :error">
+        { @instance.last_error.obj_created.lformat } Error: { @instance.last_error.subject }
+        <div class="message">
+            { (@instance.last_error.body) }
+        </div>
+    </div>
+
+    <table id="plugin-values">
+        <tr sp:each="@instance.plugin.metadata |key, details|">
+            <td>
+                { key }
+            </td>
+            <td>{ @instance.last_reported(key) }</td>
+        </tr> 
+    </table>
+
     <div class="info-block main">
+        <div class="row">
+            <label>_(Last check):</label>
+            { @instance.obj_modified.lformat }
+        </div>
         <div class="row">
             <label>_(Servant):</label>
             <a href="{ Master.url }/servants/{ @servant.id }">{ @servant.name }</a>

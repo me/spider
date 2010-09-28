@@ -15,6 +15,11 @@ module Spider; module Master
             element :receive_notifications, Bool, :default => true
             element :manage, Bool, :default => true
         end
+        choice :status, {
+            :ok => _('Ok'),
+            :error => _('Error'),
+            :alert => _('Alert')
+        }, :default => :ok
         
         
         def plugin
@@ -43,8 +48,20 @@ module Spider; module Master
         end
         
         def report_admins
-            no_admins = self.dont_report_to.map{ |adm| adm.id }
-            admins = self.servant.report_admins.reject{ |adm| no_admins.include?(adm.id) }
+            admins = self.admins.reject{ |adm| !adm.receive_notifications }.map{ |adm| adm.admin }
+        end
+
+        def last_error
+            last = ScoutError.where(:plugin_instance => self).order_by(:obj_created, :desc)
+            last.limit = 1
+            last[0]
+        end
+        
+        def last_reported(key=nil)
+            last = ScoutReport.where(:plugin_instance => self).order_by(:obj_created, :desc)
+            last.limit = 1
+            return last[0].value(key) if key && last[0]
+            return last[0]
         end
         
         def to_s
@@ -63,6 +80,7 @@ module Spider; module Master
                         )
                     end
                 end
+                super
             end
             
             def after_save(obj, mode)
@@ -73,6 +91,7 @@ module Spider; module Master
                         trigger.save
                     end
                 end
+                super
             end
             
         end
