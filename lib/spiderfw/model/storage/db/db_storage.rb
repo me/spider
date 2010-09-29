@@ -88,11 +88,15 @@ module Spider; module Model; module Storage; module Db
         end
         
         def query_start
-            @query_start = Time.now
+            curr[:query_start] = Time.now
         end
         
         def query_finished
-            Spider.logger.info("Db query (#{@instance_name}) done in #{(Time.now - @query_start)*1000}ms")
+            now = Time.now
+            diff = now - curr[:query_start]
+            diff = 0 if diff < 0 # ??? 
+            diff = diff*1000
+            Spider.logger.info("Db query (#{@instance_name}) done in #{diff}ms")
         end
         
         def curr
