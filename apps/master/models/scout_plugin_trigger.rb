@@ -85,10 +85,10 @@ module Spider; module Master
             when :trend
                 values = {
                     :data_name => data_name,
-                    :direction => self.direction.to_s,
+                    :direction => _(self.direction.to_s),
                     :percentage_change => "#{self.percentage_change.lformat(1)}%",
                     :duration => _("%d minutes") % self.duration,
-                    :window => self.window_reference.to_s,
+                    :window => _(self.window_reference.to_s),
                     :min_value => format_value(self.min_value, md["units"], md["precision"].to_i)
                     
                 }
