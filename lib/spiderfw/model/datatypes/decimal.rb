@@ -26,6 +26,10 @@ module Spider; module DataTypes
             super(s)
         end
         
+        def as_json
+            to_f
+        end
+        
 
 
     end
