@@ -2438,8 +2438,10 @@ module Spider; module Model
             h
         end
         
-        def self.transaction
+        def self.in_transaction
+            self.storage.in_transaction
             yield
+            self.storage.commit_or_continue
         end
         
         def self.dump_element(el)
