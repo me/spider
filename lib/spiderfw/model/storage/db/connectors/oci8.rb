@@ -95,6 +95,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
                     debug("oci8 #{connection} executing:\n#{sql}\n[#{debug_vars_str}]")
                 end
+                query_start
                 cursor = connection.parse(sql)
                 return cursor if (!cursor || cursor.is_a?(Fixnum))
                 bind_vars.each_index do |i|
@@ -145,6 +146,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
                     raise exc
                 end
             ensure
+                query_finished
                 cursor.close if cursor
                 release if curr[:conn] && !in_transaction?
             end

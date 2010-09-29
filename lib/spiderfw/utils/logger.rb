@@ -18,6 +18,7 @@ module Spider
             def open(dest, level= :WARN)
                 @loggers ||= {}
                 logger = ::Logger.new(dest, Spider.conf.get('log.rotate.age'), Spider.conf.get('log.rotate.size'))
+                logger.formatter = Spider::Logger::Formatter.new
                 logger.level = ::Logger.const_get(level)
                 @loggers[dest] = logger
             end
@@ -44,9 +45,6 @@ module Spider
             def send_to_loggers(action, *args, &proc)
                 return if $SAFE > 1
                 return unless @loggers
-                if args[0].is_a?(String)
-                    args[0] = "T#{Thread.current.object_id} #{args[0]}"
-                end
                 @loggers.each do |dest, logger| 
                     begin
                         logger.send(action, *args, &proc) 
@@ -163,6 +161,16 @@ module Spider
             Spider::Logger.fatal?
         end
         
+        
+        class Formatter < ::Logger::Formatter
+            Format = "%s, [%s#%d:%d] %5s -- %s: %s\n"
+            
+            def call(severity, time, progname, msg)
+                Format % [severity[0..0], format_datetime(time), $$, Thread.current.object_id, severity, progname,
+                msg2str(msg)]
+            end
+            
+        end
         
     end
     

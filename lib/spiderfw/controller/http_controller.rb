@@ -70,6 +70,7 @@ module Spider
                 @request.format = $2.to_sym
             end
 #            Spider.reload_sources if Spider.conf.get('webserver.reload_sources')
+            Spider.logger.info("Request: #{@request.http_method} #{@request.http_host} #{@request.path}")
             super(action, *arguments)
         end
         
@@ -77,6 +78,16 @@ module Spider
             # FIXME: cache stripped action?
             action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
             super(action, *arguments)
+            str = "Done: #{@response.status} #{Spider::HTTP.status_messages[@response.status]}"
+            str += " (static)" if @request.misc[:is_static]
+            str += " in #{(Time.now - Spider::Request.current[:_start])*1000}ms"
+            if @request.respond_to?(:user) && @request.user
+                str += " for user #{@request.user.class}(#{@request.user.primary_keys})"
+            end
+            if Spider.conf.get('log.memory')
+                str += " - Memory usage: #{Spider::Memory.get_memory_usage}"
+            end
+            Spider.logger.info(str)
             #@response.headers['Date'] ||= Time.now.httpdate
         end
         

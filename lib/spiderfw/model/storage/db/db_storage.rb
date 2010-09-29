@@ -87,6 +87,14 @@ module Spider; module Model; module Storage; module Db
             
         end
         
+        def query_start
+            @query_start = Time.now
+        end
+        
+        def query_finished
+            Spider.logger.info("Db query (#{@instance_name}) done in #{(Time.now - @query_start)*1000}ms")
+        end
+        
         def curr
             Thread.current[:db_storages] ||= {}
             Thread.current[:db_storages][@connection_params] ||= {

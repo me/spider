@@ -168,6 +168,7 @@ module Spider; module Model; module Storage; module Db
                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
                     debug("mysql executing:\n#{sql}\n[#{debug_vars_str}]")
                 end
+                query_start
                 stmt = connection.prepare(sql)
                 curr[:stmt] = stmt
                 res = stmt.execute(*bind_vars)
@@ -208,6 +209,7 @@ module Spider; module Model; module Storage; module Db
                     raise exc
                 end
             ensure
+                query_finished
                 release if curr[:conn] && !in_transaction?
             end
          end

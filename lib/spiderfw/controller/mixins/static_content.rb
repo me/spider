@@ -69,6 +69,7 @@ module Spider; module ControllerMixins
         end
         
         def output_static(full_path)
+            @request.misc[:is_static] = true
             debug("Serving asset: #{full_path}")
             mode = Spider.conf.get('static_content.mode')
             raise Spider::Controller::NotFound.new(full_path) unless File.exist?(full_path)

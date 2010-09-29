@@ -99,6 +99,7 @@ module Spider
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
     config_option 'log.rotate.age', _("Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"), :default => 'daily'
     config_option 'log.rotate.size', _("Maximum logfile size (only applies when log.rotate.age is a number)"), :default => 1048576
+    config_option 'log.memory', _("Log memory usage"), :default => false
 
 
     config_option 'orgs', _("A list of organizations"), :type => :conf

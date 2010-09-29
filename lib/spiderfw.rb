@@ -138,10 +138,13 @@ module Spider
         
         def request_started
             @request_mutex.lock if (@request_mutex)
-            Spider::Request.current = {}
+            Spider::Request.current = {
+                :_start => Time.now
+            }
         end
         
         def request_finished
+            # Spider.logger.info("Done in #{(Time.now - Spider::Request.current[:_start])*1000}ms")
             Spider::Request.reset_current
             @request_mutex.unlock if (@request_mutex)
         end
