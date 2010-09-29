@@ -463,10 +463,12 @@ Spider.defineWidget = function(name, parent, w){
 Spider.Controller = Class.extend({
     
     init: function(){
-		var url = ''+document.location;
-		var slashPos = url.lastIndexOf('/');
-		url = url.substr(0, slashPos);
+		var loc = ''+document.location;
+		var slashPos = loc.lastIndexOf('/');
+		url = loc.substr(0, slashPos);
 		this.setUrl(url);
+        this.currentAction = loc.substr(slashPos+1);
+        
     },
 
 	setUrl: function(url){
