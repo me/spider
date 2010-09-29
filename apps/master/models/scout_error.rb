@@ -14,7 +14,7 @@ module Spider; module Master
                    next unless adm.email
                    Spider::Messenger.email(
                         Spider.conf.get('master.from_email'), adm.email, {
-                            'Subject' => "Spider alert: #{obj.subject}"
+                            'Subject' => "Spider error for #{obj.plugin_instance}: #{obj.subject}"
                         }, obj.body
                    )
                end

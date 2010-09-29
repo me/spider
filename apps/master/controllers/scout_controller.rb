@@ -50,7 +50,20 @@ module Spider; module Master
                 end
             end
             res["alerts"].each do |alert|
+                subject = alert["fields"]["subject"]
+                body = alert["fields"]["body"]
+                last = ScoutAlert.where(:plugin_instance => alert["plugin_id"]).order_by(:obj_created, :desc)
+                last.limit = 1
                 statuses[alert["plugin_id"]] = :alert
+                next if last[0] && last[0].subject == subject && last[0].body == body
+                subject = alert["fields"]["subject"]
+                instance = ScoutPluginInstance.new(alert["plugin_id"])
+                subject = "#{instance.servant} - #{subject}"
+                alert = ScoutAlert.create(
+                    :plugin_instance => alert["plugin_id"],
+                    :subject => alert["fields"]["subject"],
+                    :body => alert["fields"]["body"]
+                )
             end
             res["errors"].each do |err|
                 subject = err["fields"]["subject"]
