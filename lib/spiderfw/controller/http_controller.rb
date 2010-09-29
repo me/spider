@@ -80,7 +80,7 @@ module Spider
             super(action, *arguments)
             str = "Done: #{@response.status} #{Spider::HTTP.status_messages[@response.status]}"
             str += " (static)" if @request.misc[:is_static]
-            str += " in #{(Time.now - Spider::Request.current[:_start])*1000}ms"
+            str += " in #{(Time.now - Spider::Request.current[:_start])*1000}ms" if Spider::Request.current[:_start]
             if @request.respond_to?(:user) && @request.user
                 str += " for user #{@request.user.class}(#{@request.user.primary_keys})"
             end

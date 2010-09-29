@@ -124,13 +124,14 @@ module Spider; module HTTP
                 end
             end
             
-            controllerThread = Thread.start &run_block
             if (Spider.conf.get('webserver.force_threads'))
+                controllerThread = Thread.start &run_block
                 while (!controller_done && !controller_response.server_output.headers_sent?)
                     Thread.stop
                 end
-            else
                 controllerThread.join
+            else
+                run_block.call
             end
 
             Spider.logger.debug("Rack responding")
