@@ -4,38 +4,30 @@
         <div class="status { @instance['status.id'] }">{ @instance.status }</div>
         <a href="{ @instance.id }/edit" class="manage edit">_(Edit settings)</a>
     </div>
+    <div class="info">
+        _(Last report): { @instance.obj_modified.lformat }
+    </div>
     <div class="plugin error" sp:if="@instance.status.id.to_sym == :error">
-        { @instance.last_error.obj_created.lformat } Error: { @instance.last_error.subject }
+        { @last_error.obj_created.lformat } Error: { @last_error.subject }
         <div class="message">
-            { (@instance.last_error.body) }
+            { (@last_error.body) }
         </div>
     </div>
 
-    <table id="plugin-values">
+    <table id="plugin-values" class="list-table">
+        <tr>
+            <th width="30%">_(Field)</th>
+            <th>_(Value)</th>
+        </tr>
         <tr sp:each="@instance.plugin.metadata |key, details|">
             <td>
-                { key }
+                <a href="{ @instance.id }/data/{ key }">{ _(details["label"]) || key }
             </td>
-            <td>{ @instance.last_reported(key) }</td>
+            <td>{ @instance.last_reported(key) || 0 } { details["units"] }</td>
         </tr> 
     </table>
 
-    <div class="info-block main">
-        <div class="row">
-            <label>_(Last check):</label>
-            { @instance.obj_modified.lformat }
-        </div>
-        <div class="row">
-            <label>_(Servant):</label>
-            <a href="{ Master.url }/servants/{ @servant.id }">{ @servant.name }</a>
-        </div>
-        <div class="row" sp:if="@servant.customer">
-            <label>_(Customer):</label>
-            <a href="{ Master.url }/customers/{ @servant.customer.id }">
-                { @servant.customer }
-            </a>
-        </div>
-    </div>
+
     <div class="triggers">
         <div class="list-title title-block">
             <h3>_(Triggers):</h3> <a href="{ @instance.id }/triggers/new" class="add manage">_(Add)</a>

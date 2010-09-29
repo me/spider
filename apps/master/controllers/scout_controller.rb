@@ -1,5 +1,4 @@
 require 'json'
-require 'json/add/rails'
 
 module Spider; module Master
     
@@ -71,6 +70,7 @@ module Spider; module Master
             end
             statuses.each do |id, val|
                 i = ScoutPluginInstance.new(id)
+                i.obj_modified = DateTime.now
                 i.status = val
                 i.save
             end

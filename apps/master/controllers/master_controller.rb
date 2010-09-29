@@ -1,6 +1,7 @@
 require 'apps/master/controllers/servant_controller'
 require 'apps/master/controllers/login_controller'
 
+
 module Spider; module Master
     
     class MasterController < Spider::PageController
@@ -189,6 +190,9 @@ module Spider; module Master
             @servant = Servant.new(:id => servant_id)
             @scene.plugin = instance.plugin
             @instance = instance
+            if instance.status.id.to_sym == :error
+                @scene.last_error = instance.last_error
+            end
             if @request.params['remove_trigger']
                 trigger = ScoutPluginTrigger.load(:id => @request.params['remove_trigger'], :plugin_instance => instance)
                 trigger.delete if trigger
@@ -198,6 +202,8 @@ module Spider; module Master
                 plugin_edit(@servant, @scene.plugin, @instance)
             elsif action == "triggers"
                 trigger_edit(sub_action)
+            elsif action == "data"
+                plugin_data(instance, sub_action)
             else
                 render('plugin_instance')
             end
@@ -236,6 +242,44 @@ module Spider; module Master
                 redirect("#{Master.url}/servants/#{@servant.id}/plugins/#{@instance.id}")
             end
             render 'trigger_edit'
+        end
+        
+        def plugin_data(instance, key)
+            return chart_data(instance) if key == 'chart_data'
+            @scene.key = key
+            @scene.label = instance.plugin.metadata[key]["label"]
+            @scene.label = key if @scene.data.blank?
+            @scene.values = ScoutReportField.where('report.plugin_instance' => instance, :name => key)
+            render 'plugin_data'
+        end
+        
+        def chart_data(instance)
+            key = @request.params["data"]
+            columns = [[instance, key]]
+            if @request.params["compare"]
+                columns += @request.params["compare"].map do |c|
+                    instance_id, c_key = c.split('|')
+                    [ScoutPluginInstance.new(instance_id), c_key]
+                end
+            end
+            res = {
+                :labels => columns.map{ |i, k| i.plugin.label(k) }
+            }
+            data = {}
+            columns.each_with_index do |pair, i|
+                inst, k = pair
+                values = ScoutReportField.where(:plugin_instance => inst, :name => k)
+                values.request.merge!(:name => true, :value => true)
+                values.each do |v|
+                    data[v.report_date] ||= []
+                    data[v.report_date][i] = v.value
+                    
+                end
+            end
+            data = data.map{ |k, v| [k] + v }.sort{ |a, b| a[0] <=> b[0] }
+            res[:data] = data 
+            content_type :json
+            $out << res.to_json
         end
         
         __.action

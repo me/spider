@@ -138,7 +138,6 @@ a.manage{
 }
 
 .list-table td{
-	width: 1%;
 	padding: 5px;
 	border-bottom: 1px solid gray;
 }
@@ -247,4 +246,45 @@ div.info-block a{
 
 .status.error{
     color: red;
+}
+
+#plugin-values{
+	width: 100%;
+}
+
+.triggers{
+	margin-top: 30px;
+}
+
+#chart_box{
+    overflow: hidden;
+}
+
+#chart{
+    width: 500px;
+    height: 200px;
+    float: left;
+}
+
+#chart-spinner{
+    margin: auto;
+}
+
+#chart_setup{
+    float: left;
+    margin-left: 50px;
+}
+
+
+#chart-columns{
+    margin-top: 15px;
+    list-style-type: none;
+}
+
+#chart-columns .remove{
+    padding-left: 10px;
+}
+
+#plugin_data{
+    margin-top: 30px;
 }

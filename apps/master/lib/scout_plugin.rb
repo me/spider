@@ -67,6 +67,11 @@ module Spider; module Master
             File.read(@rb_path)
         end
         
+        def label(key)
+            return key unless self.metadata && self.metadata[key] && self.metadata[key]["label"]
+            self.metadata[key]["label"]
+        end
+        
         alias :data :yaml_data
         
         def metadata

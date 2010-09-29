@@ -1,0 +1,30 @@
+<div>
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="{ Master.pub_url }/js/charts.js"></script>
+    <div class="page-title title-block">
+        <h2>{ @instance.name } - { @label }</h2>
+        <div class="status { @instance['status.id'] }">{ @instance.status }</div>
+    </div>
+    <div id="chart_box">
+        <div id="chart" >
+            <img id="chart-spinner" src="http://www.google.com/ig/images/spinner.gif" />
+        </div>
+        <div id="chart_setup">
+            <h5>_(Compare):</h5>
+            <select id="chart_add_column" name="add_column">
+                <tpl:pass sp:each="@servant.scout_plugins |plugin|">
+                    <option value="" disabled="disabled">{ plugin.name }</option>
+                    <option sp:each="plugin.plugin.metadata |k, d|" 
+                        value="{ plugin.id }|{ k }">--- { (d["label"].blank? ? k : d["label"]) }</option>
+                </tpl:pass>
+            </select>
+            <div class="chart_options">
+                <input type="checkbox" id="chart-uniform"> _(Show in same scale)
+            </div>
+            <ul id="chart-columns">
+                <li>{ @label }</li>
+            </ul>
+        </div>
+    </div>
+    <core:table id="plugin_data" queryset="@values" elements="created_at,name,value" sort="created_at,desc"/>
+</div>
