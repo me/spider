@@ -13,6 +13,7 @@ module Spider; module Components
         attribute :max_element_length, :type => Fixnum, :default => 80
         attribute :link_el, :type => Symbol
         attribute :link
+        attribute :sort
         i_attribute :queryset
         i_attribute :model
         attr_accessor :queryset, :condition, :page
@@ -31,6 +32,10 @@ module Spider; module Components
                 @sort_el = params['sort'].keys.first.to_sym 
                 @sort_dir = params['sort'].values.first.to_sym
                 @page = 1
+            elsif @attributes[:sort]
+                el, dir = @attributes[:sort].split(',')
+                @sort_el = el.to_sym
+                @sort_dir = dir ? dir.to_sym : :asc
             end
             if (@attributes[:paginate])
                 @page = params['page'] if params['page']
