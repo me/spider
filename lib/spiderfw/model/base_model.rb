@@ -992,6 +992,7 @@ module Spider; module Model
         # Mixin!
         def self.get_storage(storage_string='default')
             storage_regexp = /([\w\d]+?):(.+)/
+            orig_string = nil
             if (storage_string !~ storage_regexp)
                 orig_string = storage_string
                 storage_conf = Spider.conf.get('storages')[storage_string]
