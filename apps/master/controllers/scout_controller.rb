@@ -68,10 +68,13 @@ module Spider; module Master
                     :body => err["fields"]["body"]
                 )
             end
+            today = Date.today
             statuses.each do |id, val|
                 i = ScoutPluginInstance.new(id)
+                averages = i.computed_averages
                 i.obj_modified = DateTime.now
                 i.status = val
+                i.compute_averages if averages < today
                 i.save
             end
 
