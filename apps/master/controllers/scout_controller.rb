@@ -74,7 +74,7 @@ module Spider; module Master
                 averages = i.computed_averages
                 i.obj_modified = DateTime.now
                 i.status = val
-                i.compute_averages if averages < today
+                i.compute_averages if averages && averages < today
                 i.save
             end
 
