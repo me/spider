@@ -3,6 +3,7 @@ module Spider; module Model; module Storage
     class BaseStorage
         include Spider::Logger
         attr_reader :url
+        attr_accessor :instance_name
         
         def self.sequence_sync
             @sequence_sync ||= Sync.new

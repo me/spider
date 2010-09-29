@@ -1002,6 +1002,7 @@ module Spider; module Model
             end
             type, url = $1, $2
             storage = Storage.get_storage(type, url)
+            storage.instance_name = orig_string
             storage.configure(storage_conf) if storage_conf
             return storage
         end
