@@ -19,7 +19,7 @@ module Spider
             elsif proc_file = File.new("/proc/#{$$}/smaps") rescue nil
                 proc_file.map do |line|
                     size = line[/Size: *(\d+)/, 1] and size.to_i
-                end.compact.sum
+                end.compact.inject(0){ |s, v| s += v }
             else
                 `ps -o vsz= -p #{$$}`.to_i
             end
