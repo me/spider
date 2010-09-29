@@ -91,6 +91,10 @@ module Spider; module Master
                         trigger.save
                     end
                 end
+                if obj.servant
+                    obj.servant.scout_plan_changed = DateTime.now
+                    obj.servant.save
+                end
                 super
             end
             
