@@ -90,7 +90,6 @@ module Spider; module ControllerMixins
         def try_rescue(exc)
             if (exc.is_a?(Spider::Controller::NotFound))
                 @response.status = Spider::HTTP::NOT_FOUND
-                error("Not found: #{exc.path}")
             elsif (exc.is_a?(Spider::Controller::BadRequest))
                 @response.status = Spider::HTTP::BAD_REQUEST
             elsif (exc.is_a?(Spider::Controller::Forbidden))
