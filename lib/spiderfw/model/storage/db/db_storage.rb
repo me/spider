@@ -424,7 +424,7 @@ module Spider; module Model; module Storage; module Db
                     end
                 end
             when 'BigDecimal'
-                value = value.to_f
+                value = value.to_f if value
             end
             return value
         end
