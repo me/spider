@@ -590,6 +590,7 @@ module Spider; module Model
             # attributes.delete(:integrate)
             # attributes.delete(:local_pk)
             integrated_attributes[:local_pk] = false
+            integrated_attributes[:lazy] = element_name
             name = params[:mapping] && params[:mapping][el.name] ? params[:mapping][el.name] : el.name
             add_element(IntegratedElement.new(name, self, element_name, el.name, integrated_attributes))
             define_element_methods(name)
