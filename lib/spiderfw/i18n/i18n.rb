@@ -55,7 +55,7 @@ module Spider
                 raise ArgumentError, "Object must be a Date, DateTime or Time object. #{object.inspect} given." unless object.respond_to?(:strftime)
                 p = provider(locale)
                 unless p
-                    Spider::Logger.error("No provider found for locale #{locale}")
+                    Spider::Logger.warn("No provider found for locale #{locale}")
                     return object.to_s
                 end
                 return p.localize_date_time(object, format, options)
@@ -64,7 +64,7 @@ module Spider
             def localize_number(locale, object, precision=nil, options={})
                 p = provider(locale)
                 unless p
-                    Spider::Logger.error("No provider found for locale #{locale}")
+                    Spider::Logger.warn("No provider found for locale #{locale}")
                     return object.to_s
                 end
                 return p.localize_number(object, precision, options)
@@ -88,7 +88,7 @@ module Spider
             def parse_dt(locale, string, format = :default, options={})
                 p = provider(locale)
                 unless p
-                    Spider::Logger.error("No provider found for locale #{locale}")
+                    Spider::Logger.warn("No provider found for locale #{locale}")
                     return Date.parse(string)
                 end
                 return p.parse_dt(string, format, options)
@@ -105,7 +105,7 @@ module Spider
             def parse_number(locale, string)
                 p = provider(locale)
                 unless p
-                    Spider::Logger.error("No provider found for locale #{locale}")
+                    Spider::Logger.warn("No provider found for locale #{locale}")
                     return nil
                 end
                 return p.parse_number(string)
