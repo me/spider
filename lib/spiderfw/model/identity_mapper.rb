@@ -58,6 +58,7 @@ module Spider; module Model
             # obj = (@objects[model][pks] ||= model.new(pks))
             pks.each{ |k, v| obj.element_loaded(k) }
             values.reject{|k,v| model.elements[k].primary_key? }.each do |k, v|
+                v = get(v) if v.is_a?(BaseModel)
                 if set_loaded
                     obj.set_loaded_value(k, v)
                 else
