@@ -68,10 +68,30 @@ module Spider; module Master
         end
         
         def last_reported(key=nil)
-            last = ScoutReport.where(:plugin_instance => self).order_by(:obj_created, :desc)
+            return last_report unless key
+            last = last_field(key)
+            return last ? last.value : nil
+        end
+        
+        def last_report
+            ScoutReport.where(:plugin_instance => self).order_by(:obj_created, :desc)
             last.limit = 1
-            return last[0].value(key) if key && last[0]
-            return last[0]
+            last[0]
+        end
+        
+        def last_field(key)
+            last = last_report
+            return nil unless last
+            last.field(key)
+        end
+        
+        def last_keys
+            fields = []
+            last = self.last_reported
+            if last
+                fields = last.fields.map{ |f| f.name }.sort
+            end
+            fields
         end
         
         def to_s
