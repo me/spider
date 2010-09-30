@@ -4,6 +4,7 @@ module Spider; module Master
        element :plugin_instance, ScoutPluginInstance, :add_multiple_reverse => :errors
        element :subject, Text
        element :body, Text
+       element :repeated, Fixnum
        
        
        with_mapper do

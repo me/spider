@@ -2,9 +2,11 @@ module Spider; module Master
 
     class ScoutAlert < Spider::Model::Managed
         element :plugin_instance, ScoutPluginInstance, :add_multiple_reverse => :alerts
+        element :data_series, String
         element :subject, Text
         element :body, Text
-
+        element :repeated, Fixnum
+        element :active, Bool
 
         with_mapper do
 

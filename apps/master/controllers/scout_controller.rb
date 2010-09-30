@@ -55,10 +55,21 @@ module Spider; module Master
             res["alerts"].each do |alert|
                 subject = alert["fields"]["subject"]
                 body = alert["fields"]["body"]
-                last = ScoutAlert.where(:plugin_instance => alert["plugin_id"]).order_by(:obj_created, :desc)
-                last.limit = 1
+                last = ScoutAlert.where(
+                    :plugin_instance => alert["plugin_id"],
+                    :active => true
+                ).order_by(:obj_created, :desc)
                 statuses[alert["plugin_id"]] = :alert
-                next if last[0] && last[0].subject == subject && last[0].body == body
+                had_previous = false
+                last.each do |l|
+                    if l && l.subject == subject && l.body == body
+                        last.repeated += 1
+                        last.save
+                        had_previous = true
+                        break
+                    end
+                end
+                next if had_previous
                 subject = alert["fields"]["subject"]
                 instance = ScoutPluginInstance.new(alert["plugin_id"])
                 subject = "#{instance.servant} - #{subject}"
@@ -74,7 +85,11 @@ module Spider; module Master
                 last = ScoutError.where(:plugin_instance => err["plugin_id"]).order_by(:obj_created, :desc)
                 last.limit = 1
                 statuses[err["plugin_id"]] = :error
-                next if last[0] && last[0].subject == subject && last[0].body == body
+                if last[0] && last[0].subject == subject && last[0].body == body
+                    last.repeated += 1
+                    last.save
+                    next
+                end
                 subject = err["fields"]["subject"]
                 instance = ScoutPluginInstance.new(err["plugin_id"])
                 subject = "#{instance.servant} - #{subject}"
@@ -91,6 +106,7 @@ module Spider; module Master
                 i.obj_modified = DateTime.now
                 i.status = val
                 i.compute_averages if averages && averages < today
+                i.check_triggers
                 i.save
             end
 
