@@ -214,13 +214,9 @@ module Spider; module Model
             if (@model.extended_models && !@model.extended_models.empty?)
                 is_insert = false
                 # Load local primary keys if they exist
-                # FIXME: load without cloning?
-                check_obj = obj.clone
+                
                 @model.elements_array.select{ |el| el.attributes[:local_pk] }.each do |local_pk|
-                    check_obj.get(local_pk)
-                end
-                @model.elements_array.select{ |el| el.attributes[:local_pk]}.each do |local_pk|
-                    if (!check_obj.element_has_value?(local_pk))
+                    if !obj.get(local_pk)
                         is_insert = true
                         break
                     end
