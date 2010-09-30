@@ -26,6 +26,11 @@ module Spider; module Master
         def plugin
             @plugin ||= ScoutPlugin.new(self.plugin_id)
         end
+
+        def fields_array
+            return [] unless self.fields
+            self.fields.split(',').sort
+        end
         
         def settings
             if self.settings_json
@@ -46,6 +51,10 @@ module Spider; module Master
                 hash.delete(id) if hash[id] == opt["default"]
             end
             self.settings_json = hash.to_json
+        end
+
+        def metadata
+            self.plugin ? self.plugin.metadata : {}
         end
         
         def report_admins

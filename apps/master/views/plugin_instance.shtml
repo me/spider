@@ -19,11 +19,11 @@
             <th width="30%">_(Field)</th>
             <th>_(Value)</th>
         </tr>
-        <tr sp:each="@instance.plugin.metadata |key, details|">
+        <tr sp:each="@fields |key|">
             <td>
-                <a href="{ @instance.id }/data/{ key }">{ _(details["label"]) || key }
+                <a href="{ @instance.id }/data/{ key }">{ _(@labels[key]) }
             </td>
-            <td>{ @instance.last_reported(key) || 0 } { details["units"] }</td>
+            <td>{ @last.value(key) || 0 } { (@metadata[key] ? @metadata[key]["units"] : '') }</td>
         </tr> 
     </table>
 

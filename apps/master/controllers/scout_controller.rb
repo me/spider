@@ -6,6 +6,7 @@ module Spider; module Master
         
         route /([\w\d]{8}-[\w\d]{4}-[\w\d]{4}-[\w\d]{4}-[\w\d]{12})/, self, :do => lambda{ |uuid|
             @servant = Servant.load(:uuid => uuid)
+            @uuid = uuid
             raise NotFound.new("Servant #{uuid}") unless @servant
         }
         
@@ -35,6 +36,8 @@ module Spider; module Master
         __.json
         def checkin
             res = Zlib::GzipReader.new(@request.body).read
+            #Spider.logger.debug("RECEIVED REPORT FOR #{@uuid}:")
+            #Spider.logger.debug(res)
             res = JSON.parse(res)
             statuses = {}
             reports = {}

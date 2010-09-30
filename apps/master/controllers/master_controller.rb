@@ -189,6 +189,21 @@ module Spider; module Master
             raise NotFound.new("Plugin #{id} for servant #{servant_id}") unless instance
             @servant = Servant.new(:id => servant_id)
             @scene.plugin = instance.plugin
+            fields = []
+            last = instance.last_reported
+            if last
+                fields = last.fields.map{ |f| f.name }
+            end
+            @scene.last_reported = last
+            @scene.fields = fields
+            @scene.last = last
+            labels = {}
+            fields.each{ |key|
+                labels[key] = instance.metadata[key] && instance.metadata[key]["label"] ? \
+                    instance.metadata[key]["label"] : key
+            }
+            @scene.labels = labels
+            @scene.metadata = instance.metadata
             @instance = instance
             if instance.status.id.to_sym == :error
                 @scene.last_error = instance.last_error
@@ -247,8 +262,8 @@ module Spider; module Master
         def plugin_data(instance, key)
             return chart_data(instance) if key == 'chart_data'
             @scene.key = key
-            @scene.label = instance.plugin.metadata[key]["label"]
-            @scene.label = key if @scene.data.blank?
+            @scene.label = instance.plugin.metadata[key]["label"] if instance.plugin.metadata[key]
+            @scene.label = key if @scene.label.blank?
             @scene.values = ScoutReportField.where('report.plugin_instance' => instance, :name => key)
             render 'plugin_data'
         end
