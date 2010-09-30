@@ -55,6 +55,8 @@ module Spider; module Master
         end
         
         def format_value(val, units, precision)
+            precision ||= 2
+            precision = precision.to_i
             str = "#{val.lformat(precision)}"
             str += " " unless units == "%"
             str += units if units
@@ -73,14 +75,13 @@ module Spider; module Master
             return nil unless self.trigger_type
             str = ""
             values = {}
-            md = self.metadata
-            return "" unless md
-            data_name = md["label"]
+            md = self.metadata || {}
+            data_name = md["label"] || self.data
             case self.trigger_type.id.to_sym
             when :peak
                 values = {
                     :data_name => data_name,
-                    :max_value => format_value(self.max_value, md["units"], md["precision"].to_i)
+                    :max_value => format_value(self.max_value, md["units"], md["precision"])
                 }
             when :trend
                 values = {
@@ -89,14 +90,14 @@ module Spider; module Master
                     :percentage_change => "#{self.percentage_change.lformat(1)}%",
                     :duration => _("%d minutes") % self.duration,
                     :window => _(self.window_reference.to_s),
-                    :min_value => format_value(self.min_value, md["units"], md["precision"].to_i)
+                    :min_value => format_value(self.min_value, md["units"], md["precision"])
                     
                 }
             when :plateau
                 values = {
                     :data_name => data_name,
                     :duration => _("%d minutes") % self.duration,
-                    :max_value => format_value(self.min_value, md["units"], md["precision"].to_i)
+                    :max_value => format_value(self.max_value, md["units"], md["precision"])
                 }
             end
             vals = values
@@ -115,6 +116,76 @@ module Spider; module Master
             when :plateau
                 _("Alert me when %s stays above %s for %s or more") % [
                     values[:data_name], values[:max_value], values[:duration]
+                ]
+            end
+        end
+        
+        def check(series=nil)
+            series = [series] if series && !series.is_a?(Enumerable)
+            if self.data
+                if series
+                    return unless series.include?(self.data)
+                else
+                    series = [self.data]
+                end
+            else
+                series ||= self.plugin_instance.last_keys
+            end
+            series.each do |s|
+                if self.trigger_type.id == :peak
+                    field = self.plugin_instance.last_field(s)
+                    if field.value > self.max_value
+                        trigger_alert(s, {:value => field.value, :time => field.report_date})
+                    end
+                elsif self.trigger_type.id == :trend
+                    duration = self.duration
+                    check_from = Time.now - self.duration
+                    fields = fields = ScoutReportField.where{ |f| 
+                        (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from) & (value < max)
+                    }
+                elsif self.trigger_type.id == :plateau
+                    # max = self.max_value
+                    #                     check_from = Time.now - self.duration
+                    #                     fields = ScoutReportField.where{ |f| 
+                    #                         (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from) & (value < max)
+                    #                     }.limit(1)
+                    #                     unless fields[0] # no value less then max
+                    #                         fields = ScoutReportField.where{ |f| 
+                    #                             (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from)
+                    #                         }.order_by(:report_date).limit(1)
+                    #                         if first = fields[0] # have at least a value
+                    #                             if first.report_date >
+                    #                             trigger_alert(s)
+                    #                         end
+                    #                     end
+                end
+            end
+        end
+        
+        def trigger_alert(series=nil, params={})
+            if series.is_a?(Hash)
+                params = series
+                series = nil
+            end
+            series ||= self.data
+            md = self.plugin_instance.plugin.metadata[series] || {}
+            data_name = md["label"] || series
+            vals = {}
+            if self.trigger_type.id == :peak
+                max_value = format_value(self.max_value, md["units"], md["precision"])
+                value = format_value(params[:value], md["units"], md["precision"])
+                time = params[:time].to_local_time.lformat
+                msg = _("%s exceeded %s, increasing to %s at %s") % [data_name, max_value, value, time]
+            elsif self.trigger_type.id == :trend
+                nil
+            elsif self.trigger_type.id == :plateau
+                max_value = format_value(self.max_value, md["units"], md["precision"])
+                first_value = format_value(params[:first_value], md["units"], md["precision"])
+                first_time = params[:first_time].to_local_time.lformat
+                last_value = format_value(params[:last_value], md["units"], md["precision"])
+                last_time = params[:first_time].to_local_time.lformat
+                msg = _("%s exceeded %s, increasing to %s at %s, and is still continuing at %s as of %s") % [
+                    data_name, max_value, first_value, first_time, last_value, last_time
                 ]
             end
         end
