@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>_(Spider Configuration Editor)</title>
+        <script sp:each='@assets[:js] |script|' type="text/javascript" src="{ script }"></script>
+        <link sp:each='@assets[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
+    </head>
+    <body>
+        <div id="content">
+            <div id="menu">
+                <a href="{ ConfigEditor.url }/options">_(Configuration options)</a>
+                <a href="{ ConfigEditor.url }/required">
+                    _(Required)<span sp:if="!@required.empty?">!</span>
+                </a>
+            </div>
+            <sp:yield />
+        </div>
+    </body>
+</html>

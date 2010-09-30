@@ -1,0 +1,23 @@
+<div>
+    <div>
+        <a sp:if="!@parts.empty?" href="{ ConfigEditor.url }/options">_(Start)</a>
+        <tpl:pass sp:each="@parts |part|">
+            <a href="{ ConfigEditor.url }/options{ part }">{ part.split('/').last }</a>
+        </tpl:pass>
+    </div>
+    <form action='' method="post">
+        <div sp:if="@multiple">
+            Multiple (fixme)
+        </div>
+        <ul>
+            <li sp:each="@subconfs |key|">
+                <a href="{ ConfigEditor.url }/options/{ @prefix }{ key }">{ key }</a>
+            </li>
+        </ul>
+        <ul>        
+            <li sp:each="@options |key, option|">
+                <sp:run obj="@edit_widgets[key]" />
+            </li>
+        </ul>
+    </form>
+</div>

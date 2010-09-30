@@ -1,0 +1,4 @@
+<div>
+    <label>{ @name }</label>
+    <input type="text" name="options[{ @name }]">
+</div>
