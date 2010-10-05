@@ -693,6 +693,12 @@ Spider.EventTarget = {
 
 $.extend(Spider.Widget.prototype, Spider.EventTarget);
 
+function _(s){
+    var tr = translations[s];
+    if (tr) return tr;
+    return s;
+}
+
 if(!window.console) {
   window.console = new function() {
     this.log = function(str) {};

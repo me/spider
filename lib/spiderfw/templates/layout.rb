@@ -24,6 +24,7 @@ module Spider
             js = []
             css = []
             runtime = []
+            js_messages = []
             all_assets.each do |res|
                 if res[:runtime]
                     next if seen[res[:runtime]]
@@ -38,6 +39,10 @@ module Spider
                 @template_assets[res[:type].to_sym] << res[:src]
                 js << res if Spider.conf.get('javascript.compress') && res[:type].to_sym == :js
                 css << res if Spider.conf.get('css.compress') && res[:type].to_sym == :css
+                if res[:gettext] && res[:type].to_sym == :js
+                    msg_path = asset_gettext_messages_file(res[:path])
+                    js_messages += JSON.parse(File.read(msg_path))
+                end
             end
             if Spider.conf.get('javascript.compress') && !@scene.__is_error_page
                 compressed = compress_javascript(js)
@@ -56,6 +61,14 @@ module Spider
             end
             @content[:yield_to] = @template
             @scene.assets = @template_assets
+            if js_messages.empty?
+                @scene.js_translations = ""
+            else
+                translations = {}
+                js_messages.each{ |msg| translations[msg] = _(msg) }
+                @scene.js_translations = "var translations = #{translations.to_json}"
+            end
+            
             @assets_prepared = true
         end
         
@@ -78,6 +91,12 @@ module Spider
         end
         
         COMPILED_FOLDER = '_c'
+        
+        def asset_gettext_messages_file(path)
+            dir = File.dirname(path)
+            name = File.basename(path, '.*')
+            File.join(dir, "#{name}.i18n.json")
+        end
         
         def compress_javascript(assets)
             require 'yui/compressor'

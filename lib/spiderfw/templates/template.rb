@@ -149,7 +149,8 @@ module Spider
                     end
                 end
                 ass[:assets].each do |a|
-                    res << {:type => a[0], :src => a[1], :app => a[2]}
+                    attributes = a[3] || {}
+                    res << {:type => a[0], :src => a[1], :app => a[2]}.merge(attributes)
                 end
                 res
             end
@@ -320,7 +321,7 @@ module Spider
                 wt.mode = :widget
                 wt.load
                 # sub_c = sub.compile(options.merge({:mode => :widget}))
-                @assets += wt.compiled.assets
+                @assets = wt.compiled.assets + @assets
             end            
             
             seen = {}
@@ -404,6 +405,7 @@ module Spider
                 ass[:compressed_path] = compressed_res.path
                 ass[:compressed] = base_url+attributes[:compressed]
             end
+            ass[:gettext] = attributes[:gettext]
             return [ass]
         end
         

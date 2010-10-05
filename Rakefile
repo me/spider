@@ -15,9 +15,9 @@ desc "Update pot/po files. To update a single app, call rake updatepo[app_relati
 task :updatepo, [:app] do |t, args|
     require 'spiderfw'
     require 'spiderfw/i18n/shtml_parser'
+    require 'spiderfw/i18n/javascript_parser'
     require 'gettext/tools'
-    require 'ruby-debug'
-    GetText.update_pofiles("spider", Dir.glob("{lib,bin,views}/**/*.{rb,rhtml,shtml}"), "Spider #{Spider::VERSION}") if !args[:app] || args[:app] == 'spider'
+    GetText.update_pofiles("spider", Dir.glob("{lib,bin,views,public}/**/*.{rb,rhtml,shtml,js}"), "Spider #{Spider::VERSION}") if !args[:app] || args[:app] == 'spider'
     apps = Spider.find_all_apps
     apps.each do |path|
         next if args[:app] && !check_app_path(path, args[:app])
@@ -27,7 +27,7 @@ task :updatepo, [:app] do |t, args|
         next unless File.directory?(mod.path+'/po')
         next if args[:app] && !check_app_path(mod.path, args[:app])
         Dir.chdir(mod.path)
-        GetText.update_pofiles(mod.short_name, Dir.glob("{lib,bin,controllers,models,views,widgets}/**/*.{rb,rhtml,shtml}"), "#{mod.name} #{mod.version}")
+        GetText.update_pofiles(mod.short_name, Dir.glob("{lib,bin,controllers,models,views,widgets,public}/**/*.{rb,rhtml,shtml,js}"), "#{mod.name} #{mod.version}")
         print "\n"
     end
 
