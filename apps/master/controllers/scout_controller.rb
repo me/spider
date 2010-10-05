@@ -63,6 +63,7 @@ module Spider; module Master
                 had_previous = false
                 last.each do |l|
                     if l && l.subject == subject && l.body == body
+                        l.repeated ||= 0
                         l.repeated += 1
                         l.save
                         had_previous = true
@@ -86,6 +87,7 @@ module Spider; module Master
                 last.limit = 1
                 statuses[err["plugin_id"]] = :error
                 if last[0] && last[0].subject == subject && last[0].body == body
+                    last[0].repeated ||= 0
                     last[0].repeated += 1
                     last[0].save
                     next
