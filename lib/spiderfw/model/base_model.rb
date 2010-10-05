@@ -378,6 +378,7 @@ module Spider; module Model
                 end
             end
             element_defined(@elements[name])
+            @elements[name].model?
             return @elements[name]
 
         end
@@ -479,6 +480,17 @@ module Spider; module Model
                 val = prepare_child(element.name, val)
                 _check(name, val)
                 notify_observers(name, val)
+                @_has_values = true
+                unless @_primary_keys_set
+                    if self.class.elements[element.name].primary_key? && primary_keys_set?
+                        @_primary_keys_set = true
+                        if Spider::Model.identity_mapper
+                            Spider::Model.identity_mapper.put(self, true, true)
+                        else
+                            Spider::Model.unit_of_work.add(self) if Spider::Model.unit_of_work
+                        end
+                    end
+                end
                 old_val = instance_variable_get(ivar)
                 @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
@@ -1139,24 +1151,11 @@ module Spider; module Model
             @_has_values = false
             @loaded_elements = {}
             @modified_elements = {}
-            @value_observers = {}
-            @all_values_observers = []
+            @value_observers = nil
+            @all_values_observers = nil
             @_extra = {}
             @model = self.class
             @_primary_keys_set = false
-            @all_values_observers << Proc.new do |obj, element_name, new_value|
-                @_has_values = true
-                unless @_primary_keys_set
-                    if self.class.elements[element_name].primary_key? && primary_keys_set?
-                        @_primary_keys_set = true
-                        if Spider::Model.identity_mapper
-                            Spider::Model.identity_mapper.put(self, true, true)
-                        else
-                            Spider::Model.unit_of_work.add(self) if Spider::Model.unit_of_work
-                        end
-                    end
-                end
-            end
             set_values(values) if values
             # if primary_keys_set?
             #     @_primary_keys_set = true
@@ -1833,16 +1832,18 @@ module Spider; module Model
         #   obj.observe_all_values do |instance, element_name, old_val|
         #     puts "#{element_name} for object #{instance} has changed from #{old_val} to #{instance.get(element_name) }"
         def observe_all_values(&proc)
+            @all_values_observers ||= []
             @all_values_observers << proc
         end
         
         def observe_element(element_name, &proc)
+            @value_observers ||= {}
             @value_observers[element_name] ||= []
             @value_observers[element_name] << proc
         end
         
         def self.observer_all_values(&proc)
-            @all_values_observers << proc
+            self.all_values_observers << proc
         end
         
         def self.observe_element(element_name, &proc)
@@ -1861,9 +1862,22 @@ module Spider; module Model
         
         # Calls the observers for element_name
         def notify_observers(element_name, new_val) #:nodoc:
-            (self.class.value_observers[element_name].to_a + @value_observers[element_name].to_a) \
-                .each { |proc| proc.call(self, element_name, new_val) }
-            (self.class.all_values_observers.to_a + @all_values_observers.to_a).each { |proc| proc.call(self, element_name, new_val) }
+            if @value_observers && @value_observers[element_name]
+                @value_observers[element_name].each{ |proc| proc.call(self, element_name, new_val) }
+            end
+            if @all_values_observers
+                @all_values_observers.each{ |proc| proc.call(self, element_name, new_val) }
+            end
+        end
+        
+        # Calls the observers for element_name
+        def self.notify_observers(element_name, new_val)
+            if @value_observers && @value_observers[element_name]
+                @value_observers[element_name].each{ |proc| proc.call(self, element_name, new_val) }
+            end
+            if @all_values_observers
+                @all_values_observers.each{ |proc| proc.call(self, element_name, new_val) }
+            end
         end
         
         
