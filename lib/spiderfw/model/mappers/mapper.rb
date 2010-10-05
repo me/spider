@@ -566,6 +566,7 @@ module Spider; module Model
                         set.each_current do |obj|
                             query.request.keys.each do |element_name|
                                 el = @model.elements[element_name]
+                                next if el.primary_key?
                                 next if el.integrated? || @model.extended_models[el.model]
                                 obj.set_loaded_value(element_name, nil) 
                             end
