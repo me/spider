@@ -1,4 +1,5 @@
 require 'logger'
+require 'zlib'
 
 module Spider
     
@@ -17,7 +18,7 @@ module Spider
             # Open a new logger.
             def open(dest, level= :WARN)
                 @loggers ||= {}
-                logger = ::Logger.new(dest, Spider.conf.get('log.rotate.age'), Spider.conf.get('log.rotate.size'))
+                logger = Spider::Logger::Logger.new(dest, Spider.conf.get('log.rotate.age'), Spider.conf.get('log.rotate.size'))
                 logger.formatter = Spider::Logger::Formatter.new
                 logger.level = ::Logger.const_get(level)
                 @loggers[dest] = logger
@@ -168,6 +169,86 @@ module Spider
             def call(severity, time, progname, msg)
                 Format % [severity[0..0], format_datetime(time), $$, Thread.current.object_id, severity, progname,
                 msg2str(msg)]
+            end
+            
+        end
+        
+        class Logger < ::Logger
+            def initialize(logdev, shift_age=0, shift_size=1048576)
+                super(nil, shift_age, shift_size)
+                if logdev
+                  @logdev = Spider::Logger::LogDevice.new(logdev, :shift_age => shift_age,
+                    :shift_size => shift_size)
+                end
+            end
+        end
+        
+        class LogDevice < Logger::LogDevice
+            
+            def shift_log_period(now)
+                super
+                postfix = previous_period_end(now).strftime("%Y%m%d")	# YYYYMMDD
+                if Spider.conf.get('log.gzip')
+                    gzip_filename = "#{@filename}.#{postfix}.gz"
+                    f = File.open("#{@filename}.#{postfix}")
+                    Zlib::GzipWriter.open(gzip_filename) do | gzip|
+                        f.each do |line|
+                            gzip << line
+                        end
+                    end
+                    File.unlink("#{@filename}.#{postfix}")
+                    f.close
+                end
+                if keep = Spider.conf.get('log.keep')
+                    dir = File.dirname(@filename)
+                    basename = File.basename(@filename)
+                    dates = []
+                    zipped = {}
+                    Dir.glob(File.join(dir, "#{basename}.*")).each do |logfile|
+                        name = File.basename(logfile)
+                        if logfile =~ /\.(\d+)(\.gz)?$/
+                            dates << $1
+                            zipped[$1] = $2
+                        end
+                    end
+                    (dates - dates.sort.reverse[0..keep-1]).each do |d|
+                        fname = "#{@filename}.#{d}"
+                        fname += ".gz" if zipped[d]
+                        File.unlink(fname)
+                    end
+                end
+                return true
+            end
+            
+            def shift_log_age
+                super
+                (@shift_age-3).downto(0) do |i|
+                    if FileTest.exist?("#{@filename}.#{i}.gz")
+                        File.rename("#{@filename}.#{i}.gz", "#{@filename}.#{i+1}.gz")
+                    end
+                end
+                if Spider.conf.get('log.gzip')
+                    gzip_filename = "#{@filename}.0.gz"
+                    f = File.open("#{@filename}.0")
+                    Zlib::GzipWriter.open(gzip_filename) do | gzip|
+                        f.each do |line|
+                            gzip << line
+                        end
+                    end
+                    File.unlink("#{@filename}.0")
+                    f.close
+                end
+                if keep = Spider.conf.get('log.keep')
+                    dir = File.dirname(@filename)
+                    basename = File.basename(@filename)
+                    Dir.glob(File.join(dir, "#{basename}.*")).each do |logfile|
+                        name = File.basename(logfile)
+                        if logfile =~ /\.(\d+)(\.gz)?$/
+                            File.unlink(logfile) if $1.to_i >= Spider.config.get('log.keep')
+                        end
+                    end
+                end
+                return true
             end
             
         end

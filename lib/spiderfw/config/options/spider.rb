@@ -100,6 +100,9 @@ module Spider
     config_option 'log.rotate.age', _("Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"), :default => 'daily'
     config_option 'log.rotate.size', _("Maximum logfile size (only applies when log.rotate.age is a number)"), :default => 1048576
     config_option 'log.memory', _("Log memory usage"), :type => Spider::DataTypes::Bool, :default => false
+    config_option 'log.keep', _("Maximum number of rotated log files to keep"), :type => Fixnum, :default => 10
+    config_option 'log.gzip', _("Whether to compress rotated log files"), :type => Spider::DataTypes::Bool, :default => true
+    
 
 
     config_option 'orgs', _("A list of organizations"), :type => :conf
