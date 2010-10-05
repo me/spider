@@ -2,13 +2,15 @@
 "http://www.w3.org/TR/html4/strict.dtd">
 <html>
     <tpl:assets widgets="forms:form,core:table" />
+    <tpl:asset name="spider-utils" />
+    <tpl:asset type="js" src="js/master.js" />
     <head>
         <title>Spider Master</title>
+        <script type="text/javascript">{ @js_translations }</script>
         <script sp:each='@assets[:js] |script|' type="text/javascript" src="{ script }"></script>
         <link sp:each='@assets[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
         <link rel="stylesheet" href="{ Master.pub_url }/css/reset.css" />
         <link rel="stylesheet" href="{ Master.pub_url }/css/master.css" />
-        
     </head>
     <body class="spider-master">
         <div id="top">

@@ -140,24 +140,35 @@ module Spider; module Master
                 elsif self.trigger_type.id == :trend
                     duration = self.duration
                     check_from = Time.now - self.duration
-                    fields = fields = ScoutReportField.where{ |f| 
+                    fields = ScoutReportField.where{ |f| 
                         (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from) & (value < max)
                     }
                 elsif self.trigger_type.id == :plateau
-                    # max = self.max_value
-                    #                     check_from = Time.now - self.duration
-                    #                     fields = ScoutReportField.where{ |f| 
-                    #                         (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from) & (value < max)
-                    #                     }.limit(1)
-                    #                     unless fields[0] # no value less then max
-                    #                         fields = ScoutReportField.where{ |f| 
-                    #                             (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from)
-                    #                         }.order_by(:report_date).limit(1)
-                    #                         if first = fields[0] # have at least a value
-                    #                             if first.report_date >
-                    #                             trigger_alert(s)
-                    #                         end
-                    #                     end
+                    max = self.max_value
+                    check_from = Time.now - self.duration
+                    
+                    last_good = ScoutReportField.where{ |f| 
+                        (f.plugin_instance == self.plugin_instance) & (f.name == s) & (value < max)
+                    }.order_by(:report_date, :desc).limit(1)[0]
+                    
+                    if !last_good || last_good.report_date < check_from
+                        first_bad = ScoutReportField.where{ |f| 
+                            (f.plugin_instance == self.plugin_instance) & (f.name == s) & (value >= max)
+                        }.order_by(:report_date, :asc).limit(1)
+                        first_bad.condition.set(:report_date, '>', last_good.report_date) if last_good
+                        first_bad = first_bad[0]
+                        if first_bad
+                            current = ScoutReportField.where{ |f| 
+                                (f.plugin_instance == self.plugin_instance) & (f.name == s)
+                            }.order_by(:report_date, :desc).limit(1)[0]
+                            trigger_alert(s, {
+                                :first_value => first_bad.value,
+                                :first_time => first_bad.report_date,
+                                :last_value => current.value,
+                                :last_time => current.report_date
+                            })
+                        end
+                    end
                 end
             end
         end
@@ -183,7 +194,7 @@ module Spider; module Master
                 first_value = format_value(params[:first_value], md["units"], md["precision"])
                 first_time = params[:first_time].to_local_time.lformat
                 last_value = format_value(params[:last_value], md["units"], md["precision"])
-                last_time = params[:first_time].to_local_time.lformat
+                last_time = params[:last_time].to_local_time.lformat
                 msg = _("%s exceeded %s, increasing to %s at %s, and is still continuing at %s as of %s") % [
                     data_name, max_value, first_value, first_time, last_value, last_time
                 ]

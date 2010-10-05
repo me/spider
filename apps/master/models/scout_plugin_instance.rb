@@ -1,5 +1,6 @@
 require 'json'
 require 'apps/master/models/scout_plugin_trigger'
+require 'apps/master/models/scout_average'
 
 module Spider; module Master
     
@@ -15,12 +16,14 @@ module Spider; module Master
             element :receive_notifications, Bool, :default => true
             element :manage, Bool, :default => true
         end
+        many :averages, ScoutAverage, :add_reverse => :plugin_instance, :delete_cascade => true
         choice :status, {
             :ok => _('Ok'),
             :error => _('Error'),
             :alert => _('Alert')
         }, :default => :ok
-        element :computed_averages, Date
+        element :averages_computed_at, Date
+
         
         
         def plugin
@@ -36,12 +39,12 @@ module Spider; module Master
             if self.settings_json
                 begin
                     opts = JSON.parse(self.settings_json)
-                rescue JSON::ParserError
+                rescue JSON::ParserError => exc
                 end
             end
             opts ||= {}
             @plugin.options.each do |id, opt|
-                opts[id] = opt["default"] if opt["default"]
+                opts[id] ||= opt["default"]
             end
             opts
         end
@@ -74,7 +77,7 @@ module Spider; module Master
         end
         
         def last_report
-            ScoutReport.where(:plugin_instance => self).order_by(:obj_created, :desc)
+            last = ScoutReport.where(:plugin_instance => self).order_by(:obj_created, :desc)
             last.limit = 1
             last[0]
         end
@@ -98,8 +101,67 @@ module Spider; module Master
             "#{self.name} - #{self.servant}"
         end
         
+                
         def compute_averages
-            last = Date.today - 7
+            today = Date.today - 1
+            last = today - 7
+            yesterday = today - 1
+            
+            fields = ScoutReportField.where{ |f| 
+                (f.plugin_instance == self) & (f.report_date > last) & (f.report_date < today) 
+            }
+            week_values = {}
+            day_values = {}
+            p "TOTAL ROWS: #{fields.total_rows}"
+#            t1 = Time.now
+            Spider::Profiling.start
+            fields[0]
+ #           t2 = Time.now
+ #           Spider.logger.debug("DONE IN #{(t2 - t1).to_i} seconds")
+            Spider::Profiling.stop
+            fields.each do |f|
+                day_values[f.name] ||= []
+                week_values[f.name] ||= []
+                next unless f.value
+                week_values[f.name] << f.value
+                if f.report_date > yesterday
+                    day_values[f.name] << f.value
+                end
+            end
+
+            week_values.keys.each do |key|
+                if week_values[key].length > 0
+                    week_average = week_values[key].inject(0.0){ |sum, v| sum + v } / week_values[key].length
+                end
+                if day_values[key].length > 0
+                    day_average = day_values[key].inject(0.0){ |sum, v| sum + v} / day_values[key].length
+                end
+                ScoutAverage.in_transaction do
+                    ScoutAverage.where{ |a| 
+                        (a.plugin_instance == self) & (a.field_name == key)
+                    }.each{ |a| a.delete }
+                    if week_average
+                        ScoutAverage.create(
+                            :plugin_instance => self,
+                            :field_name => key,
+                            :type => :week,
+                            :mean => week_average,
+                            :date => last
+                        )
+                    end
+                    if day_average
+                        ScoutAverage.create(
+                            :plugin_instance => self,
+                            :field_name => key,
+                            :type => :day,
+                            :mean => day_average,
+                            :date => yesterday
+                        )
+                    end
+                end
+            end
+            
+            
             fields = ScoutReportField.where{ |f| 
                 (f.plugin_instance == self) & (f.report_date < last) & (f.mean == nil)
             }.order_by(:name, :report_date)
@@ -108,10 +170,11 @@ module Spider; module Master
             averages = []
             values = []
             seen = {}
+            day_values = []
             fields.each do |f|
                 if last_key && f.name != last_key
                     unless values.empty?
-                        averages << values_averages(values, last_date)
+                        averages << hourly_averages(values, last_date)
                         commit_averages(last_key, averages, last)
                     end
                     last_date = nil
@@ -120,16 +183,20 @@ module Spider; module Master
                 last_key = f.name
                 date = f.report_date
                 if last_date && last_date.hour != date.hour
-                    averages << values_averages(values, last_date)
+                    averages << hourly_averages(values, last_date)
                 end
                 values << f.value
+                if f.report_date.day == yesterday.day
+                    day_values << f.value
+                end
                 last_date = date
             end
             unless values.empty?
-                averages << values_averages(values, last_date)
+                averages << hourly_averages(values, last_date)
                 commit_averages(last_key, averages, last)
             end
-            self.computed_averages = Date.today
+            
+            self.averages_computed_at = today
             self.save
         end
         
@@ -154,7 +221,7 @@ module Spider; module Master
             end
         end
         
-        def values_averages(values, last_date)
+        def hourly_averages(values, last_date)
             n = values.length
             sum = values.inject(0.0){ |acc, i| acc + i }
             mean = sum / values.length

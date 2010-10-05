@@ -1,6 +1,7 @@
 module Spider; module Master
     
-    class ScoutAverage < Spider::Model::Managed
+    class ScoutAverage < Spider::Model::Managed        
+        element :field_name, String
         choice :type, {
             :hour => 'hourly',
             :day => 'daily',
@@ -8,12 +9,14 @@ module Spider; module Master
             :month => 'monthly',
             :year => 'yearly'
         }
-        element :field, String
+        element :date, Date
         element :mean, Decimal
         element :median, Decimal
         element :mode, Decimal
+        element :stdev, Decimal
         element :high, Decimal
         element :low, Decimal
+        element :cnt, Fixnum
         
     end
     
