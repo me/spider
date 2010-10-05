@@ -108,7 +108,7 @@ module Spider; module Master
                 i.obj_modified = DateTime.now
                 i.status = val
                 i.compute_averages if averages && averages < today
-                i.check_triggers
+                #i.check_triggers
                 i.save
             end
 
