@@ -477,7 +477,7 @@ module Spider; module Model
                     end
                 end
                 val = prepare_child(element.name, val)
-                check(name, val)
+                _check(name, val)
                 notify_observers(name, val)
                 old_val = instance_variable_get(ivar)
                 @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
@@ -1510,7 +1510,7 @@ module Spider; module Model
         # Will raise a Model::FormatError when a check is not succesful.
         # If the :check attribute is an Hash, the Hash keys will be used as messages, which will be passed
         # to the FormatError.
-        def check(name, val)
+        def _check(name, val)
             element = self.class.elements[name]
             element.type.check(val) if (element.type.respond_to?(:check))
             if (checks = element.attributes[:check])
