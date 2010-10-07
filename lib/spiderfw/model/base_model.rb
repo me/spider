@@ -578,7 +578,7 @@ module Spider; module Model
         def self.integrate(element_name, params={})
             params ||= {}
             elements[element_name].attributes[:integrated_model] = true
-            model = elements[element_name].model
+            model = elements[element_name].type
             self.attributes[:integrated_models] ||= {}
             self.attributes[:integrated_models][model] = element_name
             params[:except] ||= []
