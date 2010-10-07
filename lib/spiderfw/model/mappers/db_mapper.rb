@@ -775,7 +775,7 @@ module Spider; module Model; module Mappers
                             end
                         else
                             el.model.primary_keys.each do |pk|
-                                fields << [schema.foreign_key_field(el.name, pk.name), direction]
+                                fields << [el_model.mapper.schema.foreign_key_field(el.name, pk.name), direction]
                             end
                         end
                     else
