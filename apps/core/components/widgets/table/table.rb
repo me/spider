@@ -48,7 +48,8 @@ module Spider; module Components
             @scene.sorted = {}
             @scene.sorted[@sort_el] = @sort_dir if @sort_el
             if (@sort_el)
-                if (@model.elements[@sort_el].model?)
+                el = @model.elements[@sort_el]
+                if el.model? && el.storage == @model.storage
                     s = []
                     element = @model.elements[@sort_el]
                     @model.elements[@sort_el].model.each_element do |el|                         
