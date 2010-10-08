@@ -148,6 +148,9 @@ module Spider; module Components
                             res_row[el] = Spider::I18n.localize_date_time(@request.locale, row[el], :short)
                         elsif (element.type <= Float || element.type <= BigDecimal)
                             res_row[el] = Spider::I18n.localize_number(@request.locale, row[el])
+                            if element.attributes[:currency]
+                                res_row[el] = "&#{element.attributes[:currency]}; #{res_row[el]}"
+                            end
                         elsif (row[el].respond_to?(:format))
                             res_row[el] = row[el].format(:short)
                         else
