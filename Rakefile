@@ -27,7 +27,10 @@ task :updatepo, [:app] do |t, args|
         next unless File.directory?(mod.path+'/po')
         next if args[:app] && !check_app_path(mod.path, args[:app])
         Dir.chdir(mod.path)
-        GetText.update_pofiles(mod.short_name, Dir.glob("{lib,bin,controllers,models,views,widgets,public}/**/*.{rb,rhtml,shtml,js}"), "#{mod.name} #{mod.version}")
+        mod.gettext_parsers.each do |p|
+            require p
+        end
+        GetText.update_pofiles(mod.short_name, Dir.glob("{#{mod.gettext_dirs.join(',')}}/**/*.{#{mod.gettext_extensions.jois(',')}}"), "#{mod.name} #{mod.version}")
         print "\n"
     end
 

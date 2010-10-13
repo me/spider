@@ -15,6 +15,7 @@ module Spider
                     attr_accessor :short_prefix
                     attr_reader :command
                     attr_reader :spec
+                    attr_reader :gettext_dirs, :gettext_extensions, :gettext_parsers
                     
                     def init
                         unless @path
@@ -35,6 +36,9 @@ module Spider
                         load_spec(spec_path) if File.exists?(spec_path)
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
+                        @gettext_parsers ||= []
+                        @gettext_dirs ||= ['lib','bin','controllers','models','views','widgets','public']
+                        @gettext_extensions ||= ['rb','rhtml','shtml','js']
                         
                         find_tags
                     end
@@ -171,6 +175,11 @@ module Spider
                         @spec.app_id = File.basename(spec_path, 'appsec') unless @spec.app_id
                         @version = @spec.version if @spec.version
                     end
+                    
+                    def gettext_parsers
+                        @gettext_parsers ||[]
+                    end
+                    
                     
                     
                 end
