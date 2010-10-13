@@ -32,6 +32,20 @@ module Spider
             dest_path = path+'/'+name
             source_path = $SPIDER_PATH+'/blueprints/home'
             create(source_path, dest_path)
+            
+            begin
+                require 'grit'
+
+                cwd = Dir.getwd
+                Dir.chdir(dest_path)
+                repo = Grit::Repo.init(dest_path)
+                repo.add('apps', 'config', 'init.rb', 'public')
+                repo.add('.gitignore')
+                repo.commit_index(_("Created repository"))
+                Dir.chdir(cwd)
+            rescue LoadError
+                puts "Grit not installed, cannot init repo"
+            end
         end
         
         def self.create(source_path, dest_path, replacements={}, erb_binding=nil)
