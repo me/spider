@@ -8,3 +8,5 @@ module Spider; module DataTypes
     
     
 end; end
+
+Spider::Bool = Spider::DataTypes::Bool
