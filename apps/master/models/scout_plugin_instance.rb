@@ -101,6 +101,14 @@ module Spider; module Master
             "#{self.name} - #{self.servant}"
         end
         
+        def average(field, type)
+            av = ScoutAverage.where{ |a| 
+                (a.plugin_instance == self) & (a.field_name == field) & (a.type == type)
+            }
+            return nil unless av
+            av.mean
+        end
+        
                 
         def compute_averages
             today = Date.today - 1
@@ -236,6 +244,12 @@ module Spider; module Master
                 last_date.year, last_date.month, last_date.day, last_date.hour, 0, 0
             )
             [average_date, n, mean, mode, stddev, high, low]
+        end
+        
+        def check_triggers
+            self.triggers.each do |trigger|
+                trigger.check
+            end
         end
         
         with_mapper do

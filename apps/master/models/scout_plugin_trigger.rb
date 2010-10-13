@@ -1,3 +1,5 @@
+require 'mailfactory'
+
 module Spider; module Master
     
     class ScoutPluginTrigger < Spider::Model::Managed
@@ -6,21 +8,21 @@ module Spider; module Master
             :peak => _('Peak trigger'),
             :plateau => _('Plateau trigger'),
             :trend => _('Trend trigger')
-        }
+        }, :default => :peak
         element :min_value, Decimal
         element :max_value, Decimal
         choice :direction, {
             :up => _('Up'),
             :down => _('Down'),
             :either => _('Either')
-        }
+        }, :default => :up
         element :percentage_change, Decimal
         element :duration, Fixnum
         choice :window_reference, {
             :last_day => _("yesterday's average"),
             :last_week => _('previous 7-day average'),
             :preceding_window => _('preceding window')
-        }
+        }, :default => :last_day
         choice :status, {
             :normal => _('normal'),
             :fired => _('fired')
@@ -132,17 +134,53 @@ module Spider; module Master
                 series ||= self.plugin_instance.last_keys
             end
             series.each do |s|
+                last_field = self.plugin_instance.last_field(s)
+                next unless last_field
                 if self.trigger_type.id == :peak
-                    field = self.plugin_instance.last_field(s)
-                    if field.value > self.max_value
-                        trigger_alert(s, {:value => field.value, :time => field.report_date})
+                    if last_field.value > self.max_value
+                        trigger_alert(s, {:value => last_field.value, :time => last_field.report_date})
                     end
                 elsif self.trigger_type.id == :trend
-                    duration = self.duration
-                    check_from = Time.now - self.duration
-                    fields = ScoutReportField.where{ |f| 
-                        (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from) & (value < max)
-                    }
+                    if self.min_value && self.min_value != 0
+                        next unless last_field.value > self.min_value
+                    end
+                    check_val = case self.window_reference.id
+                    when :last_day
+                        self.plugin_instance.average(s, :day)
+                    when :last_week
+                        self.plugin_instance.average(s, :week)
+                    when :preceding_window
+                        f = ScoutReportField.where{ |f| 
+                            (f.plugin_instance == self.plugin_instance) & (f.name == s)
+                        }.order_by(:report_date, :desc).limit(2)[1]
+                        f ? f.value : nil
+                    end
+                    next unless check_val
+                    if self.duration && self.duration > 0
+                        check_from = Time.now - self.duration
+                        values = ScoutReportField.where{ |f| 
+                            (f.plugin_instance == self.plugin_instance) & (f.name == s) & (f.report_date > check_from)
+                        }.map{ |f| f.value }
+                    else
+                        values = [last_field.value]
+                    end
+                    next unless values.length > 0
+                    average = values.inject(0.0){ |sum, v| sum + v } / values.length
+                    perc = (check_val*self.percentage_change)/100
+                    do_trigger = false
+                    if self.direction.id == :up || self.direction.id == :either
+                        do_trigger = :up if average > (check_val + perc)
+                    elsif self.direction.id == :down || self.direction.id == :either
+                        do_trigger = :down if average < (check_val - perc)
+                    end
+                    if do_trigger
+                        trigger_alert(s, {
+                            :current_value => last_field.value,
+                            :average => average,
+                            :check_value => check_val,
+                            :direction => do_trigger
+                        })
+                    end
                 elsif self.trigger_type.id == :plateau
                     max = self.max_value
                     check_from = Time.now - self.duration
@@ -157,15 +195,12 @@ module Spider; module Master
                         }.order_by(:report_date, :asc).limit(1)
                         first_bad.condition.set(:report_date, '>', last_good.report_date) if last_good
                         first_bad = first_bad[0]
-                        if first_bad
-                            current = ScoutReportField.where{ |f| 
-                                (f.plugin_instance == self.plugin_instance) & (f.name == s)
-                            }.order_by(:report_date, :desc).limit(1)[0]
+                        if first_bad && first_bad.report_date <= check_from
                             trigger_alert(s, {
                                 :first_value => first_bad.value,
                                 :first_time => first_bad.report_date,
-                                :last_value => current.value,
-                                :last_time => current.report_date
+                                :last_value => last_field.value,
+                                :last_time => last_field.report_date
                             })
                         end
                     end
@@ -188,7 +223,15 @@ module Spider; module Master
                 time = params[:time].to_local_time.lformat
                 msg = _("%s exceeded %s, increasing to %s at %s") % [data_name, max_value, value, time]
             elsif self.trigger_type.id == :trend
-                nil
+                current_value = format_value(params[:current_value], md["units"], md["precision"])
+                check_value = format_value(params[:check_value], md["units"], md["precision"])
+                direction = _(self.direction.to_s)
+                percentage = "#{self.percentage_change.lformat(1)}%"
+                duration = _("%d minutes") % self.duration
+                window = _(self.window_reference.to_s)
+                msg = _("%s went %s more than %s over the preceding %s minutes with respect to %s, and is now %s") % [
+                    data_name, direction, percentage, duration, window, current_value
+                ]
             elsif self.trigger_type.id == :plateau
                 max_value = format_value(self.max_value, md["units"], md["precision"])
                 first_value = format_value(params[:first_value], md["units"], md["precision"])
@@ -199,6 +242,28 @@ module Spider; module Master
                     data_name, max_value, first_value, first_time, last_value, last_time
                 ]
             end
+            mail = MailFactory.new
+            path_txt = MasterController.find_resource_path(:email, template+'.txt', nil, MasterController)
+            path_html = MasterController.find_resource_path(:email, template+'.html', nil, MasterController)
+            
+            # ERB data
+            server_id = self.plugin_instance.servant.id
+            server_name = self.plugin_instance.servant.name
+            plugin_id = self.plugin_instance.id
+            plugin_name = self.plugin_instance.name
+            message = msg
+            
+            text = ERB.new(IO.read(path_txt)).result if path_txt && File.exist?(path_txt)
+            html = ERB.new(IO.read(path_html)).result if path_html && File.exist?(path_html)
+
+            mail.text = text if text
+            mail.html = html if html
+            ScoutAlert.create(
+                :plugin_instance => self.plugin_instance,
+                :data_series => series,
+                :subject => msg,
+                :body => mail.body
+            )
         end
         
         with_mapper do

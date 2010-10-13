@@ -1,0 +1,14 @@
+<div>
+    <div>
+        <label>Server:</label>
+        <a href="<%=Spider::Master.url_for_servant(server_id)%>"><%=server_name%></a>
+    </div>
+    <div>
+        <label>Plugin:</label>
+        <a href="<%=Spider::Master.url_for_plugin(plugin_id)%>"><%=plugin_name%></a>
+    </div>
+    
+    <div>
+        <%=message%>
+    </div>
+</div>

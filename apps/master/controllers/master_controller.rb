@@ -13,6 +13,7 @@ module Spider; module Master
         route /customers\/(\d+)\/installations\//, :installations
         route /customers\/(\d+)\/servants\//, :servants
         route /servants\/(\d+)\/plugins\/(\d+)(?:\/(\w+))?(?:\/(.+))?/, :plugin_instance
+        route /servants\/(\d+)\/sites\/(\d+|new|create)(?:\/(\w+))?(?:\/(.+))?/, :site
         #route /servants\/([^\/]+)/, ServantController, :do => lambda{ |id| @request.misc[:servant] = Servant.new(id) }
         route 'login', LoginController
         
@@ -221,6 +222,19 @@ module Spider; module Master
                 plugin_data(instance, sub_action)
             else
                 render('plugin_instance')
+            end
+        end
+        
+        __.html
+        def site(servant_id, id, action=nil, sub_action=nil)
+            if @request.params['submit']
+            end
+            @servant = Servant.new(servant_id)
+            @scene.site_type = @request.params['site_type']
+            if @request.params['edit'] || id == 'new' || id == 'create'
+                render('site_edit')
+            else
+                render('site')
             end
         end
         

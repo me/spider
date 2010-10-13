@@ -104,11 +104,11 @@ module Spider; module Master
             today = Date.today
             statuses.each do |id, val|
                 i = ScoutPluginInstance.new(id)
-                averages = i.averages_computed_at
+                averages_computed_at = i.averages_computed_at
                 i.obj_modified = DateTime.now
                 i.status = val
-                i.compute_averages if averages && averages < today
-                #i.check_triggers
+                i.compute_averages if !averages_computed_at || averages_computed_at < today
+                i.check_triggers
                 i.save
             end
 

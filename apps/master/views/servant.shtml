@@ -28,6 +28,19 @@
     </tpl:pass>
     <tpl:pass sp:if="!@edit">
         <div class="list-title title-block">
+            <h3>_(Sites)</h3>
+            <a href="{ Master.url_for_servant(@servant) }/sites/create" class="add manage">_(New site)</a>
+            <a href="{ Master.url_for_servant(@servant) }/sites/create" class="add manage">_(Add existing site)</a>
+        </div>
+        <table class="list-table">
+            <!-- <tr sp:each="@servant.scout_plugins |plugin|">
+                <td>
+                    <a href="{ Master.url }/servants/{ @servant.id }/plugins/{ plugin.id }">{ plugin.name }</a>
+                    <a href="{ @servant.id }?remove_plugin={ plugin.id }" class="manage remove">_(Remove)</a>
+                </td>
+            </tr> -->
+        </table>
+        <div class="list-title title-block">
             <h3>_(Plugins):</h3>
             <div class="add manage">
                 <span class="manage-label">

@@ -2,9 +2,13 @@ module Spider
     module Master
         include Spider::App
         @controller = :MasterController
+        
+        
+        
     end
 end
 
+require 'apps/master/master'
 
 require 'apps/master/models/admin'
 require 'apps/master/models/customer'
@@ -18,6 +22,8 @@ require 'apps/master/lib/scout_plugin'
 require 'apps/master/controllers/master_controller'
 require 'apps/app_server/app_server'
 require 'apps/master/controllers/scout_controller'
+require 'apps/master/lib/site_type'
+require 'apps/master/plugins/site_types/spider/spider'
 
 Spider.home.controller.route 'clients', Spider::Master::ScoutController
 
