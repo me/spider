@@ -30,7 +30,7 @@ Spider.defineWidget('Spider.Forms.FileInput', 'Spider.Forms.Input', {
 						link.addClass('open');
 						changeDiv.show();
 					}
-				});
+			});
 		}
 		
 	}    
