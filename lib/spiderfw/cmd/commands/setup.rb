@@ -31,6 +31,13 @@ class SetupCommand < CmdParse::Command
             if (apps.length > 1) && (@to || @from || @version)
                 raise "Can't use --from, --to or --version with multiple apps"
             end
+            if apps.length == 0
+                require 'lib/spiderfw/setup/spider_setup_wizard'
+                wizard = Spider::SpiderSetupWizard.new
+                wizard.implementation(Spider::ConsoleWizard)
+                wizard.run
+                
+            end
             apps.each do |name|
                 Spider.load_app(name) unless Spider.apps[name]
                 app = Spider.apps[name]
@@ -61,6 +68,7 @@ class SetupCommand < CmdParse::Command
                 tasks.each do |task|
                     Spider.logger.info("Running setup task #{path+'/'+task}")
                     t = Spider::SetupTask.load("#{path}/#{task}")
+                    t.app = app
                     begin
                         done_tasks << t
                         t.do_up

@@ -37,11 +37,22 @@ class CreateCommand < CmdParse::Command
                    "-p"){ |path|
                 @path = path
             }
+            opt.on("--no-wizard", _("Don't launch wizard"), "-W"){ |w| @no_wizard }
         end
         install.set_execution_block do |installs|
             @path ||= Dir.pwd
             installs.each do |inst|
                 Spider::Create.home(inst, @path)
+                unless @no_wizard
+                    Dir.chdir(inst) do 
+                        require 'spiderfw'
+                        require 'lib/spiderfw/setup/spider_setup_wizard'
+                        wizard = Spider::SpiderSetupWizard.new
+                        wizard.first_run = true
+                        wizard.implementation(Spider::ConsoleWizard)
+                        wizard.run
+                    end
+                end
             end
         end
         self.add_command(install, false)
