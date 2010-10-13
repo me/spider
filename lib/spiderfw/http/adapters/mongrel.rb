@@ -117,7 +117,6 @@ module Spider; module HTTP
 
             controller_response = Spider::Response.new
             if (Spider.conf.get('http.auto_headers'))
-                Spider::Logger.debug("ENABLING AUTO HEADERS: #{Spider.conf.get('http.auto_headers')}")
                 controller_response.server_output = MongrelIO.new(response, controller_response)
             else
                 controller_response.server_output = response
