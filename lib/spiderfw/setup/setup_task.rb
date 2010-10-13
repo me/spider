@@ -2,7 +2,7 @@ module Spider
     
     class SetupTask
         attr_reader :path, :version
-        attr_accessor :up, :down
+        attr_accessor :up, :down, :app
         
         class <<self
             def tasks
@@ -44,11 +44,45 @@ module Spider
         end
         
         def do_up
-            @up.call
+            intance_eval(&@up)
+            sync_schema unless @no_sync || @sync_done
         end
         
         def do_down
-            @down.call
+            instance_eval(&@down)
+        end
+        
+        def no_sync_schema
+            @no_sync = true
+        end
+        
+        def sync_schema(*models)
+            if models[-1].is_a?(Hash)
+                options = models.pop
+            else
+                options = {}
+            end
+            if models.empty?
+                models = @app.models.reject{ |m| !(m < Spider::Model::Managed) }
+            end
+            Spider::Model.sync_schema(
+                model, options[:force], 
+                :drop_fields => options[:drop_fields], 
+                :update_sequences => options[:update_sequences], 
+                :no_foreign_key_constraints => options[:no_foreign_key_constraints]
+            )
+            @sync_done = true
+        end
+        
+        def sync_schema!(*models)
+            if models[-1].is_a?(Hash)
+                options = models.pop
+            else
+                options = {}
+            end
+            options[:force] = true
+            args = models + [options]
+            sync_schema(*args)
         end
         
 
