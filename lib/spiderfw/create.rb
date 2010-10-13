@@ -66,6 +66,9 @@ module Spider
                     dst.close
                 end
             end
+            Dir.glob("#{dest_path}/**/.dirs").each do |f|
+                File.unlink(f)
+            end
         end
         
     end
