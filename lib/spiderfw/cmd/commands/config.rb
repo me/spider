@@ -48,6 +48,22 @@ class ConfigCommand < CmdParse::Command
         end
         
         self.add_command(get)
+        
+        set = CmdParse::Command.new('set', false)
+        set.short_desc = _("Set the value of a configuration option")
+        set.set_execution_block do |args|
+            require 'spiderfw'
+            require 'lib/spiderfw/config/configuration_editor'
+            editor = Spider::ConfigurationEditor.new
+            Spider.config.loaded_files.each do |f|
+                editor.load(f)
+            end
+            editor.set(*args)
+            editor.save
+        end
+        
+        self.add_command(set)
+        
     end
     
 end
