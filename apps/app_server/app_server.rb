@@ -19,7 +19,17 @@ module Spider
             self.paths.each do |path|
                 apps += scan_path(path)
             end
+            @apps_by_id = {}
+            apps.each do |app|
+                @apps_by_id[app.spec.id] = app
+                app.app_server(Spider.conf.get('app_server.url'))
+            end
             apps
+        end
+        
+        def self.apps_by_id
+            self.apps
+            @apps_by_id
         end
         
         def self.scan_path(path)

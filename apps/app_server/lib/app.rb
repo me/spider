@@ -1,10 +1,12 @@
 module Spider; module AppServer
     
     class App
+        attr_reader :path
         attr_accessor :spec
         attr_reader :last_modified
         
-        def initialize
+        def initialize(path)
+            @path = path
         end
         
         def method_missing(name, *args)

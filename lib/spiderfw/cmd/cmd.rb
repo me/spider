@@ -9,6 +9,7 @@ require 'spiderfw/cmd/commands/setup'
 require 'spiderfw/cmd/commands/model'
 require 'spiderfw/cmd/commands/config'
 require 'spiderfw/cmd/commands/content'
+require 'spiderfw/cmd/commands/app'
 
 module Spider; module CommandLine
 
@@ -49,6 +50,7 @@ module Spider; module CommandLine
             @cmd.add_command(ModelCommand.new)
             @cmd.add_command(ConfigCommand.new)
             @cmd.add_command(ContentCommand.new)
+            @cmd.add_command(AppCommand.new)
             # @cmd.add_command(ScaffoldCommand.new)
         end
 
