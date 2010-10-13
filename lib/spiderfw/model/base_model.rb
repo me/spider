@@ -1187,6 +1187,7 @@ module Spider; module Model
         
         def self.get(values)
             return self.new(values) unless Spider::Model.identity_mapper
+            values = [values] unless values.is_a?(Hash) || values.is_a?(Array)
             if values.is_a?(Array)
                 vals = {}
                 self.primary_keys.each_with_index do |k, i|
