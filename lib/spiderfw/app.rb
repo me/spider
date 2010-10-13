@@ -192,11 +192,24 @@ module Spider
         class AppSpec
             @@attributes = []
             
-            def self.attribute(name)
+            def self.attribute(name, options={})
                 @@attributes << name
                 str = <<END_OF_EVAL
                 def #{name}(val=nil)
                     @#{name} = val if val
+                    @#{name} ||= #{options[:default].inspect}
+                    @#{name}
+                end
+END_OF_EVAL
+                class_eval(str)
+            end
+            
+            def self.array_attribute(name, options={})
+                @@attributes << name
+                str = <<END_OF_EVAL
+                def #{name}(*vals)
+                    @#{name} = vals unless vals.empty?
+                    @#{name} ||= []
                     @#{name}
                 end
 END_OF_EVAL
@@ -208,11 +221,13 @@ END_OF_EVAL
             attribute :description
             attribute :authors
             attribute :git_repo
-            attribute :git_repo_ro
             attribute :git_repo_rw
-            attribute :depends
-            attribute :gems
+            array_attribute :depends
+            array_attribute :depends_optional
+            array_attribute :gems
+            array_attribute :gems_optional
             attribute :version
+            attribute :app_server
             
             def id(val=nil)
                 self.app_id(val)
@@ -257,6 +272,14 @@ END_OF_EVAL
             
             def to_json
                 to_h.to_json
+            end
+            
+            def self.parse_hash(h)
+                spec = self.new
+                h.each do |key, value|
+                    spec.send(:"#{key}", value)
+                end
+                spec
             end
 
         end
