@@ -5,6 +5,7 @@ module Spider
     
     class Configuration
         attr_accessor :options, :current_set, :hash_key
+        attr_reader :loaded_files
         @@options = {}
         @@lang_aliases = {}
         
@@ -26,6 +27,7 @@ module Spider
             @sets['default'] = self
             @values = {}
             @hash_key = nil
+            @loaded_files = []
         end
         
         def global_options
@@ -103,6 +105,7 @@ module Spider
                     end
                 else
                     val = convert_val(@options[key][:params][:type], val) if (@options[key][:params][:type])
+                    @options[key][:params][:do].call(val) if @options[key][:params][:do]
                     self[key] = val
                 end
             end
@@ -267,6 +270,7 @@ module Spider
                     configure(key, val)
                 end
             end
+            @loaded_files << file
         end
         
         def to_yaml
@@ -285,6 +289,15 @@ module Spider
                 h[k] = v
             end
             return h
+        end
+        
+        def get_editor
+            require 'spiderfw/config/configuration_editor'
+            editor = ConfigurationEditor.new
+            @loaded_files.each do |f|
+                editor.load(f)
+            end
+            editor
         end
         
     end
