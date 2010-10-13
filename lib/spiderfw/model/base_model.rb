@@ -474,7 +474,7 @@ module Spider; module Model
                             val = qs
                         end
                     else
-                        val = element.model.new(val) unless val.is_a?(BaseModel)
+                        val = element.model.get(val) unless val.is_a?(BaseModel)
                     end
                 end
                 val = prepare_child(element.name, val)
