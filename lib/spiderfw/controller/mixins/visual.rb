@@ -100,7 +100,13 @@ module Spider; module ControllerMixins
             @template = get_template if !@template && @visual_params[:template]
             init_widgets(@template) if @template
             if @visual_params[:call]
-                send(@visual_params[:call], *params)
+                meth = self.method(@visual_params[:call])
+                args = params + @executed_method_arguments
+                arity = meth.arity
+                arity = (-arity + 1) if arity < 0
+                args = arity == 0 ? [] : args[0..(arity-1)]
+                args = [nil] if meth.arity == 1 && args.empty?
+                send(@visual_params[:call], *args)
             end
             if @visual_params[:template] && !@_widget && !done?
                 if (@template)
