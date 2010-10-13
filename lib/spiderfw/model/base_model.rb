@@ -456,7 +456,9 @@ module Spider; module Model
                         set(element.integrated_from, Spider::Model.get(integrated_obj))
                         get(element.integrated_from).merge!(integrated_obj)
                     end
-                    @modified_elements[name] = true unless element.primary_key?
+                    if !element.primary_key? && integrated_obj.element_modified?(name)
+                        @modified_elements[name] = true
+                    end
                     return res
                 end
                 if (val && element.model?)
