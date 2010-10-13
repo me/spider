@@ -104,24 +104,29 @@ module Spider; module Model; module Storage; module Db
             end 
         end
         
-        def parse_url(url)
+        def self.parse_url(url)
             # db:mysql://<username:password>@<host>:<port>/<database>
             if (url =~ /.+:\/\/(?:(.+):(.+)@)?(.+)?\/(.+)/)
-                @user = $1
-                @pass = $2
-                @location = $3
-                @db_name = $4
+                user = $1
+                pass = $2
+                location = $3
+                db_name = $4
             else
                 raise ArgumentError, "Mysql url '#{url}' is invalid"
             end
-            if (@location =~ /localhost:(\/.+)/)
-                @host = 'localhost'
-                @sock = $1
+            if (location =~ /localhost:(\/.+)/)
+                host = 'localhost'
+                sock = $1
             else
-                @location =~ /(.+)(?::(\d+))/
-                @host = $1
-                @port = $2
+                location =~ /(.+)(?::(\d+))/
+                host = $1
+                port = $2
             end
+            return [host, user, pass, db_name, port, sock]
+        end
+        
+        def parse_url(url)
+            @host, @user, @pass, @db_name, @port, @sock = parse_url
             @connection_params = [@host, @user, @pass, @db_name, @port, @sock]
         end
         
