@@ -45,7 +45,9 @@ module Spider; module Model
                 has_pks = true if v
                 pks[k.name] = model.prepare_value(k, v)
             end
-            raise IdentityMapperException, "Can't get without all primary keys" unless has_pks
+            unless has_pks
+                raise IdentityMapperException, "Can't get #{model} from IdentityMapper without all primary keys, #{values.inspect} given"
+            end
             pks.extend(HashComparison)
             current = @objects[model][pks]
             obj = nil
