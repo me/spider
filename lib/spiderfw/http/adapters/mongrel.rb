@@ -146,9 +146,11 @@ module Spider; module HTTP
             ensure
                 MongrelIO.send_headers(controller_response, response) unless response.header_sent
                 Spider::Logger.debug("---- Closing Mongrel Response ---- ")
-                response.socket.flush
-                response.finished
-                response.socket.close
+                unless response.socket.closed?
+                    response.socket.flush
+                    response.finished
+                    response.socket.close
+                end
                 Spider.request_finished
             end
             if controller
