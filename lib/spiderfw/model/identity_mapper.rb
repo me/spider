@@ -45,6 +45,7 @@ module Spider; module Model
                 has_pks = true if v
                 pks[k.name] = model.prepare_value(k, v)
             end
+            normalize_pks(model, pks)
             unless has_pks
                 raise IdentityMapperException, "Can't get #{model} from IdentityMapper without all primary keys, #{values.inspect} given"
             end
@@ -54,6 +55,7 @@ module Spider; module Model
             if current
                 obj = current
             else
+#                Spider.logger.debug("GETTING NEW #{model} FROM #{pks.inspect}")
                 obj = model.new(pks)
                 #@objects[model][pks] = obj
             end
@@ -83,11 +85,12 @@ module Spider; module Model
                 raise IdentityMapperException, "Can't get without all primary keys" unless obj.primary_keys_set?
                 pks = {}
                 obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
+                pks = normalize_pks(obj.class, pks)
                 pks.extend(HashComparison)
                 @objects[obj.class] ||= {}
                 if (check && (existent = @objects[obj.class][pks]) && existent.object_id != obj.object_id)
-                    # debugger if fail_if_exists
-                    raise IdentityMapperException, "A different instance of the same object already exists in the identity mapper" if fail_if_exists
+                    #debugger if fail_if_exists
+                    raise IdentityMapperException, "A different instance of the same object #{obj} already exists in the identity mapper" if fail_if_exists
                     existent.merge!(obj)
                     return existent
                 else
@@ -122,6 +125,7 @@ module Spider; module Model
         def has?(obj)
             pks = {}
             obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
+            pks = normalize_pks(obj.class, pks)
             pks.extend(HashComparison)
             @objects[obj.class] && @objects[obj.class][pks]
         end
@@ -136,6 +140,19 @@ module Spider; module Model
         def reset
             @objects = {}
             @pks = {}
+        end
+        
+        def normalize_pks(model, keys)
+            model_pks = model.primary_keys.map{ |k| k.name }
+            model_pks.each do |k|
+                if keys[k] && keys[k].is_a?(BaseModel)
+                    keys[k] = keys[k].class.primary_keys.length > 1 ? keys[k].primary_keys : keys[k].primary_keys[0]
+                end
+            end
+            keys.keys.each do |k|
+                keys.delete(k) unless model_pks.include?(k)
+            end
+            keys
         end
 
         
