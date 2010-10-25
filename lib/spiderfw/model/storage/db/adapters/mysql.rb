@@ -126,7 +126,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def parse_url(url)
-            @host, @user, @pass, @db_name, @port, @sock = parse_url
+            @host, @user, @pass, @db_name, @port, @sock = self.class.parse_url(url)
             @connection_params = [@host, @user, @pass, @db_name, @port, @sock]
         end
         
@@ -298,6 +298,18 @@ module Spider; module Model; module Storage; module Db
              sql = super
              sql += " AUTO_INCREMENT" if attributes[:autoincrement]
              return sql
+         end
+         
+         def function(func)
+             return super unless func.func_name == :concat
+             fields = func.elements.map{ |func_el|
+                 if (func_el.is_a?(Spider::QueryFuncs::Function))
+                     function(func_el)
+                 else
+                     func.mapper_fields[func_el]
+                 end
+             }
+             return "CONCAT(#{fields.map{ |f| "COALESCE(#{f}, '')" }.join(', ')})"
          end
          
          ##############################################################
