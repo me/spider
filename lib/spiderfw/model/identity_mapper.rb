@@ -82,6 +82,7 @@ module Spider; module Model
                 obj.each_current_index{ |i| obj[i] = put(obj[i], check) }
                 return obj
             else
+                return obj if @pks[obj.object_id]
                 raise IdentityMapperException, "Can't get without all primary keys" unless obj.primary_keys_set?
                 pks = {}
                 obj.class.primary_keys.each{ |key| pks[key.name] = obj.get(key) }
