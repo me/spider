@@ -91,7 +91,7 @@ module Spider; module Model
                 @objects[obj.class] ||= {}
                 if (check && (existent = @objects[obj.class][pks]) && existent.object_id != obj.object_id)
                     #debugger if fail_if_exists
-                    raise IdentityMapperException, "A different instance of the same object #{obj} already exists in the identity mapper" if fail_if_exists
+                    raise IdentityMapperException, "A different instance of the same object #{obj.inspect} already exists in the identity mapper" if fail_if_exists
                     existent.merge!(obj)
                     return existent
                 else
