@@ -1777,13 +1777,19 @@ module Spider; module Model
         
         # Sets all values of obj on the current object
         def merge!(obj, only=nil)
+            return self if obj.object_id == self.object_id
             obj.class.elements_array.select{ |el| 
                 (only || obj.element_has_value?(el)) && !el.integrated? && !el.attributes[:computed_from]
             }.each do |el|
                 next if only && !only.key?(el.name)
                 val = obj.get_no_load(el)
+                if el.model? && only[el.name].is_a?(Hash) && (our_val = self.get_no_load(el)) \
+                    && val.is_a?(BaseModel) && our_val.is_a?(BaseModel)
+                    val = our_val.merge!(val, only[el.name])
+                end
                 set_loaded_value(el, val, false)
             end
+            self
         end
         
         # Returns a deep copy of the object
