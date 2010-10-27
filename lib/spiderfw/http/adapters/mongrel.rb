@@ -46,17 +46,20 @@ module Spider; module HTTP
         end
         
         def self.send_headers(controller_response, response)
-            controller_response.prepare_headers
-            response.status = controller_response.status
-            response.send_status(nil)
-            controller_response.headers.each do |key, val|
-                if (val.is_a?(Array))
-                    val.each{ |v| response.header[key] = v }
-                else
-                    response.header[key] = val
+            begin
+                controller_response.prepare_headers
+                response.status = controller_response.status
+                response.send_status(nil)
+                controller_response.headers.each do |key, val|
+                    if (val.is_a?(Array))
+                        val.each{ |v| response.header[key] = v }
+                    else
+                        response.header[key] = val
+                    end
                 end
+                response.send_header
+            rescue Errno::EPIPE, IOError
             end
-            response.send_header
         end
         
         def send_headers
