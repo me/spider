@@ -16,7 +16,7 @@ module Spider; module Auth
             end
             val = self.get(el)
             val.each do |v|
-                return true if v.id == permission
+                return true if v.id.to_sym == permission.to_sym
             end
             self.class.rbac_inherit_from.each do |element|
                 val = self.get(element)
