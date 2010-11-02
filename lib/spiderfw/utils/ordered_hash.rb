@@ -87,6 +87,10 @@ module Spider
       def to_a
         @keys.map { |key| [ key, self[key] ] }
       end
+      
+      def to_json
+          '{'+ @keys.map{ |key| ({key => self[key]}).to_json[1..-2] }.join(', ') +'}'
+      end
 
       def each_key
         @keys.each { |key| yield key }
