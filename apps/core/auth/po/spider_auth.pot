@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Auth 0.1\n"
-"POT-Creation-Date: 2010-03-24 16:27+0100\n"
+"POT-Creation-Date: 2010-11-02 18:12+0100\n"
 "PO-Revision-Date: 2009-06-30 16:58+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: controllers/mixins/auth_helper.rb:63
+#: controllers/mixins/auth_helper.rb:65
 msgid "Please login first"
 msgstr ""
 
@@ -26,12 +26,28 @@ msgid ""
 "or realm"
 msgstr ""
 
+#: models/group.rb:11
+msgid "Label"
+msgstr ""
+
+#: models/group.rb:12
+msgid "Name"
+msgstr ""
+
+#: models/login_user.rb:7
+msgid "The username contains disallowed characters"
+msgstr ""
+
 #: models/mixins/authentication_tracking.rb:6
 msgid "Last login"
 msgstr ""
 
 #: models/mixins/authentication_tracking.rb:7
 msgid "Login count"
+msgstr ""
+
+#: models/mixins/rbac.rb:36
+msgid "%s permissions"
 msgstr ""
 
 #: models/super_user.rb:5

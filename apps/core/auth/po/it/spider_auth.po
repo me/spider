@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Auth 0.1\n"
-"POT-Creation-Date: 2010-03-24 16:27+0100\n"
-"PO-Revision-Date: 2010-03-24 16:28+0100\n"
+"POT-Creation-Date: 2010-11-02 18:12+0100\n"
+"PO-Revision-Date: 2010-11-02 18:13+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -15,13 +15,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: controllers/mixins/auth_helper.rb:63
+#: controllers/mixins/auth_helper.rb:65
 msgid "Please login first"
 msgstr "Per favore, esegui il login"
 
 #: models/digest_user.rb:17
 msgid "You must always supply the password to a DigestUser when updating username or realm"
 msgstr "È necessario sempre specificare la password di un DigestUser quando si modifica lo username o il realm"
+
+#: models/group.rb:11
+msgid "Label"
+msgstr "Descrizione"
+
+#: models/group.rb:12
+msgid "Name"
+msgstr "Nome"
+
+#: models/login_user.rb:7
+msgid "The username contains disallowed characters"
+msgstr "Il nome utente contiene caratteri non permessi"
 
 #: models/mixins/authentication_tracking.rb:6
 msgid "Last login"
@@ -30,6 +42,10 @@ msgstr "Ultima login"
 #: models/mixins/authentication_tracking.rb:7
 msgid "Login count"
 msgstr "Numero login"
+
+#: models/mixins/rbac.rb:36
+msgid "%s permissions"
+msgstr "Permessi %s"
 
 #: models/super_user.rb:5
 msgid "Superuser"
