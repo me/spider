@@ -451,7 +451,7 @@ module Spider; module Model
                         op = replace[op]
                     end
                     op = op.to_s
-                    c = Condition.no_conjunction.set(@condition_element_name, op, val)
+                    c = Condition.and.set(@condition_element_name, op, val)
                     if (@condition_context)
                         @condition_context << c
                     end
