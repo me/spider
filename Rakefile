@@ -30,7 +30,7 @@ task :updatepo, [:app] do |t, args|
         mod.gettext_parsers.each do |p|
             require p
         end
-        GetText.update_pofiles(mod.short_name, Dir.glob("{#{mod.gettext_dirs.join(',')}}/**/*.{#{mod.gettext_extensions.jois(',')}}"), "#{mod.name} #{mod.version}")
+        GetText.update_pofiles(mod.short_name, Dir.glob("{#{mod.gettext_dirs.join(',')}}/**/*.{#{mod.gettext_extensions.join(',')}}"), "#{mod.name} #{mod.version}")
         print "\n"
     end
 
