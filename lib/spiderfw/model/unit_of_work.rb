@@ -44,6 +44,7 @@ module Spider; module Model
                     end
                 end
             end
+            @running = true
             @objects.each do |obj_id, obj|
                 @actions[obj_id].each do |action, params|
                     if action == :save
@@ -68,6 +69,11 @@ module Spider; module Model
             end
             @objects = {}
             @new_objects = []
+            @running = false
+        end
+        
+        def running?
+            @running
         end
         
         alias :commit :run
@@ -89,6 +95,7 @@ module Spider; module Model
                 
         
         def add(obj, action = :save, params = {})
+            raise "Objects can't be added to the UnitOfWork while it is running" if @running
             if (obj.class == QuerySet)
                 obj.each do |item|
                     add(item, action, params)
