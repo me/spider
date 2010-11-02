@@ -201,7 +201,7 @@ module Spider; module Components
         end
 
         def create_sublist(name, attributes = {})
-            w = create_widget(self.class, name, @request, @response)
+            w = create_widget(self.class, name)
             if (attributes['inherit_template'] && @template)
                 w.template = @template
             end

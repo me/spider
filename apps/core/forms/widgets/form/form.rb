@@ -274,7 +274,7 @@ module Spider; module Forms
         end
         
         def create_input(type, el)
-            input = create_widget(type, el.name, @request, @response)
+            input = create_widget(type, el.name)
             input.css_classes << "el-#{el.name}"
             case type.name
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'

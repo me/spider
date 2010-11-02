@@ -543,6 +543,8 @@ module Spider
         end
         
         def create_widget(klass, id,  *params)
+            params.unshift(@response)
+            params.unshift(@request)
             obj = klass.new(*params)
             obj.id = id
             add_widget(obj)
@@ -760,6 +762,10 @@ module Spider
     end
     
     module WidgetScene
+        
+        def _wt
+            self[:widget][:id_path].join('/')
+        end
         
         def widget_target
             "#{self[:request][:path]}?_wt=#{self[:widget][:id_path].join('/')}"
