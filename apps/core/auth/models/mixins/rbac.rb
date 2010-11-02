@@ -9,6 +9,11 @@ module Spider; module Auth
         def can?(permission, context=nil)
             context ||= self.class.rbac_contexts.first
             el = self.class.rbac_provider_elements[context]
+            options = RBAC.options(context)
+            if options[:superuser]
+                val = self.get(options[:superuser])
+                return true if val
+            end
             val = self.get(el)
             val.each do |v|
                 return true if v.id == permission
@@ -31,9 +36,10 @@ module Spider; module Auth
             
             def rbac_provider_for(context)
                 @rbac_provider_elements ||= {}
-                @rbac_provider_elements[context] = :"#{context}_#{_('permissions')}"
+                @rbac_provider_elements[context] = :"#{context}_permissions"
                 self.multiple_choice @rbac_provider_elements[context], RBAC.context(context),
                     :label => _("%s permissions") % context.to_s.capitalize
+                self.elements[@rbac_provider_elements[context]].type.translate = true
             end
             
             def rbac_provider_elements
