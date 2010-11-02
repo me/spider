@@ -1,5 +1,5 @@
 Spider::Template.define_named_asset 'jquery', [
-     [:js, 'js/jquery/jquery-1.4.2.js', Spider::Components]
+     [:js, 'js/jquery/jquery-1.4.3.js', Spider::Components]
  ]
 Spider::Template.define_named_asset 'spider', [
     [:js, 'js/inheritance.js', Spider::Components],
