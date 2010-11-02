@@ -16,7 +16,21 @@ module Spider; module Model
             # Sets/gets model data.
             def data(val=nil)
                 self.data = val if (val)
-                @data
+                d = @data
+                if self.translate?
+                    @data.each do |k, v|
+                        d[k] = _(v)
+                    end
+                end
+                d
+            end
+            
+            def translate=(val)
+                @translate = val
+            end
+            
+            def translate?
+                @translate
             end
             
             def mapper
