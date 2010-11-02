@@ -99,7 +99,7 @@ module Spider; module Model
                     @pks[obj.object_id] = pks
                     traverse(obj)
                     uow = Spider::Model.unit_of_work
-                    uow.add(obj) if uow
+                    uow.add(obj) if uow && !uow.running?
                     return obj
                 end
             end
