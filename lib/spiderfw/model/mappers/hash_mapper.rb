@@ -40,7 +40,10 @@ module Spider; module Model; module Mappers
             end
             desc ||= alt_desc
             raise MapperError, "Model has no primary key or no description element" unless primary_key && desc
-            res =  @model.data.map{ |id, val| {primary_key => id.to_s, desc => val} }.select do |row|
+            res =  @model.data.map{ |id, val| 
+                id = id.to_s if id.is_a?(Symbol)
+                {primary_key => id, desc => val} 
+            }.select do |row|
                 check_condition(query.condition, row)
             end
             res.extend(Spider::Model::Storage::StorageResult)
