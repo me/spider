@@ -141,6 +141,7 @@ module Spider
             
             def compile_text(str)
                 res = ""
+                str = str.gsub(/\302\240/, ' ') # remove annoying fake space
                 scanner = ::StringScanner.new(str)
                 pos = 0
                 var_regexp = /\{ ([^}]+) \}/
