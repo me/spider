@@ -1782,12 +1782,16 @@ module Spider; module Model
                 (only || obj.element_has_value?(el)) && !el.integrated? && !el.attributes[:computed_from]
             }.each do |el|
                 next if only && !only.key?(el.name)
-                val = obj.get_no_load(el)
-                if el.model? && only[el.name].is_a?(Hash) && (our_val = self.get_no_load(el)) \
+                val = obj.element_has_value?(el.name) ? obj.get_no_load(el) : nil
+                our_val = self.element_has_value?(el.name) ? self.get_no_load(el) : nil
+                next if our_val == val
+                if el.model? && only && only[el.name].is_a?(Hash) && our_val \
                     && val.is_a?(BaseModel) && our_val.is_a?(BaseModel)
-                    val = our_val.merge!(val, only[el.name])
+                    val = our_val.merge!(val, only[el.name])                    
+                else
+                    Spider.logger.warn("Element #{el.name} overwritten in #{obj.inspect}") if our_val && our_val != val
                 end
-                set_loaded_value(el, val, false)
+                set_loaded_value(el, val, false) unless val.nil? && element.multiple?
             end
             self
         end
