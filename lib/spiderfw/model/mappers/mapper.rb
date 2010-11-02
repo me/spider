@@ -522,8 +522,7 @@ module Spider; module Model
         def find(query, query_set=nil, options={})
             set = nil
             Spider::Model.with_identity_mapper do |im|
-#                im.put(query_set)
-                # FIXME!!! probably need to update loaded elements, but it's extremely slow
+                im.put(query_set)
                 query_set.update_loaded_elements if query_set
                 set = query_set || QuerySet.new(@model)
                 was_loaded = set.loaded
