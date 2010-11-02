@@ -1942,8 +1942,8 @@ module Spider; module Model
                 return
             end
             save_mode do
-                before_save unless Spider.current[:unit_of_work]
-                if Spider.current[:unit_of_work]
+                before_save unless unit_of_work_available?
+                if unit_of_work_available?
                     Spider.current[:unit_of_work].add(self)
                     if @unit_of_work
                         @unit_of_work.commit
@@ -1980,8 +1980,8 @@ module Spider; module Model
                 return
             end
             save_mode do
-                before_save unless Spider.current[:unit_of_work]
-                if Spider.current[:unit_of_work]
+                before_save unless unit_of_work_available?
+                if unit_of_work_available?
                     Spider.current[:unit_of_work].add(self, :save, :force => :insert)
                     if @unit_of_work
                         @unit_of_work.commit
@@ -1998,6 +1998,10 @@ module Spider; module Model
                 end
             end
             self
+        end
+        
+        def unit_of_work_available?
+            Spider.current[:unit_of_work] && !Spider.current[:unit_of_work].running?
         end
         
         # Inserts the object in the storage
