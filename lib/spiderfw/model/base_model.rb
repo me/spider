@@ -748,9 +748,10 @@ module Spider; module Model
         # Externalizes the superclass elements making the superclass an external integrated element.
         # Parameters may be:
         # * :name               (symbol) name of the created element
-        # * :delete_cascade     (bool) delete cascade the superclass instance
+        # * :delete_cascade     (bool) delete cascade the superclass instance. True by default.
         # * :no_local_pk        (bool) do not define an id for this class
         def self.class_table_inheritance(params={})
+            
             self.extend_model(superclass, params)
         end
         
@@ -1881,15 +1882,16 @@ module Spider; module Model
             if @all_values_observers
                 @all_values_observers.each{ |proc| proc.call(self, element_name, new_val) }
             end
+            self.class.notify_observers(element_name, new_val, self)
         end
         
         # Calls the observers for element_name
-        def self.notify_observers(element_name, new_val)
+        def self.notify_observers(element_name, new_val, obj=nil)
             if @value_observers && @value_observers[element_name]
-                @value_observers[element_name].each{ |proc| proc.call(self, element_name, new_val) }
+                @value_observers[element_name].each{ |proc| proc.call(obj, element_name, new_val) }
             end
             if @all_values_observers
-                @all_values_observers.each{ |proc| proc.call(self, element_name, new_val) }
+                @all_values_observers.each{ |proc| proc.call(obj, element_name, new_val) }
             end
         end
         
