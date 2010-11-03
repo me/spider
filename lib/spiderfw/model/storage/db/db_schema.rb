@@ -225,6 +225,19 @@ module Spider; module Model; module Storage; module Db
             "#<#{self.class.name}:#{self.object_id} @name=\"#{@name}\", @table=#<Spider::Model::Storage::Db::Table:#{@table.object_id} #{@table.name}> >"
         end
         
+        def ==(other)
+            @table == other.table && @name == other.name
+        end
+        
+        
+        def eql?(other)
+            self == other
+        end
+        
+        def hash
+            to_s.hash
+        end
+        
     end
     
     class FieldExpression < Field
