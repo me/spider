@@ -555,6 +555,9 @@ module Spider; module Model; module Storage; module Db
                 else
                     val = bound_vars ? '?' : value
                     sql = "#{key} #{comp} #{val}"
+                    if comp == '<>'
+                        sql = "(#{sql} or #{key} IS NULL)"
+                    end
                 end
             end
             return sql
