@@ -122,11 +122,10 @@ module Spider; module Master
             day_values = {}
             p "TOTAL ROWS: #{fields.total_rows}"
 #            t1 = Time.now
-            Spider::Profiling.start
-            fields[0]
+            #Spider::Profiling.start
  #           t2 = Time.now
  #           Spider.logger.debug("DONE IN #{(t2 - t1).to_i} seconds")
-            Spider::Profiling.stop
+            #Spider::Profiling.stop
             fields.each do |f|
                 day_values[f.name] ||= []
                 week_values[f.name] ||= []
@@ -170,80 +169,94 @@ module Spider; module Master
             end
             
             
+            
+        end
+        
+        def fields_to_averages(last, type= :hour)
+            
             fields = ScoutReportField.where{ |f| 
-                (f.plugin_instance == self) & (f.report_date < last) & (f.mean == nil)
+                (f.plugin_instance == self) & (f.report_date < last) & ( (f.averaged .not type) )
             }.order_by(:name, :report_date)
             last_key = nil
+            first_date = nil
             last_date = nil
             averages = []
             values = []
             seen = {}
-            day_values = []
+            
+            check_commit = case type
+            when :hour
+                lambda{ |last_date, date| last_date.hour != date.hour }
+            when :day
+                lambda{ |last_date, date| last_date.day = date.day }
+            when :week
+                lambda{ |last_date, date| last_date.cweek != date.cweek }
+            end
+            
             fields.each do |f|
                 if last_key && f.name != last_key
-                    unless values.empty?
-                        averages << hourly_averages(values, last_date)
-                        commit_averages(last_key, averages, last)
+                    unless values.empty?                        
+                        commit_averages(last_key, values, first_date, last_date)
                     end
+                    first_date = nil
                     last_date = nil
                     values = []
                 end
+                first_date ||= f.report_date
                 last_key = f.name
                 date = f.report_date
-                if last_date && last_date.hour != date.hour
-                    averages << hourly_averages(values, last_date)
+                if last_date && check_commit.call(last_date, date)
+                    commit_averages(last_key, values, first_date, last_date)
+                    first_date = last_date
+                    values = []
                 end
-                values << f.value
-                if f.report_date.day == yesterday.day
-                    day_values << f.value
+                if last_date
+                    # p "DATE: #{date}, LAST: #{last_date}"
+                    # p "DIFF: #{date.to_local_time - last_date.to_local_time}"
+                    values << [f.value, date.to_local_time - last_date.to_local_time]
                 end
                 last_date = date
             end
             unless values.empty?
-                averages << hourly_averages(values, last_date)
-                commit_averages(last_key, averages, last)
+                commit_averages(last_key, values, first_date, last_date)
             end
-            
-            self.averages_computed_at = today
-            self.save
         end
         
-        def commit_averages(key, averages, last)
+        def commit_averages(key, values, first, last, type= :hour)
+            av = do_averages(values)
             ScoutReportField.in_transaction do
-                c = Spider::Model::Condition.new{ |f| (f.name == key) & (f.report_date < last) & (f.mean == nil) }
+                c = Spider::Model::Condition.new{ |f| (f.name == key) & (f.report_date <= last) & (f.report_date >= first) }
                 ScoutReportField.mapper.delete(c)
-                averages.each do |av|
-                    ScoutReportField.create(
-                        :name => key,
-                        :plugin_instance => self,
-                        :report_date => av[0],
-                        :cnt => av[1],
-                        :mean => av[2],
-                        :mode => av[3],
-                        :stdev => av[4],
-                        :high => av[5],
-                        :low => av[6],
-                        :value => av[2]
-                    )
-                end
+                av.unshift(last)
+                ScoutReportField.create(
+                    :name => key,
+                    :plugin_instance => self,
+                    :report_date => av[0],
+                    :cnt => av[1],
+                    :mean => av[2],
+                    :mode => av[3],
+                    :stdev => av[4],
+                    :high => av[5],
+                    :low => av[6],
+                    :value => av[2],
+                    :averaged => type
+                )
             end
         end
         
-        def hourly_averages(values, last_date)
+        def do_averages(values_with_weight)
+            values = values_with_weight.map{ |v| v[0] }
             n = values.length
-            sum = values.inject(0.0){ |acc, i| acc + i }
-            mean = sum / values.length
-            variance = values.inject(0.0){ |sum, v| sum + (v - mean)**2 } / (n - 1)
+            sum = values_with_weight.inject(0.0){ |acc, i| acc + i[0]*i[1] }
+            mean = sum / values_with_weight.inject(0.0){ |acc, i| acc + i[1] }
+            variance = values.inject(0.0){ |acc, v| acc + (v - mean)**2 } / (n - 1)
             stddev = Math.sqrt(variance)
             high = values.max
             low = values.min
             freq = values.inject(Hash.new(0)){ |h, i| h[i] += 1; h }
             mode = values.sort_by { |v| freq[v] }.last
             
-            average_date = DateTime.civil(
-                last_date.year, last_date.month, last_date.day, last_date.hour, 0, 0
-            )
-            [average_date, n, mean, mode, stddev, high, low]
+            [n, mean, mode, stddev, high, low]
         end
         
         def check_triggers

@@ -108,6 +108,8 @@ module Spider; module Master
                 i.obj_modified = DateTime.now
                 i.status = val
                 i.compute_averages if !averages_computed_at || averages_computed_at < today
+                i.averages_computed_at = Date.today
+                i.save
                 i.check_triggers
                 i.save
             end

@@ -1,5 +1,6 @@
 module Spider
     module Master
+        @short_name = 'master'
         include Spider::App
         @controller = :MasterController
         
