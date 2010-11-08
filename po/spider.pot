@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.5.13\n"
-"POT-Creation-Date: 2010-10-14 00:17+0200\n"
+"POT-Creation-Date: 2010-11-08 16:23+0100\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -104,7 +104,7 @@ msgstr ""
 msgid "%s already exists, skipping"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:146
+#: lib/spiderfw/cmd/commands/app.rb:147
 msgid "The following apps will be installed as a dependency:"
 msgstr ""
 
@@ -633,10 +633,6 @@ msgid "Use cache busters for CSS urls"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:156
-msgid "Url of the app server"
-msgstr ""
-
-#: lib/spiderfw/config/options/spider.rb:158
 msgid "Proxy to use for http clients (http://user:pass@host:port)"
 msgstr ""
 
@@ -652,7 +648,7 @@ msgstr ""
 msgid "Site error"
 msgstr ""
 
-#: lib/spiderfw/create.rb:46
+#: lib/spiderfw/create.rb:44
 msgid "Created repository"
 msgstr ""
 
@@ -709,11 +705,11 @@ msgstr ""
 msgid "over %d years"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1461
+#: lib/spiderfw/model/base_model.rb:1460
 msgid "'%s' is not a valid date"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1521
+#: lib/spiderfw/model/base_model.rb:1520
 msgid "'%s' is not in the correct format"
 msgstr ""
 
@@ -753,11 +749,11 @@ msgstr ""
 msgid "Modified"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:1056
+#: lib/spiderfw/model/mappers/mapper.rb:1054
 msgid "Element %s is required"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:1060
+#: lib/spiderfw/model/mappers/mapper.rb:1058
 msgid "Another item with the same %s is already present"
 msgstr ""
 
@@ -806,82 +802,86 @@ msgstr ""
 msgid "Database type: "
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:230
+#: lib/spiderfw/setup/spider_setup_wizard.rb:207
+msgid "Configuration saved."
+msgstr ""
+
+#: lib/spiderfw/setup/spider_setup_wizard.rb:231
 msgid "Mysql gem is not available. Install?"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:240
+#: lib/spiderfw/setup/spider_setup_wizard.rb:241
 msgid "Installation of mysql gem failed."
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:243
+#: lib/spiderfw/setup/spider_setup_wizard.rb:244
 msgid ""
 "The mysql gem failed to compile, so the pure-ruby version was installed.\n"
 "                            You should install the compiled version manually "
 "for better performance."
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:249
+#: lib/spiderfw/setup/spider_setup_wizard.rb:250
 msgid "Can't configure mysql without the mysql gem."
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:261
+#: lib/spiderfw/setup/spider_setup_wizard.rb:262
 msgid "We found the following MySQL instances. Do you want to use one of them?"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:262
+#: lib/spiderfw/setup/spider_setup_wizard.rb:263
 msgid "No"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:275
+#: lib/spiderfw/setup/spider_setup_wizard.rb:276
 msgid "Do you want to connect via socket or via network?"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:277
+#: lib/spiderfw/setup/spider_setup_wizard.rb:278
 msgid "Host:"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:278
+#: lib/spiderfw/setup/spider_setup_wizard.rb:279
 msgid "Port:"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:280
+#: lib/spiderfw/setup/spider_setup_wizard.rb:281
 msgid "Socket location"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:286
+#: lib/spiderfw/setup/spider_setup_wizard.rb:287
 msgid "%s does not seem to be a socket"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:293
+#: lib/spiderfw/setup/spider_setup_wizard.rb:294
 msgid "Connection to %s failed"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:303
+#: lib/spiderfw/setup/spider_setup_wizard.rb:304
 msgid "Username"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:304
+#: lib/spiderfw/setup/spider_setup_wizard.rb:305
 msgid "Password"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:306
+#: lib/spiderfw/setup/spider_setup_wizard.rb:307
 msgid "Trying to connect to mysql at %s ... "
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:316
+#: lib/spiderfw/setup/spider_setup_wizard.rb:317
 msgid "Connection failed."
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:322
+#: lib/spiderfw/setup/spider_setup_wizard.rb:323
 msgid "Db name:"
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:324
+#: lib/spiderfw/setup/spider_setup_wizard.rb:325
 msgid "Checking if db exists... "
 msgstr ""
 
-#: lib/spiderfw/setup/spider_setup_wizard.rb:331
+#: lib/spiderfw/setup/spider_setup_wizard.rb:332
 msgid "Database %s does not exist."
 msgstr ""
 
