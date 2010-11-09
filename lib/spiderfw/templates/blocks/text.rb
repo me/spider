@@ -2,8 +2,7 @@ require 'spiderfw/templates/template_blocks'
 require 'strscan'
 
 module Spider; module TemplateBlocks
-    ExpressionOutputRegexp = /[^\{]\{\s([^\s].*?)\s\}/
-    EscapedExpressionOutputRegexp = /\{\{\s([^\s].*?)\s\}\}/
+    ExpressionOutputRegexp = /\{?\{\s([^\s].*?)\s\}\}?/
     GettextRegexp = /_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
     ERBRegexp = /(<%(.+)?%>)/
     
@@ -15,15 +14,17 @@ module Spider; module TemplateBlocks
             scanner = ::StringScanner.new(text)
             pos = 0
             c = ""
-            while scanner.scan_until(Regexp.union(EscapedExpressionOutputRegexp, ExpressionOutputRegexp, GettextRegexp, ERBRegexp))
+            while scanner.scan_until(Regexp.union(ExpressionOutputRegexp, GettextRegexp, ERBRegexp))
                 text = scanner.pre_match[pos..-1]
                 pos = scanner.pos
                 c += "$out << '#{escape_text(text)}'\n" if (text && text.length > 0)
                 case scanner.matched
                 when ExpressionOutputRegexp
-                    c += "$out << #{vars_to_scene($1)}\n"
-                when EscapedExpressionOutputRegexp
-                    c += "$out << '{ #{escape_text($1)} }'\n"
+                    if scanner.matched[1].chr == '{'
+                        c += "$out << '{ #{escape_text($1)} }'\n"
+                    else
+                        c += "$out << #{vars_to_scene($1)}\n"
+                    end
                 when GettextRegexp
                     c += "$out << _('#{escape_text($1)}')"
                     if $2
