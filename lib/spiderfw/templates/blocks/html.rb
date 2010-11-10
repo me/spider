@@ -44,6 +44,9 @@ module Spider; module TemplateBlocks
             end
             start = "$out << '<"+@el.name
             @el.attributes.to_hash.each do |key, val|
+                if key =~ /sp::(.+)/
+                    key = "sp:#{$1}"
+                end
                 start += " #{key}=\""
                 start += compile_text(val)
                 start += "\""
