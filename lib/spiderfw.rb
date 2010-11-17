@@ -294,8 +294,10 @@ module Spider
             @apps_by_short_name[mod.short_name] = mod
         end
         
-        def app?(path)
-            @apps_by_path[path] ? true : false
+        def app?(path_or_name)
+            return true if @apps_by_path[path_or_name]
+            return true if @apps_by_short_name[path_or_name]
+            return false
         end
         
         def load_configuration(path)
