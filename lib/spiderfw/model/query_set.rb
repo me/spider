@@ -387,6 +387,26 @@ module Spider; module Model
             reindex
         end
         
+        def include?(val)
+            self.each do |obj|
+                if val.is_a?(BaseModel)
+                    return true if obj == val
+                elsif val.is_a?(Hash)
+                    has_all = true
+                    val.each do |k, v|
+                        unless obj.get(k) == v
+                            has_all = false
+                            break
+                        end
+                        return true if has_all
+                    end
+                elsif @model.primary_keys.length == 1
+                    return true if obj.primary_keys[0] == val
+                end
+            end
+            return false
+        end
+        
         # Searchs the index for objects matching the given params.
         def find(params)
             sorted_keys = params.keys.map{|k| k.to_s}.sort.map{|k| k.to_sym}
