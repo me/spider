@@ -45,6 +45,8 @@ class CreateCommand < CmdParse::Command
                 Spider::Create.home(inst, @path)
                 unless @no_wizard
                     Dir.chdir(inst) do 
+                        $SPIDER_RUN_PATH = Dir.pwd
+                        $:.push($SPIDER_RUN_PATH)
                         require 'spiderfw'
                         require 'lib/spiderfw/setup/spider_setup_wizard'
                         wizard = Spider::SpiderSetupWizard.new
