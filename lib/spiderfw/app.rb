@@ -132,6 +132,16 @@ module Spider
                         self.constants.map{ |m| const_get(m) }.select{ |m| m.subclass_of? Spider::Controller }
                     end
                     
+                    def find_resource(type, name, cur_path=nil)
+                        Spider.find_resource(type, name, cur_path, self)
+                    end
+
+                    def find_resource_path(type, name, cur_path=nil)
+                        res = Spider.find_resource(type, name, cur_path, self)
+                        return res ? res.path : nil
+                    end
+                    
+                    
                     def register_tag(tag, obj)
                         @tags ||= {}
                         @tags[tag] = obj
