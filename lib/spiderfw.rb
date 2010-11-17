@@ -236,7 +236,7 @@ module Spider
             return if @loaded_apps[path]
             @loaded_apps[path] = true
             last_name = path.split('/')[-1]
-            app_files = ['_init.rb', last_name+'.rb', 'config/options.rb', 'cmd.rb']
+            app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
             app_files.each{ |f| require path+'/'+f if File.exist?(path+'/'+f)}
             # if File.exist?("#{path}/data/locale")
             #     ENV['GETTEXT_PATH'] += ',' if ENV['GETTEXT_PATH']
