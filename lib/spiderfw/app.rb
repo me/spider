@@ -24,6 +24,7 @@ module Spider
                           @path = dir
                         end
                         @short_name ||= Inflector.underscore(self.name).gsub('/', '_')
+                        @dotted_name = Inflector.underscore(self.name).gsub('/', '.')
                         @pub_path ||= @path+'/public'
                         @test_path ||= @path+'/test'
                         @setup_path ||= @path+'/setup'
@@ -44,9 +45,37 @@ module Spider
                     end
                     
                     def request_url
+                        if u = Spider.conf.get("#{@dotted_name}.url") 
+                            return u
+                        end
                         Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
                     end
                     alias :url :request_url
+                    
+                    def http_url(action=nil)
+                        if u = Spider.conf.get("#{@dotted_name}.http_url") 
+                            return u
+                        end
+                        return nil unless Spider.site
+                        u = "http://#{Spider.site.domain}"
+                        u += ":#{Spider.site.port}" unless Spider.site.port == 80
+                        u += url
+                        u += "/"+action.to_s if action
+                        u
+                    end
+                    
+                    def https_url
+                        return nil unless Spider.site && Spider.site.ssl?
+                        u = "https://#{Spider.site.domain}"
+                        u += ":#{Spider.site.ssl_port}" unless Spider.site.ssl_port == 443
+                        u += url
+                        u
+                    end
+                    
+                    def http_s_url
+                        return https_url if Spider.site && Spider.site.ssl?
+                        return http_url
+                    end
                     
                     def pub_url
                         if Spider.conf.get('static_content.mode') == 'publish'
