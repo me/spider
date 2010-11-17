@@ -22,6 +22,7 @@ module Spider; module DataTypes
         take_attributes :hash, :salt
         
         def map(mapper_type)
+            return self.to_s if attributes[:hashed]
             salt = attributes[:salt] || Spider.conf.get('password.salt')
             # TODO: better salts
             salt ||= (0..10).inject('') { |r, i| r << rand(89) + 37 }
