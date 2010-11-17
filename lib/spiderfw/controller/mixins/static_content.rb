@@ -5,10 +5,11 @@ require 'mime/types'
 module Spider; module ControllerMixins
     
     module StaticContent
+        include Spider::ControllerMixin
         include Spider::ControllerMixins::HTTPMixin
         
         def self.included(klass)
-            klass.extend(ClassMethods)
+            super
             klass.route('public/', :serve_static, :do => lambda{ @serving_static = true })
             klass.route('w/', :serve_widget_static, :do => lambda{ @serving_static = true })
             if (klass < Visual)

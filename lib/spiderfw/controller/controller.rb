@@ -5,6 +5,8 @@ require 'spiderfw/controller/scene'
 require 'spiderfw/controller/controller_exceptions'
 require 'spiderfw/controller/first_responder'
 
+require 'spiderfw/controller/controller_mixin'
+
 require 'spiderfw/controller/mixins/visual'
 require 'spiderfw/controller/mixins/http_mixin'
 require 'spiderfw/controller/mixins/static_content'
