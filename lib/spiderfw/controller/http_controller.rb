@@ -34,10 +34,12 @@ module Spider
             @uploaded_files = []
             if (@request.env['QUERY_STRING'])
                 @request.params = Spider::HTTP.parse_query(@request.env['QUERY_STRING'])
+                @request.get = @request.params
             end
             if @request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE']
                 if @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded')
-                    @request.params.merge!(Spider::HTTP.parse_query(@request.read_body))
+                    @request.post = Spider::HTTP.parse_query(@request.read_body)
+                    @request.params.merge!(@request.post)
                 elsif @request.env['HTTP_CONTENT_TYPE'] =~ Spider::HTTP::MULTIPART_REGEXP
                     multipart_params, multipart_files = Spider::HTTP.parse_multipart(@request.body, $1, @request.env['CONTENT_LENGTH'].to_i)
                     @request.params.merge!(multipart_params)
@@ -47,6 +49,29 @@ module Spider
 
             @request.http_method = @request.env['REQUEST_METHOD'].upcase.to_sym
             @request.http_host = @request.env['HTTP_HOST']
+            @request.ssl = true if @request.env['HTTPS'] == 'on'
+            if @request.http_host =~ /(.+)\:(\d+)/
+                @request.domain = $1
+                @request.port = $2.to_i
+            else
+                @request.domain = @request.http_host
+                @request.port = @request.ssl? ? 443 : 80
+            end
+            
+            unless Spider.site
+                port = @request.ssl? ? nil : @request.port
+                Spider.site = Spider::Site.new(@request.domain, port)
+                Spider.site._auto = true
+                Spider.site.save_cache
+            end
+            if @request.ssl? && Spider.site.auto? && !Spider.site.ssl_port
+                Spider.site.ssl_port = @request.port
+                Spider.site.save_cache
+            end
+            if !@request.ssl? && Spider.site.auto? && !Spider.site.port
+                Spider.site.port = @request.port
+                Spider.site.save_cache
+            end
             if @request.env['HTTP_CACHE_CONTROL']
                 parts = @request.env['HTTP_CACHE_CONTROL'].split(';')
                 parts.each do |part|
@@ -132,7 +157,7 @@ module Spider
         end
         
         module HTTPRequest
-            attr_accessor :http_method, :http_host
+            attr_accessor :http_method, :http_host, :domain, :port, :post, :get
             
             # Returns PATH_INFO reversing any proxy mappings if needed.
             def path
@@ -162,6 +187,22 @@ module Spider
             
             def cache_control
                 @cache_control ||= {}
+            end
+            
+            def ssl=(bool)
+                @ssl = bool
+            end
+            
+            def ssl?
+                @ssl
+            end
+            
+            def post
+                @post ||= {}
+            end
+            
+            def get
+                @get ||= {}
             end
             
         end

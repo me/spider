@@ -40,6 +40,8 @@ module Spider
         attr_reader :home
         # Registered resource types
         attr_reader :resource_types
+        # Main site
+        attr_accessor :site
         
         # Initializes the runtime environment. This method is called when spider is required. Apps may implement
         # an app_init method, that will be called after Spider::init is done.
@@ -109,6 +111,12 @@ module Spider
             end
             if (Spider.conf.get('template.cache.reload_on_restart'))
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
+            end
+            if domain = Spider.conf.get('site.domain')
+                ssl_port = Spider.conf.get('site.ssl') ? Spider.conf.get('site.ssl_port') : nil
+                Spider.site = Site.new(domain, Spider.conf.get('site.port'), ssl_port)
+            elsif File.exists?(Site.cache_file)
+                Spider.site = Site.load_cache
             end
             if (Spider.conf.get('request.mutex'))
                 mutex_requests!
