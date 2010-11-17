@@ -592,6 +592,26 @@ module Spider
             parse_runtime_content(doc, src_path) if doc.children && doc.root && doc.root.children
         end
         
+        def replace_content_vars(str, scene=nil)
+            scene ||= @parent && @parent.scene ? @parent.scene : @scene
+            res = ""
+            Spider::Template.scan_text(str) do |type, val, full|
+                case type
+                when :plain, :escaped_expr
+                    res << full
+                when :expr
+                    Spider::Template.scan_scene_vars(val) do |vtype, vval|
+                        case vtype
+                        when :plain
+                            res << vval
+                        when :var
+                            res << scene[vval.to_sym].to_s
+                        end
+                    end
+                end
+            end
+        end
+        
         def parse_runtime_content(doc, src_path=nil)
             doc.search('sp:plugin').each do |plugin|
                 # we don't call add_plugin here because the overrides don't have to be added at runtime, since
