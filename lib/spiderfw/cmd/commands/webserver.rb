@@ -38,6 +38,10 @@ class WebServerCommand < CmdParse::Command
         start.set_execution_block do |args|
             require 'spiderfw'
             raise "Can't use cgi mode with SSL" if @ssl && @cgi
+            if @ssl && @server_name != 'webrick'
+                puts _("Note: Using WEBrick as a webserver, since SSL was requested")
+                @server_name = 'webrick'
+            end
             @port ||= Spider.conf.get('webserver.port')
             @server_name ||= Spider.conf.get('http.server')
             @pid_file = Spider.paths[:var]+'/run/server.pid'
