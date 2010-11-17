@@ -204,6 +204,7 @@ module Spider
                 editor = Spider.config.get_editor
                 editor.set('storages', @db_label, 'url', db.get_url)
                 editor.save
+                puts _("Configuration saved.")
             end
             
         end
