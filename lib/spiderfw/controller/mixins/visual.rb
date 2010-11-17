@@ -316,7 +316,7 @@ module Spider; module ControllerMixins
             end
             headers = {'Subject' => subject}
             from = Spider.conf.get('orgs.default.auto_from_email') || Spider.conf.get('site.tech_admin.email')
-            Spider::Messenger::MessengerHelper.email(
+            Spider::Messenger::MessengerHelper.send_email(
                 self.class, 'error', scene, from, Spider.conf.get('site.tech_admin.email'), headers
             )
         end
