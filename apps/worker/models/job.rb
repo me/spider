@@ -10,9 +10,12 @@ module Spider; module Worker
         }
         
         def run
+            Spider.logger.debug("Running job #{self.uuid}")
             t = self.task.untaint
-            $SAFE = 4
-            eval(t)
+            Thread.start{
+                $SAFE = 3
+                eval(t)
+            }.join
         end
         
     end
