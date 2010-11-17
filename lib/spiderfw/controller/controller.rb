@@ -305,7 +305,7 @@ module Spider
         def set_action(action)
             @executed_method = nil
             @executed_method_arguments = nil
-            if (!can_dispatch?(:execute, action))
+            if !can_dispatch?(:execute, action)
                 method, additional_arguments = get_action_method(action)
                 if (method && self.class.controller_action?(method))
                     @executed_method = method.to_sym
