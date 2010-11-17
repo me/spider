@@ -219,9 +219,9 @@ END_OF_EVAL
             attribute :app_id
             attribute :name
             attribute :description
-            attribute :authors
             attribute :git_repo
             attribute :git_repo_rw
+            array_attribute :authors
             array_attribute :depends
             array_attribute :depends_optional
             array_attribute :gems
