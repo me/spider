@@ -14,14 +14,17 @@ module Spider; module Messenger
         # attachments must be an array of hashes like 
         # {:file => '/full/file/path', :type => 'mime type', :file_name => 'optional email file name', 
         # :headers => 'optional string or array of additional headers'}
-        def email(template, scene, from, to, headers={}, attachments=[], params={})
-            Spider::Messenger::MessengerHelper.email(self.class, template, scene, from, to, headers, attachments, params)
+        def send_email(template, scene, from, to, headers={}, attachments=[], params={})
+            klass = self.class if self.class.respond_to?(:find_resouce_path)
+            klass ||= self.class.app if self.class.respond_to?(:app)
+            klass ||= Spider.home
+            Spider::Messenger::MessengerHelper.send_email(klass, template, scene, from, to, headers, attachments, params)
         end
         
-        def self.email(klass, template, scene, from, to, headers={}, attachments=[], params={})
+        def self.send_email(klass, template, scene, from, to, headers={}, attachments=[], params={})
             path_txt = klass.find_resource_path(:email, template+'.txt')
             path_txt = nil unless File.exist?(path_txt)
-            path_html = klass.find_resource_path(:email, template+'.txt')
+            path_html = klass.find_resource_path(:email, template+'.html')
             path_html = nil unless File.exist?(path_html)
             scene_binding = scene.instance_eval{ binding }
             if (path_txt || path_html)

@@ -10,6 +10,8 @@ module Spider; module Messenger
         element :subject, String, :label => _("Subject"), :computed_from => [:headers]
         element :body, Text, :label => _("Body")
         
+        queue :email
+        
         def subject
             if (self.headers =~ /^Subject: (.+)$/)
                 return $1

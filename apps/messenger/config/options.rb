@@ -7,11 +7,34 @@ module Spider
     config_option 'messenger.smtp.password', _("SMTP authentication password"), :default => nil
     config_option 'messenger.smtp.auth_scheme', _("SMTP authentication scheme"), :default => nil, :type => Symbol,
         :choices => [nil, :plain, :login, :cram_md5]
+    config_option 'messenger.smtp.log_path', _("Smtp logfile (e.g. /var/log/mail.log)"), :default => nil
         
-    config_option 'messenger.email.retries', :type => Fixnum, :default => 5
+    config_option 'messenger.email.retries', _("How many times to retry sending an e-mail"), :type => Fixnum, :default => 5
     config_option 'messenger.email.retry_time', _("Seconds to wait until retry (will be incremented at each retry)"), 
         :type => Fixnum, :default => 10
     config_option 'messenger.queue.run_every', _("Time in seconds between queue runs"), :type => Fixnum, :default => 60
     
+    config_option 'messenger.email.backends', _("The backends to use for sending mail (if more than one)"), :type => Array, :default => ['smtp']
+    config_option 'messenger.email.backend', _("The backend to use for sending sms"), :type => String, :do => lambda{ |val|
+        Spider.conf.set('messenger.email.backends', [val])
+    }
+    
+    config_option 'messenger.sms.backends', _("The backends to use for sending sms (if more than one)"), :type => Array, :default => []
+    config_option 'messenger.sms.backend', _("The backend to use for sending sms"), :type => String, :do => lambda{ |val|
+        Spider.conf.set('messenger.sms.backends', [val])
+    }
+    config_option 'messenger.smstools.path_spool', _("The path to the smstools 'spool' folder"), :default => '/var/spool/sms'
+    config_option 'messenger.smstools.path_outgoing', _("The path to the smstools 'outgoing' folder"), 
+        :default => lambda{ File.join(Spider.conf.get('messenger.smstools.path_spool'), 'outgoing')}
+    config_option 'messenger.smstools.path_failed', _("The path to the smstools 'failed' folder"), 
+        :default => lambda{ File.join(Spider.conf.get('messenger.smstools.path_spool'), 'failed')}    
+    config_option 'messenger.smstools.path_sent', _("The path to the smstools 'sent' folder"), 
+        :default => lambda{ File.join(Spider.conf.get('messenger.smstools.path_sent'), 'sent')}    
+    config_option 'messenger.smstools.remove_failed', _("Whether to remove failed messages from the smstools failed folder"),
+        :type => Spider::Bool, :default => true
+    config_option 'messenger.smstools.remove_sent', _("Whether to remove failed messages from the smstools sent folder"),
+        :type => Spider::Bool, :default => true
+    config_option 'messenger.smstools.log_path', _("Smsd logfile"), :default => '/var/log/smsd.log'
+
     
 end

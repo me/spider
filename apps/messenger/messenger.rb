@@ -1,17 +1,22 @@
-require 'apps/messenger/models/email'
-
-
 module Spider
     
     module Messenger
         
         def self.queues
             {
-                :email => {
-                    :label => _("Email"),
-                    :model => Email
-                }
+                :email => { :label => _("Email"), :model => :Email },
+                :sms => { :label => _("SMS"), :model => :SMS }
             }
+        end
+        
+        def self.backends
+            @backends ||= {}
+        end
+        
+        def self.add_backend(queue, mod)
+            @backends ||= {}
+            @backends[queue] ||= []
+            @backends[queue] << mod
         end
         
         def self.process_queues
@@ -25,36 +30,30 @@ module Spider
             @mutexes ||= {}
             mutex = @mutexes[queue] ||= Mutex.new
             return if mutex.locked?
-            model = self.queues[queue][:model]
+            model = Spider::Messenger.const_get(self.queues[queue][:model])
             mutex.synchronize do
                 now = DateTime.now
                 list = model.where{ (sent == nil) & (next_try <= now) }
                 list.each do |msg|
                     res = false
                     exc = nil
-                    begin
-                        res = self.send(:"send_#{queue}", msg)
-                    rescue => exc
+                    self.backends[queue].each do |backend|
+                        begin
+                            res = backend.send(msg)
+                        rescue => exc
+                            Spider.logger.error(exc)
+                        end
+                        break if res
                     end
                     if (res)
                         msg.sent = now
+                        msg.status = :backend
                         msg.next_try = nil
                         msg.backend_response = res
                         msg.save
                     else
-                        msg.last_try = now
-                        msg.attempts ||= 0
-                        msg.attempts += 1
-                        if (exc)
-                            msg.backend_response = exc.to_s
-                        else
-                            msg.backend_response = res
-                        end
-                        if (msg.attempts >= Spider.conf.get("messenger.#{queue}.retries"))
-                            msg.next_try = nil
-                        else
-                            msg.next_try = msg.last_try.to_local_time + (msg.attempts * Spider.conf.get("messenger.#{queue}.retry_time") * 60)
-                        end
+                        backend_response = exc ? exc.to_s : res
+                        msg.add_failure(backend_response)
                         msg.save
                     end
                             
@@ -78,23 +77,6 @@ module Spider
             return msg
         end
         
-        # Actual SMTP send.
-        def self.send_email(msg)
-            require 'net/smtp'
-            res = false
-            Net::SMTP.start(
-              Spider.conf.get('messenger.smtp.address'),
-              Spider.conf.get('messenger.smpt.port'),
-              Spider.conf.get('messenger.smtp.domain'),
-              Spider.conf.get('messenger.smtp.username'),
-              Spider.conf.get('messenger.smtp.password'),
-              Spider.conf.get('messenger.smtp.auth_scheme')
-            ) do |smtp|
-                msg_str = msg.headers+"\r\n"+msg.body
-                res = smtp.send_message msg_str, msg.from, msg.to
-            end
-            return res.string
-        end
         
     end
     
