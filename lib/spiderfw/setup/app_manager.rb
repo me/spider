@@ -60,9 +60,9 @@ module Spider
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
                 gems = specs.map{ |s| s.gems }
-                unless options[:no_optional_gems]
-                    gems += specs.map{ |s| s.gems_optional }
-                end
+                # unless options[:no_optional_gems]
+                #     gems += specs.map{ |s| s.gems_optional }
+                # end
                 gems = gems.flatten.uniq
                 gems.reject!{ |g| Gem.available?(g) }
                 unless gems.empty?
