@@ -69,7 +69,8 @@ module Spider; module ControllerMixins
             output_static(full_path)
         end
         
-        def output_static(full_path)
+        def output_static(full_path, file_name=nil)
+            file_name ||= File.basename(full_path)
             @request.misc[:is_static] = true
             debug("Serving asset: #{full_path}")
             mode = Spider.conf.get('static_content.mode')
@@ -99,7 +100,7 @@ module Spider; module ControllerMixins
             if File.directory?(full_path)
                 ct = "httpd/unix-directory"
             else
-                ct = MIME::Types.type_for(full_path)
+                ct = MIME::Types.type_for(file_name)
                 ct = ct.first if ct.is_a?(Array)
                 ct = ct.to_s if ct
                 ct ||= "application/octet-stream"
