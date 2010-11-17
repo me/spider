@@ -887,7 +887,7 @@ msgstr "Siamo spiacenti, la pagina richiesta non è stata trovata"
 
 #: views/errors/error.layout.shtml:20
 msgid "If you need to contact the administrator to provide additional information, you may send an e-mail to"
-msgstr "Per contattare l'amministratore e fornire informazioni aggiuntive, Ã¨ possibile inviare un'e-mail a"
+msgstr "Per contattare l'amministratore e fornire informazioni aggiuntive, è possibile inviare un'e-mail a"
 
 #: views/errors/error.layout.shtml:24
 msgid "The identifier of this error is %s. Please refer to it when requesting assistance."
