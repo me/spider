@@ -178,7 +178,7 @@ module Spider
         # -:default     the default value for the option; if it is a proc, it will be called
         # -:choiches    an array of allowed values
         # -:type        parameter type; can be one of int, string, bool
-        def config_option(name, description, params={}, &proc)
+        def config_option(name, description=nil, params={}, &proc)
             name = name.to_s
             if (params.empty? && description.is_a?(Hash))
                 params = description
@@ -192,7 +192,10 @@ module Spider
                 o = (o[first] ||= {})
                 first, rest = rest.split('.', 2)
             end
-            o[first] = {:description => description, :params => params}
+            if params && description
+                o[first] = {:description => description, :params => params}
+            end
+            o[first]
         end
         
         def option(name)
