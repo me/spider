@@ -403,7 +403,7 @@ module Spider
                 @_widget.is_target_ancestor = true
                 @_widget.widget_target = rest
                 @_widget.is_target = true unless rest
-                @_widget_rest = rest
+                @_widget_rest = rest || ''
             end
             @init_widgets_done = true
             
