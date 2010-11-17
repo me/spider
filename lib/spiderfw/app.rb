@@ -253,6 +253,7 @@ END_OF_EVAL
             array_attribute :authors
             array_attribute :depends
             array_attribute :depends_optional
+            array_attribute :can_use
             array_attribute :gems
             array_attribute :gems_optional
             attribute :version
