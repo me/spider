@@ -769,13 +769,13 @@ module Spider; module Model; module Mappers
                     el_joins, el_model, el = get_deep_join(order_element)
                     if (el.model?)
                         # FIXME: integrated elements
-                        if !joins.empty?
+                        if el.model.storage != storage
                             el.model.primary_keys.each do |pk|
-                                fields << [el.model.mapper.schema.field(pk.name), direction]
+                                fields << [el_model.mapper.schema.foreign_key_field(el.name, pk.name), direction]
                             end
                         else
                             el.model.primary_keys.each do |pk|
-                                fields << [el_model.mapper.schema.foreign_key_field(el.name, pk.name), direction]
+                                fields << [el.model.mapper.schema.field(pk.name), direction]
                             end
                         end
                     else
