@@ -35,7 +35,11 @@ module Spider; module Model
             
             def mapper
                 return Mappers::HashMapper.new(self, self.data)
-            end 
+            end
+            
+            def get_storage(url='default')
+                self.data
+            end
             
         end
         
