@@ -39,7 +39,9 @@ class ModelCommand < CmdParse::Command
                 if (mod.is_a?(Module) && mod.include?(Spider::App))
                     mod.models.each do |m|
                         unless @non_managed || m < Spider::Model::Managed
-                            Spider.logger.warn("Skipping #{m} because it's non managed (use -m to override)")
+                            unless m < Spider::Model::InlineModel || m.attributes[:sub_model]
+                                Spider.logger.warn("Skipping #{m} because it's non managed (use -m to override)")
+                            end
                             next
                         end
                         models << m
