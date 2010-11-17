@@ -23,14 +23,13 @@ module Spider
             @options
         end
         
-        
-        def self.app_startup
-            
+        def self.start
+            @runner = start_runner unless running?
         end
         
         def self.app_startup
             return unless Spider.conf.get('worker.enable')
-            @runner = start_runner unless running?
+            self.start
         end
         
         def self.app_shutdown

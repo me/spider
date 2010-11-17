@@ -34,7 +34,7 @@ module Spider; module Worker
                     Worker.options[:fork] = false
                     Worker.options[:detach] = false
                 end
-                Worker.app_startup
+                Worker.start
                 if (@daemonize)
                     STDIN.reopen "/dev/null"       # Free file descriptors and
                     STDOUT.reopen "/dev/null", "a" # point them somewhere sensible
