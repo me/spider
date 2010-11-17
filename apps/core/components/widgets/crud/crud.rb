@@ -16,6 +16,7 @@ module Spider; module Components
         def prepare(action='')
             @action = (@_action_local && !@_action_local.empty?) ? :form : :table
             @_pass_action = (@action == :form) ? @_action : nil
+            @model = const_get_full(@model) if @model.is_a?(String)
             @scene.saved = flash[:saved]
             if (params['delete_cancel'])
                 params.delete('delete')
