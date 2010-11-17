@@ -1797,6 +1797,12 @@ module Spider; module Model
             self
         end
         
+        def merge_hash(h)
+            h.each do |k, v|
+                self.set(k.to_sym, v)
+            end
+        end
+        
         # Returns a deep copy of the object
         def clone
             obj = self.class.new
