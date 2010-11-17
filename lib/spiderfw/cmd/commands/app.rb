@@ -5,7 +5,7 @@ class AppCommand < CmdParse::Command
         super('app', true, true )
         @short_desc = _("Manage apps")
         
-        @server_url = 'http://localhost:8989/spider/app_server'
+        @server_url = 'http://www.soluzionipa.it/euroservizi/spider/app_server'
         
         self.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--proxy", _("Proxy server to use (http://user:pass@host:port)"), "-p"){ |p|
@@ -143,8 +143,10 @@ class AppCommand < CmdParse::Command
                 specs = client.get_deps(apps, :no_optional => @no_optional)
             end
             deps = specs.map{ |s| s.app_id }
-            puts _("The following apps will be installed as a dependency:")
-            puts (deps - apps).inspect
+            unless (deps - apps).empty?
+                puts _("The following apps will be installed as a dependency:")
+                puts (deps - apps).inspect
+            end
             Spider::AppManager.install(specs, Dir.pwd, {
                 :use_git => use_git, 
                 :no_gems => @no_gems,
