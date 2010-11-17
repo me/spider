@@ -133,8 +133,12 @@ module Spider
     
     config_option 'site.admin.name', _("Name of the site administrator")
     config_option 'site.admin.email', _("Email of the site administrator")
-    config_option 'site.tech_admin.email', _("Email of the site technical administrator"), 
+    config_option 'site.tech_admin.email', _("Email of the site technical administrator"),
         :default => lambda{ Spider.conf.get('site.admin.email') }
+    config_option 'site.domain', _("Main domain name used to access the site")
+    config_option 'site.port', _("Main port used to access the site"), :default => 80
+    config_option 'site.ssl', _("Whether this site can be accessed using SSL"), :type => Spider::DataTypes::Bool
+    config_option 'site.ssl_port', _("Port used to access the site via SSL"), :default => 443
        
         
     config_option 'errors.send_email', _("Send an e-mail to the technical administrator when errors occur"), :type => Spider::DataTypes::Bool,
@@ -152,8 +156,6 @@ module Spider
         :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }, :type => Spider::DataTypes::Bool
     config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
         :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
-    
-    config_option 'app_server.url', _("Url of the app server"), :default => 'http://www.soluzionipa.it/euroservizi/spider/app_server'
     
     config_option 'http_proxy', _("Proxy to use for http clients (http://user:pass@host:port)"), :type => String,
         :do => lambda{ |val| ENV['http_proxy'] = val }
