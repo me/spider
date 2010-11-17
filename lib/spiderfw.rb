@@ -431,17 +431,7 @@ module Spider
                 end
                 return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
                 raise "Can't find owner app for resource #{path}" unless app
-                search_locations = []
-                root_search = "#{Spider.paths[:root]}/#{resource_rel_path}/#{app.relative_path}"
-                unless cur_path && cur_path == File.join(root_search, path)
-                    search_locations = [[root_search, @home]]
-                end
-                if app.respond_to?("#{resource_type}_path")
-                    search_locations << [app.send("#{resource_type}_path"), app]
-                else
-                    search_locations << [app.path+'/'+resource_rel_path, app]
-                end
-                search_locations << [$SPIDER_PATH+'/'+resource_rel_path, self]
+                search_locations = resource_search_locations(resource_type, app)
                 search_paths.each do |p|
                     p = [p, owner_class] unless p.is_a?(Array)
                     search_locations << p
@@ -452,6 +442,56 @@ module Spider
                 end
             end
             return Resource.new(path)
+        end
+        
+        def resource_search_locations(resource_type, app=nil)
+            resource_config = @resource_types[resource_type]
+            resource_rel_path = resource_config[:path]
+            app_rel_path = app && app.respond_to?(:relative_path) ? app.relative_path : nil
+            root_search = File.join(Spider.paths[:root], resource_rel_path)
+            root_search = File.join(root_search, app_rel_path) if app_rel_path
+            # unless cur_path && cur_path == File.join(root_search, path)
+            search_locations = [[root_search, @home]]
+            # end
+            if app
+                if app.respond_to?("#{resource_type}_path")
+                    search_locations << [app.send("#{resource_type}_path"), app]
+                else
+                    search_locations << [File.join(app.path, resource_rel_path), app]
+                end
+            end
+            spider_path = File.join($SPIDER_PATH, resource_rel_path)
+            search_locations << [spider_path, self]
+            search_locations
+        end
+        
+        def list_resources(resource_type, owner_class=nil, start=nil, search_paths = [])
+            app = nil
+            if owner_class <= Spider::App
+                app = owner_class
+            else
+                app = owner_class.app if (owner_class && owner_class.app)
+            end
+            search_locations = resource_search_locations(resource_type, app)
+            resource_config = @resource_types[resource_type]
+            extensions = resource_config[:extensions]
+            search_paths.each do |p|
+                p = [p, owner_class] unless p.is_a?(Array)
+                search_locations << p
+            end
+            res = []
+            search_locations.reverse.each do |p|
+                pname = Pathname.new(p[0])
+                base = p[0]
+                base = File.join(base, start) if start
+                extensions.each do |ext|
+                    Dir.glob("#{base}/*.#{ext}").each do |f|
+                        res << (Pathname.new(f).relative_path_from(pname)).to_s
+                    end
+                end
+            end
+            res.uniq
+            
         end
         
         def find_resource_path(resource_type, path, cur_path=nil, owner_classes=nil, search_paths=[])
