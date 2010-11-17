@@ -803,6 +803,50 @@ module Spider
             "#<#{self.class}:#{self.object_id} #{@path}>"
         end
         
+        ExpressionOutputRegexp = /\{?\{\s([^\s].*?)\s\}\}?/
+        GettextRegexp = /_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
+        ERBRegexp = /(<%(.+)?%>)/
+        SceneVarRegexp = /@(\w[\w\d_]+)/
+        
+        def self.scan_text(text)
+            text = text.gsub(/\302\240/, ' ') # remove annoying fake space
+            scanner = ::StringScanner.new(text)
+            pos = 0
+            c = ""
+            while scanner.scan_until(Regexp.union(ExpressionOutputRegexp, GettextRegexp, ERBRegexp))
+                t = scanner.pre_match[pos..-1]
+                pos = scanner.pos
+                yield :plain, t, t if t && t.length > 0
+                case scanner.matched
+                when ExpressionOutputRegexp
+                    if scanner.matched[1].chr == '{'
+                        yield :escaped_expr, $1, scanner.matched
+                    else
+                        yield :expr, $1, scanner.matched
+                    end
+                when GettextRegexp
+                    gt = [$1]
+                    gt << $3 if $2 # interpolated vars
+                    yield :gettext, gt, scanner.matched
+                when ERBRegexp
+                    yield :erb, $1, scanner.matched
+                end
+            end
+            yield :plain, scanner.rest, scanner.rest
+        end
+        
+        def self.scan_scene_vars(str)
+            scanner = ::StringScanner.new(str)
+            pos = 0
+            while scanner.scan_until(SceneVarRegexp)
+                text = scanner.pre_match[pos..-1]
+                yield :plain, text, text if text &&  text.length > 0
+                pos = scanner.pos
+                yield :var, scanner.matched[1..-1]
+            end
+            yield :plain, scanner.rest
+        end
+        
     end
     
     # Class holding compiled template code.

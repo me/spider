@@ -111,56 +111,40 @@ module Spider
             
             def self.vars_to_scene(str, container='self')
                 res = ""
-                scanner = ::StringScanner.new(str)
-                pos = 0
-                while scanner.scan_until(/@(\w[\w\d_]+)/)
-                    text = scanner.pre_match[pos..-1]
-                    pos = scanner.pos
-                    res += text
-                    res += "#{container}[:#{scanner.matched[1..-1]}]"
+                Spider::Template.scan_scene_vars(str) do |type, val|
+                    case type
+                    when :plain
+                        res += val
+                    when :var
+                        res += "#{container}[:#{val}]"
+                    end
                 end
-                res += scanner.rest
-                return res
+                res
             end
             
             def vars_to_scene(str, container='self')
                 self.class.vars_to_scene(str, container)
             end
             
-            def scan_vars(str, &block)
-                res = ""
-                scanner = ::StringScanner.new(str)
-                pos = 0
-                while scanner.scan_until(/\{ ([^}]+) \}/)
-                    text = scanner.pre_match[pos..-1]
-                    pos = scanner.pos
-                    yield text, scanner.matched[2..-3]
-                end
-                return scanner.rest
-            end
-            
             def compile_text(str)
                 res = ""
-                str = str.gsub(/\302\240/, ' ') # remove annoying fake space
-                scanner = ::StringScanner.new(str)
-                pos = 0
-                var_regexp = /\{ ([^}]+) \}/
-                while scanner.scan_until(Regexp.union(var_regexp, GettextRegexp))
-                    text = scanner.pre_match[pos..-1]
-                    pos = scanner.pos
-                    case scanner.matched
-                    when var_regexp
-                         res += text+"'+("+vars_to_scene(scanner.matched[2..-3])+").to_s+'"
-                    when GettextRegexp
-                        res += "'\n$out << _('#{escape_text($1)}')"
-                        if $2
-                            res += " #{vars_to_scene($2)}" 
+                Spider::Template.scan_text(str) do |type, val, full|
+                    case type
+                    when :plain
+                        res += escape_text(val)
+                    when :escaped_expr
+                        res += full
+                    when :expr
+                        res += "'+("+vars_to_scene(val)+").to_s+'"
+                    when :gettext
+                        res += "'\n$out << _('#{escape_text(val[0])}')"
+                        if val[1]
+                            res += " #{vars_to_scene(val[1])}" 
                         end
                         res += "\n$out << '"
                     end
                 end
-                res += escape_text(scanner.rest)
-                return res
+                res
             end
             
             

@@ -18,8 +18,13 @@ module Spider; module TemplateBlocks
             end
             if (mode == :parse)
                 str = ""
-                rest = scan_vars(@el.to_s) do |text, code|
-                    str += escape_text(text)+"'+("+vars_to_scene(code)+").to_s+'"
+                rest = Spider::Template.scan_scene_vars(@el.to_s) do |type, val|
+                    case type
+                    when :plain
+                        str += escape_text(val)
+                    when :var
+                        str += "'+("+vars_to_scene(val)+").to_s+'"
+                    end
                 end
                 str += escape_text(rest)
             elsif (mode == :verbatim)

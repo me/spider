@@ -11,33 +11,27 @@ module Spider; module TemplateBlocks
         
         def compile(options={})
             text = @el.content
-            scanner = ::StringScanner.new(text)
-            pos = 0
             c = ""
-            while scanner.scan_until(Regexp.union(ExpressionOutputRegexp, GettextRegexp, ERBRegexp))
-                text = scanner.pre_match[pos..-1]
-                pos = scanner.pos
-                c += "$out << '#{escape_text(text)}'\n" if (text && text.length > 0)
-                case scanner.matched
-                when ExpressionOutputRegexp
-                    if scanner.matched[1].chr == '{'
-                        c += "$out << '{ #{escape_text($1)} }'\n"
-                    else
-                        c += "$out << #{vars_to_scene($1)}\n"
-                    end
-                when GettextRegexp
-                    c += "$out << _('#{escape_text($1)}')"
-                    if $2
-                        c += " % [#{vars_to_scene($3)}]" 
+            Spider::Template.scan_text(text) do |type, val, full|
+                case type
+                when :plain
+                    c += "$out << '#{escape_text(val)}'\n"
+                when :escaped_expr
+                    c += "$out << '{ #{escape_text(val)} }'\n"
+                when :expr
+                    c += "$out << #{vars_to_scene(val)}\n"
+                when :gettext
+                    c += "$out << _('#{escape_text(val[0])}')"
+                    if val[1]
+                        c += " % [#{vars_to_scene(val[1])}]" 
                     end
                     c += "\n"
-                when ERBRegexp
-                    c += $1
+                when :erb
+                    c += val
                 end
             end
-            text = scanner.rest
-            c += "$out << '#{escape_text(text)}'\n" if (text && text.length > 0)
             return CompiledBlock.new(nil, c)
+            
         end
         
         
