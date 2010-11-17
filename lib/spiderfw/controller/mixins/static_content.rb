@@ -133,8 +133,10 @@ module Spider; module ControllerMixins
             return scene
         end
         
-        def serving_static?
-            @serving_static
+        def serving_static?(action=nil)
+            return @serving_static if @serving_static || !action
+            n = dispatch_next(action)
+            n && n.action == "serve_static"
         end
         
     end
