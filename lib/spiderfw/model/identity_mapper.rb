@@ -16,8 +16,11 @@ module Spider; module Model
             if (proc)
                 prev_im = Spider::Model.identity_mapper
                 Spider::Model.identity_mapper = self
-                yield self
-                Spider::Model.identity_mapper = prev_im
+                begin
+                    yield self
+                ensure
+                    Spider::Model.identity_mapper = prev_im
+                end
             end
         end
         
