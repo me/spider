@@ -47,6 +47,8 @@ module Spider; module Forms
         attr_accessor :pk
         attr_reader :obj
         
+        include Spider::EventSource
+        
         def init
             @inputs = {}
             @names = []
@@ -172,7 +174,7 @@ module Spider; module Forms
         end
         
         def run
-            Spider::Logger.debug("FORM EXECUTING")
+            #Spider::Logger.debug("FORM EXECUTING")
             if (@obj)
                 
                 @scene.form_desc = @model.label.downcase+' '+ (@obj.to_s || '')
@@ -251,7 +253,7 @@ module Spider; module Forms
                 end
                 input = create_input(widget_type, el) if widget_type
                 
-                debug("Created input for #{el.name}, #{input}")
+                #debug("Created input for #{el.name}, #{input}")
                 if (input)
                     input.read_only if read_only?(el.name)
 #                    input.id_path.insert(input.id_path.length-1, 'data')
@@ -288,7 +290,7 @@ module Spider; module Forms
         
         def set_values(obj)
             @inputs.each do |element_name, input|
-                debug("SET VALUE #{obj.get(element_name)} ON INPUT #{input}, #{input.object_id}")
+                #debug("SET VALUE #{obj.get(element_name)} ON INPUT #{input}, #{input.object_id}")
                 input.value ||= obj.get(element_name)
             end
         end
@@ -358,9 +360,10 @@ module Spider; module Forms
                 end
                 before_save(obj, save_mode)
                 @before_save.call(obj, save_mode) if @before_save
+                trigger(:before_save, obj)
                 begin
                     save_mode == :update ? obj.update : obj.insert
-                    debug("SAVED")
+                    #debug("SAVED")
                     @saved = true
                     @pk = @model.primary_keys.map{ |k| obj[k.name] }.join(':')
                 rescue => exc
@@ -374,6 +377,7 @@ module Spider; module Forms
                 end
                 @after_save.call(obj, save_mode) if @after_save
                 after_save(obj, save_mode)
+                trigger(:save, obj, save_mode)
                 @auto_redirect = true if @auto_redirect.is_a?(String) && @auto_redirect.strip == 'true'
                 if @auto_redirect
                     if @auto_redirect.is_a?(String)
