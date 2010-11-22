@@ -51,7 +51,7 @@ module Spider; module Components
             @sections[section] ||= []
             @sections[section] << content
             @labels[content] = label
-            w_action = label.downcase.gsub(/\s+/, '_').gsub(/[^a-zA-Z_]/, '')
+            w_action = self.class.label_to_link(label)
             @content_by_action[w_action] = content
             @links[content] = w_action
         end
@@ -60,6 +60,10 @@ module Spider; module Components
             res = @widgets[:menu].assets
             res += @current.assets if @current
             return res
+        end
+        
+        def self.label_to_link(label)
+            label.downcase.gsub(/\s+/, '_').gsub(/[^a-zA-Z_]/, '')
         end
         
         
