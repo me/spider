@@ -69,6 +69,8 @@ module Spider; module Model
         
         # If this object is used as a superclass in class_table_inheritance, points to the current subclass
         attr_accessor :_subclass_object
+        # This object won't be put into the identity mapper
+        attr_accessor :_no_identity_mapper
         
         class <<self
             # An Hash of model attributes. They can be used freely.
@@ -1815,6 +1817,7 @@ module Spider; module Model
             obj = nil
             Spider::Model.no_identity_mapper do
                 obj = self.class.new
+                obj._no_identity_mapper = true
                 self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
             end
             return obj
@@ -1822,8 +1825,12 @@ module Spider; module Model
         
         # Returns a new static instance with the same primary keys
         def get_new_static
-            obj = self.class.static
-            self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            obj = nil
+            Spider::Model.no_identity_mapper do
+                obj = self.class.static
+                obj._no_identity_mapper = true
+                self.class.primary_keys.each{ |k| obj.set(k, self.get(k)) }
+            end
             return obj
         end
         

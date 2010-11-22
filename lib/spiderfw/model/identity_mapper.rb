@@ -78,6 +78,7 @@ module Spider; module Model
         # if check is false, if a object with the same primary keys exists it will be overwritten.
         def put(obj, check=false, fail_if_exists=false)
             return nil unless obj
+            return obj if obj._no_identity_mapper
             if (obj.is_a?(QuerySet))
                 obj.each_current_index{ |i| obj[i] = put(obj[i], check) }
                 return obj

@@ -48,6 +48,8 @@ module Spider; module Model
         attr_accessor :append_element
         # (bool) If false, prevents the QuerySet from loading.
         attr_accessor :loadable # :nodoc: TODO: remove?
+        # Don't put this queryset's objects into the IdentityMapper
+        attr_accessor :_no_identity_mapper
         
         # Instantiates a non-autoloading queryset
         def self.static(model, query_or_val=nil)
