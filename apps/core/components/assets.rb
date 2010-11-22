@@ -10,6 +10,13 @@ Spider::Template.define_named_asset 'spider', [
     [:css, 'css/spider.css', Spider::Components]
 ], :depends => ['jquery']
 
+Spider::Template.define_named_asset 'cssgrid', [
+    [:css, 'css/grid/1140.css', Spider::Components],
+    [:css, 'css/grid/ie.css', Spider::Components, {:if_ie_lte => 9}],
+    [:css, 'css/grid/smallerscreen.css', Spider::Components, {:media => "only screen and (max-width: 1023px)"}],
+    [:css, 'css/grid/mobile.css', Spider::Components, {:media => "handheld, only screen and (max-width: 767px)"}]
+]
+
 Spider::Template.define_named_asset 'spider-utils', [
     [:js, 'js/utils.js', Spider::Components, {:gettext => true}]
 ], :depends => ['spider']
