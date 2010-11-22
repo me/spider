@@ -12,6 +12,7 @@ module Spider; module Components
         attribute :paginate, :type => TrueClass, :default => true
         attribute :max_element_length, :type => Fixnum, :default => 80
         attribute :link_el, :type => Symbol
+        attribute :link_id, :type => Symbol
         attribute :link
         attribute :sort
         i_attribute :queryset
@@ -62,6 +63,7 @@ module Spider; module Components
             @sort_el = [@sort_el] if @sort_el && !@sort_el.is_a?(Array)
             @scene.link_el = @attributes[:link_el]
             @scene.link = @attributes[:link]
+            @scene.link_id = @attributes[:link_id] || @attributes[:link_el]
             super
         end
         
