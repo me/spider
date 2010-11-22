@@ -414,16 +414,18 @@ module Spider
                     end
                 end
                 app = nil
+                path_app = nil
                 if (path[0].chr == '/')
                     first_part = path[1..-1].split('/')[0]
                     Spider.apps_by_path.each do |p, a|
                         if path.index(p+'/') == 1 # FIXME: might not be correct
                         #if first_part == p
-                            app = a
+                            path_app = a
                             path = path[p.length+2..-1]
                             break
                         end
                     end
+                    app = path_app
                 elsif owner_class <= Spider::App
                     app = owner_class
                 else
@@ -438,7 +440,8 @@ module Spider
                 end
                 search_locations.each do |p|
                     found = first_found(extensions, p[0]+'/'+path)
-                    return Resource.new(found, p[1]) if found
+                    definer = path_app || p[1]
+                    return Resource.new(found, definer) if found
                 end
             end
             return Resource.new(path)
