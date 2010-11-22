@@ -25,6 +25,8 @@ module Spider
                 block = :Each
             elsif el.name == 'tpl:output'
                 block = :Output
+            elsif el.name == 'tpl:output-assets'
+                block = :LayoutAssets    
             elsif el.name == 'sp:render'
                 block = :Render
             elsif el.name == 'sp:run'
@@ -205,5 +207,6 @@ require 'spiderfw/templates/blocks/run'
 require 'spiderfw/templates/blocks/debugger'
 require 'spiderfw/templates/blocks/parent_context'
 require 'spiderfw/templates/blocks/output'
+require 'spiderfw/templates/blocks/layout_assets'
 
 

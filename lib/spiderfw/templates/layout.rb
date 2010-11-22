@@ -5,6 +5,7 @@ module Spider
     class Layout < Template
 #        allow_blocks :HTML, :Text, :Render, :Yield, :If, :TagIf, :Each, :Pass, :Widget
         attr_accessor :template
+        attr_accessor :asset_set
         
         def init(scene)
             super
@@ -26,9 +27,11 @@ module Spider
             runtime = []
             js_messages = []
             all_assets.each do |res|
-                if res[:runtime]
-                    next if seen[res[:runtime]]
-                    seen[res[:runtime]] = true
+                is_runtime = res[:runtime] || res[:if_ie_lte] || res[:media]
+                if is_runtime
+                    rntm = res[:runtime] || res[:src]
+                    next if seen[rntm]
+                    seen[rntm] = true
                     runtime << res
                     next
                 end
@@ -57,10 +60,15 @@ module Spider
                 }
             end
             runtime.each do |rt|
-                @template_assets[rt[:type]] << Spider::Template.runtime_assets[rt[:runtime]].call(@request, @response, @scene)
+                if rt[:runtime]
+                    @template_assets[rt[:type]] << Spider::Template.runtime_assets[rt[:runtime]].call(@request, @response, @scene)
+                else
+                    @template_assets[rt[:type]] << rt
+                end
             end
             @content[:yield_to] = @template
             @scene.assets = @template_assets
+            @scene.extend(LayoutScene)
             if js_messages.empty?
                 @scene.js_translations = ""
             else
@@ -104,6 +112,7 @@ module Spider
             compress = {}
             compressed = []
             cname = File.basename(@path, '.layout.shtml')
+            cname += "-#{@asset_set}" if @asset_set
             assets.each do |ass|
                 if ass[:compressed]
                     compressed << ass[:compressed_path]
@@ -171,6 +180,7 @@ module Spider
             res = []
             combine = {}
             cname = File.basename(@path, '.layout.shtml')
+            cname += "-#{@asset_set}" if @asset_set
             assets.each do |ass|
                 name = ass[:combine] || cname
                 combine[name] ||= []
@@ -278,6 +288,32 @@ module Spider
                 res << compiled_name
             end
             res
+        end
+        
+    end
+    
+    module LayoutScene
+        
+        def output_assets(type=nil)
+            types = type ? [type] : self.assets.keys
+            if types.include?(:js)
+                self.assets[:js].each do |ass|
+                    ass = {:src => ass} if ass.is_a?(String)
+                    $out << "<script type=\"text/javascript\" src=\"#{ass[:src]}\"></script>\n"
+                end
+            end
+            if types.include?(:css)
+                self.assets[:css].each do |ass|
+                    ass = {:src => ass} if ass.is_a?(String)
+                    link = "<link rel=\"stylesheet\" href=\"#{ass[:src]}\""
+                    link += " media=\"#{ass[:media]}\"" if ass[:media]
+                    link += ">\n"
+                    if ass[:if_ie_lte]
+                        link = "<!--[if lte IE #{ass[:if_ie_lte]}]>\n#{link}<![endif]-->\n"
+                    end
+                    $out << link
+                end
+            end
         end
         
     end

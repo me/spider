@@ -285,19 +285,28 @@ module Spider
             @assets = new_assets
             root.search('.to_delete').remove
             root.search('tpl:assets').each do |ass|
-                wattr = ass.get_attribute('widgets')
-                widgets = []
-                wattr.split(/,\s*/).each do |w|
-                    w_templates = nil
-                    if w =~ /(\.+)\((.+)\)/
-                        w = $1
-                        w_templates = $2.split('|')
+                if wattr = ass.get_attribute('widgets')
+                    widgets = []
+                    wattr.split(/,\s*/).each do |w|
+                        w_templates = nil
+                        if w =~ /(\.+)\((.+)\)/
+                            w = $1
+                            w_templates = $2.split('|')
+                        end
+                        klass = Spider::Template.get_registered_class(w)
+                        w_templates ||= [klass.default_template]
+                        w_templates.each do |wt| 
+                            t = klass.load_template(wt)
+                            add_widget_template(t, klass)
+                        end
                     end
-                    klass = Spider::Template.get_registered_class(w)
-                    w_templates ||= [klass.default_template]
-                    w_templates.each do |wt| 
-                        t = klass.load_template(wt)
-                        add_widget_template(t, klass)
+                elsif sattr = ass.get_attribute('src')
+                    sattr.split(/,\s*/).each do |s|
+                        s_template = Spider::Template.new(s)
+                        s_template.owner = @owner
+                        s_template.definer_class = @definer_class
+                        s_template.load(s)
+                        @assets = s_template.assets + @assets
                     end
                 end
             end
@@ -405,7 +414,9 @@ module Spider
                 ass[:compressed_path] = compressed_res.path
                 ass[:compressed] = base_url+attributes[:compressed]
             end
-            ass[:gettext] = attributes[:gettext]
+            [:gettext, :media, :if_ie_lte].each do |key|
+                ass[key] = attributes[key] if attributes.key?(key)
+            end
             return [ass]
         end
         
