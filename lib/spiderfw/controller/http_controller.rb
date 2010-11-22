@@ -164,8 +164,13 @@ module Spider
                 Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping(self.env['PATH_INFO'])
             end
             
-            def full_path
+            def http_path
                 'http://'+self.env['HTTP_HOST']+path
+            end
+            
+            def full_path
+                Spider.logger.warn("Request#full_path is deprecated. Use Request#http_path instead")
+                http_path
             end
             
             # Returns the REQUEST_URI reversing any proxy mappings if needed
@@ -203,6 +208,14 @@ module Spider
             
             def get
                 @get ||= {}
+            end
+            
+            def post?
+                self.http_method == :POST
+            end
+            
+            def get?
+                self.http_method == :GET
             end
             
         end
