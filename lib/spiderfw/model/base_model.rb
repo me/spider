@@ -1192,7 +1192,7 @@ module Spider; module Model
         
         def self.create(values)
             obj = self.static(values)
-            obj.save
+            obj.insert
             return obj
         end
         
