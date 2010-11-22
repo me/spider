@@ -48,7 +48,7 @@ module Spider
                         Spider::Logger.info("Sending TERM signal to worker #{pid}")
                         Process::kill 'TERM', pid
                     end
-                rescue Errno::ENOENT
+                rescue Errno::ENOENT, Errno::ESRCH
                 end
             end
             begin
