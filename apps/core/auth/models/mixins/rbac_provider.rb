@@ -38,7 +38,8 @@ module Spider; module Auth
                 @rbac_provider_elements ||= {}
                 @rbac_provider_elements[context] = :"#{context}_permissions"
                 self.multiple_choice @rbac_provider_elements[context], RBAC.context(context),
-                    :label => _("%s permissions") % context.to_s.capitalize
+                    :label => _("%s permissions") % context.to_s.gsub(/_+/, ' ').capitalize,
+                    :inline_model => [[:id, String, {:primary_key => true}], [:desc, String]]
                 self.elements[@rbac_provider_elements[context]].type.translate = true
             end
             

@@ -1,4 +1,4 @@
-require 'apps/core/auth/models/mixins/rbac'
+require 'apps/core/auth/models/mixins/rbac_provider'
 
 module RBAC
 
