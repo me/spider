@@ -77,6 +77,15 @@ module Spider
             return msg
         end
         
+        def self.sms(to, text, params={})
+            msg = SMS.new(
+                :to => to, :text => text
+            )
+            msg.next_try = params[:send_from] || DateTime.new
+            msg.save
+            return msg
+        end
+        
         
     end
     

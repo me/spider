@@ -45,3 +45,6 @@ end
 Spider.conf.get('messenger.email.backends').each do |backend|
     require File.join('apps/messenger/backends/email/', backend)
 end
+Spider.conf.get('messenger.sms.backends').each do |backend|
+    require File.join('apps/messenger/backends/sms/', backend)
+end
