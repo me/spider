@@ -208,7 +208,7 @@ module Spider; module Model
             #                 type = Model.base_type(type)
             #             els
             if (type.class <= Hash)
-                type = create_inline_model(name, type)
+                type = create_inline_model(name, type, attributes)
                 attributes[:inline] = true
             end
             if (attributes[:integrated_from])
@@ -690,18 +690,24 @@ module Spider; module Model
         end
         
         # Creates an inline model
-        def self.create_inline_model(name, hash) #:nodoc:
+        def self.create_inline_model(name, hash, attributes={}) #:nodoc:
             model = self.const_set(Spider::Inflector.camelize(name), Class.new(InlineModel))
             model.instance_eval do
-                hash.each do |key, val|
-                    key = key.to_s if key.is_a?(Symbol)
-                    element(:id, key.class, :primary_key => true)
-                    if (val.class == Hash)
-                        # TODO: allow passing of multiple values like {:element1 => 'el1', :element2 => 'el2'}
-                    else
-                        element(:desc, val.class, :desc => true)
+                if attributes[:inline_model]
+                    attributes[:inline_model].each do |el|
+                        element(el[0], el[1], el[2] || {})
                     end
-                    break
+                else
+                    hash.each do |key, val|
+                        key = key.to_s if key.is_a?(Symbol)
+                        element(:id, key.class, :primary_key => true)
+                        if (val.class == Hash)
+                            # TODO: allow passing of multiple values like {:element1 => 'el1', :element2 => 'el2'}
+                        else
+                            element(:desc, val.class, :desc => true)
+                        end
+                        break
+                    end
                 end
             end
             model.data = hash
