@@ -32,7 +32,7 @@ module Spider; module Forms
         
         def prepare
             super
-            @blank_option = (@multiple ? false : true) if @blank_option.nil?
+            @blank_option = ((@multiple || @required) ? false : true) if @blank_option.nil?
             @scene.blank_option = blank_option
         end
         
@@ -49,8 +49,6 @@ module Spider; module Forms
                 @scene.data.condition.and(conn_cond)
             end
             @scene.values = {}
-            debug("SELECT VALUE:")
-            debug(@value)
             @scene.selected = {}
             if (@value)
                 val = @multiple ? @value : [@value]
@@ -66,8 +64,6 @@ module Spider; module Forms
 
         
         def value=(val)
-            debug("SETTING SELECT VALUE TO")
-            debug(val)
             if (val.nil? || (val.is_a?(String) && val.empty?))
                 @value = nil
                 return
@@ -105,7 +101,6 @@ module Spider; module Forms
         end
         
         def connection_condition
-#           debugger
             if (@connections && @form)
                 conn_cond = Spider::Model::Condition.and
                 conn_param = params['connected'] || {}
