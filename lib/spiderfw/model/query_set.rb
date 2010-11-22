@@ -682,7 +682,7 @@ module Spider; module Model
         end
         
         def empty!
-            @object = []
+            @objects = []
         end
         
         def to_s
