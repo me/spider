@@ -34,8 +34,19 @@ module Spider
             
         end
         
+        def on(event_name, *params)
+            @event_handlers ||= {}
+            @event_handlers[event_name] ||= []
+            debugger unless proc
+            @event_handlers[event_name] << proc
+        end
+        
         def trigger(event_name, *params)
             self.class.trigger(event_name, *([self]+params))
+            return unless @event_handlers && @event_handlers[event_name]
+            @event_handlers[event_name].each do |h|
+                h.call(*params)
+            end
         end
         
     end
