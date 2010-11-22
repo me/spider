@@ -456,9 +456,13 @@ module Spider; module ControllerMixins
                 @layouts ||= []
             end
             
+            def layout_params
+                @layout_params ||= {}
+            end
+            
             def layout(name, params={})
-                @layouts ||= []
-                @layouts << [name, params]
+                self.layouts << name
+                self.layout_params[name] = params
             end
             
             
@@ -474,8 +478,8 @@ module Spider; module ControllerMixins
                     end
                 end
                 action = (action && !action.empty?) ? action.to_sym : self.default_action
-                layouts.each do |try|
-                    name, params = try
+                layouts.each do |name|
+                    params = @layout_params[name]
                     if (params[:for])
                         next unless check_action(action, params[:for])
                     end
@@ -530,12 +534,14 @@ module Spider; module ControllerMixins
                 unless respond_to?(:layout_path)
                     raise NotImplementedError, "The layout_path class method must be implemented by object using the Visual mixin, but #{self} does not"
                 end
+                params = self.layout_params[path] || {}
                 if (path.is_a?(Symbol))
                     path = Spider::Layout.named_layouts[path]
                 end
                 resource = Spider::Template.find_resource(path+'.layout', layout_path, self)
                 layout = Spider::Layout.new(resource.path)
                 layout.definer_class = resource.definer
+                layout.asset_set = params[:assets] if params[:assets]
                 layout
             end
             
