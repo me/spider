@@ -277,6 +277,7 @@ module Spider; module Model
                     Spider.logger.error("Duplicate version for #{self}")
                 end
                 object.autoload(true)
+                object.trigger(:version_saved)
             end
             
             def save_junction_version(object)
@@ -468,7 +469,6 @@ module Spider; module Model
                 obj = Spider::Model.identity_mapper.put(self)
                 uow.add(obj, :save_version)
             end
-            obj.trigger(:version_saved)
         end
 
         
