@@ -339,7 +339,7 @@ module Spider
         end
         
         def discovery
-            check = ['/tmp/mysql.sock', '/var/lib/mysql/mysql.sock']
+            check = ['/tmp/mysql.sock', '/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock']
             local = []
             check.each do |c|
                 local << {:socket => c} if File.socket?(c)
