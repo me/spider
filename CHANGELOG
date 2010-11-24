@@ -1,3 +1,14 @@
+= 0.5.14
+== 24 November, 2010
+* App management, setup wizard, configuration editor
+* Assets compressing
+* IdentityMapper, UnitOfWork and versioning
+* Role Based Access Control
+* Messenger backends
+* HtmlArea
+* Master and Servant apps
+* Many bugfixes and new methods
+
 = 0.5.13
 == 17 June, 2010
 * Changed gem dipendency from json to json_pure
