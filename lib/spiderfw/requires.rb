@@ -1,6 +1,7 @@
 require 'spiderfw/i18n/gettext'
 require 'spiderfw/i18n/i18n'
 require 'spiderfw/exceptions'
+require 'spiderfw/tag/tag'
 require 'spiderfw/utils/monkey/kernel'
 require 'spiderfw/utils/monkey/module'
 require 'spiderfw/utils/monkey/class'

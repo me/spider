@@ -5,12 +5,14 @@ module Spider; module Messenger; module Backends; module SMS
     module SmsTools
         include Messenger::SMSBackend
         
-        def self.send(msg)
+        def self.send_message(msg)
             Spider.logger.debug("Sending SMS #{msg.ticket}")
-            File.new(File.join(Spider.conf.get('messenger.smstools.path_outgoing'), msg.ticket), 'w') do |f|
-                f << "To: #{msg.to}\n\n"
+            file_path = File.join(Spider.conf.get('messenger.smstools.path_outgoing'), msg.ticket)
+            File.open(file_path, 'w') do |f|
+                f << "To: +39#{msg.to}\n\n"
                 f << msg.text
             end
+            File.chmod(0666, file_path)
             return true
         end
         

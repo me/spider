@@ -40,7 +40,7 @@ module Spider; module Messenger
         
         def add_failure(backend_response=nil)
             msg = self
-            msg.last_try = now
+            msg.last_try = DateTime.now
             msg.attempts ||= 0
             msg.attempts += 1
             queue = self.class.queue
@@ -48,7 +48,8 @@ module Spider; module Messenger
                 msg.next_try = nil
                 msg.status = :failed
             else
-                msg.next_try = msg.last_try.to_local_time + (msg.attempts * Spider.conf.get("messenger.#{queue}.retry_time") * 60)
+	        msg.last_try ||= DateTime.now
+                msg.next_try = msg.last_try + (msg.attempts * Spider.conf.get("messenger.#{queue}.retry_time") * 60)
                 msg.status = :retry
             end
         end
