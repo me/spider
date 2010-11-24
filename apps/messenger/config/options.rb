@@ -23,6 +23,9 @@ module Spider
     config_option 'messenger.sms.backend', _("The backend to use for sending sms"), :type => String, :do => lambda{ |val|
         Spider.conf.set('messenger.sms.backends', [val])
     }
+    config_option 'messenger.sms.retries', _("How many times to retry sending an sms"), :type => Fixnum, :default => 5
+    config_option 'messenger.sms.retry_time', _("Seconds to wait until retry (will be incremented at each retry)"), 
+        :type => Fixnum, :default => 10
     config_option 'messenger.smstools.path_spool', _("The path to the smstools 'spool' folder"), :default => '/var/spool/sms'
     config_option 'messenger.smstools.path_outgoing', _("The path to the smstools 'outgoing' folder"), 
         :default => lambda{ File.join(Spider.conf.get('messenger.smstools.path_spool'), 'outgoing')}

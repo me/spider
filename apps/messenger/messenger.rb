@@ -39,7 +39,7 @@ module Spider
                     exc = nil
                     self.backends[queue].each do |backend|
                         begin
-                            res = backend.send(msg)
+                            res = backend.send_message(msg)
                         rescue => exc
                             Spider.logger.error(exc)
                         end
@@ -81,7 +81,7 @@ module Spider
             msg = SMS.new(
                 :to => to, :text => text
             )
-            msg.next_try = params[:send_from] || DateTime.new
+            msg.next_try = params[:send_from] || DateTime.now
             msg.save
             return msg
         end

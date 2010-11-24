@@ -5,7 +5,7 @@ module Spider; module Messenger
    module SMSBackend 
       
       def self.included(mod) 
-          Messenger.add_backend(:sms, self)
+          Messenger.add_backend(:sms, mod)
       end
       
        

@@ -6,7 +6,7 @@ module Spider; module Messenger; module Backends; module Email
     module SMTP
         include Messenger::EmailBackend
         
-        def self.send(msg)
+        def self.send_message(msg)
             Spider.logger.debug("Sending e-mail #{msg.ticket}")
             res = false
             Net::SMTP.start(
