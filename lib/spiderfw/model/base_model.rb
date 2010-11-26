@@ -2464,6 +2464,25 @@ module Spider; module Model
             h
         end
         
+        def self.from_hash_dump(h)
+            obj = self.static
+            h.each do |key, val|
+                el = self.elements[key.to_sym]
+                next unless el
+                if el.multiple? && val
+                    qs = obj.get(el)
+                    val.each do |v|
+                        v = el.model.from_hash_dump(v) if v.is_a?(Hash)
+                        qs << v
+                    end
+                else
+                    val = el.model.from_hash_dump(val) if val.is_a?(Hash)
+                    obj.set(el, val)
+                end
+            end
+            obj
+        end
+        
         def dump_to_all_data_hash(options={}, h={}, seen={})
             Spider::Model.with_identity_mapper do |im|
                 clname = self.class.name.to_sym
