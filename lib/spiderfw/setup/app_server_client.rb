@@ -20,7 +20,14 @@ module Spider
         def http_get(url)
             uri = URI.parse(url)
             proxy = uri.find_proxy
-            klass = proxy ? Net::HTTP::Proxy(proxy.host, proxy.port) : Net::HTTP
+            klass = nil
+            if proxy
+                proxy_user, proxy_pass = nil
+                proxy_user, proxy_pass = proxy.userinfo.split(/:/) if proxy.userinfo
+                klass = Net::HTTP::Proxy(proxy.host, proxy.port, proxy_user, proxy_pass)
+            else
+                klass = Net::HTTP
+            end
             result = klass.get_response(uri)
             raise "#{result.code} #{result.message} #{uri}" if result.is_a?(Net::HTTPClientError)
             result.body
