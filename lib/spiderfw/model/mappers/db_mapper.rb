@@ -1076,7 +1076,7 @@ module Spider; module Model; module Mappers
 
         # Modifies the storage according to the schema.
         def sync_schema(force=false, options={})
-            compute_foreign_key_constraints
+            compute_foreign_key_constraints unless options[:no_foreign_key_constraints] || !storage.supports?(:foreign_keys)
             schema_description = schema.get_schemas
             sequences = {}
             sequences[schema.table] = schema.sequences
