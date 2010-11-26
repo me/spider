@@ -54,9 +54,11 @@ module Spider
         end
         
         def fetch_app(app_id)
-            tmp = Tempfile.open("spider-app-archive")
+            tmp = Tempfile.new("spider-app-archive")
+            tmp.binmode
             res = http_get(@url+"/pack/#{app_id}")
             tmp << res
+            tmp.flush
             tmp.path
         end
         
