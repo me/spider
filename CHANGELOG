@@ -1,3 +1,9 @@
+= 0.5.15
+== 26 November, 2010
+* BaseModel.from_hash_dump, :reverse option in extend_model
+* Spider.http_client util
+* Bugfixes
+
 = 0.5.14
 == 24 November, 2010
 * App management, setup wizard, configuration editor
