@@ -8,10 +8,10 @@ class AppCommand < CmdParse::Command
         @server_url = 'http://www.soluzionipa.it/euroservizi/spider/app_server'
         
         self.options = CmdParse::OptionParserWrapper.new do |opt|
-            opt.on("--proxy", _("Proxy server to use (http://user:pass@host:port)"), "-p"){ |p|
+            opt.on("--proxy [SERVER]", _("Proxy server to use (http://user:pass@host:port)"), "-p"){ |p|
                 ENV['http_proxy'] = p
             }
-            opt.on("--server", _("App server"), "-s") { |s|
+            opt.on("--server [SERVER]", _("App server"), "-s") { |s|
                 @server_url = s
             }
         end
