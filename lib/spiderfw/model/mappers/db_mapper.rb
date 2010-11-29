@@ -310,7 +310,7 @@ module Spider; module Model; module Mappers
             keys = []
             primary_keys = []
             types = {}
-            if (query.limit && query.order.empty?)
+            if (query.limit && query.order.empty? && !query.only_one?)
                 @model.primary_keys.each do |key|
                     elements << key.name unless elements.include?(key.name)
                     query.order_by(key.name, :asc)

@@ -1091,7 +1091,7 @@ module Spider; module Model
         # See #self.where for parameter syntax.
         def self.load(*params, &proc)
             qs = self.where(*params, &proc)
-            qs.limit = 1
+            qs.only_one
             return qs[0]
         end
         
