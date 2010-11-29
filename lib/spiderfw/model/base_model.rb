@@ -66,6 +66,8 @@ module Spider; module Model
         attr_accessor :_parent
         # If _parent is a model instance, which element points to this one
         attr_accessor :_parent_element
+        #
+        attr_accessor :_check_if_saved
         
         # If this object is used as a superclass in class_table_inheritance, points to the current subclass
         attr_accessor :_subclass_object
@@ -2464,19 +2466,24 @@ module Spider; module Model
             h
         end
         
-        def self.from_hash_dump(h)
+        def self.from_hash_dump(h, options={})
             obj = self.static
+            obj._check_if_saved = true if options[:check_if_saved]
             h.each do |key, val|
                 el = self.elements[key.to_sym]
                 next unless el
                 if el.multiple? && val
                     qs = obj.get(el)
                     val.each do |v|
-                        v = el.model.from_hash_dump(v) if v.is_a?(Hash)
+                        v = el.model.from_hash_dump(v, options) if v.is_a?(Hash)
                         qs << v
                     end
                 else
-                    val = el.model.from_hash_dump(val) if val.is_a?(Hash)
+                    val = el.model.from_hash_dump(val, options) if val.is_a?(Hash)
+	            case el.type.name.to_sym
+                    when :Date, :DateTime
+                        val =  el.type.parse(val) unless val.blank?
+                    end
                     obj.set(el, val)
                 end
             end
