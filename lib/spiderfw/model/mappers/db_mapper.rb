@@ -134,7 +134,7 @@ module Spider; module Model; module Mappers
             return nil unless save[:values].length > 0
             condition = Condition.and
             @model.primary_keys.each do |key|
-                condition[key.name] = map_condition_value(key.type, obj.get(key))
+                condition[key.name] = obj.get(key)
             end
             preprocess_condition(condition)
             save[:condition], save[:joins] = prepare_condition(condition)
