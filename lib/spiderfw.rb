@@ -440,6 +440,7 @@ module Spider
                 end
                 search_locations.each do |p|
                     found = first_found(extensions, p[0]+'/'+path)
+                    next if found == cur_path
                     definer = path_app || p[1]
                     return Resource.new(found, definer) if found
                 end
