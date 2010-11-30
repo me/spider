@@ -2480,11 +2480,14 @@ module Spider; module Model
                     end
                 else
                     val = el.model.from_hash_dump(val, options) if val.is_a?(Hash)
-	            case el.type.name.to_sym
+	                case el.type.name.to_sym
                     when :Date, :DateTime
                         val =  el.type.parse(val) unless val.blank?
                     end
-                    obj.set(el, val)
+					begin
+                        obj.set(el, val)
+                    rescue # FIXME: should be and option
+                    end
                 end
             end
             obj
