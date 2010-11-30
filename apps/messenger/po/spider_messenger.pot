@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Messenger 0.1\n"
-"POT-Creation-Date: 2010-03-24 16:27+0100\n"
+"POT-Creation-Date: 2010-11-29 12:48+0100\n"
 "PO-Revision-Date: 2009-06-30 16:44+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 msgid "From"
 msgstr ""
 
-#: models/email.rb:8
+#: models/email.rb:8 models/sms.rb:7
 msgid "To"
 msgstr ""
 
@@ -53,11 +53,47 @@ msgid "Attempts"
 msgstr ""
 
 #: models/message.rb:10
-msgid "Last status"
+msgid "Backend"
 msgstr ""
 
 #: models/message.rb:11
+msgid "Backend id"
+msgstr ""
+
+#: models/message.rb:12
+msgid "Last status"
+msgstr ""
+
+#: models/message.rb:13
 msgid "Sent at"
+msgstr ""
+
+#: models/message.rb:15
+msgid "Retry"
+msgstr ""
+
+#: models/message.rb:16
+msgid "Queued"
+msgstr ""
+
+#: models/message.rb:17
+msgid "Failed"
+msgstr ""
+
+#: models/message.rb:18
+msgid "Handed to backend"
+msgstr ""
+
+#: models/message.rb:19
+msgid "Sent"
+msgstr ""
+
+#: models/message.rb:20
+msgid "Delivered"
+msgstr ""
+
+#: models/sms.rb:8
+msgid "Text"
 msgstr ""
 
 #: views/index.shtml:2

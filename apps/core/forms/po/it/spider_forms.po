@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Forms 0.1\n"
-"POT-Creation-Date: 2010-04-22 18:59+0200\n"
-"PO-Revision-Date: 2010-03-11 11:36+0100\n"
+"POT-Creation-Date: 2010-11-29 12:48+0100\n"
+"PO-Revision-Date: 2010-11-29 12:52+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -31,7 +31,7 @@ msgstr "%s e nuovo"
 msgid "%s and stay"
 msgstr "%s e rimani"
 
-#: widgets/inputs/date_time/date_time.rb:17
+#: widgets/inputs/date_time/date_time.rb:22
 msgid "%s is not a valid date"
 msgstr "%s non è una data valida"
 
@@ -39,10 +39,23 @@ msgstr "%s non è una data valida"
 msgid "%s is required"
 msgstr "Il campo %s è obbligatorio"
 
-#: widgets/inputs/file_input/file_input.shtml:6
+#: widgets/inputs/file_input/file_input.shtml:7
 msgid "Clear"
 msgstr "Pulisci"
 
-#: widgets/inputs/file_input/file_input.shtml:8
+#: widgets/inputs/file_input/file_input.shtml:9
 msgid "Change"
 msgstr "Cambia"
+
+#: widgets/inputs/time_span/time_span.shtml:4
+msgid "Seconds"
+msgstr "Secondi"
+
+#: widgets/inputs/time_span/time_span.shtml:5
+msgid "Minutes"
+msgstr "Minuti"
+
+#: widgets/inputs/time_span/time_span.shtml:6
+msgid "Hours"
+msgstr "Ore"
+

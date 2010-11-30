@@ -6,9 +6,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2010-10-04 14:43+0200\n"
-"PO-Revision-Date: 2010-10-04 17:14+0100\n"
-"Last-Translator: Ivan Pirlik <ivan.pirlik@gmail.com>\n"
+"POT-Creation-Date: 2010-11-29 12:48+0100\n"
+"PO-Revision-Date: 2010-11-29 12:51+0100\n"
+"Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,15 +19,19 @@ msgstr ""
 msgid "Administration"
 msgstr "Amministrazione"
 
+#: widgets/admin/admin.rb:37
+msgid "Manage Data"
+msgstr "Gestisci i Dati"
+
 #: widgets/admin/admin.rb:42
 msgid "guest"
 msgstr "ospite"
 
-#: widgets/crud/crud.rb:94
+#: widgets/crud/crud.rb:95
 msgid "Cancel"
 msgstr "Annulla"
 
-#: widgets/crud/crud.rb:95
+#: widgets/crud/crud.rb:96
 msgid "Ok"
 msgstr "Ok"
 
@@ -52,11 +56,11 @@ msgstr "Nessun elemento"
 msgid "Delete"
 msgstr "Elimina"
 
-#: public/js/utils.js:8
+#: public/js/utils.js:9
 msgid "Are you sure?"
 msgstr "Sei sicuro?"
 
-#: public/js/utils.js:11
+#: public/js/utils.js:14
 msgid "Yes"
 msgstr "Sì"
 
