@@ -62,12 +62,13 @@ module Spider
             setup_paths(@root)
             all_apps = find_all_apps
             all_apps.each do |path|
-                require path+'/config/options.rb' if File.exist?(path+'/config/options.rb')
+                opts = File.join(path, 'config/options.rb')
+                require opts if File.exist?(opts)
             end
             @runmode = nil
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
-            load_configuration($SPIDER_PATH+'/config')
-            load_configuration(@root+'/config')
+            load_configuration File.join($SPIDER_PATH, 'config')
+            load_configuration File.join(@root, 'config')
             start_loggers
 #            @controller = Controller
             @paths[:spider] = $SPIDER_PATH
@@ -75,8 +76,9 @@ module Spider
             if ($SPIDER_CONFIG_SETS)
                 $SPIDER_CONFIG_SETS.each{ |set| @configuration.include_set(set) }
             end
-            if File.exist?($SPIDER_RUN_PATH+'/init.rb')
-                @home.instance_eval(File.read($SPIDER_RUN_PATH+'/init.rb'), $SPIDER_RUN_PATH+'/init.rb')
+            init_file = File.join($SPIDER_RUN_PATH, 'init.rb')
+            if File.exist?(init_file)
+                @home.instance_eval(File.read(init_file), init_file)
             end
             @logger.close(STDERR)
             @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
@@ -86,15 +88,6 @@ module Spider
                 mod.app_init if mod.respond_to?(:app_init)
             end
             @init_done=true
-            # routes_file = "#{@paths[:config]}/routes.rb"
-            # if (File.exist?(routes_file))
-            #     load(routes_file)
-            # end
-            # else
-            #     @apps.each do |name, app|
-            #         @controller.route('/'+app.name.gsub('::', '/'), app.controller, :ignore_case => true)
-            #     end
-            # end
         end
         
         # 
@@ -107,7 +100,7 @@ module Spider
 
         # Invoked before a server is started. Apps may implement the app_startup method, that will be called.
         def startup
-            unless File.exists?(Spider.paths[:root]+'/init.rb')
+            unless File.exists?(File.join(Spider.paths[:root], 'init.rb'))
                 raise "The server must be started from the root directory"
             end
             if (Spider.conf.get('template.cache.reload_on_restart'))
@@ -182,9 +175,9 @@ module Spider
                 @logger.error("Unable to create log folder")
             end
             if (File.exist?(@paths[:log]))
-                @logger.open(@paths[:log]+'/error.log', :ERROR) if Spider.conf.get('log.errors')
+                @logger.open(File.join(@paths[:log], 'error.log'), :ERROR) if Spider.conf.get('log.errors')
                 if (Spider.conf.get('log.debug.level'))
-                    @logger.open(@paths[:log]+'/debug.log', Spider.conf.get('log.debug.level'))
+                    @logger.open(File.join(@paths[:log], 'debug.log'), Spider.conf.get('log.debug.level'))
                 end
             end
             $LOG = @logger
@@ -193,23 +186,23 @@ module Spider
         # Sets the default paths (see #paths).
         def setup_paths(root)
             @paths[:root] = root
-            @paths[:apps] = root+'/apps'
-            @paths[:core_apps] = $SPIDER_PATH+'/apps'
-            @paths[:config] = root+'/config'
-            @paths[:layouts] = root+'/layouts'
-            @paths[:var] = root+'/var'
-            @paths[:certs] = @paths[:config]+'/certs'
-            @paths[:tmp] = root+'/tmp'
-            @paths[:data] = root+'/data'
-            @paths[:log] = @paths[:var]+'/log'
+            @paths[:apps] = File.join(root, 'apps')
+            @paths[:core_apps] = File.join($SPIDER_PATH, 'apps')
+            @paths[:config] = File.join(root, 'config')
+            @paths[:layouts] = File.join(root, 'layouts')
+            @paths[:var] = File.join(root, 'var')
+            @paths[:certs] = File.join(@paths[:config], 'certs')
+            @paths[:tmp] = File.join(root, 'tmp')
+            @paths[:data] = File.join(root, 'data')
+            @paths[:log] = File.join(@paths[:var], 'log')
         end
         
         # Finds an app by name, looking in paths[:apps] and paths[:core_apps]. Returns the found path.
         def find_app(name)
             path = nil
             [@paths[:apps], @paths[:core_apps]].each do |base|
-                test = base+'/'+name
-                if (File.exist?(test+'/_init.rb'))
+                test = File.join(base, name)
+                if File.exist?(File.join(test, '_init.rb'))
                     path = test
                     break
                 end
@@ -219,8 +212,8 @@ module Spider
         
         def find_apps(name)
             [@paths[:apps], @paths[:core_apps]].each do |base|
-                test = base+'/'+name
-                if (File.exist?(test))
+                test = File.join(base, name)
+                if File.exist?(test)
                     return find_apps_in_folder(test)
                 end
             end
@@ -234,7 +227,6 @@ module Spider
         end
         
         def load_app_at_path(path)
-            path = path[0..-2] if path[-1].chr == '/'
             return if @loaded_apps[path]
             relative_path = path
             if path.index(Spider.paths[:root])
@@ -243,10 +235,10 @@ module Spider
                 relative_path = pname.relative_path_from(home).to_s
             end
             @loaded_apps[path] = true
-            last_name = path.split('/')[-1]
+            last_name = File.basename(path)
             app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
-            app_files.each{ |f| require relative_path+'/'+f if File.exist?(path+'/'+f)}
-            GetText::LocalePath.add_default_rule("#{path}/data/locale/%{lang}/LC_MESSAGES/%{name}.mo")
+            app_files.each{ |f| require File.join(relative_path, f) if File.exist?(File.join(path, f)) }
+            GetText::LocalePath.add_default_rule(File.join(path, "data/locale/%{lang}/LC_MESSAGES/%{name}.mo"))
         end
         
         def load_apps(*l)
@@ -267,7 +259,7 @@ module Spider
                 if (File.basename(path) == '_init.rb')
                     app_paths << File.dirname(path)
                     Find.prune
-                elsif (File.exist?("#{path}/_init.rb"))
+                elsif File.exist?(File.join(path, '_init.rb'))
                     app_paths << path
                     Find.prune
                 end
@@ -276,16 +268,16 @@ module Spider
         end
         
         def find_apps_in_folder(path)
-            path += '/' unless path[-1].chr == '/'
             return unless File.directory?(path)
-            return [path] if File.exist?(path+'/_init.rb')
+            return [path] if File.exist?(File.join(path, '_init.rb'))
             found = []
             Dir.new(path).each do |f|
                 next if f[0].chr == '.'
-                if (File.exist?(path+f+'/_init.rb'))
-                    found << path+f
+                found_path = File.join(path, f)
+                if File.exist?(File.join(found_path, '/_init.rb'))
+                    found << found_path
                 else
-                    found += find_apps_in_folder(path+f)
+                    found += find_apps_in_folder(found_path)
                 end
             end
             return found
@@ -305,8 +297,8 @@ module Spider
         
         def load_configuration(path)
             return unless File.directory?(path)
-            path += '/' unless path[-1] == ?o
-            require path+'options.rb' if File.exist?(path+'options.rb')
+            opts = File.join(path, 'options.rb')
+            require opts if File.exist?(opts)
             Dir.new(path).each do |f|
                 f.untaint # FIXME: security parse
                 case f
@@ -314,7 +306,7 @@ module Spider
                     next
                 when /\.(yaml|yml)$/
                     begin
-                        @configuration.load_yaml(path+f)
+                        @configuration.load_yaml(File.join(path, f))
                     rescue ConfigurationException => exc
                         if (exc.type == :yaml)
                             @logger.error("Configuration file #{path+f} is not valid YAML")
@@ -323,7 +315,6 @@ module Spider
                         end
                     end
                 end
-                #load(package_path+'/config/'+f)
             end
         end
         
@@ -491,7 +482,7 @@ module Spider
                 base = p[0]
                 base = File.join(base, start) if start
                 extensions.each do |ext|
-                    Dir.glob("#{base}/*.#{ext}").each do |f|
+                    Dir.glob(File.join(base, "*.#{ext}")).each do |f|
                         res << (Pathname.new(f).relative_path_from(pname)).to_s
                     end
                 end
@@ -517,7 +508,7 @@ module Spider
                    loaded.push(file)
                 else
                     $:.each do |dir|
-                        file_path = dir+'/'+file
+                        file_path = File.join(dir, file)
                         if (file_path =~ /^#{path}/)  # FileTest.exists?(file_path) && 
                             loaded.push(file_path)
                         end
@@ -556,7 +547,7 @@ module Spider
                 init_debug
             end
             if (mode != 'production')
-                Spider.paths[:var] += "/#{mode}"
+                Spider.paths[:var] = File.join(Spider.paths[:var], mode)
             end
         end
         

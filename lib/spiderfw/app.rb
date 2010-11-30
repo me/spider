@@ -19,21 +19,22 @@ module Spider
                     
                     def init
                         unless @path
-                          file = caller[1].split(':')[0]
-                          dir = File.expand_path(File.dirname(file))
-                          @path = dir
+                            file = caller[1].split(':')[0]
+                            dir = File.dirname(file)
+                            @path = dir
                         end
-                        @short_name ||= Inflector.underscore(self.name).gsub('/', '_')
-                        @dotted_name = Inflector.underscore(self.name).gsub('/', '.')
-                        @pub_path ||= @path+'/public'
-                        @test_path ||= @path+'/test'
-                        @setup_path ||= @path+'/setup'
-                        @models_path ||= @path+'/models'
-                        @widgets_path ||= @path+'/widgets'
-                        @views_path ||= @path+'/views'
-                        @tags_path ||= @path+'/tags'
+                        @path = File.expand_path(@path)
+                        @short_name ||= Inflector.underscore(self.name).gsub(File::SEPARATOR, '_')
+                        @dotted_name = Inflector.underscore(self.name).gsub(File::SEPARATOR, '.')
+                        @pub_path ||= File.join(@path, 'public')
+                        @test_path ||= File.join(@path, 'test')
+                        @setup_path ||= File.join(@path, 'setup')
+                        @models_path ||= File.join(@path, 'models')
+                        @widgets_path ||= File.join(@path, 'widgets')
+                        @views_path ||= File.join(@path, '/views')
+                        @tags_path ||= File.join(@path, 'tags')
                         @version = Gem::Version.new(@version.to_s) if @version && !@version.is_a?(Gem::Version)
-                        spec_path = "#{@path}/#{@short_name}.appspec"
+                        spec_path = File.join(@path, "#{@short_name}.appspec")
                         load_spec(spec_path) if File.exists?(spec_path)
                         @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
@@ -174,7 +175,7 @@ module Spider
                             next if entry[0].chr == '.'
                             next unless File.extname(entry) == '.erb'
                             name = File.basename(entry, '.erb')
-                            klass = Spider::Tag.new_class(@tags_path+'/'+entry)
+                            klass = Spider::Tag.new_class(File.join(@tags_path, entry))
                             const_set(Spider::Inflector.camelize(name).to_sym, klass)
                             #Spider::Logger.debug("REGISTERED TAG #{name}, #{klass}")
                             register_tag(name, klass)
@@ -192,7 +193,7 @@ module Spider
                     end
                     
                     def installed_version_path
-                         "#{Spider.paths[:var]}/apps/#{self.name}/installed_version"
+                        File.join(Spider.paths[:var], 'apps', self.name, 'installed_version')
                     end
                     
                     def installed_version
