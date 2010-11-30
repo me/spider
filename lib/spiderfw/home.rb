@@ -23,9 +23,10 @@ module Spider
         end
 
         def list_apps
-            apps_dir = Pathname.new(Spider.paths[:apps])
+            apps_path = Spider.respond_to?(:paths) ? Spider.paths[:apps] : File.join(@path, 'apps')
+            apps_dir = Pathname.new(apps_path)
             apps = []
-            Dir.glob("#{Spider.paths[:apps]}/**/_init.rb").each do |path|
+            Dir.glob("#{apps_path}/**/_init.rb").each do |path|
                 dir = Pathname.new(File.dirname(path))
                 apps << dir.relative_path_from(apps_dir).to_s
             end

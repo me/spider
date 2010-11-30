@@ -155,5 +155,65 @@ class AppCommand < CmdParse::Command
         end
         self.add_command(install)
         
+        update = CmdParse::Command.new( 'update', false )
+        update.short_desc = _("Update an app")
+        update.options = CmdParse::OptionParserWrapper.new do |opt|
+            opt.on("--all", _("Update all apps"), "-a"){ |a| @all = true }
+            opt.on("--no-git", _("Don't use git for updating apps"), "-g"){ |r| @no_git = true }
+            opt.on("--no-dependencies", _("Don't install other apps this one depends on"), "-d"){ |d| 
+                @no_deps = true 
+            }
+            opt.on("--no-gems", _("Don't install ruby gems this app depends on"), "-g"){ |g| @no_gems = true }
+            opt.on("--no-optional", _("Don't install optional app dependencies"), "-D"){ |o| @no_optional = true }
+            opt.on("--no-optional-gems", _("Don't install optional gem dependencies"), "-G"){ |g| 
+                @no_optional_gems = true
+            }
+        end
+        update.set_execution_block do |args|
+            unless File.exist?('init.rb') && File.directory?('apps')
+                puts _("Please execute this command from the home folder")
+                exit
+            end
+            require 'spiderfw/setup/app_server_client'
+            use_git = false
+            unless @no_git
+                begin
+                    require 'grit'
+                    use_git = true
+                rescue
+                    puts "Grit not available; install Grit for Git support"
+                end
+            end
+            apps = args
+            if @all
+                require 'spiderfw/home'
+                home = Spider::Home.new(Dir.pwd)
+                apps = home.list_apps
+            end
+            if apps.empty?
+                puts _("No app to update")
+                exit
+            end
+            require 'spiderfw/setup/app_manager'
+            specs = []
+            client = Spider::AppServerClient.new(@server_url)
+            if @no_deps
+                specs = client.get_specs(apps)
+            else
+                specs = client.get_deps(apps, :no_optional => @no_optional)
+            end
+            deps = specs.map{ |s| s.app_id }
+            unless (deps - apps).empty?
+                puts _("The following apps will be updated as a dependency:")
+                puts (deps - apps).inspect
+            end
+            Spider::AppManager.update(specs, Dir.pwd, {
+                :use_git => use_git, 
+                :no_gems => @no_gems,
+                :no_optional_gems => @no_optional_gems
+            })
+        end
+        self.add_command(update)
+        
     end
 end
