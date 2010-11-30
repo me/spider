@@ -123,6 +123,16 @@ module Spider; module Model
        def first
            self.limit = 1
        end
+
+       def only_one
+           self.limit = 1
+           @only_one = true
+       end
+
+
+       def only_one?
+           @only_one
+       end
        
        def page(page, rows)
            page = page.to_i
