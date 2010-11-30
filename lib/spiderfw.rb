@@ -3,6 +3,7 @@ require 'spiderfw/env'
 require 'rubygems'
 require 'find'
 require 'fileutils'
+require 'pathname'
 require 'spiderfw/autoload'
 require 'spiderfw/requires'
 
@@ -233,16 +234,18 @@ module Spider
         end
         
         def load_app_at_path(path)
+            path = path[0..-2] if path[-1].chr == '/'
             return if @loaded_apps[path]
+            relative_path = path
+            if path.index(Spider.paths[:root])
+                home = Pathname.new(Spider.paths[:root])
+                pname = Pathname.new(path)
+                relative_path = pname.relative_path_from(home).to_s
+            end
             @loaded_apps[path] = true
             last_name = path.split('/')[-1]
             app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
-            app_files.each{ |f| require path+'/'+f if File.exist?(path+'/'+f)}
-            # if File.exist?("#{path}/data/locale")
-            #     ENV['GETTEXT_PATH'] += ',' if ENV['GETTEXT_PATH']
-            #     ENV['GETTEXT_PATH'] += "#{path}/data/locale" 
-            # end
-            # GETTEXT_PATH is broken at the moment in gettext 2.1.0
+            app_files.each{ |f| require relative_path+'/'+f if File.exist?(path+'/'+f)}
             GetText::LocalePath.add_default_rule("#{path}/data/locale/%{lang}/LC_MESSAGES/%{name}.mo")
         end
         
