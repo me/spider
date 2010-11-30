@@ -1532,7 +1532,7 @@ module Spider; module Model
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
-                        val == nil || val.empty? ? true : check.match(val)
+                        val.blank? ? true : check.match(val.to_s)
                     when Proc
                         check.call(val)
                     end
