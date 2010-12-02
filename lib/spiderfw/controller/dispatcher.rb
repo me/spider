@@ -115,6 +115,7 @@ module Spider
         
         # Looks in defined routes, and returns the first matching Route for path.
         def get_route(path)
+            path ||= ''
             r = routes + self.class.routes
             r.each do |route|
                 try, dest, options = route
