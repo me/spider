@@ -641,6 +641,25 @@ jQuery.parseISODate = function(iso){
     else return null;
 };
 
+if (!Date.prototype.toISOString){
+    Date.prototype.toISOString = (function(){
+        function t(i){return i<10?"0"+i:i;};
+        function h(i){return i.length<2?"00"+i:i.length<3?"0"+i:3<i.length?Math.round(i/Math.pow(10,i.length-3)):i;};
+        return function(){
+            return "".concat(
+                this.getUTCFullYear(), "-",
+                t(this.getUTCMonth() + 1), "-",
+                t(this.getUTCDate()), "T",
+                t(this.getUTCHours()), ":",
+                t(this.getUTCMinutes()), ":",
+                t(this.getUTCSeconds()), ".",
+                h("" + this.getUTCMilliseconds()), "Z"
+            );
+        };
+    })();
+}    
+
+
 Spider.EventTarget = {
     bind: function(eventName, callback){
         if (!this.events) this.events = {};
