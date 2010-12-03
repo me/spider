@@ -3,21 +3,21 @@ module Spider; module Components
     class MonthCalendar < Spider::Widget
         tag 'month_calendar'
         
-        attribute :start_month, :type => Fixnum
-        attribute :start_year, :type => Fixnum
-        attr_accessor :busy
+        i_attr_accessor :start_month, :type => Fixnum
+        i_attr_accessor :start_year, :type => Fixnum
+        is_attr_accessor :busy
         
         def prepare
             super
             today = Date.today
-            start_month = attributes[:start_month] || today.month
-            start_year = attributes[:start_year] || today.year
+            @start_month ||= today.month
+            @start_year ||= today.year
             if params['d'] && params['d'] =~ /(\d{4})\/(\d{1,2})/
                 @month = $2.to_i
                 @year = $1.to_i
             else
-                @month = start_month
-                @year = start_year
+                @month = @start_month
+                @year = @start_year
             end
             @busy ||= {}
         end
@@ -54,12 +54,19 @@ module Spider; module Components
                     @scene.rows[row] = []
                 end
                 classes = []
-                classes << 'busy' if @busy[year] && @busy[year][month] && @busy[year][month][i]
-                @scene.rows[row][col] = {:day => i, :classes => classes}
+                is_busy = @busy[year] && @busy[year][month] && @busy[year][month][i]
+                classes << 'busy' if is_busy
+                @scene.rows[row][col] = {:day => i, :classes => classes, :busy => is_busy, :current_month => true}
             end
             (col+1).upto(6){ |i| @scene.rows[row][i] = {:day => i - col, :classes => ['next-month'] } }
         end
         
+        def set_busy_date(d)
+            @busy ||= {}
+            @busy[d.year] ||= {}
+            @busy[d.year][d.month] ||= {}
+            @busy[d.year][d.month][d.day] = true
+        end
         
         
     end
