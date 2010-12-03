@@ -5,10 +5,12 @@ module Spider
         def self.included(mod)
             mod.extend(ModuleMethods)
             mod.module_eval{ include Annotations }
+            Spider::ControllerMixins::Visual.define_format_annotations(mod)
+            mod.extend(Spider::ControllerMixins::Visual::OutputFormatMethods)
         end
         
         module ModuleMethods
-            
+                        
             def plugin_name
                 @plugin_name
             end
@@ -39,6 +41,18 @@ module Spider
                 return open(path){ |f| Hpricot.XML(f) }.root.children_of_type('tpl:asset').map{ |el|
                     Spider::Template.parse_asset_element(el)
                 }
+            end
+            
+            def controller_actions(*methods)
+                if (methods.length > 0)
+                    @controller_actions ||= []
+                    @controller_actions += methods
+                end
+                @controller_actions
+            end
+            
+            def controller_action?(method)
+                @controller_actions && @controller_actions.include?(method)
             end
             
         end

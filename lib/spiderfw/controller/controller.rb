@@ -301,13 +301,17 @@ module Spider
 #            obj.dispatch_path = @dispatch_path + route.path
             return obj
         end
+        
+        def controller_action?(method)
+            self.class.controller_action?(method)
+        end
                 
         def set_action(action)
             @executed_method = nil
             @executed_method_arguments = nil
             if !can_dispatch?(:execute, action)
                 method, additional_arguments = get_action_method(action)
-                if (method && self.class.controller_action?(method))
+                if (method && controller_action?(method))
                     @executed_method = method.to_sym
                     @executed_method_arguments = additional_arguments || []
                 end

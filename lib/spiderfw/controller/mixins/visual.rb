@@ -10,10 +10,15 @@ module Spider; module ControllerMixins
         
         def self.included(klass)
            klass.extend(ClassMethods)
-           klass.define_annotation(:html) { |k, m, params| k.output_format(m, :html, params) }
-           klass.define_annotation(:xml) { |k, m, params| k.output_format(m, :xml, params) }
-           klass.define_annotation(:json) { |k, m, params| k.output_format(m, :json, params) }
-           klass.define_annotation(:text) { |k, m, params| k.output_format(m, :text, params) }
+           klass.extend(OutputFormatMethods)
+           define_format_annotations(klass)
+        end
+        
+        def self.define_format_annotations(klass)
+            klass.define_annotation(:html) { |k, m, params| k.output_format(m, :html, params) }
+            klass.define_annotation(:xml) { |k, m, params| k.output_format(m, :xml, params) }
+            klass.define_annotation(:json) { |k, m, params| k.output_format(m, :json, params) }
+            klass.define_annotation(:text) { |k, m, params| k.output_format(m, :text, params) }
         end
         
         def before(action='', *params)
@@ -411,9 +416,8 @@ module Spider; module ControllerMixins
             return bt
         end
         
-        
-        module ClassMethods
-            
+        module OutputFormatMethods
+           
             def output_format(method=nil, format=nil, params={})
                 return @default_output_format unless method
                 @output_formats ||= {}
@@ -449,7 +453,11 @@ module Spider; module ControllerMixins
             def default_output_format(format)
                 @default_output_format = format if format
                 @default_output_format
-            end
+            end 
+            
+        end
+        
+        module ClassMethods
 
             
             def layouts

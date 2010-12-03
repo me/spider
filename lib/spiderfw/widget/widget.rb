@@ -263,6 +263,7 @@ module Spider
             @widgets_runtime_content = {}
             @widget_procs = {}
             @runtime_overrides = []
+            @_plugins = []
         end
         
         def full_id
@@ -776,7 +777,17 @@ module Spider
             mod = self.class.plugin(name)
             return unless mod
             self.extend(mod)
+            @_plugins << mod
             @runtime_overrides << [name, mod.get_overrides, mod.overrides_path]
+        end
+        
+        def controller_action?(method)
+            r = super
+            return r if r
+            @_plugins.each do |pl|
+                return r if r = pl.controller_action?(method)
+            end
+            return false
         end
         
     end
