@@ -181,7 +181,7 @@ module Annotations
 
         # Searches for a defined annotation in class and ancestors.
         def find_defined_annotation(name)
-            return nil if self.class == Module
+            return nil if self.class == Module && !@defined_annotations
             k = self
             while (k != Object)
                 return nil unless k < Annotations
