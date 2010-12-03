@@ -39,6 +39,7 @@ module Spider
                 self.controller_mixins.each do |mod|
                     klass.send(:include, mod)
                 end
+                super
             end
             
         end
