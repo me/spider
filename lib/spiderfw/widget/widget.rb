@@ -309,8 +309,8 @@ module Spider
             widget_init(action)
             return unless active?
             #Spider.logger.debug("Preparing widget #{self}")
-            prepare
             prepare_scene(@scene)
+            prepare
             @before_done = true
         end
         
