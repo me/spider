@@ -883,6 +883,14 @@ module Spider; module Model
                 condition = @model.prepare_condition(condition)
                 basic_preprocess(condition)
             end
+            if @model.attributes[:integrated_models]
+                @model.attributes[:integrated_models].each do |im, iel|
+                    if im.respond_to?(:prepare_condition)
+                        condition = im.prepare_condition(condition)
+                        basic_preprocess(condition)
+                    end
+                end
+            end
             
             # Utility function to set conditions on 
             def set_pks_condition(condition, el, val, prefix) # :nodoc:
