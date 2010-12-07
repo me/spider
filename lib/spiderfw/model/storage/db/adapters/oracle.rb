@@ -263,6 +263,10 @@ module Spider; module Model; module Storage; module Db
          ##############################################################
          #   Methods to get information from the db                   #
          ##############################################################
+         
+         def post_execute
+             curr[:bind_cnt] = 0
+         end
 
          def list_tables
              return execute("SELECT TABLE_NAME FROM user_tables ORDER BY table_name").map{ |r| r['TABLE_NAME'] }

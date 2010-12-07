@@ -149,6 +149,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
                 query_finished
                 cursor.close if cursor
                 release if curr[:conn] && !in_transaction?
+                post_execute
             end
         end
         
