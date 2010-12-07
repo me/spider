@@ -109,7 +109,7 @@ class AppCommand < CmdParse::Command
             opt.on("--no-optional-gems", _("Don't install optional gem dependencies"), "-G"){ |g| 
                 @no_optional_gems = true
             }
-            opt.on("--ssh-user", _("SSH user")){ |s| @ssh_user = s }
+            opt.on("--ssh-user [USERNAME]", _("SSH user")){ |s| @ssh_user = s }
         end
         install.set_execution_block do |args|
             unless File.exist?('init.rb') && File.directory?('apps')

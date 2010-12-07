@@ -24,7 +24,7 @@ module Spider
             puts _("Fetching %s from %s") % [spec.app_id, spec.git_repo]
             repo_url = spec.git_repo
             if options[:ssh_user] && repo_url =~ /ssh:\/\/([^@]+@)?(.+)/
-                repo_url = "ssh://#{options[:ssh_user]}"
+                repo_url = "ssh://#{options[:ssh_user]}@#{$2}"
             end
             `#{Grit::Git.git_binary} submodule add #{repo_url} apps/#{spec.id}`
             repo.git.submodule({}, "init")
