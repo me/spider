@@ -169,10 +169,10 @@ module Spider; module Model
         
         # Sets a comparison.
         def set(field, comparison, value)
-            if (value.is_a?(QuerySet))
+            if value.is_a?(QuerySet)
                 value = value.to_a
             end
-            if (value.is_a?(Array))
+            if value.is_a?(Array) && comparison != 'between'
                 or_cond = self.class.or
                 value.uniq.each do |v|
                     or_cond.set(field, comparison, v)
