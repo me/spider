@@ -11,25 +11,29 @@ module Spider
             pre_setup(specs, options)
             specs.each do |spec|
                 if spec.git_repo && options[:use_git]
-                    git_install(spec, home_path)
+                    git_install(spec, home_path, options)
                 else
-                    pack_install(spec, home_path)
+                    pack_install(spec, home_path, options)
                 end
             end
         end
 
-        def self.git_install(spec, home_path)
+        def self.git_install(spec, home_path, options={})
             require 'grit'
             repo = Grit::Repo.new(home_path)
             puts _("Fetching %s from %s") % [spec.app_id, spec.git_repo]
-            `#{Grit::Git.git_binary} submodule add #{spec.git_repo} apps/#{spec.id}`
+            repo_url = spec.git_repo
+            if options[:ssh_user] && repo_url =~ /ssh:\/\/([^@]+@)?(.+)/
+                repo_url = "ssh://#{options[:ssh_user]}"
+            end
+            `#{Grit::Git.git_binary} submodule add #{repo_url} apps/#{spec.id}`
             repo.git.submodule({}, "init")
             repo.git.submodule({}, "update")
             repo.add('.gitmodules', "apps/#{spec.id}")
             repo.commit_index(_("Added app %s") % spec.id) 
         end
 
-        def self.pack_install(spec, home_path)
+        def self.pack_install(spec, home_path, options={})
             require 'rubygems/package'
             client = AppServerClient.new(spec.app_server)
             print _("Fetching %s from server... ") % spec.app_id
@@ -82,14 +86,14 @@ module Spider
             pre_setup(specs, options)
             specs.each do |spec|
                 if spec.git_repo && options[:use_git]
-                    git_update(spec, home_path)
+                    git_update(spec, home_path, options)
                 else
-                    pack_update(spec, home_path)
+                    pack_update(spec, home_path, options)
                 end
             end
         end
         
-        def self.git_update(spec, home_path)
+        def self.git_update(spec, home_path, options={})
             require 'grit'
             home_repo = Grit::Repo.new(home_path)
             app_path = File.join(home_path, "apps/#{spec.id}")
@@ -116,7 +120,7 @@ module Spider
             home_repo.commit_index(_("Updated app %s") % spec.id) 
         end
         
-        def self.pack_update(spec, home_path)
+        def self.pack_update(spec, home_path, options={})
             require 'fileutils'
             require 'date'
             require 'time'

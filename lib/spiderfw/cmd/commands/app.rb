@@ -109,6 +109,7 @@ class AppCommand < CmdParse::Command
             opt.on("--no-optional-gems", _("Don't install optional gem dependencies"), "-G"){ |g| 
                 @no_optional_gems = true
             }
+            opt.on("--ssh-user", _("SSH user")){ |s| @ssh_user = s }
         end
         install.set_execution_block do |args|
             unless File.exist?('init.rb') && File.directory?('apps')
@@ -121,7 +122,8 @@ class AppCommand < CmdParse::Command
                 begin
                     require 'grit'
                     use_git = true
-                rescue
+                rescue => exc
+                    puts exc.message
                     puts "Grit not available; install Grit for Git support"
                 end
             end
@@ -147,11 +149,13 @@ class AppCommand < CmdParse::Command
                 puts _("The following apps will be installed as a dependency:")
                 puts (deps - apps).inspect
             end
-            Spider::AppManager.install(specs, Dir.pwd, {
+            options = {
                 :use_git => use_git, 
                 :no_gems => @no_gems,
                 :no_optional_gems => @no_optional_gems
-            })
+            }
+            options[:ssh_user] = @ssh_user if @ssh_user
+            Spider::AppManager.install(specs, Dir.pwd, options)
         end
         self.add_command(install)
         
