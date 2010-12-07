@@ -1,3 +1,10 @@
+= 0.5.16
+== 07 December, 2010
+* Added app update command
+* Fixed templates extension for overridden templates
+* Added Query#only_one, BaseModel#_check_if_saved
+* Bugfixes
+
 = 0.5.15
 == 26 November, 2010
 * BaseModel.from_hash_dump, :reverse option in extend_model
