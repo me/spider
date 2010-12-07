@@ -92,6 +92,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def query_finished
+            return unless curr[:query_start] # happens if there was no db connection
             now = Time.now
             diff = now - curr[:query_start]
             diff = 0 if diff < 0 # ??? 
