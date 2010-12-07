@@ -62,7 +62,7 @@ module Spider; module TemplateBlocks
             end
             html.gsub!("'", "\\\\'")
             init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{html}', #{t_param})\n"
-            c = "yield :#{id}\n"
+            c = "yield :\"#{id}\"\n"
             return CompiledBlock.new(init, c)
         end
         
