@@ -39,6 +39,7 @@ module Spider
             b = @body.is_a?(String) ? StringIO.new(@body) : @body
             return nil unless b
             if block_given?
+                b.rewind
                 while (buf = b.read(BUFSIZE))
                     yield buf
                 end
