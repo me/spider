@@ -199,6 +199,7 @@ Spider.Widget = Class.extend({
 					if (options.before) options.before();
 				},
 				success: function(res){
+				    w.trigger('ajaxifyResponse', form);
 					w.replaceHTML(res);
 					w.removeLoading();
 					if (options.onLoad) options.onLoad(form);
@@ -231,6 +232,7 @@ Spider.Widget = Class.extend({
 				type: 'GET',
 				dataType: 'html',
 				success: function(res){
+                    w.trigger('ajaxifyResponse', a);
 					w.replaceHTML(res);
 					w.removeLoading();
 					if (options.onLoad) options.onLoad(a);
