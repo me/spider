@@ -20,6 +20,10 @@ module Spider
 
         def self.git_install(spec, home_path, options={})
             require 'grit'
+            if ::File.exist?("apps/#{spec.id}")
+                puts _("%s already installed, skipping") % spec.id
+                return
+            end
             repo = Grit::Repo.new(home_path)
             puts _("Fetching %s from %s") % [spec.app_id, spec.git_repo]
             repo_url = spec.git_repo
