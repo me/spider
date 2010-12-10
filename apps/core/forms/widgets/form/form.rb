@@ -78,8 +78,10 @@ module Spider; module Forms
             @model = const_get_full(@model) if @model.is_a?(String)
             if @model.method_defined?(:to_subclass) # FIXME: this is a quick hack, standardize
                 @obj ||= load
-                @obj = @obj.to_subclass
-                @model = @obj.class
+                if @obj
+                    @obj = @obj.to_subclass
+                    @model = @obj.class
+                end
             end
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
