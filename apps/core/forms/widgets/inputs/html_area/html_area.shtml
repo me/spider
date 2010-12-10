@@ -4,7 +4,7 @@
     <tpl:asset type="js" src="html_area.js" /><tpl:asset type="js" src="text_area.js" />
     <!--- <tpl:asset type="css" src="jwysiwyg/jquery.wysiwyg.css" />
     <tpl:asset type="js" src="jwysiwyg/jquery.wysiwyg.js" /> -->
-    <tpl:asset type="js" src="ckeditor/ckeditor.js" />
+    <tpl:asset type="js" src="ckeditor/ckeditor.js" compressed="true"/>
     <tpl:asset type="js" src="ckeditor/adapters/jquery.js" />
     <div class="initial_html" style="display:none">{ @initial_html }</div>
     <div class="css" style="display:none">{ @css }</div>
