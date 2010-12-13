@@ -406,9 +406,6 @@ module Spider
                 processor = TemplateAssets.const_get(ass_info[:processor])
                 ass = processor.process(ass)
             end
-            if attributes['sp:if']
-                ass[:if] = Spider::TemplateBlocks::Block.vars_to_scene(attributes['sp:if']).gsub("'", "\\'") 
-            end
             if attributes[:compressed]
                 compressed_res = Spider.find_resource(type.to_sym, attributes[:compressed], @path, [owner_class, @definer_class])
                 ass[:compressed_path] = compressed_res.path
@@ -769,29 +766,7 @@ module Spider
             end
         end
         
-        # Template assets.
-        def conditional_assets
-            res = []
-            @assets.each do |ass|
-                 # FIXME: is this the best place to check if? Maybe it's better to do it when printing resources?
-                res << ass unless ass[:if] && !ass[:if].empty? && !@scene.instance_eval(ass[:if])
-            end
-            return res
-        end
-        
-#         # Assets for the template and contained widgets.
-#         def all_assets
-#             res = [] 
-#             seen = {}
-#             @widgets.each do |id, w|
-# #                next if seen[w.class]
-#                 seen[w.class] = true
-#                 res += w.assets
-#             end
-#             res += assets
-#             return res
-#         end
-        
+
         def with_widget(path, &proc)
             first, rest = path.split('/', 2)
             @widget_procs[first.to_sym] ||= []
