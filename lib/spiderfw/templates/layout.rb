@@ -312,7 +312,6 @@ module Spider
             types = type ? [type] : self.assets.keys
             use_cdn = Spider.conf.get('assets.use_cdn')
             if types.include?(:js)
-                debugger
                 self.assets[:js].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
                     $out << "<script type=\"text/javascript\" src=\"#{ass[:src]}\"></script>\n"
