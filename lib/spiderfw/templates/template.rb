@@ -28,6 +28,7 @@ module Spider
         attr_accessor :assets
         attr_accessor :runtime_overrides
         attr_reader :overrides, :path, :subtemplates, :widgets
+        attr_accessor :asset_profiles
         
         @@registered = {}
         @@widget_plugins = {}
@@ -332,7 +333,7 @@ module Spider
                 wt.load
                 # sub_c = sub.compile(options.merge({:mode => :widget}))
                 @assets = wt.compiled.assets + @assets
-            end            
+            end
             
             seen = {}
             # @assets.each_index do |i|
@@ -340,6 +341,7 @@ module Spider
             #     if ass[:name]
             # end
             @assets.each do |ass|
+                ass[:profiles] = ((ass[:profiles] || []) + @asset_profiles).uniq if @asset_profiles
                 next if seen[ass.inspect]
                 res_init += "@assets << #{ass.inspect}\n"
                 # res_init += "@assets << {
@@ -365,6 +367,9 @@ module Spider
             if attributes[:name]
                 named = Spider::Template.get_named_asset(attributes[:name])
                 raise "Can't find named asset #{attributes[:name]}" unless named
+                if attributes[:profiles]
+                    named.each{ |nmdass| nmdass[:profiles] = attributes[:profiles] }
+                end
                 return named.map{ |nmdass| 
                     parse_asset(nmdass[:type], nmdass[:src], nmdass)
                 }.flatten
@@ -392,7 +397,7 @@ module Spider
             ass[:path] = res.path if res
             base_url = nil
             if controller.respond_to?(:pub_url)
-                if src[0].chr == '/'
+                if src[0].chr == '/' && controller != Spider::HomeController
                     # strips the app path from the src. FIXME: should probably be done somewhere else
                     src = src[(2+controller.app.relative_path.length)..-1]
                 end
@@ -412,8 +417,11 @@ module Spider
                 ass[:compressed_path] = compressed_res.path
                 ass[:compressed] = base_url+attributes[:compressed]
             end
-            [:gettext, :media, :if_ie_lte].each do |key|
+            [:gettext, :media, :if_ie_lte, :cdn].each do |key|
                 ass[key] = attributes[key] if attributes.key?(key)
+            end
+            if attributes[:profiles]
+                ass[:profiles] = attributes[:profiles].split(/,\s*/).map{ |p| p.to_sym }
             end
             return [ass]
         end
@@ -683,10 +691,11 @@ module Spider
         end
         
         
-        def load_subtemplate(id) # :nodoc:
+        def load_subtemplate(id, options={}) # :nodoc:
             load unless loaded?
             return nil unless @compiled.subtemplates[id]
             t = Template.new
+            t.asset_profiles = options[:asset_profiles] if options[:asset_profiles]
             t.compiled = @compiled.subtemplates[id]
             return t
         end

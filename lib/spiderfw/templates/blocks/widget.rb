@@ -32,7 +32,6 @@ module Spider; module TemplateBlocks
                 init, c = klass.compile_block(@el, id, @el.attributes.to_hash, options)
                 return CompiledBlock.new(init, c)
             end
-            init_params = self.class.attributes_to_init_params(@el.attributes.to_hash)
 
             html = ""
             @el.each_child do |ch|
@@ -43,7 +42,15 @@ module Spider; module TemplateBlocks
 
             template = nil
             overrides += @template.overrides_for(id)
+            
+            asset_profiles = @el.get_attribute('sp:asset-profiles')
+            if asset_profiles
+                asset_profiles = asset_profiles.split(/,\s*/).map{ |pr| pr.to_sym } 
+                @el.remove_attribute('sp:asset-profiles')
+            end
+            
             template = klass.load_template(template_attr || klass.default_template)
+            template.asset_profiles = asset_profiles if asset_profiles
             if (overrides.length > 0)
                 #template_name = klass.find_template(template_attr)
                 template.add_overrides overrides
@@ -55,12 +62,19 @@ module Spider; module TemplateBlocks
 
             init = ""
             t_param = 'nil'
+            t_options = {}
+            
+            t_options[:asset_profiles] = asset_profiles if asset_profiles
+            
             if (template)
                 # FIXME: the subtemplate shouldn't be loaded at this point
-                init = "t = load_subtemplate('#{id}')\n"
+                init = "t = load_subtemplate('#{id}', #{t_options.inspect})\n"
                 t_param = 't'
             end
             html.gsub!("'", "\\\\'")
+            
+            init_params = self.class.attributes_to_init_params(@el.attributes.to_hash)
+            
             init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{html}', #{t_param})\n"
             c = "yield :\"#{id}\"\n"
             return CompiledBlock.new(init, c)

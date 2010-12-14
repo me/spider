@@ -156,6 +156,8 @@ module Spider
         :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }, :type => Spider::DataTypes::Bool
     config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
         :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
+    config_option 'assets.use_cdn', _("Use a Content Delivery Network for assets if defined"), :type => Spider::Bool,
+        :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
     
     config_option 'http_proxy', _("Proxy to use for http clients (http://user:pass@host:port)"), :type => String,
         :do => lambda{ |val| ENV['http_proxy'] = val }
