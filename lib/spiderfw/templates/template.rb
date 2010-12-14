@@ -1,4 +1,5 @@
 require 'hpricot'
+require 'spiderfw/patches/hpricot'
 require 'spiderfw/templates/template_blocks'
 require 'spiderfw/cache/template_cache'
 begin
