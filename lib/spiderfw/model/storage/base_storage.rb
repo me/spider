@@ -6,7 +6,7 @@ module Spider; module Model; module Storage
         attr_accessor :instance_name
         
         def self.sequence_sync
-            @sequence_sync ||= Sync.new
+            @sequence_sync ||= ::Sync.new
         end
         
         def self.base_types
@@ -96,7 +96,7 @@ module Spider; module Model; module Storage
                 f.flock File::LOCK_UN
                 f.close
             end
-            self.class.sequence_sync.lock(Sync::UN)
+            self.class.sequence_sync.lock(::Sync::UN)
             return seq
         end
             
