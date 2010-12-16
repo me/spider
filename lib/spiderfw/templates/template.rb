@@ -397,7 +397,7 @@ module Spider
             ass[:path] = res.path if res
             base_url = nil
             if controller.respond_to?(:pub_url)
-                if src[0].chr == '/' && controller != Spider::HomeController
+                if src[0].chr == '/' && !(controller <= Spider::HomeController)
                     # strips the app path from the src. FIXME: should probably be done somewhere else
                     src = src[(2+controller.app.relative_path.length)..-1]
                 end

@@ -314,14 +314,12 @@ module Spider
             if types.include?(:js)
                 self.assets[:js].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
-                    ass[:src] = ass[:cdn] if use_cdn
                     $out << "<script type=\"text/javascript\" src=\"#{ass[:src]}\"></script>\n"
                 end
             end
             if types.include?(:css)
                 self.assets[:css].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
-                    ass[:src] = ass[:cdn] if ass[:cdn]
                     link = "<link rel=\"stylesheet\" type=\"text/css\" href=\"#{ass[:src]}\""
                     link += " media=\"#{ass[:media]}\"" if ass[:media]
                     link += ">\n"
