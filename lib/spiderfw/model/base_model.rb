@@ -376,6 +376,7 @@ module Spider; module Model
             end
             if (@subclasses)
                 @subclasses.each do |sub|
+                    next if sub == type && attributes[:added_reverse] && sub.elements[attributes[:reverse]].type == self # subclass ref to parent
                     next if sub.elements[name] # if subclass already defined an element with this name, don't overwrite it
                     sub.elements[name] = @elements[name].clone
                     sub.elements_order << name
