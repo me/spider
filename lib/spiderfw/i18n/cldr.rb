@@ -4,6 +4,7 @@ require 'locale'
 
 module Spider; module I18n
     
+    # Formats: short, medium, full, long
     class CLDR < Provider
                 
         def initialize(locale)
