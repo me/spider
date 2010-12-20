@@ -1,3 +1,10 @@
+= 0.5.17
+== 20 December, 2010
+* Better assets compression; assets profiles
+* Bugfixes
+
+
+
 = 0.5.16
 == 07 December, 2010
 * Added app update command
