@@ -1,3 +1,5 @@
+require 'open-uri'
+
 module Spider
 
     def self.http_client
