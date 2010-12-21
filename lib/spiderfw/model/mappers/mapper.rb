@@ -1071,6 +1071,37 @@ module Spider; module Model
     
     NotUniqueError = MapperElementError.create_subclass(_("Another item with the same %s is already present"))
 
+    
+    module MapperIncludeModule
         
+        def self.included(mod)
+            mod.extend(ModuleMethods)
+        end
+        
+        module ModuleMethods
+            
+            def extended(obj)
+                obj.define_schema &@schema_define_proc if @schema_define_proc
+                obj.with_schema &@schema_proc if @schema_proc
+            end
+            
+            def no_map(*els)
+                @no_map_elements ||= {}
+                els.each{ |el| @no_map_elements[el] = true }
+            end
+            
+        
+            def define_schema(&proc)
+                @schema_define_proc = proc
+            end
+        
+            def with_schema(&proc)
+                @schema_proc = proc
+            end
+        
+        end
+        
+        
+    end
     
 end; end

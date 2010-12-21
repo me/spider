@@ -97,7 +97,6 @@ module Spider; module Model
             each_element do |el|
                 subclass.add_element(el.clone) unless el.attributes[:local_pk]
             end
-            subclass.instance_variable_set("@mapper_procs_subclass", @mapper_procs_subclass.clone) if @mapper_procs_subclass
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
             subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
             em = subclass.const_set(:ElementMethods, Module.new)
@@ -975,25 +974,21 @@ module Spider; module Model
         # The given proc will be mixed in the mapper used by this class
         # Note that the proc will be converted to a Module, so any overridden methods will still have 
         # access to the super method.
-        def self.with_mapper(*params, &proc)
-            # @mapper_procs ||= []
-            # @mapper_procs << proc
-            mod = Module.new(&proc)
+        def self.with_mapper(&proc)
+            mod = Module.new
+            mod.send(:include, Spider::Model::MapperIncludeModule)
+            mod.module_eval(&proc)
             mapper_include(mod)
         end
-        
-        # FIXME: remove
-        def self.with_mapper_subclasses(*params, &proc) #:nodoc:
-            @mapper_procs_subclass ||= []
-            @mapper_procs_subclass << proc
-        end
-        
+                
         # Like #with_mapper, but will mixin the block only if the mapper matches params.
         # Possible params are:
         # - a String, matching the class' use_storage
         def self.with_mapper_for(*params, &proc)
-            @mapper_procs_for ||= []
-            @mapper_procs_for << [params, proc]
+            mod = Module.new
+            mod.send(:include, Spider::Model::MapperIncludeModule)
+            mod.module_eval(&proc)
+            mapper_include_for(params, mod)
         end
         
         # Sets the url or the name of the storage to use
@@ -1050,23 +1045,10 @@ module Spider; module Model
             end
             if (@mapper_modules_for)
                 @mapper_modules_for.each do |params, mod|
-                    if params.is_a?(String)
-                        mapper.extend(mod) if self.use_storage == params
-                    end
-                end
-            end
-            if (@mapper_procs)
-                @mapper_procs.each{ |proc| mapper.instance_eval(&proc) }
-            end
-            if (@mapper_procs_for)
-                @mapper_procs_for.each do |params, proc|
                     if (params.length == 1 && params[0].class == String)
-                        mapper.instance_eval(&proc) if (self.use_storage == params[0])
+                        mapper.extend(mod) if self.use_storage == params[0]
                     end
                 end
-            end
-            if (@mapper_procs_subclass)
-                @mapper_procs_subclass.each{ |proc| mapper.instance_eval(&proc) }
             end
             return mapper
         end
