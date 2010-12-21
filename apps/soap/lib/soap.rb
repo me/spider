@@ -1,4 +1,6 @@
 require 'soap/mapping/registry'
+require 'soap/mapping/factory'
+require 'soap/rpc/router'
 
 module SOAP; module Mapping
     
