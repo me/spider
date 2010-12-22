@@ -55,7 +55,11 @@ module Spider
                     
                     def http_url(action=nil)
                         if u = Spider.conf.get("#{@dotted_name}.http_url") 
-                            return u
+                            if action
+                                u += '/' if u[-1].chr != '/'
+                                u += action
+                            end
+                            return u 
                         end
                         return nil unless Spider.site
                         u = "http://#{Spider.site.domain}"
