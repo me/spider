@@ -10,19 +10,18 @@ Gem::Specification.new do |s|
   s.description = "Spider is yet another Ruby framework."
   s.has_rdoc = true
   s.authors  = ["Ivan Pirlik"]
-  s.files = FileList[
+  s.files = [
       'README',
       'VERSION',
       'CHANGELOG',
       'Rakefile',
-      'spider.gemspec',
-      'apps/**/*',
-      'bin/*',
-      'blueprints/**/*',
-      'data/**/*',
-      'lib/**/*.rb',
-      'views/**/*'
-  ].to_a
+      'spider.gemspec'] \
+      + Dir.glob('apps/**/*') \
+      + Dir.glob('bin/*') \
+      + Dir.glob('blueprints/**/*') \
+      + Dir.glob('data/**/*') \
+      + Dir.glob('lib/**/*.rb') \
+      + Dir.glob('views/**/*')
 #  s.test_files = []
 #  s.rdoc_options = ["--main", "README.txt"]
 #  s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
