@@ -1,3 +1,8 @@
+= 0.5.19
+== 23 December, 2010
+* Made Ripl an optional dependency, since Bond can't be build on JRuby
+* Fixed bug in assets with compressed="true"
+
 = 0.5.18
 == 23 December, 2010
 * Ripl for spider console

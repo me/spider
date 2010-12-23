@@ -39,12 +39,9 @@ Gem::Specification.new do |s|
   s.add_dependency("locale", ["> 2.0"])
   s.add_dependency("builder", ["> 2.1"])
   s.add_dependency("macaddr", [">= 1.0.0"])
-  s.add_dependency("ripl", [">= 0.2.8"])
-  s.add_dependency("ripl-irb", [">= 0.2.1"])
-  s.add_dependency("ripl-multi_line", [">= 0.2.1"])
   s.add_development_dependency("rake", ["> 0.7.3"])
   s.add_development_dependency("ruby-debug", ["> 0.9.3"])
-  s.requirements << "Optional dependencies: json, openssl, sqlite3, webrick, mongrel, ruby-oci8 >2.0, mysql, yui-compressor, home_run, cldr"
+  s.requirements << "Optional dependencies: ripl, ripl-irb, ripl-multi_line, json, openssl, sqlite3, webrick, mongrel, ruby-oci8 >2.0, mysql, yui-compressor, home_run, cldr"
   # optional dependencies
   # 
 end
