@@ -412,10 +412,15 @@ module Spider
                 processor = TemplateAssets.const_get(ass_info[:processor])
                 ass = processor.process(ass)
             end
-            if attributes[:compressed]
-                compressed_res = Spider.find_resource(type.to_sym, attributes[:compressed], @path, [owner_class, @definer_class])
-                ass[:compressed_path] = compressed_res.path
-                ass[:compressed] = base_url+attributes[:compressed]
+            if cpr = attributes[:compressed] 
+                if cpr == "true"
+                    ass[:compressed_path] = ass[:path]
+                    ass[:compressed] = base_url + File.basename(ass[:path])
+                else
+                    compressed_res = Spider.find_resource(type.to_sym, cpr, @path, [owner_class, @definer_class])
+                    ass[:compressed_path] = compressed_res.path
+                    ass[:compressed] = base_url+cpr
+                end
             end
             [:gettext, :media, :if_ie_lte, :cdn].each do |key|
                 ass[key] = attributes[key] if attributes.key?(key)
