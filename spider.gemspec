@@ -1,4 +1,3 @@
-require 'rake'
 require 'date'
 
 Gem::Specification.new do |s|
