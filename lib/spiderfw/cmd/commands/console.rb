@@ -16,17 +16,21 @@ class ConsoleCommand < CmdParse::Command
         end
         
         set_execution_block do
+            unless @opts[:irb]
+                begin
+                    require 'rubygems'
+                    require 'ripl'
+                rescue LoadError
+                    @opts[:irb] = 'irb'
+                end
+            end
             if @opts[:irb]
                 ENV['SPIDER_RUNMODE'] = $SPIDER_RUNMODE if ($SPIDER_RUNMODE)
                 ENV['SPIDER_CONFIG_SETS'] = $SPIDER_CONFIG_SETS.join(',') if ($SPIDER_CONFIG_SETS)
                 exec("#{@opts[:irb]} -I #{$SPIDER_LIB} -r spiderfw")
             else
-                require 'rubygems'
-                
-                
-                require 'ripl'
                 require 'ripl/irb'
-                require 'ripl/multi_line'
+                require 'ripl/multi_line' 
                 
                 Ripl.config[:irb_verbose] = false
                 Ripl::Runner.load_rc(Ripl.config[:riplrc])

@@ -1,9 +1,13 @@
+= 0.5.18
+== 23 December, 2010
+* Ripl for spider console
+* Ruby 1.9.2 support
+* Bugfixes
+
 = 0.5.17
 == 20 December, 2010
 * Better assets compression; assets profiles
 * Bugfixes
-
-
 
 = 0.5.16
 == 07 December, 2010

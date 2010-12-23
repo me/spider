@@ -967,6 +967,7 @@ module Spider; module Model
         end
         
         def self.mapper_include_for(params, mod)
+            params = [params] unless params.is_a?(Array)
             @mapper_modules_for ||= []
             @mapper_modules_for << [params, mod]
         end
