@@ -2,8 +2,8 @@ module Spider; module Loggers
     
     class ApacheCommonsLogger
         
-        def initialize(klass='org.spiderfw')
-            @logger = java.org.apache.commons.logging.LogFactory.getLog(klass)
+        def initialize(klass='spider')
+            @logger = org.apache.commons.logging.LogFactory.getLog(klass)
         end
         
         def do_log(level, message=nil, &proc)
@@ -11,7 +11,7 @@ module Spider; module Loggers
                 return unless send("#{level}?")
         	    message = yield
     	    end
-            send(level, message)
+            @logger.send(level, message)
         end
         
         def fatal(message, &proc)
