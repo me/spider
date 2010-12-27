@@ -12,6 +12,10 @@ require 'spiderfw/version'
 
 module Spider
     
+    @apps = {}; @apps_by_path = {}; @apps_by_short_name = {}; @loaded_apps = {}
+    @paths = {}
+    @resource_types = {}
+    
     class << self
         # Everything here must be thread safe!!!
         
@@ -48,17 +52,10 @@ module Spider
         # an app_init method, that will be called after Spider::init is done.
         def init(force=false)
             return if @init_done && !force
-            @paths = {}
             @apps_to_load = []
-            @apps ||= {}
-            @apps_by_path ||= {}
-            @apps_by_short_name ||= {}
-            @loaded_apps = {}
             @root = $SPIDER_RUN_PATH
             @home = Home.new(@root)
-            Locale.default = Spider.conf.get('i18n.default_locale')
-            @resource_types = {}
-            register_resource_type(:views, :extensions => ['shtml'])
+
             setup_paths(@root)
             all_apps = find_all_apps
             all_apps.each do |path|
@@ -69,6 +66,7 @@ module Spider
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
             load_configuration File.join($SPIDER_PATH, 'config')
             load_configuration File.join(@root, 'config')
+            Locale.default = Spider.conf.get('i18n.default_locale')
             start_loggers
 #            @controller = Controller
             @paths[:spider] = $SPIDER_PATH
@@ -80,8 +78,6 @@ module Spider
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
             end
-            @logger.close(STDERR)
-            @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
             GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
                 GetText.bindtextdomain(mod.short_name) if File.directory?(mod.path+'/po')
@@ -355,6 +351,8 @@ module Spider
                 :path => options[:path] || name.to_s
             }
         end
+        
+        Spider.register_resource_type(:views, :extensions => ['shtml'])
         
         def path
             $SPIDER_PATH
