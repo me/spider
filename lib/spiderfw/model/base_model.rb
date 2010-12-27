@@ -2037,7 +2037,7 @@ module Spider; module Model
                 return
             end
             before_delete unless Spider.current[:unit_of_work]
-            if Spider.current[:unit_of_work]
+            if Spider.current[:unit_of_work] && !Spider.current[:unit_of_work].running?
                 Spider.current[:unit_of_work].add(self, :delete)
                 if @unit_of_work
                     @unit_of_work.commit
