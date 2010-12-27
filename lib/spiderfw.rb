@@ -164,16 +164,16 @@ module Spider
         def start_loggers
             @logger = Spider::Logger
             @logger.close_all
-            @logger.open(STDERR, Spider.conf.get('debug.console.level')) if Spider.conf.get('debug.console.level')
+            @logger.open(STDERR, Spider.conf.get('log.console')) if Spider.conf.get('log.console')
             begin
                 FileUtils.mkpath(@paths[:log]) unless File.exist?(@paths[:log])
             rescue => exc
                 @logger.error("Unable to create log folder")
             end
-            if (File.exist?(@paths[:log]))
+            if File.exist?(@paths[:log])
                 @logger.open(File.join(@paths[:log], 'error.log'), :ERROR) if Spider.conf.get('log.errors')
-                if (Spider.conf.get('log.debug.level'))
-                    @logger.open(File.join(@paths[:log], 'debug.log'), Spider.conf.get('log.debug.level'))
+                if Spider.conf.get('log.level')
+                    @logger.open(File.join(@paths[:log], Spider.conf.get('log.file_name')), Spider.conf.get('log.level'))
                 end
             end
             $LOG = @logger

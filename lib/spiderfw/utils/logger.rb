@@ -14,13 +14,22 @@ module Spider
             #     @@loggers ||= {}
             #     @@loggers[dest]
             # end
+            
+            @loggers = {}
         
             # Open a new logger.
             def open(dest, level= :WARN)
-                @loggers ||= {}
-                logger = Spider::Logger::Logger.new(dest, Spider.conf.get('log.rotate.age'), Spider.conf.get('log.rotate.size'))
-                logger.formatter = Spider::Logger::Formatter.new
-                logger.level = ::Logger.const_get(level)
+                begin
+                    logger = Spider::Logger::Logger.new(dest, Spider.conf.get('log.rotate.age'), Spider.conf.get('log.rotate.size'))
+                    logger.formatter = Spider::Logger::Formatter.new
+                    logger.level = ::Logger.const_get(level)
+                    add(dest, logger)
+                rescue => exc
+                    STDERR << "Can't open logging to #{dest}: #{exc}\n"
+                end
+            end
+            
+            def add(dest, logger, levels={})
                 @loggers[dest] = logger
             end
             
@@ -114,6 +123,10 @@ module Spider
             
             def unknown(*args, &proc)
                 send_to_loggers(:unknown, *args, &proc)
+            end
+            
+            def method_missing(method, *args, &proc)
+                send_to_loggers(method, *args, &proc)
             end
 
         end

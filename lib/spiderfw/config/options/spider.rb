@@ -90,13 +90,16 @@ module Spider
         :type => Hash
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
     
-    config_option 'debug.console.level', _("Level of debug output to console"), :default => :INFO,
+    config_option 'log.console', _("Level of debug output to console"), 
+        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? :DEBUG : :INFO },
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false },
         :choices => [false, :DEBUG, :WARN, :INFO, :ERROR]
-    config_option 'log.errors', _("Log errors to file"), :type => Spider::DataTypes::Bool, :default => true
-    config_option 'log.debug.level', _("Log level to use for debug file (false for no debug)"), :default => false,
+    config_option 'log.errors', _("Log errors to errors.log file"), :type => Spider::DataTypes::Bool, :default => true
+    config_option 'log.level', _("Log level to use for main log file (false for no logging)"),
+        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? :DEBUG : :INFO },
         :choices => [false, :DEBUG, :WARN, :INFO, :ERROR],
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
+    config_option 'log.file_name', _("Name of the main log file"), :default => 'site.log'
     config_option 'log.rotate.age', _("Number of old log files to keep, OR frequency of rotation (daily, weekly or monthly)"), :default => 'daily'
     config_option 'log.rotate.size', _("Maximum logfile size (only applies when log.rotate.age is a number)"), :default => 1048576
     config_option 'log.memory', _("Log memory usage"), :type => Spider::DataTypes::Bool, :default => false
