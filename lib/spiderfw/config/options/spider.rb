@@ -105,6 +105,7 @@ module Spider
     config_option 'log.memory', _("Log memory usage"), :type => Spider::DataTypes::Bool, :default => false
     config_option 'log.keep', _("Maximum number of rotated log files to keep"), :type => Fixnum, :default => 10
     config_option 'log.gzip', _("Whether to compress rotated log files"), :type => Spider::DataTypes::Bool, :default => true
+    config_option 'log.apache_commons', _("Under JRuby, Use Apache Commons Logging if available"), :default => true
     
 
 

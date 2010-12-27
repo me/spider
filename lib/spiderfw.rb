@@ -176,6 +176,11 @@ module Spider
                     @logger.open(File.join(@paths[:log], Spider.conf.get('log.file_name')), Spider.conf.get('log.level'))
                 end
             end
+            if RUBY_PLATFORM =~ /java/ && Spider.conf.get('log.apache_commons')
+                require 'spiderfw/utils/loggers/apache_commons_logger'
+                l = Spider::Loggers::ApacheCommonsLogger.new
+                @logger.add('apache_commons_logger', l)
+            end
             $LOG = @logger
         end
         
