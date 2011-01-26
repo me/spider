@@ -7,9 +7,6 @@ module Spider; module Forms
         is_attr_accessor :label
         is_attr_accessor :required, :type => Spider::DataTypes::Bool
         
-        def self.template_path_parent
-            File.dirname(File.dirname(__FILE__))
-        end
         
         def init
             @done = true
