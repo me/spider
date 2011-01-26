@@ -145,7 +145,9 @@ module Spider; module Components
                             res_row[el] = list
                         end
                     else
-                        if (!row[el])
+                        if element.type <= Spider::Bool
+                            res_row[el] = row[el] ? _('Yes') : _('No')
+                        elsif (!row[el])
                             res_row[el] = '' 
                         elsif (element.type <= Date || element.type <= Time)
                             res_row[el] = Spider::I18n.localize_date_time(@request.locale, row[el], :short)
