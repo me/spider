@@ -757,15 +757,30 @@ module Spider
                 found.remove
             else
                 found.each do |f|
+                    o_doc = nil
                     if (override.name == 'tpl:override-content')
                         overridden = f.innerHTML
                         f.innerHTML = override.innerHTML
-                        f.search('tpl:overridden').each{ |o| o.swap(overridden) }
+                        f.search('tpl:overridden').each do |o| 
+                            ovr = overridden
+                            if o_search = o.get_attribute('search')
+                                o_doc ||= Hpricot("<o>#{overridden}</o>")
+                                ovr = o_doc.root.search(o_search).to_html
+                            end 
+                            o.swap(ovr)
+                        end
                     elsif (override.name == 'tpl:override' || override.name == 'tpl:content')
                         overridden = f.to_html
                         parent = f.parent
                         f.swap(override.innerHTML)
-                        parent.search('tpl:overridden').each{ |o| o.swap(overridden) }
+                        parent.search('tpl:overridden').each do |o| 
+                            ovr = overridden
+                            if o_search = o.get_attribute('search')
+                                o_doc ||= Hpricot("<o>#{overridden}</o>")
+                                ovr = o_doc.root.search(o_search).to_html
+                            end
+                            o.swap(ovr)
+                        end
                     elsif (override.name == 'tpl:override-attr')
                         f.set_attribute(override.get_attribute("name"), override.get_attribute("value"))
                     elsif (override.name == 'tpl:append-attr')
