@@ -126,8 +126,6 @@ module Spider; module Model; module Storage; module Db; module Connectors
             case type.name
             when 'Spider::DataTypes::Decimal', 'BigDecimal'
                 java_bigdecimal(value)
-            when 'Spider::DataTypes::Bool'
-                value ? 1 : 0
             when 'Date', 'DateTime'
                 java_date(value)
             when 'Time'
