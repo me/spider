@@ -20,7 +20,7 @@ module Spider; module Model
         end
         
         def target_element
-            @owner.elements[@integrated_element].type.elements[@integrated_element_element]
+            @target_element ||= @owner.elements[@integrated_element].type.elements[@integrated_element_element]
         end
         
         def type
