@@ -13,5 +13,5 @@
     <div class="current_section">
 	    <span id="label">{ @current }</span>
     </div>
-    <core:switcher id="switcher" />
+    <core:switcher id="switcher" use_template="table" />
 </div>
