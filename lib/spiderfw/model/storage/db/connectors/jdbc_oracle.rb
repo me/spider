@@ -185,6 +185,8 @@ module Spider; module Model; module Storage; module Db; module Connectors
             method = case type
             when :INTEGER, :SMALLINT, :TINYING, :BIGINTEGER, :NUMBER, :NUMERIC
                 :getInt
+            when :LONG
+                :getLong
             when :FLOAT, :REAL
                 :getFloat
             when :DECIMAL
