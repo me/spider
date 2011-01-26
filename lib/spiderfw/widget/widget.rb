@@ -31,7 +31,20 @@ module Spider
                 @subclasses ||= []
                 @subclasses << subclass
                 super
+                # Do some magic to try and infer the widget's path, considering intermediate superclass callers
+                cnt = 0
+                s = subclass.superclass
+                while s != Spider::Widget
+                    if caller[cnt].split(':')[-1] =~ /inherited/
+                        cnt += 1
+                    end
+                    s = s.superclass
+
+                end
+                file = caller[cnt].split(':')[0]
+                subclass.instance_variable_set("@widget_path", File.dirname(file))
             end
+
             
             def attribute(name, params={})
                 # TODO: implement, this is just a placeholder
@@ -101,24 +114,21 @@ module Spider
                 @scene_elements
             end
             
-            def template_path_parent(val=nil)
-                # FIXME: damn! find a better way!
-                @template_path_parent = val if val
-                return @template_path_parent || app.path+'/widgets'
-            end
-            
             def template_path
-                p = template_path_parent+'/'+Inflector.underscore(self.to_s.split('::')[-1])
-                return p+'/templates' if (File.exist?(p+'/templates'))
-                return p
+                return @template_path if @template_path
+                @template_path = @widget_path
+                @template_path += '/templates' if ::File.directory?(@template_path+'/templates')
+                @template_path
             end
             
-            def default_template
-                Spider::Inflector.underscore(self.name).split('/')[-1]
+            def default_template(val=nil)
+                @default_template = val if val
+                @default_template ||= Spider::Inflector.underscore(self.name).split('/')[-1]
+                @default_template
             end
             
             def relative_url
-                template_path[template_path_parent.length+1..-1]
+                ::File.dirname(@widget_path)
             end
             
             def route_url
