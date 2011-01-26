@@ -1,0 +1,15 @@
+<tpl:extend src="default.shtml">
+    <tpl:override-content>
+        <div id="switcher_top"></div>
+        <table width="100%">
+            <tr>
+                <td valign="top" width="18%">
+                    <tpl:overridden search="#menu" />
+                </td>
+                <td valign="top">
+                    <tpl:overridden search="#content" />
+                </td>
+            </tr>
+        </table>
+    </tpl:override-content>
+</tpl:extend>

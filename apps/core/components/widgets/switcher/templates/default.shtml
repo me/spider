@@ -1,0 +1,8 @@
+<div>
+    <tpl:asset type="css" src="css/switcher.css" />
+    <core:menu id="menu"/>
+    <div id="content" class="content">
+        <sp:render sp:if="@current.is_a?(Spider::Template)" obj="@current" />
+        <sp:run sp:if="@current.is_a?(Spider::Widget)" obj="@current" />
+    </div>
+</div>
