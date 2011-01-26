@@ -41,7 +41,10 @@ module Spider
             def app
                 return @app if @app
                 @app ||= self.parent_module
-                @app = nil unless self.parent_module.include?(Spider::App)
+                while @app && !@app.include?(Spider::App) && @app != Object
+                    @app = @app.parent_module
+                end
+                @app = nil if @app && !@app.include?(Spider::App)
                 return @app
             end
             
