@@ -112,6 +112,7 @@ module Spider; module Components
             @scene.has_more = @rows.has_more?
             @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
             @scene.paginate_last = [@scene.paginate_first + 9, @scene.pages].min
+            @scene.columns = @elements.size
             super
         end
         
