@@ -471,6 +471,9 @@ module Spider
                 elsif ext_app
                     ext_app = Spider.apps_by_path[ext_app]
                     ext_owner = ext_app
+                else 
+                    ext_owner = @owner.class
+                    ext_app = ext_owner.app
                 end
                 ext_search_paths = nil
                 if (ext_owner && ext_owner.respond_to?(:template_paths))
