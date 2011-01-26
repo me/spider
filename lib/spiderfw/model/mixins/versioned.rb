@@ -106,6 +106,7 @@ module Spider; module Model
                       end
                       if vmod.elements[el.name] && elh[:attributes][:reverse] && !(el.model < Spider::Model::Versioned)
                           vmod.elements[el.name].attributes.delete(:reverse)
+                          vmod.elements[el.name].attributes.delete(:condition)
                       end
                       if el.multiple? && !el.attributes[:junction] && !(el.model < Spider::Model::Versioned)
                           elh[:attributes].delete(:reverse)
