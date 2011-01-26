@@ -6,7 +6,9 @@ class Module #:nodoc:
     end
     
     def parent_module(n=1)
-        return const_get_full(self.to_s.reverse.split('::', n+1)[n].reverse)
+        part = self.to_s.reverse.split('::', n+1)[n]
+        return nil if part.blank?
+        return const_get_full(part.reverse)
     end
     
     def last_name
