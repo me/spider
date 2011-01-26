@@ -75,7 +75,7 @@ module Spider; module TemplateBlocks
             
             init_params = self.class.attributes_to_init_params(@el.attributes.to_hash)
             
-            init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{html}', #{t_param})\n"
+            init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{runtime_content}', #{t_param})\n"
             c = "yield :\"#{id}\"\n"
             return CompiledBlock.new(init, c)
         end
