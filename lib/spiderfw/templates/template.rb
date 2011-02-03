@@ -828,7 +828,7 @@ module Spider
         SceneVarRegexp = /@(\w[\w\d_]+)/
         
         def self.scan_text(text)
-            text = text.gsub(/\302\240/, ' ') # remove annoying fake space
+            text = text.gsub(/\302\240/u, ' ') # remove annoying fake space
             scanner = ::StringScanner.new(text)
             pos = 0
             c = ""
