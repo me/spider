@@ -1,6 +1,7 @@
 require 'spiderfw/model/mixins/state_machine'
 require 'spiderfw/model/element'
 require 'spiderfw/model/integrated_element'
+require 'spiderfw/model/junction'
 require 'iconv'
 
 module Spider; module Model
@@ -279,6 +280,7 @@ module Spider; module Model
                     # FIXME! fix in case of clashes with existent elements
                     assoc_type.element(other_name, orig_type, :association => :choice, :junction_reference => true)
                     assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
+                    assoc_type.send(:include, Spider::Model::Junction)
                     if (proc)                                   #        to be hidden, but the integrated el instead
                         attributes[:extended] = true
                         attributes[:keep_junction] = true
