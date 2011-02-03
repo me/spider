@@ -36,70 +36,23 @@ class WebServerCommand < CmdParse::Command
             opt.on("--key key", _("SSL private key")){ |key| @ssl_key = key }
         end
         start.set_execution_block do |args|
-            require 'spiderfw'
+            require 'spiderfw/spider'
             raise "Can't use cgi mode with SSL" if @ssl && @cgi
             if @ssl && @server_name != 'webrick'
                 puts _("Note: Using WEBrick as a webserver, since SSL was requested")
                 @server_name = 'webrick'
             end
-            @port ||= Spider.conf.get('webserver.port')
-            @server_name ||= Spider.conf.get('http.server')
-            @pid_file = Spider.paths[:var]+'/run/server.pid'
-            puts _("Using webserver %s") % @server_name if $verbose
-            puts _("Listening on port %s") % @port if $verbose
-            server = Spider::HTTP.const_get(servers[@server_name]).new
-            ssl_server = nil
-            start = lambda{
-                Spider.startup
-                if Spider.conf.get('devel.trace.extended')
-                    require 'ruby-debug'
-                    require 'spiderfw/utils/monkey/debugger'
-                    Debugger.start
-                    Debugger.post_mortem
-                end
-                
-                thread = Thread.new do
-                    server.start(:port => @port, :cgi => @cgi)
-                end
-                if (@ssl)
-                    @ssl_cert ||= Spider.conf.get('orgs.default.cert')
-                    @ssl_key ||= Spider.conf.get('orgs.default.private_key')
-                    raise "SSL Certificate not set" unless @ssl_cert
-                    raise "SSL Key not set" unless @ssl_key
-                    raise "SSL Certificate (#{@ssl_cert}) not found" unless File.file?(@ssl_cert)
-                    raise "SSL Key (#{@ssl_key}) not found" unless File.file?(@ssl_key)
-                    ssl_thread = Thread.new do
-                        ssl_server = Spider::HTTP.const_get(servers[@server_name]).new
-                        ssl_server.start(:port => @ssl, :ssl => true, :ssl_cert => @ssl_cert, :ssl_private_key => @ssl_key)
-                    end
-                end
-                do_shutdown = lambda{ |arg|
-                    server.shutdown
-                    ssl_server.shutdown if ssl_server
-                    Spider.shutdown
-                    begin
-                        File.unlink(@pid_file)
-                    rescue Errno::ENOENT
-                    end
-                }
-                trap('TERM', &do_shutdown)
-                trap('INT', &do_shutdown)
-                
-                thread.join
-                ssl_thread.join if ssl_thread
+            options = {
+                :verbose => $verbose,
+                :ssl => @ssl,
+                :ssl_cert => @ssl_cert,
+                :ssl_key => @ssl_key,
+                :cgi => @cgi,
+                :daemonize => @daemonize
             }
-            if (@daemonize)
-                forked = Spider.fork do
-                    File.open(@pid_file, 'w') do |f|
-                        f.write(Process.pid)
-                    end
-                    $0 = 'spider-server'
-                    start.call
-                end
-                Process.detach(forked)
-            else
-                start.call
-            end
+            Spider::HTTP::Server.start(@server_name, @port, options)
+            
+            
         end
         self.add_command( start )
 

@@ -67,11 +67,9 @@ module Spider
                 $SPIDER_CONFIG_SETS.each{ |set| @configuration.include_set(set) }
             end
             init_file = File.join($SPIDER_RUN_PATH, 'init.rb')
-            Spider.logger.info("one")
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
             end
-            Spider.logger.info("two")
             GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
 
@@ -133,50 +131,7 @@ module Spider
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
-            require 'fssm'
-            Thread.new do
-                fsm_exclude = ['var', 'tmp']
-                monitor = lambda{ 
-                    glob '**/*.rb'
 
-                    update { |base, relative| 
-                        Spider.logger.debug("#{relative} updated")
-                        Spider.respawn! 
-                    }
-                    delete { |base, relative|
-                        Spider.logger.debug("#{relative} deleted")
-                        Spider.respawn! 
-                    }
-                    create { |base, relative|
-                        Spider.logger.debug("#{relative} created")
-                        Spider.respawn!
-                    }
-                }
-                FSSM.monitor do
-                    path Spider.paths[:apps] do 
-                        glob '**/*.rb'
-
-                        update { |base, relative| 
-                            Spider.logger.debug("#{relative} updated")
-                            Spider.respawn! 
-                        }
-                        delete { |base, relative|
-                            Spider.logger.debug("#{relative} deleted")
-                            Spider.respawn! 
-                        }
-                        create { |base, relative|
-                            Spider.logger.debug("#{relative} created")
-                            Spider.respawn!
-                        }
-                    end
-
-                  # path '/some/other/directory/' do
-                  #   update {|base, relative|}
-                  #   delete {|base, relative|}
-                  #   create {|base, relative|}
-                  # end
-                end
-            end
             @startup_done = true
         end
         
@@ -224,7 +179,8 @@ module Spider
         
         
         # Closes any open loggers, and opens new ones based on configured settings.
-        def start_loggers
+        def start_loggers(force=false)
+            return if @logger && !force
             @logger = Spider::Logger
             @logger.close_all
             @logger.open(STDERR, Spider.conf.get('log.console')) if Spider.conf.get('log.console')
@@ -250,6 +206,10 @@ module Spider
             end
             $LOG = @logger
             Object.const_set(:LOGGER, @logger)
+        end
+        
+        def start_loggers!
+            start_loggers(false)
         end
         
         # Sets the default paths (see #paths).
@@ -612,6 +572,8 @@ module Spider
         end
         
         def respawn!
+            # TODO
+            raise "Unimplemented"
             Spider.logger.info("Respawning")
             @spawner.write('spawn')
             @spawner.close
