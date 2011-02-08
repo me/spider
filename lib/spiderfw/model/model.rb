@@ -212,7 +212,7 @@ module Spider
         end
         
         # Load YAML data
-        def self.load_fixtures(file)
+        def self.load_fixtures(file, truncate=false)
             if (file =~ /\.([^\.]+)$/)
                 extension = $1
             else
@@ -229,6 +229,7 @@ module Spider
             data.each do |step|
                 step.each do |mod_name, mod_data|
                     mod = const_get_full(mod_name)
+                    mod.mapper.truncate! if truncate
                     mod_data.each do |row|
                         obj = mod.new(row)
                         obj.insert
