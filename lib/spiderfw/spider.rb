@@ -115,16 +115,18 @@ module Spider
             unless File.exists?(File.join(Spider.paths[:root], 'init.rb'))
                 raise "The server must be started from the root directory"
             end
-            if (Spider.conf.get('template.cache.reload_on_restart'))
+            if Spider.conf.get('template.cache.reload_on_restart')
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
-            if domain = Spider.conf.get('site.domain')
-                ssl_port = Spider.conf.get('site.ssl') ? Spider.conf.get('site.ssl_port') : nil
-                Spider.site = Site.new(domain, Spider.conf.get('site.port'), ssl_port)
-            elsif File.exists?(Site.cache_file)
-                Spider.site = Site.load_cache
+            unless Spider.runmode == 'test'
+                if domain = Spider.conf.get('site.domain')
+                    ssl_port = Spider.conf.get('site.ssl') ? Spider.conf.get('site.ssl_port') : nil
+                    Spider.site = Site.new(domain, Spider.conf.get('site.port'), ssl_port)
+                elsif File.exists?(Site.cache_file)
+                    Spider.site = Site.load_cache
+                end
             end
-            if (Spider.conf.get('request.mutex'))
+            if Spider.conf.get('request.mutex')
                 mutex_requests!
             end
             @apps.each do |name, mod|
