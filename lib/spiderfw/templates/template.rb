@@ -33,7 +33,6 @@ module Spider
         @@registered = {}
         @@widget_plugins = {}
         @@namespaces = {}
-        @@cache = TemplateCache.new(Spider.paths[:var]+'/cache/templates')
         @@overrides = ['content', 'override', 'override-content', 'override-attr', 'append-attr',
                         'append', 'prepend', 'delete', 'before', 'after']
                         
@@ -47,7 +46,7 @@ module Spider
             
             # Returns the class TemplateCache instance
             def cache
-                @@cache
+                @@cache ||= TemplateCache.new(Spider.paths[:var]+'/cache/templates')
             end
             
             # Sets allowed blocks
