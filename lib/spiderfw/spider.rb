@@ -337,7 +337,12 @@ module Spider
                         @configuration.load_yaml(File.join(path, f))
                     rescue ConfigurationException => exc
                         if (exc.type == :yaml)
-                            @logger.error("Configuration file #{path+f} is not valid YAML")
+                            err = "Configuration file #{path+f} is not valid YAML"
+                            if @logger
+                                @logger.error(err)
+                            else
+                                puts err
+                            end
                         else
                             raise
                         end
