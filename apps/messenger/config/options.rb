@@ -14,15 +14,13 @@ module Spider
         :type => Fixnum, :default => 10
     config_option 'messenger.queue.run_every', _("Time in seconds between queue runs"), :type => Fixnum, :default => 60
     
-    config_option 'messenger.email.backends', _("The backends to use for sending mail (if more than one)"), :type => Array, :default => ['smtp']
-    config_option 'messenger.email.backend', _("The backend to use for sending sms"), :type => String, :do => lambda{ |val|
-        Spider.conf.set('messenger.email.backends', [val])
-    }
+    config_option 'messenger.email.backends', _("The backends to use for sending mail (if more than one)"), :type => Array,
+        :default => lambda{ Spider.conf.get('messenger.email.backend') ? [Spider.conf.get('messenger.email.backend')] : [] }
+    config_option 'messenger.email.backend', _("The backend to use for sending sms"), :type => String, :default => 'smtp'
     
-    config_option 'messenger.sms.backends', _("The backends to use for sending sms (if more than one)"), :type => Array, :default => []
-    config_option 'messenger.sms.backend', _("The backend to use for sending sms"), :type => String, :do => lambda{ |val|
-        Spider.conf.set('messenger.sms.backends', [val])
-    }
+    config_option 'messenger.sms.backends', _("The backends to use for sending sms (if more than one)"), :type => Array,
+        :default => lambda{ Spider.conf.get('messenger.sms.backend') ? [Spider.conf.get('messenger.sms.backend')] : [] }
+    config_option 'messenger.sms.backend', _("The backend to use for sending sms"), :type => String
     config_option 'messenger.sms.retries', _("How many times to retry sending an sms"), :type => Fixnum, :default => 5
     config_option 'messenger.sms.retry_time', _("Seconds to wait until retry (will be incremented at each retry)"), 
         :type => Fixnum, :default => 10
