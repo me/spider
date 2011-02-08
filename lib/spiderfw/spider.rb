@@ -91,8 +91,7 @@ module Spider
             setup_paths(@root)
             all_apps = find_all_apps
             all_apps.each do |path|
-                opts = File.join(path, 'config/options.rb')
-                require opts if File.exist?(opts)
+                load_configuration(File.join(path, 'config'))
             end
             @runmode = nil
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
