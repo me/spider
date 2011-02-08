@@ -494,6 +494,9 @@ module Spider
                 else
                     search_locations << [File.join(app.path, resource_rel_path), app]
                 end
+                if Spider.runmode == 'test'
+                    search_locations << [File.join(app.path, 'test', resource_rel_path), app]
+                end
             end
             spider_path = File.join($SPIDER_PATH, resource_rel_path)
             search_locations << [spider_path, self]
