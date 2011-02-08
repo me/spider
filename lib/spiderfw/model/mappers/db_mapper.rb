@@ -65,6 +65,11 @@ module Spider; module Model; module Mappers
             storage.execute(sql, *values)
         end
         
+        def truncate!
+            sql = storage.sql_truncate(schema.table)
+            storage.execute(sql)
+        end
+        
         # def delete_all!
         #     storage.execute("DELETE FROM #{schema.table}")
         # end

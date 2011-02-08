@@ -473,6 +473,10 @@ module Spider; module Model
             delete(all, true)
         end
         
+        def truncate!
+            raise MapperError, "Unimplemented"
+        end
+        
         # Actual interaction with the storage. May be implemented by subclasses.
         def do_delete(obj, force=false)
             raise MapperError, "Unimplemented"

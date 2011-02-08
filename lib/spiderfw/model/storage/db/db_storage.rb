@@ -669,6 +669,10 @@ module Spider; module Model; module Storage; module Db
             return [sql, bind_vars]
         end
         
+        def sql_truncate(table)
+            "TRUNCATE #{table}"
+        end
+        
         # Returns an array of SQL statements for a create structured description.
         def sql_create_table(create)
             name = create[:table]
