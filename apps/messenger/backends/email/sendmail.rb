@@ -7,10 +7,10 @@ module Spider; module Messenger; module Backends; module Email
         
         def self.send_message(msg)
             Spider.logger.debug("Sending e-mail #{msg.ticket}")
-            res = false
             mail = prepare_mail(msg)
             mail.delivery_method :sendmail
             mail.deliver
+            return true
         end
         
 

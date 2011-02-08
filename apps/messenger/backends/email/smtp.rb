@@ -7,7 +7,6 @@ module Spider; module Messenger; module Backends; module Email
         
         def self.send_message(msg)
             Spider.logger.debug("Sending e-mail #{msg.ticket}")
-            res = false
             mail = prepare_mail(msg)
             mail.delivery_method :smtp, {
                 :address => Spider.conf.get('messenger.smtp.address'),
@@ -18,6 +17,7 @@ module Spider; module Messenger; module Backends; module Email
                 :authentication => Spider.conf.get('messenger.smtp.auth_scheme')
             }
             mail.deliver
+            return true
         end
         
         def self.update_statuses
