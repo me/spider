@@ -126,6 +126,10 @@ module Spider
             return val
         end
         
+        def keys
+            @values.keys
+        end
+        
         
         def [](key)
             key = translate_key(key)
