@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module Spider
     
     module Messenger
@@ -24,39 +26,56 @@ module Spider
                 self.process_queue(queue)
             end
         end
+        
+        def self.lock_file
+            File.join(Spider.paths[:var], 'messenger_lock')
+        end
                 
-        def self.process_queue(queue)
+        def self.process_queue(queue, tickets=nil)
             raise ArgumentError, "Queue #{name} not found" unless self.queues[queue]
             @mutexes ||= {}
             mutex = @mutexes[queue] ||= Mutex.new
-            return if mutex.locked?
+            return false if mutex.locked?
             model = Spider::Messenger.const_get(self.queues[queue][:model])
+            lock_file = "#{self.lock_file}_#{queue}"
             mutex.synchronize do
-                now = DateTime.now
-                list = model.where{ (sent == nil) & (next_try <= now) }
-                list.each do |msg|
-                    res = false
-                    exc = nil
-                    self.backends[queue].each do |backend|
-                        begin
-                            res = backend.send_message(msg)
-                        rescue => exc
-                            Spider.logger.error(exc)
-                        end
-                        break if res
-                    end
-                    if (res)
-                        msg.sent = now
-                        msg.status = :backend
-                        msg.next_try = nil
-                        msg.backend_response = res
-                        msg.save
+                FileUtils.touch(lock_file)
+                File.open(lock_file, 'r'){ |f| return false unless f.flock File::LOCK_EX | File::LOCK_NB }
+                begin
+                    list = nil
+                    if tickets
+                        list = model.where(:ticket => tickets)
                     else
-                        backend_response = exc ? exc.to_s : res
-                        msg.add_failure(backend_response)
-                        msg.save
+                        now = DateTime.now
+                        list = model.where{ (sent == nil) & (next_try <= now) }
                     end
+                    list.each do |msg|
+                        res = false
+                        exc = nil
+                        self.backends[queue].each do |backend|
+                            begin
+                                res = backend.send_message(msg)
+                            rescue => exc
+                                Spider.logger.error(exc)
+                            end
+                            break if res
+                        end
+                        if (res)
+                            msg.sent = now
+                            msg.status = :backend
+                            msg.next_try = nil
+                            msg.backend_response = res
+                            msg.save
+                        else
+                            backend_response = exc ? exc.to_s : res
+                            msg.add_failure(backend_response)
+                            msg.save
+                        end
                             
+                    end
+                ensure
+                    File.open(lock_file, 'r'){ |f| f.flock File::LOCK_UN }
+                    File.unlink(lock_file)
                 end
             end
         end

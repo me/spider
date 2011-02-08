@@ -1,5 +1,4 @@
 require 'apps/messenger/lib/email_backend'
-require 'net/smtp'
 
 module Spider; module Messenger; module Backends; module Email
     
@@ -9,18 +8,16 @@ module Spider; module Messenger; module Backends; module Email
         def self.send_message(msg)
             Spider.logger.debug("Sending e-mail #{msg.ticket}")
             res = false
-            Net::SMTP.start(
-              Spider.conf.get('messenger.smtp.address'),
-              Spider.conf.get('messenger.smpt.port'),
-              Spider.conf.get('messenger.smtp.domain'),
-              Spider.conf.get('messenger.smtp.username'),
-              Spider.conf.get('messenger.smtp.password'),
-              Spider.conf.get('messenger.smtp.auth_scheme')
-            ) do |smtp|
-                msg_str = msg.headers+"\r\n\r\n"+msg.body
-                res = smtp.send_message msg_str, msg.from, msg.to
-            end
-            return res.string
+            mail = prepare_mail(msg)
+            mail.delivery_method :smtp, {
+                :address => Spider.conf.get('messenger.smtp.address'),
+                :port => Spider.conf.get('messenger.smpt.port'),
+                :domain => Spider.conf.get('messenger.smtp.domain'),
+                :user_name => Spider.conf.get('messenger.smtp.username'),
+                :password => Spider.conf.get('messenger.smtp.password'),
+                :authentication => Spider.conf.get('messenger.smtp.auth_scheme')
+            }
+            mail.deliver
         end
         
         def self.update_statuses

@@ -6,6 +6,16 @@ module Spider; module Messenger
       
       def self.included(mod) 
           Messenger.add_backend(:email, mod)
+          mod.extend(ClassMethods)
+      end
+      
+      module ClassMethods
+          
+          def prepare_mail(msg)
+              msg_str = msg.headers+"\r\n\r\n"+msg.body
+              mail = Mail.new(msg_str)
+          end
+          
       end
      
        

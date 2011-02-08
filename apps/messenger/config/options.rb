@@ -38,6 +38,7 @@ module Spider
     config_option 'messenger.smstools.remove_sent', _("Whether to remove failed messages from the smstools sent folder"),
         :type => Spider::Bool, :default => true
     config_option 'messenger.smstools.log_path', _("Smsd logfile"), :default => '/var/log/smsd.log'
-
+    config_option 'messenger.send_immediate', _("Send messages right after the controller action instead of waiting for worker"), 
+        :type => Spider::Bool, :default => true
     
 end

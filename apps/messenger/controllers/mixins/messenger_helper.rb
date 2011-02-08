@@ -1,5 +1,5 @@
 require 'erb'
-require 'mailfactory'
+require 'mail'
 
 Spider.register_resource_type(:email, :extensions => ['erb'], :path => 'templates/email')
 
@@ -11,14 +11,20 @@ module Spider; module Messenger
         # #Messenger::email
         # template is the template name (found in templates/email), without the extension
         # will use template.html.erb and template.txt.erb if they exist, template.erb otherwise.
-        # attachments must be an array of hashes like 
-        # {:file => '/full/file/path', :type => 'mime type', :file_name => 'optional email file name', 
-        # :headers => 'optional string or array of additional headers'}
+        # attachments must be an array, which items can be strings (the path to the file)
+        # or Hashes:
+        # {:filename => 'filename.png', :content => File.read('/path/to/file.jpg'),
+        #   :mime_type => 'mime/type'}
+        # Attachments will be passed to the Mail gem (https://github.com/mikel/mail), so any syntax allowed by Mail
+        # can be used
         def send_email(template, scene, from, to, headers={}, attachments=[], params={})
             klass = self.class if self.class.respond_to?(:find_resouce_path)
             klass ||= self.class.app if self.class.respond_to?(:app)
             klass ||= Spider.home
-            Spider::Messenger::MessengerHelper.send_email(klass, template, scene, from, to, headers, attachments, params)
+            msg = Spider::Messenger::MessengerHelper.send_email(klass, template, scene, from, to, headers, attachments, params)
+            @messenger_sent ||= {}
+            @messenger_sent[:email] ||= []
+            @messenger_sent[:email] << msg.ticket
         end
         
         def self.send_email(klass, template, scene, from, to, headers={}, attachments=[], params={})
@@ -34,20 +40,33 @@ module Spider; module Messenger
                 path = klass.find_resource_path(:email, template)
                 text = ERB.new(IO.read(path)).result(scene_binding)
             end
-            mail = MailFactory.new
-            mail.To = to
-            mail.From = from
+            mail = Mail.new
+            mail[:to] = to
+            mail[:from] = from
+            mail.charset = "UTF-8"
             headers.each do |key, value|
-                mail.add_header(key, value)
+                mail[key] = value
             end
-            mail.html = html if html
-            mail.text = text if text
-            if (attachments && !attachments.empty?)
+
+            if html
+                mail.text_part do
+                    body text
+                end
+                mail.html_part do
+                    content_type 'text/html; charset=UTF-8'
+                    body html
+                end
+            else
+                mail.body = text
+            end
+
+            if attachments && !attachments.empty?
                 attachments.each do |att|
-                    if (att[:file_name])
-                        mail.add_attachment_as(att[:file], att[:file_name], att[:type], att[:headers])
+                    if att.is_a?(Hash)
+                        filename = att.delete(:filename)
+                        mail.attachments[filename] = att
                     else
-                        mail.add_attachment(att[:file], att[:type], att[:headers])
+                        mail.add_file(att)
                     end
                 end
             end
@@ -55,6 +74,13 @@ module Spider; module Messenger
             mail_headers += "\r\n"
             Messenger.email(from, to, mail_headers, mail_body, params)
         end
+        
+        def after(action='', *params)
+            return super unless Spider.conf.get('messenger.send_immediate') && @messenger_sent
+            Spider::Messenger.process_queue(:email, @messenger_sent[:email]) if @messenger_sent[:email]
+            Spider::Messenger.process_queue(:sms, @messenger_sent[:sms]) if @messenger_sent[:sms]
+        end
+        
     end
     
 end; end
