@@ -236,6 +236,7 @@ module Spider; module Model; module Mappers
             result.each do |row|
                 set << map(nil, row, @model)
             end
+            set.modified = false
             return set
         end
         
