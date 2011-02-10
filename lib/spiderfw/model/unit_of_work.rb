@@ -93,7 +93,14 @@ module Spider; module Model
                 @tasks[dep[0]] << @tasks[dep[1]]
                 find_dependencies(dep[0]) unless had0
                 find_dependencies(dep[1]) unless had1
+        def has?(obj)
+            if obj.class == QuerySet
+                obj.each do |item|
+                    return false unless has?(item)
+                end
+                return true
             end
+            @actions[obj.object_id] && !@actions[obj.object_id].empty?
         end
                 
         
