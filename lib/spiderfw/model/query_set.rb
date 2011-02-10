@@ -28,7 +28,7 @@ module Spider; module Model
         # Total number of objects present in the Storage for the Query
         attr_accessor :total_rows
         # (bool) Wether the QuerySet has been loaded
-        attr_accessor :loaded
+        attr_reader :loaded
         # (Fixnum) How many objects to load at a time. If nil, all the objects returned by the Query 
         # will be loaded.
         attr_accessor :fetch_window
@@ -50,6 +50,7 @@ module Spider; module Model
         attr_accessor :loadable # :nodoc: TODO: remove?
         # Don't put this queryset's objects into the IdentityMapper
         attr_accessor :_no_identity_mapper
+        attr_accessor :modified
         
         # Instantiates a non-autoloading queryset
         def self.static(model, query_or_val=nil)
@@ -172,6 +173,7 @@ module Spider; module Model
             end
             index_object(obj)
             @raw_data[@objects.length-1] = raw if raw
+            @modified = true
         end
 
             
@@ -219,6 +221,14 @@ module Spider; module Model
                 end
             end
             @loaded_elements.merge!(f_loaded)
+        end
+        
+        def modified?
+            return true if @modified
+            @objects.each do |obj|
+                return true if obj.modified?
+            end
+            return false
         end
         
         # Returns the last object.
@@ -460,6 +470,7 @@ module Spider; module Model
             return load_next if @fetch_window && !@query.offset
             mapper.find(@query.clone, self)
             @loaded = true
+            @modified = false
             return self
         end
         
@@ -502,6 +513,11 @@ module Spider; module Model
             return false unless @window_current_start
             return true if index >= @window_current_start-1 && index < @window_current_start+@fetch_window-1
             return false
+        end
+        
+        def loaded=(val)
+            @loaded = val
+            @modified = false if @loaded
         end
         
         def loadable?
