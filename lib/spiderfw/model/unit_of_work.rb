@@ -47,10 +47,6 @@ module Spider; module Model
             @running = true
             @objects.each do |obj_id, obj|
                 @actions[obj_id].each do |action, params|
-                    if action == :save
-                        next unless obj.mapper && obj.mapper.class.write?
-                        next unless obj.modified?
-                    end
                     task = Spider::Model::MapperTask.new(obj, action, params)
                     @tasks[task] = task
                 end
@@ -64,8 +60,13 @@ module Spider; module Model
             tasks.each do |task| 
                 Spider.logger.debug "-- #{task.action} on #{task.object.class} #{task.object.primary_keys}"
             end
-            
+                        
             tasks.each do |task|
+                obj = task.object
+                if task.action == :save
+                    next unless obj.mapper && obj.mapper.class.write?
+                    next unless obj.modified?
+                end
                 #Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
             end
