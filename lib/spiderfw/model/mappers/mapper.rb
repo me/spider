@@ -252,13 +252,11 @@ module Spider; module Model
 
         # Elements that are associated to this one externally.
         def association_elements
-             els = @model.elements_array.select{ |el| 
-                 mapped?(el) && !el.integrated? && !have_references?(el) && !(el.attributes[:added_reverse] && el.type <= @model)
-             }
-             if @unit_of_work_task
-                 els = els.select{ |el| el.attributes[:junction] && !el.attributes[:keep_junction] }
-             end
-             els
+            return [] if @unit_of_work_task
+            els = @model.elements_array.select{ |el| 
+                mapped?(el) && !el.integrated? && !have_references?(el) && !(el.attributes[:added_reverse] && el.type <= @model)
+            }
+            els
         end
         
         # Saves object associations.
