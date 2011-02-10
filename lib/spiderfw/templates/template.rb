@@ -244,6 +244,7 @@ module Spider
         # Loads the compiled template (from cache if available).
         def load(path=nil)
             @path = real_path(path) if path
+            @path = File.expand_path(@path)
 #            debug("TEMPLATE LOADING #{@path}")
             cache_path = @path.sub(Spider.paths[:root], 'ROOT').sub(Spider.paths[:spider], 'SPIDER')
             unless @runtime_overrides.empty?
