@@ -232,6 +232,10 @@ module Spider; module Model
             @objects.delete_at(index)
         end
         
+        def delete(obj)
+            @objects.delete(obj)
+        end
+        
         # Returns a new QuerySet containing objects from both this and the other.
         def +(other)
             qs = self.clone
