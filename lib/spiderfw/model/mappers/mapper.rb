@@ -370,9 +370,10 @@ module Spider; module Model
         
         # Saves the given object and all objects reachable from it.
         def save_all(root)
-            uow = UnitOfWork.new
-            uow.add(root)
-            uow.run()
+            UnitOfWork.new do |uow|
+                uow.add(root)
+                uow.run()
+            end
         end
         
         # Inserts the object in the storage.
