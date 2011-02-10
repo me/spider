@@ -902,19 +902,26 @@ module Spider; module Model; module Mappers
                 elements.select{ |n, el| !el.has_single_reverse? }.each do |name, element|
                     set = obj.send(element.name)
                     set = [set] unless set.is_a?(Enumerable)
+                    prev_task = nil
                     set.each do |set_obj|
                         # set_obj.set(el.reverse, obj) if el.reverse
-                        deps << [task, MapperTask.new(set_obj, :keys)]                        
+                        sub_task = MapperTask.new(set_obj, :keys)
+                        sub_task << prev_task if prev_task
+                        deps << [task, sub_task]
+                        prev_task = sub_task
                     end
                 end
                 elements.select{ |n, el| el.has_single_reverse? }.each do |name, element|
                     if (element.model? && element.type.mapper && element.type.mapper.class.write?)
                         set = obj.send(element.name)
                         set = [set] unless set.is_a?(Enumerable)
+                        prev_task = nil
                         set.each do |set_obj|
                             # set_obj.set(el.reverse, obj) if el.reverse
                             sub_task = MapperTask.new(set_obj, :save)
+                            sub_task << prev_task if prev_task
                             deps << [sub_task, MapperTask.new(obj, :keys)]
+                            prev_task = sub_task
                         end
                     end
                 end
