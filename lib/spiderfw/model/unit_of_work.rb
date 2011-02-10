@@ -53,8 +53,10 @@ module Spider; module Model
                     end
                     task = Spider::Model::MapperTask.new(obj, action, params)
                     @tasks[task] = task
-                    find_dependencies(task)
                 end
+            end
+            @tasks.clone.each do |k, task|
+                find_dependencies(task)
             end
             tasks = tsort()
             
