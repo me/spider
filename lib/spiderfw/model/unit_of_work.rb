@@ -99,6 +99,10 @@ module Spider; module Model
         
         def add(obj, action = :save, params = {})
             raise "Objects can't be added to the UnitOfWork while it is running" if @running
+            if [:insert, :update].include?(action)
+                params[:force] = action
+                action = :save
+            end
             if (obj.class == QuerySet)
                 obj.each do |item|
                     add(item, action, params)
