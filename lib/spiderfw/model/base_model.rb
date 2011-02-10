@@ -1185,6 +1185,10 @@ module Spider; module Model
             return obj
         end
         
+        def self.load_or_create(values)
+            self.load(values) || self.create(values)
+        end
+        
         def self.get(values)
             return self.new(values) unless Spider::Model.identity_mapper
             values = [values] unless values.is_a?(Hash) || values.is_a?(Array)
@@ -1947,33 +1951,16 @@ module Spider; module Model
         # Saves the object to the storage
         # (see Mapper#save)
         def save
-            if @unit_of_work
-                @unit_of_work.add(self)
-                return
-            end
-            save_mode do
-                before_save unless unit_of_work_available?
-                if unit_of_work_available?
-                    Spider.current[:unit_of_work].add(self)
-                    if @unit_of_work
-                        @unit_of_work.commit
-                        Spider::Model.stop_unit_of_work
-                        if @uow_identity_mapper
-                            Spider.current[:identity_mapper] = nil
-                            @uow_identity_mapper = nil
-                        end
-                        @unit_of_work = nil
-                    end
-                    return
-                else
-                    save!
-                end
+            saving(:save) do
+                before_save
+                save!
             end
             self
         end
                 
         def save!
             mapper.save(self)
+            after_save
             self
         end
         
@@ -1985,33 +1972,11 @@ module Spider; module Model
         end
         
         def insert
-            if @unit_of_work
-                @unit_of_work.add(self)
-                return
-            end
-            save_mode do
-                before_save unless unit_of_work_available?
-                if unit_of_work_available?
-                    Spider.current[:unit_of_work].add(self, :save, :force => :insert)
-                    if @unit_of_work
-                        @unit_of_work.commit
-                        Spider::Model.stop_unit_of_work
-                        if @uow_identity_mapper
-                            Spider.current[:identity_mapper] = nil
-                            @uow_identity_mapper = nil
-                        end
-                        @unit_of_work = nil
-                    end
-                    return
-                else
-                    insert!
-                end
+            saving(:insert) do
+                before_save
+                insert!
             end
             self
-        end
-        
-        def unit_of_work_available?
-            Spider.current[:unit_of_work] && !Spider.current[:unit_of_work].running?
         end
         
         # Inserts the object in the storage
@@ -2020,44 +1985,41 @@ module Spider; module Model
         # (See Mapper#insert).
         def insert!
             mapper.insert(self)
-            reset_modified_elements
+            after_save
         end
         
         # Updates the object in the storage
         # Note: the update will silently fail if the object is not present in the storage
         # (see Mapper#update).
         def update
-            mapper.update(self)
-            reset_modified_elements
+            saving(:update) do
+                before_save
+                update!
+            end
         end
         
+        def update!
+            mapper.update(self)
+            after_save
+        end
+        
+        def unit_of_work_available?
+            Spider.current[:unit_of_work] && !Spider.current[:unit_of_work].running?
+        end
+        
+
         # Deletes the object from the storage
         # (see Mapper#delete).
         def delete
-            if @unit_of_work
-                @unit_of_work.add(self, :delete)
-                return
-            end
-            before_delete unless Spider.current[:unit_of_work]
-            if Spider.current[:unit_of_work] && !Spider.current[:unit_of_work].running?
-                Spider.current[:unit_of_work].add(self, :delete)
-                if @unit_of_work
-                    @unit_of_work.commit
-                    @unit_of_work.stop
-                    if @uow_identity_mapper
-                        Spider.current[:identity_mapper] = nil
-                        @uow_identity_mapper = nil
-                    end
-                    @unit_of_work = nil
-                end
-                return
-            else
+            saving(:delete) do
+                before_delete
                 delete!
             end
         end
         
         def delete!
             mapper.delete(self)
+            after_delete
         end
         
         def before_delete
@@ -2066,22 +2028,24 @@ module Spider; module Model
         def before_save
         end
         
-        def use_unit_of_work
-            had_uow = true
-            unless Spider.current[:unit_of_work]
-                had_wow = false
-                @unit_of_work = Spider::Model.start_unit_of_work
-            end
-            unless Spider::Model.identity_mapper
-                @uow_identity_mapper = Spider::Model::IdentityMapper.new
-                Spider.current[:identity_mapper] = @uow_identity_mapper
-                @uow_identity_mapper.put(self) if self.primary_keys_set?
-            end
-#            Spider.current[:unit_of_work].add(self)
-            Spider.current[:unit_of_work]
-            return had_uow
+        def after_save
+            reset_modified_elements
+            autoload(@_saving[:prev_autoload]) if @_saving
+            @_saving = nil
         end
         
+        def after_delete
+        end
+        
+        def saving(mode, &proc)
+            @_saving ||= { :prev_autoload => save_mode }
+            if unit_of_work_available?
+                Spider.current[:unit_of_work].add(self, mode)
+            else
+                yield
+            end
+        end
+                
         # Loads the object from the storage
         # Acceptable arguments are:
         # * a Query object, or
