@@ -6,6 +6,9 @@ module Spider; module Forms
         is_attr_accessor :mode, :type => Symbol, :default => :date
         i_attr_accessor :format, :type => String
         i_attr_accessor :lformat, :type => Symbol, :default => :short
+        attribute :"change-month", :type => Spider::Bool, :default => false
+        attribute :"change-year", :type => Spider::Bool, :default => false
+        attribute :"year-range", :type => String, :default => "150:10"
         
         def prepare_value(val)
             return val if val.respond_to?(:strftime)
@@ -31,6 +34,12 @@ module Spider; module Forms
                 when :time then 8
                 end
             end
+            @additional_classes = []
+            @additional_classes << 'change-month' if @attributes[:"change-month"]
+            @additional_classes << 'change-year' if @attributes[:"change-year"]
+            yr = @attributes[:"year-range"].sub('-', 'm').sub('+', 'p').sub(':', '-') if @attributes[:"change-year"]
+            @additional_classes << "year-range-#{yr}" if yr 
+            @scene.additional_classes = @additional_classes
             super
         end
         

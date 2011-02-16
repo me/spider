@@ -2,5 +2,5 @@
     <tpl:asset type="js" src="input.js" />
     <tpl:asset name="jquery-ui-datepicker" />
     <tpl:asset type="js" src="date_time.js" />
-    <input type="text" name="{ @name }" value="{ @formatted_value }" size="{ @size }" class="{ @mode }">
+    <input type="text" name="{ @name }" value="{ @formatted_value }" size="{ @size }" class="{ @mode } { @additional_classes.join(' ') }">
 </sp:template>
