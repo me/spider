@@ -40,7 +40,7 @@ module Spider
             pub_dest = nil
             all_assets.each do |ass|
                 seen_check = ass[:runtime] || ass[:src]
-                next if !ass[:src] || ass[:src].empty?
+                next if ass[:src].blank? && !ass[:runtime]
                 next if seen[seen_check]
                 seen[seen_check] = true
                 type = ass[:type].to_sym
@@ -55,7 +55,7 @@ module Spider
                 
                 if no_compress
                     if ass[:runtime]
-                        assets[type] << Spider::Template.runtime_assets[ass[:runtime]].call(@request, @response, @scene)
+                        assets[type] << {:src => Spider::Template.runtime_assets[ass[:runtime]].call(@request, @response, @scene)}
                     else
                         assets[type] << ass
                     end
