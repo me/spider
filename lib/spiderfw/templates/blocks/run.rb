@@ -51,7 +51,7 @@ module Spider; module TemplateBlocks
                         attr_name = at.get_attribute('name').gsub("'", "\\\\'")
                         attr_value = at.get_attribute('value').gsub("'", "\\\\'")
 
-                        init += "@owner.widget_attributes[#{widget_id}][:#{attr_name}] = '#{attr_value}'\n"
+                        init += "@owner.widget_attributes[#{widget_id}][:\"#{attr_name}\"] = '#{attr_value}'\n"
                     end
                 end
                 @el.innerHTML = ''
