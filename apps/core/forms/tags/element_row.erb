@@ -1,9 +1,18 @@
 <%
+    tag_attrs = ['required', 'element', 'error_condition']
     error_condition = @attributes['error_condition'] ? @attributes['error_condition'] : "@inputs[#{@attributes['element']}].error?"
     required =  @attributes['required'] ? @attributes['required'] : "@inputs[#{@attributes['element']}].required?"
 %>
 <forms:row error_condition="<%=error_condition%>" required="<%=required%>">
     <forms:element_label element="<%=@attributes['element']%>" required="<%=required%>"/>
-    <sp:run obj="@inputs[<%=@attributes['element']%>]" />
-    <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="required" value="<%=(@attributes['required']=='true')? 'true' : ''%>" />
+    <sp:run obj="@inputs[<%=@attributes['element']%>]" widget="<%=@attributes['element']%>">
+      <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="required" value="<%=(@attributes['required']=='true')? 'true' : ''%>" />
+      <%
+        (@attributes.keys - tag_attrs).each do |k|
+      %>
+      <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="<%=k%>" value="<%=@attributes[k]%>" />
+      <%
+        end
+      %>
+    </sp:run>
 </forms:row>
