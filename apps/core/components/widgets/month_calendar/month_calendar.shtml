@@ -1,21 +1,23 @@
-<table class="{ @widget[:css_class] }">
+<div>
     <tpl:asset type="css" src="css/month_calendar.css" />
-    <thead>
-        <tr>
-            <th colspan="7">
-                <a href="{ @request[:path] }?_w{ @widget[:param] }[d]={ @prev_link }"><span>&lt;&lt;</span></a>
-                { @current_month_name } { @year }
-                <a href="{ @request[:path] }?_w{ @widget[:param] }[d]={ @next_link }"><span>&gt;&gt;</span></a>
-            </th>
-        <tr>
-            <th sp:each="@week_days |i|">{ @days_short_names[i] }</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr sp:each="@rows |row|">
-            <td sp:each="row |col|" class="{ col[:classes] }">
-                { col[:day] }
-            </td>
-        </tr>
-    </tbody>
-</table>
+    <table class="{ @widget[:css_class] }">
+        <thead>
+            <tr>
+                <th colspan="7">
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }[d]={ @prev_link }"><span>&lt;&lt;</span></a>
+                    { @current_month_name } { @year }
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }[d]={ @next_link }"><span>&gt;&gt;</span></a>
+                </th>
+            <tr>
+                <th sp:each="@week_days |i|">{ @days_short_names[i] }</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr sp:each="@rows |row|">
+                <td sp:each="row |col|" class="{ col[:classes] }">
+                    { col[:day] }
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
