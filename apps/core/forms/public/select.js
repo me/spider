@@ -5,12 +5,12 @@ Spider.defineWidget('Spider.Forms.Select', 'Spider.Forms.Input', {
 	ready: function(){
 		if (this.el.is('select[multiple]')){
             this.el.attr('title', 'Aggiungi...');
-		    this.el.asmSelect({
+		    this.el.bsmSelect({
     			removeLabel: 'togli',
     			highlightAddedLabel: 'Aggiunto: ',
     			highlightRemovedLabel: 'Tolto: '
     		});
-            $('.asmSelect option:first', this.el.parent()).addClass('asmSelectTitle')
+            $('.bsmSelect option:first', this.el.parent()).addClass('bsmSelectTitle')
                 .attr("selected", false)
 				.attr("disabled", true);
 		} 
