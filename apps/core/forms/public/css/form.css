@@ -90,3 +90,11 @@
 .bsmSelectTitle{
     color: #999999;
 }
+
+.spider.forms.form .bsmContainer{
+    float: left;
+}
+
+.spider.forms.form .bsmListItem{
+    padding-right: 2em;
+}
