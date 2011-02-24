@@ -27,6 +27,8 @@ module Spider; module Model
         
         def run #(&proc)
             #proc.call
+            prev_uow = Spider.current[:unit_of_work]
+            Spider.current[:unit_of_work] = self
             @tasks = {}
             @processed_tasks = {}
             while objs = new_objects
@@ -73,6 +75,7 @@ module Spider; module Model
             @objects = {}
             @new_objects = []
             @running = false
+            Spider.current[:unit_of_work] = prev_uow
         end
         
         def running?
