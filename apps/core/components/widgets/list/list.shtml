@@ -32,8 +32,8 @@
 		{ @close_list_tag }
 	</sp:pass>
 	<div class="paginator" sp:if="(@page && @page > 1) || @has_more">
-     	<a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
+     	<a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }%5Bpage%5D={ @page-1 }">Indietro</a>
 		Pagina { @page } di { @pages }
-        <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>
+        <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }%5Bpage%5D={ @page+1 }">Avanti</a>
     </div>
 </div>
