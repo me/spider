@@ -443,7 +443,9 @@ Spider.defineWidget = function(name, parent, w){
 	if (parent) parent = Spider.widgetClasses[parent];
 	else parent = Spider.Widget;
     var widget = parent.extend(w);
-	curr[parts[parts.length-1]] = widget;
+    var last = parts[parts.length-1];
+    if (curr[last]) widget = curr[last].extend(widget);
+	curr[last] = widget;
 	Spider.widgetClasses[name] = widget;
 	if (w.autoInit){
 		var initSelector = null;
