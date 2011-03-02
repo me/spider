@@ -813,15 +813,15 @@ module Spider
         end
         
         def widget_action(name, *params)
-            "#{self.widget_target}&_we=#{name}"+(params.map{|p| "&_wp[]=#{p}"}).join('')
+            "#{self.widget_target}&_we=#{name}"+(params.map{|p| "&_wp%5B%5D=#{p}"}).join('')
         end
         
         def widget_params(params)
-            "#{self[:request][:path]}?"+params.map{ |k, v| "_w#{self[:widget][:param]}[#{k}]=#{v}"}.join('&')
+            "#{self[:request][:path]}?"+params.map{ |k, v| "_w#{self[:widget][:param]}%5B#{k}%5D=#{v}"}.join('&')
         end
         
         def widget_param(name)
-            "_w#{self[:widget][:param]}[#{name}]"
+            "_w#{self[:widget][:param]}%5B#{name}%5D"
         end
         
     end
