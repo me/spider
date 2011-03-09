@@ -813,6 +813,10 @@ module Spider
         end
         
         def widget_action(name, *params)
+            "#{self.widget_target}&_we=#{name}"+(params.map{|p| "&_wp[]=#{p}"}).join('')
+        end
+        
+        def widget_action_u(name, *params)
             "#{self.widget_target}&_we=#{name}"+(params.map{|p| "&_wp%5B%5D=#{p}"}).join('')
         end
         
@@ -821,6 +825,10 @@ module Spider
         end
         
         def widget_param(name)
+            "_w#{self[:widget][:param]}[#{name}]"
+        end
+        
+        def widget_param_u(name)
             "_w#{self[:widget][:param]}%5B#{name}%5D"
         end
         

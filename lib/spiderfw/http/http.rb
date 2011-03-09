@@ -171,7 +171,6 @@ module Spider
         #--
         # from Merb
         def self.parse_query(qs, d = '&')
-            qs = urldecode(qs)
           return (qs||'').split(/[#{d}] */n).inject({}) { |h,p| 
             key, value = urldecode(p).split('=',2)
             normalize_params(h, key, value)
