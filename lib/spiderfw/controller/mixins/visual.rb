@@ -86,6 +86,7 @@ module Spider; module ControllerMixins
             template.do_widgets_before
             layout.do_widgets_before if layout
             if @_widget
+                @_widget.before(widget_execute) if @_widget.is_target
                 @_widget.execute
                 done
             end
