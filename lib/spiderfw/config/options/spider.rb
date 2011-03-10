@@ -93,7 +93,7 @@ module Spider
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
     
     config_option 'log.console', _("Level of debug output to console"), 
-        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? :DEBUG : :INFO },
+        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? :DEBUG : false },
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false },
         :choices => [false, :DEBUG, :WARN, :INFO, :ERROR]
     config_option 'log.errors', _("Log errors to errors.log file"), :type => Spider::DataTypes::Bool, :default => true
