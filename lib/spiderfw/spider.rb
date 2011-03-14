@@ -79,6 +79,10 @@ module Spider
             @init_done=true
         end
         
+        def init_done?
+            @init_done
+        end
+        
         def init_base(force=false)
             return if @init_base_done && !force
             
