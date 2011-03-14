@@ -52,10 +52,12 @@ module Spider
     
     # Model
     
-    config_option 'storage.db.pool.size', _("How many connections to open to a db"), :type => Fixnum, :default => 5
-    config_option 'storage.db.pool.timeout', _("Timout in seconds to obtain a connection"), :type => Fixnum, :default => 5
-    config_option 'storage.db.pool.retry', _("How many times to retry acquiring a connection"), :type => Fixnum, :default => 5
-    
+    config_option 'storage.pool.size', _("How many connections to open to a connection"), :type => Fixnum, :default => 5
+    config_option 'storage.pool.timeout', _("Timout in seconds to obtain a connection"), :type => Fixnum, :default => 5
+    config_option 'storage.pool.retry', _("How many times to retry acquiring a connection"), :type => Fixnum, :default => 5
+    config_option 'storage.shared_connection', _("Use one connection for all threads; use this only when testing!"), 
+        :type => Spider::Bool, :default => lambda{ Spider.runmode == 'test' ? true : false}
+        
     config_option 'storage.db.replace_debug_vars', _("Replace bound variables in debug sql"), :type => Spider::DataTypes::Bool,
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
         
