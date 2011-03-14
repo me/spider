@@ -156,7 +156,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         def do_rollback
-            curr[:conn].rollback
+            curr[:conn].rollback if curr[:conn]
             curr[:in_transaction] = false
         end
         
