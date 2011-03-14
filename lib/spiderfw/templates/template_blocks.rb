@@ -135,7 +135,7 @@ module Spider
                     when :plain
                         res += escape_text(val)
                     when :escaped_expr
-                        res += full
+                        res += "{ #{val} }"
                     when :expr
                         res += "'+("+vars_to_scene(val)+").to_s+'"
                     when :gettext
