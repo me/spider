@@ -119,6 +119,8 @@ module Spider
             unless File.exists?(File.join(Spider.paths[:root], 'init.rb'))
                 raise "The server must be started from the root directory"
             end
+            FileUtils.mkdir_p(Spider.paths[:tmp])
+            FileUtils.mkdir_p(Spider.paths[:var])
             if Spider.conf.get('template.cache.reload_on_restart')
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
@@ -186,15 +188,15 @@ module Spider
         # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers(force=false)
             return if @logger && !force
-            @logger = Spider::Logger
+            @logger ||= Spider::Logger
             @logger.close_all
             @logger.open(STDERR, Spider.conf.get('log.console')) if Spider.conf.get('log.console')
             begin
-                FileUtils.mkpath(@paths[:log]) unless File.exist?(@paths[:log])
+                FileUtils.mkdir(@paths[:log]) unless File.exist?(@paths[:log])
             rescue => exc
-                @logger.error("Unable to create log folder")
+                @logger.error("Unable to create log folder") if File.exist?(File.dirname(@paths[:log]))
             end
-            if File.exist?(@paths[:log])
+            if @paths[:log] && File.exist?(@paths[:log])
                 @logger.open(File.join(@paths[:log], 'error.log'), :ERROR) if Spider.conf.get('log.errors')
                 if Spider.conf.get('log.level')
                     @logger.open(File.join(@paths[:log], Spider.conf.get('log.file_name')), Spider.conf.get('log.level'))
