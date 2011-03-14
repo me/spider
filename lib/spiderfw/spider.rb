@@ -617,7 +617,9 @@ module Spider
                 else
                     Debugger.start
                 end
-            rescue LoadError, RuntimeError; end
+            rescue LoadError, RuntimeError => exc
+                Spider.logger.warn(exc.message)
+            end
         end
         
         def locale
