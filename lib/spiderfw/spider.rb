@@ -599,7 +599,7 @@ module Spider
             raise "Can't change runmode" if @runmode
             @runmode = mode
             @configuration.include_set(mode)
-            if mode == 'devel' || File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
+            if Spider.conf.get('debugger.start') || File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                 init_debug
             end
             if (mode != 'production')
