@@ -173,10 +173,10 @@ module Spider; module Model; module Storage; module Db
                 curr[:last_executed] = [sql, bind_vars]
                 if (Spider.conf.get('storage.db.replace_debug_vars'))
                     cnt = -1
-                    debug("mysql executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
+                    debug("mysql #{curr[:conn]} executing: "+sql.gsub('?'){ debug_vars[cnt+=1] })
                 else
                     debug_vars_str = debug_vars ? debug_vars.join(', ') : ''
-                    debug("mysql executing:\n#{sql}\n[#{debug_vars_str}]")
+                    debug("mysql #{curr[:conn]} executing:\n#{sql}\n[#{debug_vars_str}]")
                 end
                 query_start
                 stmt = connection.prepare(sql)
