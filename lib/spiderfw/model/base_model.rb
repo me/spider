@@ -1753,6 +1753,16 @@ module Spider; module Model
             else
                 @modified_elements = {}
             end
+            elements = self.class.elements_array.map{ |el| el.name } if elements.empty?
+            elements.each do |el_name|
+                val = instance_variable_get("@#{el_name}")
+                val.modified = false if val.is_a?(QuerySet)
+            end
+            self.class.elements_array.select{ |el| el.attributes[:integrated_model] && self.element_has_value?(el) }.each do |el|
+                self.get(el).reset_modified_elements(elements)
+            end
+
+            nil
         end
         
         # Returns true if all primary keys have a value; false if some primary key
