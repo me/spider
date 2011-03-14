@@ -359,7 +359,7 @@ module Spider; module Model; module Storage; module Db
          end
          
          def column_name(name)
-             super.upcase
+             shorten_identifier(super, 30).upcase
          end
          
          def sequence_name(name)
