@@ -1,8 +1,8 @@
 require 'monitor'
 
-module Spider; module Model; module Storage; module Db
+module Spider; module Model; module Storage
 
-    class DbConnectionPool
+    class ConnectionPool
         attr_reader :max_size
         attr_accessor :timeout, :retry
 
@@ -11,21 +11,13 @@ module Spider; module Model; module Storage; module Db
             @provider = provider
             @connection_mutex = Monitor.new
             @queue = @connection_mutex.new_cond
-            @max_size = Spider.conf.get('storage.db.pool.size')
+            @max_size = Spider.conf.get('storage.pool.size')
             @max_size = provider.max_connections if provider.max_connections && provider.max_connections < @max_size
-            @timeout = Spider.conf.get('storage.db.pool.timeout')
-            @retry = Spider.conf.get('storage.db.pool.retry')
+            @timeout = Spider.conf.get('storage.pool.timeout')
+            @retry = Spider.conf.get('storage.pool.retry')
             @connections = []
             @free_connections = []
             @thread_connections = {}
-            # if Spider.runmode == 'devel'
-            #     Thread.new do
-            #         loop do
-            #             Spider.logger.debug("DB Pool: #{@connections.length} connections, #{@free_connections.length} free")
-            #             sleep(10)
-            #         end
-            #     end
-            # end
         end
         
         def size
@@ -35,18 +27,27 @@ module Spider; module Model; module Storage; module Db
         def free_size
             @free_connections.length
         end
+        
+        def storage_type
+            @provider.storage_type
+        end
 
         def get_connection
-            Thread.current[:db_connections] ||= {}
+            if Spider.conf.get('storage.shared_connection')
+                @shared_conn ||= _checkout
+                return @shared_conn
+            end
+            Thread.current[:storage_connections] ||= {}
+            Thread.current[:storage_connections][storage_type] ||= {}
             @connection_mutex.synchronize do
                 #Spider.logger.debug("DB Pool (#{Thread.current}): trying to get connection")
-                if conn = Thread.current[:db_connections][@connection_params]
+                if conn = Thread.current[:storage_connections][storage_type][@connection_params]
                     #Spider.logger.debug("DB Pool (#{Thread.current}): returning thread connection #{conn}")
                     @free_connections.delete(conn)
                     conn
                 else
                     conn = _checkout
-                    Thread.current[:db_connections][@connection_params] = conn
+                    Thread.current[:storage_connections][storage_type][@connection_params] = conn
                     @thread_connections[Thread.current.object_id] = [conn, Time.now]
                     conn
                 end
@@ -60,10 +61,13 @@ module Spider; module Model; module Storage; module Db
         end
         
         def release(conn)
+            if Spider.conf.get('storage.shared_connection')
+                return
+            end
             @connection_mutex.synchronize do
                 #Spider.logger.debug("DB Pool (#{Thread.current}): releasing #{conn}")
                 @free_connections << conn
-                Thread.current[:db_connections].delete(@connection_params)
+                Thread.current[:storage_connections][storage_type].delete(@connection_params)
                 @thread_connections.delete(Thread.current.object_id)
                 @queue.signal
             end
@@ -102,7 +106,7 @@ module Spider; module Model; module Storage; module Db
                             create_new_connection if @free_connections.empty? && @connections.length < @max_size
                             if @free_connections.empty?
                                 Spider.logger.error "#{Thread.current} GOT TIRED WAITING, #{@queue.count_waiters} IN QUEUE"
-                                raise StorageException, "Unable to get a db connection in #{@timeout} seconds" if @timeout
+                                raise StorageException, "Unable to get a #{storage_type} connection in #{@timeout} seconds" if @timeout
                             end
                         end
                     end
@@ -111,7 +115,7 @@ module Spider; module Model; module Storage; module Db
                 end
                 conn = @free_connections.pop
                 while conn && !@provider.connection_alive?(conn)
-                    Spider.logger.warn("DB Pool (#{Thread.current}): connection #{conn} dead")
+                    Spider.logger.warn("Storage #{storage_type} Pool (#{Thread.current}): connection #{conn} dead")
                     remove_connection(conn)
                     conn = nil
                     conn = @free_connections.pop unless @free_connections.empty?
@@ -158,7 +162,7 @@ module Spider; module Model; module Storage; module Db
         
         def create_new_connection
             conn = @provider.new_connection(*@connection_params)
-            Spider.logger.debug("DB Pool (#{Thread.current}): creating new connection #{conn} (#{@connections.length} already in pool)")
+            Spider.logger.debug("Storage #{storage_type } Pool (#{Thread.current}): creating new connection #{conn} (#{@connections.length} already in pool)")
             @connections << conn
             @free_connections << conn
         end
@@ -168,4 +172,4 @@ module Spider; module Model; module Storage; module Db
     end
 
 
-end; end; end; end
+end; end; end
