@@ -269,7 +269,7 @@ module Spider
             doc = open(@path){ |f| Hpricot.XML(f) }
             root = get_el(doc)
             el = process_tags(root)
-            @overrides.each{ |o| apply_override(root, o) } if (@overrides)
+            @overrides.each{ |o| apply_override(root, o) } if @overrides
             root.search('tpl:placeholder').remove # remove empty placeholders
             owner_class = @owner ? @owner.class : @owner_class
             @assets += owner_class.assets if owner_class
