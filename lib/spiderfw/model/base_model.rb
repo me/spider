@@ -1491,7 +1491,7 @@ module Spider; module Model
             end
             value.loaded = true if (value.is_a?(QuerySet))
             element_loaded(element_name) if mark_loaded
-            set_reverse(element, value) if element.model?
+            set_reverse(element, value) if element.model? && value
             @modified_elements[element_name] = false
         end
         
