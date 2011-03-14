@@ -1614,7 +1614,7 @@ module Spider; module Model
         # If a block is given, the current autoload setting will be restored after yielding.
         def save_mode
             prev_autoload = autoload?
-            self.autoload = :save_mode
+            self.autoload = :save_mode unless prev_autoload == false
             if (block_given?)
                 yield
                 self.autoload = prev_autoload
