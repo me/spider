@@ -231,7 +231,18 @@ module Spider
                     mod = const_get_full(mod_name)
                     mod.mapper.truncate! if truncate
                     mod_data.each do |row|
-                        obj = mod.new(row)
+                        h = {}
+                        row.each do |k, v|
+                            if v.is_a?(String)
+                                if v[0..1] == '@@'
+                                    v = v[1..-1]
+                                elsif v[0].chr == '@'
+                                    v = eval(v[1..-1].to_s)
+                                end
+                            end
+                            h[k] = v
+                        end
+                        obj = mod.new(h)
                         obj.insert
                     end
                 end
