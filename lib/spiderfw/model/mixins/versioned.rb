@@ -196,11 +196,13 @@ module Spider; module Model
         
         module Mapper
             
-            def get_dependencies(obj, action)
+            def get_dependencies(task)
 
                 deps = []
+                obj = task.object
+                action = task.action
                 version_contents = obj.class.version_contents
-                task = MapperTask.new(obj, action)
+                
                 case action
                 when :save_version
                     #Spider.logger.debug("PROCESSING DEPS ON #{obj}")
