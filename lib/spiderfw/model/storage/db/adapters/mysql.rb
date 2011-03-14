@@ -84,6 +84,11 @@ module Spider; module Model; module Storage; module Db
             conn.close
         end
         
+        def configure(conf)
+            super
+            @configuration['default_engine'] ||= Spider.conf.get('db.mysql.default_engine')
+        end
+        
         def release
             begin
                 #Spider::Logger.debug("MYSQL #{self.object_id} in thread #{Thread.current} releasing connection #{@conn}")
@@ -298,6 +303,12 @@ module Spider; module Model; module Storage; module Db
              sql = super
              sql += " AUTO_INCREMENT" if attributes[:autoincrement]
              return sql
+         end
+         
+         def sql_create_table(create)
+             sqls = super
+             sqls[0] += " ENGINE=#{@configuration['default_engine']}" if @configuration['default_engine']
+             sqls
          end
          
          def function(func)

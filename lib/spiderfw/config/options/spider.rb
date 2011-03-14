@@ -58,6 +58,9 @@ module Spider
     
     config_option 'storage.db.replace_debug_vars', _("Replace bound variables in debug sql"), :type => Spider::DataTypes::Bool,
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
+        
+    config_option 'db.mysql.default_engine', _("The engine to use when creating tables"),
+        :default => lambda{ Spider.runmode == 'test' ? 'InnoDB' : 'MyISAM' }
     
     config_option 'storages', _("A list of named storages"), :type => :conf
     config_option 'storages.x.url', _("Connection url to the storage"), :type => String, :required => true
