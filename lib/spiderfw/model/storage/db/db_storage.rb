@@ -1,6 +1,5 @@
 require 'spiderfw/model/storage/base_storage'
 require 'spiderfw/model/mappers/db_mapper'
-require 'spiderfw/model/storage/db/db_connection_pool'
 require 'iconv'
 
 module Spider; module Model; module Storage; module Db
@@ -31,60 +30,19 @@ module Spider; module Model; module Storage; module Db
             attr_reader :type_synonyms
             # Type conversions which do not lose data. See also #safe_schema_conversion?
             attr_reader :safe_conversions
-            # An Hash of DB capabilities. The default is 
-            # {:autoincrement => false, :sequences => true, :transactions => true}
-            # (The BaseStorage class provides file sequences in case the subclass does not support them.)
-            attr_reader :capabilities
 
-            # Returns a new connection. Must be implemented by the subclasses; args are implementation specific.
-            def new_connection(*args)
-                raise "Unimplemented"
+
+            def storage_type
+                :db
             end
             
-            def max_connections
-                nil
+            def inherited(subclass)
+                subclass.instance_variable_set("@reserved_keywords", @reserved_keywords)
+                subclass.instance_variable_set("@type_synonyms", @type_synonyms)
+                subclass.instance_variable_set("@safe_conversions", @safe_conversions)
+                super
             end
-            
-            def connection_pools
-                @pools ||= {}
-            end
-            
-            def get_connection(*args)
-                @pools ||= {}
-                @pools[args] ||= DbConnectionPool.new(args, self)
-                @pools[args].get_connection
-            end
-            
-            # Frees a connection, relasing it to the pool
-            def release_connection(conn, conn_params)
-                return unless conn
-                return unless @pools && @pools[conn_params]
-                @pools[conn_params].release(conn)
-            end
-            
-            # Removes a connection from the pool.
-            def remove_connection(conn, conn_params)
-                return unless conn
-                return unless @pools && @pools[conn_params]
-                @pools[conn_params].remove(conn)
-            end
-            
-            def disconnect(conn)
-                raise "Virtual"
-            end
-                
-            # Checks whether a connection is still alive. Must be implemented by subclasses.
-            def connection_alive?(conn)
-                raise "Virtual"
-            end
-            
-             def inherited(subclass)
-                 subclass.instance_variable_set("@reserved_keywords", @reserved_keywords)
-                 subclass.instance_variable_set("@type_synonyms", @type_synonyms)
-                 subclass.instance_variable_set("@safe_conversions", @safe_conversions)
-                 subclass.instance_variable_set("@capabilities", @capabilities)
-             end
-            
+
         end
         
         def query_start
@@ -100,70 +58,11 @@ module Spider; module Model; module Storage; module Db
             Spider.logger.info("Db query (#{@instance_name}) done in #{diff}ms")
         end
         
-        def curr
-            Thread.current[:db_storages] ||= {}
-            Thread.current[:db_storages][@connection_params] ||= {
-                :transaction_nesting => 0, :savepoints => []
-            }
-        end
-        
-        def connection_pool
-            self.class.connection_pools[@connection_params]
-        end
-        
         # The constructor takes the connection URL, which will be parsed into connection params.
         def initialize(url)
             super
         end
         
-        # Instantiates a new connection with current connection params.
-        def connect
-            return self.class.get_connection(*@connection_params)
-            #Spider::Logger.debug("#{self.class.name} in thread #{Thread.current} acquired connection #{@conn}")
-        end
-        
-        # True if currently connected.
-        def connected?
-            curr[:conn] != nil
-        end
-
-        
-        # Returns the current connection, or creates a new one.
-        # If a block is given, will release the connection after yielding.
-        def connection
-            # is_connected = connected?
-            #             Spider.logger.debug("#{self} already connected with conn #{@conn}") if is_connected
-            #             connect unless is_connected
-            curr[:conn] = connect
-            if block_given?
-                yield curr[:conn]
-                release # unless is_connected
-                return true
-            else
-                #debugger unless @conn
-                return curr[:conn]
-            end
-        end
-        
-        def self.connection_attributes
-            @connection_attributes ||= {}
-        end
-        
-        def connection_attributes
-            self.class.connection_attributes[connection] ||= {}
-        end
-        
-        # Releases the current connection to the pool.
-        def release
-            # The subclass should check if the connection is alive, and if it is not call remove_connection instead
-            c = curr[:conn]
-            #Spider.logger.debug("#{self} in thread #{Thread.current} releasing #{curr[:conn]}")
-            curr[:conn] = nil
-            self.class.release_connection(c, @connection_params)
-            #Spider.logger.debug("#{self} in thread #{Thread.current} released #{curr[:conn]}")
-            return nil
-            #@conn = nil
-        end
         
         # Returns the default mapper for the storage.
         # If the storage subclass contains a MapperExtension module, it will be mixed-in with the mapper.
@@ -175,106 +74,6 @@ module Spider; module Model; module Storage; module Db
             return mapper
         end
         
-        # True if given named capability is supported by the DB.
-        def supports?(capability)
-            self.class.capabilities[capability]
-        end
-        
-        def supports_transactions?
-            return self.class.capabilities[:transactions]
-        end
-        
-        def transactions_enabled?
-            @configuration['enable_transactions'] && supports_transactions?
-        end
-        
-        def start_transaction
-            return unless transactions_enabled?
-            return savepoint("point#{curr[:savepoints].length}") if in_transaction?
-            curr[:transaction_nesting] += 1
-            Spider.logger.debug("#{self.class.name} starting transaction for connection #{connection.object_id}")
-            do_start_transaction
-            return true
-        end
-        
-        # May be implemented by subclasses.
-        def do_start_transaction
-           raise StorageException, "The current storage does not support transactions" 
-        end
-        
-        def in_transaction
-            if in_transaction?
-                curr[:transaction_nesting] += 1
-                return true
-            else
-                start_transaction
-                return false
-            end
-        end
-        
-        def in_transaction?
-            return false
-        end
-        
-        def commit
-            return false unless transactions_enabled?
-            raise StorageException, "Commit without a transaction" unless in_transaction?
-            return curr[:savepoints].pop unless curr[:savepoints].empty?
-            commit!
-        end
-        
-        def commit_or_continue
-            return false unless transactions_enabled?
-            raise StorageException, "Commit without a transaction" unless in_transaction?
-            if curr[:transaction_nesting] == 1
-                commit
-                return true
-            else
-                curr[:transaction_nesting] -= 1
-            end
-        end
-        
-        def commit!
-            Spider.logger.debug("#{self.class.name} commit connection #{curr[:conn].object_id}")
-            curr[:transaction_nesting] = 0
-            do_commit
-            release
-        end
-        
-        def do_commit
-            raise StorageException, "The current storage does not support transactions" 
-        end
-        
-        def rollback
-            raise "Can't rollback in a nested transaction" if curr[:transaction_nesting] > 1
-            return rollback_savepoint(curr[:savepoints].last) unless curr[:savepoints].empty?
-            rollback!
-        end
-        
-        def rollback!
-            curr[:transaction_nesting] = 0
-            Spider.logger.debug("#{self.class.name} rollback")
-            do_rollback
-            curr[:savepoints] = []
-            release
-        end
-        
-        def do_rollback
-            raise StorageException, "The current storage does not support transactions" 
-        end
-        
-        def savepoint(name)
-            curr[:savepoints] << name
-        end
-        
-        def rollback_savepoint(name=nil)
-            if name
-                curr[:savepoints] = curr[:savepoints][0,(curr[:savepoints].index(name))]
-                name
-            else
-                curr[:savepoints].pop
-            end
-        end
         
         def lock(table, mode=:exclusive)
             lockmode = case(mode)
@@ -340,6 +139,9 @@ module Spider; module Model; module Storage; module Db
         def column_attributes(type, attributes)
             db_attributes = {}
             case type.name
+            when 'Spider::DataTypes::PK'
+                db_attributes[:autoincrement] = true if supports?(:autoincrement)
+                db_attributes[:length] = 11
             when 'String', 'Spider::DataTypes::Text'
                 db_attributes[:length] = attributes[:length] if (attributes[:length])
             when 'Float'
@@ -387,15 +189,6 @@ module Spider; module Model; module Storage; module Db
         #   Preparing values                                             #
         ##################################################################
         
-        # Prepares a value for saving.
-        def value_for_save(type, value, save_mode)
-            return prepare_value(type, value)
-        end
-        
-        # Prepares a value that will be used in a condition.
-        def value_for_condition(type, value)
-            return prepare_value(type, value)
-        end
         
         # Converts a value loaded from the DB to return it to the mapper.
         def value_to_mapper(type, value)

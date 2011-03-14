@@ -275,8 +275,8 @@ module Spider; module Model
                     assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel))
                     assoc_type.attributes[:sub_model] = self
                     assoc_type.attributes[:sub_model_element] = name
-                    assoc_type.element(attributes[:junction_id], Fixnum, :primary_key => true, :autoincrement => true, :hidden => true) if attributes[:junction_id]
                     assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice, :junction_reference => true) # FIXME: must check if reverse exists?
+                    assoc_type.element(attributes[:junction_id], Spider::DataTypes::PK, :primary_key => true, :autoincrement => true, :hidden => true) if attributes[:junction_id]
                     # FIXME! fix in case of clashes with existent elements
                     assoc_type.element(other_name, orig_type, :association => :choice, :junction_reference => true)
                     assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
@@ -997,6 +997,8 @@ module Spider; module Model
         # Sets the url or the name of the storage to use
         def self.use_storage(name=nil)
             @use_storage = name if name
+            @use_storage ||= self.attributes[:sub_model].use_storage if self.attributes[:sub_model]
+            @use_storage ||= self.superclass.use_storage if self.superclass.respond_to?(:use_storage) && self.superclass.use_storage
             @use_storage
         end
         
@@ -1004,10 +1006,8 @@ module Spider; module Model
         # The storage to use can be set with #use_storage
         def self.storage
             return @storage if @storage
-            if (!@use_storage && self.attributes[:sub_model])
-                @use_storage = self.attributes[:sub_model].use_storage
-            end
-            return @use_storage ? get_storage(@use_storage) : get_storage
+            st = self.use_storage
+            return st ? get_storage(st) : get_storage
         end
         
         # Returns an instancethe storage corresponding to the storage_string if it is given, 
@@ -1433,7 +1433,7 @@ module Spider; module Model
         # appropriate type.
         def self.prepare_value(element, value)
             element = self.class.elements[element] unless element.is_a?(Element)
-            if (element.type < Spider::DataType)
+            if element.type < Spider::DataType && element.type.force_wrap?
                 value = element.type.from_value(value) unless value.is_a?(element.type)
                 if value
                     element.type.take_attributes.each do |a|

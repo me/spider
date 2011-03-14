@@ -66,9 +66,8 @@ module Spider; module Model; module Storage; module Db; module Connectors
         
         def prepare_value(type, value)
             value = super
-            if (type < Spider::Model::BaseModel)
-                type = type.primary_keys[0].type
-            end
+            type = type.primary_keys[0].type if type < Spider::Model::BaseModel
+            type = Fixnum if type == Spider::DataTypes::PK
             return Oracle::OracleNilValue.new(Spider::Model.ruby_type(type)) if (value == nil)
             case type.name
             when 'Spider::DataTypes::Binary'
@@ -84,7 +83,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
                     debug_vars = bind_vars.map{|var| var = var.to_s; var && var.length > 50 ? var[0..50]+"...(#{var.length-50} chars more)" : var}
                 end
                 curr[:last_executed] = [sql, bind_vars]
-                if (Spider.conf.get('storage.db.replace_debug_vars'))
+                if Spider.conf.get('storage.db.replace_debug_vars')
                     debug("oci8 #{connection} executing: "+sql.gsub(/:(\d+)/){
                         i = $1.to_i
                         v = bind_vars[i-1]

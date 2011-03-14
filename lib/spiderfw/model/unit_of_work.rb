@@ -87,23 +87,15 @@ module Spider; module Model
         def find_dependencies(model_task)
             return if (@processed_tasks[model_task])
             @processed_tasks[model_task] = true
-            dependencies = model_task.object.mapper.get_dependencies(model_task.object, model_task.action).uniq
+            dependencies = model_task.object.mapper.get_dependencies(model_task)
             dependencies.each do |dep|
                 had0 = @tasks[dep[0]]
-                @tasks[dep[0]] ||= dep[0]
+                @tasks[dep[0]] = dep[0] unless had0
                 had1 = @tasks[dep[1]]
-                @tasks[dep[1]] ||= dep[1]
+                @tasks[dep[1]] = dep[1] unless had1
                 @tasks[dep[0]] << @tasks[dep[1]]
-                if had0
-                    dep[0].dependencies.each{ |d| had0.dependencies << d }
-                else
-                    find_dependencies(dep[0]) 
-                end
-                if had1
-                    dep[1].dependencies.each{ |d| had1.dependencies << d }
-                else
-                    find_dependencies(dep[1])
-                end
+                find_dependencies(dep[0]) unless had0
+                find_dependencies(dep[1]) unless had1
             end
         end
         
@@ -142,17 +134,14 @@ module Spider; module Model
             @actions[obj.object_id] << [action, params]
             @objects[obj.object_id] = obj
             @new_objects << obj unless curr
-            traverse(obj, action, params) if action == :save
+            if action == :save
+                children = obj.mapper.children_for_unit_of_work(obj, action)
+                children.each do |child|
+                    add(child, action, params)
+                end
+            end
         end
         
-        def traverse(obj, action, params)
-            obj.class.elements_array.each do |el|
-                next unless obj.element_has_value?(el)
-                next unless el.model?
-                add(obj.get(el), action, params)
-            end
-            
-        end
         
         def to_delete(obj)
             

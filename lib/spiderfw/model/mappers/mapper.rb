@@ -50,6 +50,10 @@ module Spider; module Model
             mapped?(element) || element.attributes[:sortable]
         end
         
+        def base_type(type)
+            Spider::Model.base_type(type)
+        end
+        
         # Utility methods
         
         # An array of mapped elements.
@@ -160,22 +164,28 @@ module Spider; module Model
             end
             done_extended = []
             unless @unit_of_work_task
-                if (@model.extended_models)
-                    @model.extended_models.each do |m, el|
-                        sub = obj.get(el)
-                        done_extended << el
-                        if mode == :update || sub.class.auto_primary_keys? || sub._check_if_saved
-                            sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
-                        else
-                            sub.insert unless sub.in_storage?
-                        end
+                save_extended_models(obj, mode)
+                save_integrated(obj, mode)
+            end
+        end
+        
+        def save_extended_models(obj, mode)
+            if @model.extended_models
+                @model.extended_models.each do |m, el|
+                    sub = obj.get(el)
+                    if mode == :update || sub.class.auto_primary_keys? || sub._check_if_saved
+                        sub.save if (obj.element_modified?(el) || !obj.primary_keys_set?) && sub.mapper.class.write?
+                    else
+                        sub.insert unless sub.in_storage?
                     end
                 end
-                @model.elements_array.select{ |el| !el.integrated? && el.attributes[:integrated_model] }.each do |el|
-                    next if done_extended.include?(el.name)
-                    sub_obj = obj.get(el)
-                    sub_obj.save if sub_obj && sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
-                end
+            end
+        end
+        
+        def save_integrated(obj, mode)
+            @model.elements_array.select{ |el| !el.integrated? && el.attributes[:integrated_model] && !el.attributes[:extended_model] }.each do |el|
+                sub_obj = obj.get(el)
+                sub_obj.save if sub_obj && sub_obj.modified? && obj.element_modified?(el) && obj.get(el).mapper.class.write?
             end
         end
         
@@ -211,7 +221,31 @@ module Spider; module Model
             prev_autoload = obj.autoload?
             obj.save_mode
             storage.in_transaction
-            if (@model.extended_models && !@model.extended_models.empty?)
+            save_mode = determine_save_mode(obj)
+            before_save(obj, save_mode)
+            # @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
+            #     obj.get(el).save if obj.element_modified?(el)
+            # end
+            
+            if (save_mode == :update)
+                do_update(obj)
+            else
+                do_insert(obj)
+            end
+            after_save(obj, save_mode)
+            storage.commit_or_continue
+            obj.autoload = prev_autoload
+            unless @doing_save_done
+                @doing_save_done = true
+                save_done(obj, save_mode) 
+            end
+            @doing_save_done = false
+            obj.trigger(:saved, save_mode)
+            true
+        end
+        
+        def determine_save_mode(obj)
+            if @model.extended_models && !@model.extended_models.empty?
                 is_insert = false
                 # Load local primary keys if they exist
                 
@@ -228,25 +262,6 @@ module Spider; module Model
             else
                 save_mode = obj.in_storage? ? :update : :insert
             end
-            before_save(obj, save_mode)
-            # @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-            #     obj.get(el).save if obj.element_modified?(el)
-            # end
-            if (save_mode == :update)
-                do_update(obj)
-            else
-                do_insert(obj)
-            end
-            after_save(obj, save_mode)
-            storage.commit_or_continue
-            obj.autoload = prev_autoload
-            unless @doing_save_done
-                @doing_save_done = true
-                save_done(obj, save_mode) 
-            end
-            @doing_save_done = false
-            obj.trigger(:saved, save_mode)
-            true
         end
         
 
@@ -652,7 +667,7 @@ module Spider; module Model
         
         
         # Transforms a Storage result into an object. Should be implemented by subclasses.
-        def map(request, result, obj)
+        def map(request, result, obj_or_model)
             raise MapperError, "Unimplemented"
         end
         
@@ -751,12 +766,71 @@ module Spider; module Model
             return res
         end
         
+        # Prepares a value going to be bound to an insert or update statement
+         def map_save_value(type, value, save_mode=:save)
+             value = map_value(type, value, :save)
+             return @storage.value_for_save(Model.simplify_type(type), value, save_mode)
+         end
 
-        # Converts a value from the storage to a value for the object.
-        def map_back_value(type, value)
-            raise MapperError, "Unimplemented"
+        # Prepares a value for a condition.
+        def map_condition_value(type, value)
+            if value.is_a?(Range)
+                return Range.new(map_condition_value(type, value.first), map_condition_value(type, value.last))
+            end
+            return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
+            value = map_value(type, value, :condition)
+            return @storage.value_for_condition(Model.simplify_type(type), value)
+        end
+
+        def storage_value_to_mapper(type, value)
+            storage.value_to_mapper(type, value)
         end
         
+        
+        # Converts a value in one accepted by the storage.
+        def map_value(type, value, mode=nil)
+            return value if value.nil?
+            if type == Spider::DataTypes::PK
+                value = value.obj if value.is_a?(Spider::DataTypes::PK)
+            elsif type < Spider::DataType
+                value = type.from_value(value) unless value.is_a?(type)
+                value = value.map(self.type)
+            elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
+                value = type.primary_keys.map{ |key| value.send(key.name) }
+            end
+            value
+        end
+        
+
+        # Converts a storage value back to the corresponding base type or DataType.
+        def map_back_value(type, value)
+            value = value[0] if value.class == Array
+            value = storage_value_to_mapper(Model.simplify_type(type), value)
+
+            if type <= Spider::DataTypes::PK
+                return value.is_a?(Spider::DataTypes::PK) ? value.obj : value
+            elsif type < Spider::DataType && type.maps_back_to
+                type = type.maps_back_to
+            end
+            case type.name
+            when 'Fixnum'
+                return value ? value.to_i : nil
+            when 'Float'
+                return value ? value.to_f : nil
+            when 'Spider::DataTypes::Bool'
+                return value if value.nil?
+                return value == 1 ? true : false
+            end
+            return nil unless value
+            case type.name
+            when 'Date', 'DateTime'
+                return type.parse(value) unless value.is_a?(Date)
+            end
+            if (type < Spider::DataType)
+                value = type.from_value(value)
+            end
+            return value
+        end        
         
         ##############################################################
         #   Strategy                                                 #
@@ -954,8 +1028,18 @@ module Spider; module Model
         end
         
         # Returns task dependecies for the UnitOfWork. May be implemented by subclasses.
-        def get_dependencies(obj, action)
+        def get_dependencies(task)
             return []
+        end
+        
+        def children_for_unit_of_work(obj, action)
+            children = []
+            obj.class.elements_array.each do |el|
+                next unless obj.element_has_value?(el)
+                next unless el.model?
+                children << obj.get(el)
+            end
+            children
         end
         
         

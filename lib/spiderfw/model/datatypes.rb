@@ -1,4 +1,5 @@
 require 'spiderfw/model/data_type'
+require 'spiderfw/model/datatypes/pk'
 require 'spiderfw/model/datatypes/bool'
 require 'spiderfw/model/datatypes/text'
 require 'spiderfw/model/datatypes/decimal'

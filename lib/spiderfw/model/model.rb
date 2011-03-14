@@ -8,7 +8,7 @@ module Spider
         
         @base_types = [
             String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Time,
-            Spider::DataTypes::Bool
+            Spider::DataTypes::Bool, Spider::DataTypes::PK
         ]
         
         # Base types are:
@@ -50,7 +50,7 @@ module Spider
             return klass if base_types.include?(klass)
             return klass if klass <= Spider::Model::BaseModel
             return t if t = map_types[klass]
-            return klass.maps_to if (klass.subclass_of?(Spider::DataType) && klass.maps_to)
+            return klass.maps_to if klass.subclass_of?(Spider::DataType) && klass.maps_to
             return klass.superclass if klass.superclass
             return nil
         end
@@ -136,7 +136,7 @@ module Spider
         def self.no_context(&proc)
             uow = self.unit_of_work
             self.unit_of_work = nil
-            im = self.identity_mapper
+            im = self.identity_mapper            
             self.identity_mapper = nil
             yield
             self.identity_mapper = im

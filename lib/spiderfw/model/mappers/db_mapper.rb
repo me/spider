@@ -16,6 +16,10 @@ module Spider; module Model; module Mappers
             true
         end
         
+        def pk
+            [Fixnum, {:autoincrement => true}]
+        end
+        
         # Checks if the schema has some key to reach element. 
         def have_references?(element) #:nodoc:
             element = @model.elements[element] unless element.is_a?(Element)
@@ -98,7 +102,6 @@ module Spider; module Model; module Mappers
                         # next if (element.model? && (!(element_val = obj.get(element)) || !))
                         next if (element.integrated?)
                         element_val = nil if element.model? && element_val.is_a?(BaseModel) && !element_val.primary_keys_set?
-                        
                         if (element.model?)
                             element.model.primary_keys.each do |key|
                                 # FIXME! only works with one primary key
@@ -242,12 +245,12 @@ module Spider; module Model; module Mappers
         
         # Implements the Mapper#map method.
         # Converts a DB result row to an object.
-        def map(request, result, obj)
+        def map(request, result, obj_or_model)
             if (!request)
                 request = Request.new
                 @model.elements_array.each{ |el| request.request(el.name) }
             end
-            model = obj.is_a?(Class) ? obj : obj.model
+            model = obj_or_model.is_a?(Class) ? obj_or_model : obj_or_model.model
             data = {}
             request.keys.each do |element_name|
                 element = @model.elements[element_name]
@@ -798,6 +801,7 @@ module Spider; module Model; module Mappers
         # Returns a type accepted by the storage for type.
         def map_type(type)
             st = type
+            return Fixnum if st <= Spider::DataTypes::PK
             while (st && !storage.class.base_types.include?(st))
                 st = Model.simplify_type(st)
             end
@@ -808,66 +812,17 @@ module Spider; module Model; module Mappers
         # Converts a value in one accepted by the storage.
         def map_value(type, value, mode=nil)
             return value if value.nil?
-             if (type < Spider::DataType && value)
-                 value = type.from_value(value) unless value.is_a?(type)
-                 value = value.map(self.type)
-             elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
-                 value = type.primary_keys.map{ |key| value.send(key.name) }
-             else
-                 case type.name
-                 when 'Spider::DataTypes::Bool'
-                     value = value ? 1 : 0
-                 end
-             end
-             return value
-        end
-        
-        # Prepares a value going to be bound to an insert or update statement
-         def map_save_value(type, value, save_mode)
-             value = map_value(type, value, :save)
-             return @storage.value_for_save(Model.simplify_type(type), value, save_mode)
-         end
-
-        # Prepares a value for a condition.
-        def map_condition_value(type, value)
-            if value.is_a?(Range)
-                return Range.new(map_condition_value(type, value.first), map_condition_value(type, value.last))
-            end
-            return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
-            value = map_value(type, value, :condition)
-            return @storage.value_for_condition(Model.simplify_type(type), value)
-        end
-
-        def storage_value_to_mapper(type, value)
-            storage.value_to_mapper(type, value)
-        end
-
-        # Converts a storage value back to the corresponding base type or DataType.
-        def map_back_value(type, value)
-            value = value[0] if value.class == Array
-            value = storage_value_to_mapper(Model.simplify_type(type), value)
-            if (type < Spider::DataType && type.maps_back_to)
-                type = type.maps_back_to
-            end
+            
             case type.name
-            when 'Fixnum'
-                return value ? value.to_i : nil
-            when 'Float'
-                return value ? value.to_f : nil
             when 'Spider::DataTypes::Bool'
-                return value if value.nil?
-                return value == 1 ? true : false
+                value = value ? 1 : 0
+            else
+                value = super
             end
-            return nil unless value
-            case type.name
-            when 'Date', 'DateTime'
-                return type.parse(value) unless value.is_a?(Date)
-            end
-            if (type < Spider::DataType)
-                value = type.from_value(value)
-            end
+            
             return value
-        end        
+        end
+      
         
         ##############################################################
         #   Primary keys                                             #
@@ -884,9 +839,10 @@ module Spider; module Model; module Mappers
         ##############################################################
         
         # UnitOfWork dependencies.
-        def get_dependencies(obj, action)
+        def get_dependencies(task)
             deps = []
-            task = MapperTask.new(obj, action)
+            obj = task.object
+            action = task.action
             deps = []
             case action
             when :keys
@@ -906,7 +862,7 @@ module Spider; module Model; module Mappers
                     set.each do |set_obj|
                         # set_obj.set(el.reverse, obj) if el.reverse
                         sub_task = MapperTask.new(set_obj, :keys)
-                        sub_task << prev_task if prev_task
+                        deps << [sub_task, prev_task] if prev_task
                         deps << [task, sub_task]
                         prev_task = sub_task
                     end
@@ -919,7 +875,7 @@ module Spider; module Model; module Mappers
                         set.each do |set_obj|
                             # set_obj.set(el.reverse, obj) if el.reverse
                             sub_task = MapperTask.new(set_obj, :save)
-                            sub_task << prev_task if prev_task
+                            deps << [sub_task, prev_task] if prev_task
                             deps << [sub_task, MapperTask.new(obj, :keys)]
                             prev_task = sub_task
                         end
@@ -975,6 +931,14 @@ module Spider; module Model; module Mappers
         def storage_column_type(type, attributes)
             @storage.column_type(type, attributes)
         end
+        
+        def base_type(type)
+            if type <= Spider::DataTypes::PK
+                Fixnum
+            else
+                super
+            end
+        end
 
         # Autogenerates schema. Returns a DbSchema.
         def generate_schema(schema=nil)
@@ -996,7 +960,7 @@ module Spider; module Model; module Mappers
                 next if element.attributes[:added_reverse] && element.has_single_reverse?
                 if (!element.model?)
                     column = schema.columns[element.name]
-                    storage_type = Spider::Model.base_type(element.type)
+                    storage_type = base_type(element.type)
                     db_attributes = column.attributes if column
                     if (!db_attributes || db_attributes.empty?)
                         db_attributes = @storage.column_attributes(storage_type, element.attributes)
@@ -1018,6 +982,7 @@ module Spider; module Model; module Mappers
                     if (!element.multiple? && !element.attributes[:junction] && !element.attributes[:condition]) # 1/n <-> 1
                         current_schema = schema.foreign_keys[element.name] || {}
                         foreign_key_constraints = {}
+                        el_mapper = element.type.mapper
                         element.type.primary_keys.each do |key|
                             if key.model? # fixme: only works with single primary key model (after the first)
                                 curr_key = key
@@ -1036,7 +1001,8 @@ module Spider; module Model; module Mappers
                                 :precision => key_attributes[:precision]
                             }
                             column = current_schema[key.name]
-                            column_type = element.attributes[:db_column_type] || @storage.column_type(key_type, key_attributes)
+                            key_storage_type = el_mapper.base_type(key_type)
+                            column_type = element.attributes[:db_column_type] || storage_column_type(key_storage_type, key_attributes)
                             unless column
                                 column_name = element.attributes[:db_column_name] || @storage.column_name("#{element.name}_#{key.name}")
                                 column_attributes = @storage.column_attributes(key_type, key_attributes)
@@ -1194,11 +1160,12 @@ module Spider; module Model; module Mappers
                         # Spider.logger.debug(fields[field])
                         unless @storage.safe_schema_conversion?(current_fields[field], fields[field]) || force
                             unsafe << field 
+                            next
                         end
                         alter_fields << field_hash
                     end
                 end
-                raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
+                
             end
             alter_attributes = {}
             if (current[:primary_keys] != attributes[:primary_keys])
@@ -1216,6 +1183,7 @@ module Spider; module Model; module Mappers
                 :attributes => alter_attributes,
                 :current => current
             })
+            raise SchemaSyncUnsafeConversion.new(unsafe) unless unsafe.empty?
         end
         
         ##############################################################

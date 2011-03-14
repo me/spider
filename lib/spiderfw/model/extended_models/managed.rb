@@ -12,7 +12,7 @@ module Spider; module Model
     # Other modules may be mixed-in to add default functionality to managed models.
     
     class Managed < BaseModel
-        element :id, Fixnum, {
+        element :id, PK, {
             :primary_key => true, 
             :autoincrement => true, 
             :read_only => true, 
