@@ -67,7 +67,8 @@ module Spider
     config_option 'storages.x.encoding', _("Encoding the DB uses"), :type => String
     config_option 'storages.x.enable_transactions', _("Whether to enable transactions on the db"), :type => Spider::DataTypes::Bool, :default => true
     
-    config_option 'debugger.start', _("Start the debugger"), :type => Spider::DataTypes::Bool
+    config_option 'debugger.start', _("Start the debugger"), :type => Spider::DataTypes::Bool,
+        :default => lambda{ ['test', 'devel'].include?(Spider.runmode) ? true : false }
     config_option 'profiling.enable', _("Enable on-request profiling"), :type => Spider::DataTypes::Bool
     config_option 'request.mutex', _("Respond to requests sequentially"), :default => false
     
