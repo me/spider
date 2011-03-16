@@ -316,6 +316,9 @@ module Spider
             root_block = TemplateBlocks.parse_element(root, self.class.allowed_blocks, self)
             if doc.children && doc.children[0].is_a?(Hpricot::DocType)
                 root_block.doctype = doc.children[0]
+                options[:doctype] = DocType.new(root_block.doctype)
+            else
+                options[:doctype] ||= DocType.new(Spider.conf.get('template.default_doctype'))
             end
             options[:root] = true
             options[:owner] = @owner
@@ -865,7 +868,7 @@ module Spider
             end
             yield :plain, scanner.rest
         end
-        
+                
     end
     
     # Class holding compiled template code.
@@ -897,6 +900,46 @@ module Spider
     end
     
     class TemplateCompileError < RuntimeError
+    end
+    
+    class DocType
+        attr_reader :type, :variant
+        
+        def initialize(type_or_str)
+            if type_or_str.is_a?(Symbol)
+                @type = type_or_str
+            else
+                @type = parse(type_or_str.to_s)
+            end
+        end
+        
+        def parse(str)
+            if str =~ /DOCTYPE HTML PUBLIC.+\sHTML/i
+                @type = :html4
+            elsif str =~ /DOCTYPE HTML PUBLIC.+\sXHTML/i
+                @type = :xhtml
+            elsif str.downcase == '<!doctype html>'
+                @type = :html5
+            end
+            if str =~ /strict/i
+                @variant = :strict
+            elsif str =~ /transitional/i
+                @variant = :transitional
+            end
+        end
+        
+        def html?
+            @type == :html4 || @type == :html5
+        end
+        
+        def xhtml?
+            @type == :xhtml
+        end
+        
+        def strict?
+            @variant == :strict
+        end
+        
     end
     
 end

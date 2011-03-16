@@ -13,7 +13,7 @@ module Spider; module TemplateBlocks
             c += html.get_start(options)
             c += "end\n"
             c, init = html.compile_content(c, init, options)
-            tag_end = html.get_end
+            tag_end = html.get_end(options)
             if (tag_end)
                 c += "if (#{cond})\n"
                 c += "  $out <<  '#{tag_end}'\n"

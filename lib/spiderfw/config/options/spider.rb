@@ -46,6 +46,8 @@ module Spider
     config_option 'template.cache.no_check', _("Never recompile templates"), :default => true, :type => Spider::DataTypes::Bool
     config_option 'template.cache.check_files', _("Check on every request if templates are changed"), :default => true,
         :type => Spider::DataTypes::Bool
+    config_option 'template.default_doctype', _("Default doctype to use for templates"), :type => Symbol, :default => :html5,
+        :choices => [:html4, :html5, :xhtml]
     
     
     #config_option 'template.safe', _("Run templates in safe mode"), { :default => false }

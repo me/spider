@@ -3,6 +3,7 @@ require 'spiderfw/templates/template_blocks'
 module Spider; module TemplateBlocks
     
     class HTML < Block
+        HTML_NO_CLOSE = ['br', 'img']
         
         def compile(options={})
             c = ""
@@ -18,7 +19,7 @@ module Spider; module TemplateBlocks
             c += "unless self[:widget][:target_only] && !self[:widget][:is_target]\n" if (options[:mode] == :widget && is_root)
             c, init = compile_content(c, init, options)
             c += "end\n"  if (options[:mode] == :widget && is_root)
-            end_tag = get_end
+            end_tag = get_end(options)
             c += "$out << '#{end_tag}'\n" if end_tag
             return CompiledBlock.new(init, c)
         end
@@ -55,7 +56,8 @@ module Spider; module TemplateBlocks
             return start
         end
         
-        def get_end
+        def get_end(options)
+            return nil if options[:doctype].html? && HTML_NO_CLOSE.include?(@el.name.downcase)
             str = escape_text(@el.etag.inspect) if @el.etag
             str = str[1..-2] if str && str[0].chr == '"' # FIXME:  This is a workaround Hpricot 0.6 and 0.8 differences
             return str
