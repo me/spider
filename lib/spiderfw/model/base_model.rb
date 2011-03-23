@@ -1669,6 +1669,13 @@ module Spider; module Model
             return true
         end
         
+        # Like ==, but other must be of the same class (no subclasses)
+        def eql?(other)
+            return false unless other.class == self.class
+            return self == other
+        end
+        
+        
         ##############################################################
         #   Iterators                                                #
         ##############################################################
