@@ -280,9 +280,11 @@ module Spider
         class TypeError < ArgumentError
         end
         
-        def self.sort(models)
-
-            sorter = Sorter.new(models)
+        def self.sort(models, options={})
+            options = {
+                :association_dependencies => true
+            }.merge(options)
+            sorter = Sorter.new(models, options)
             sorter.sort
         end
         
@@ -291,11 +293,12 @@ module Spider
         class Sorter
             include TSort
             
-            def initialize(models)
+            def initialize(models, options={})
                 @model_tasks = {}
                 @processed_deps = {}
                 @processed = {}
                 @models = models
+                @options = options
                 @models.each{ |m| collect_dependencies(m) }
             end
             
@@ -314,6 +317,14 @@ module Spider
                  if @models.include?(model.superclass)
                      @model_tasks[model.superclass] ||= SortTask.new(model.superclass)
                      @model_tasks[model] << @model_tasks[model.superclass]
+                 end
+                 if @options[:association_dependencies]
+                     model.elements.each do |name, element|
+                         if element.model? && !element.attributes[:added_reverse] && @models.include?(element.type)
+                             @model_tasks[element.type] ||= SortTask.new(element.type)
+                             @model_tasks[model] << @model_tasks[element.type]
+                         end
+                     end
                  end
              end
 
