@@ -219,12 +219,7 @@ Spider.Widget = Class.extend({
 			}
 			e.preventDefault();
 			var a = $(e.target);
-			var url = $(this).attr('href');
-			var parts = url.split('?');
-			url = parts[0]; //+'.json';
-			url += '?';
-			if (parts[1]) url += parts[1]+'&';
-			url += '_wt='+w.path;
+			var url = w.urlToAction($(this).attr('href'));
 			if (options.before) options.before();
 			w.setLoading();
 			$.ajax({
@@ -240,6 +235,15 @@ Spider.Widget = Class.extend({
 				}
 			});
 		});
+	},
+	
+	urlToAction: function(url){
+	    var parts = url.split('?');
+		url = parts[0]; //+'.json';
+		url += '?';
+		if (parts[1]) url += parts[1]+'&';
+		url += '_wt='+this.path;
+		return url;
 	},
 	
 	setLoading: function(){
