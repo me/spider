@@ -624,9 +624,12 @@ module Spider; module Model
             if (obj_res && obj_res[0])
                 obj_res[0].set_parent(set, nil)
                 obj_res[0].merge!(obj, request)
-                obj.loaded_elements.each do |name, bool| 
-                    set.element_loaded(name) if request.key?(name)
+                request.each do |k, bool|
+                    obj_res[0].element_loaded(k)
                 end
+                # obj.loaded_elements.each do |name, bool| 
+                #     set.element_loaded(name) if request.key?(name)
+                # end
             else
                 set << obj
             end
