@@ -1475,7 +1475,9 @@ module Spider; module Model
             elsif element.model?
                 value.autoload(autoload?, true) if value && value.respond_to?(:autolad)
             else
-                case element.type.name
+                type = element.type
+                type = mapper.base_type(type) if type < Spider::DataType && type.mapper_dependant?
+                case type.name
                 when 'Date', 'DateTime'
                     return nil if value.is_a?(String) && value.empty?
                     parsed = nil

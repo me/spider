@@ -4,6 +4,7 @@ module Spider; module DataTypes
     
     class PK < Delegator
         include DataType
+        mapper_dependant
         
         def initialize(obj)
             @delegate_sd_obj = obj

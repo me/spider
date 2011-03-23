@@ -65,6 +65,16 @@ module Spider
                 true
             end
             
+            # Indicates that the actual type of this DataType depends on the mapper (e.g. PK)
+            def mapper_dependant
+                @mapper_dependant = true
+            end
+
+            # Returns whether this DataTypes is mapper dependant
+            def mapper_dependant?
+                @mapper_dependant
+            end
+            
         end
         
         # Returns the DataType attributes, as set in the Model Element.
