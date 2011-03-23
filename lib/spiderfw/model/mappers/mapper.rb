@@ -806,7 +806,7 @@ module Spider; module Model
             value = storage_value_to_mapper(Model.simplify_type(type), value)
 
             if type <= Spider::DataTypes::PK
-                return value.is_a?(Spider::DataTypes::PK) ? value.obj : value
+                value = value.is_a?(Spider::DataTypes::PK) ? value.obj : value
             elsif type < Spider::DataType && type.maps_back_to
                 type = type.maps_back_to
             end
