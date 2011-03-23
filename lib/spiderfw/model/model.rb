@@ -126,6 +126,10 @@ module Spider
             self.unit_of_work = uow
         end
         
+        def self.unit_of_work_running?
+            self.unit_of_work && self.unit_of_work.running?
+        end
+        
         def self.no_identity_mapper(&proc)
             im = self.identity_mapper
             self.identity_mapper = nil

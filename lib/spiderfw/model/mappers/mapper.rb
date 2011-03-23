@@ -63,7 +63,6 @@ module Spider; module Model
         
         # Calls the given action. Used by UnitOfWork tasks.
         def execute_action(action, object, params={}) # :nodoc:
-            @unit_of_work_task = true
             case action
             when :save
                 if params[:force] == :insert
@@ -80,7 +79,6 @@ module Spider; module Model
             else
                 raise MapperError, "#{action} action not implemented"
             end
-            @unit_of_work_task = false
         end
         
         # Converts hashes and arrays to QuerySets and BaseModel instances.
@@ -163,7 +161,7 @@ module Spider; module Model
                 end
             end
             done_extended = []
-            unless @unit_of_work_task
+            unless Spider::Model.unit_of_work_running?
                 save_extended_models(obj, mode)
                 save_integrated(obj, mode)
             end
@@ -267,7 +265,7 @@ module Spider; module Model
 
         # Elements that are associated to this one externally.
         def association_elements
-            return [] if @unit_of_work_task
+            return [] if Spider::Model.unit_of_work_running?
             els = @model.elements_array.select{ |el| 
                 mapped?(el) && !el.integrated? && !have_references?(el) && !(el.attributes[:added_reverse] && el.type <= @model)
             }
