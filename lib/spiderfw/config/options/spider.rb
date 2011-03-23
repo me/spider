@@ -70,6 +70,7 @@ module Spider
     config_option 'storages.x.url', _("Connection url to the storage"), :type => String, :required => true
     config_option 'storages.x.encoding', _("Encoding the DB uses"), :type => String
     config_option 'storages.x.enable_transactions', _("Whether to enable transactions on the db"), :type => Spider::DataTypes::Bool, :default => true
+    config_option 'storage.versioning.use_document', _("Use given document storage for versioning if available"), :default => 'document'
     
     config_option 'debugger.start', _("Start the debugger"), :type => Spider::DataTypes::Bool,
         :default => lambda{ ['test', 'devel'].include?(Spider.runmode) ? true : false }
