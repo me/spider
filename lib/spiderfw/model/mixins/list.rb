@@ -14,6 +14,7 @@ module Spider; module Model
         module MapperMethods
             
             def before_save(obj, mode)
+                return super if obj.embedder && storage.supports?(:embedding)
                 obj.class.lists.each do |l|
                     next if (!check_list_condition(l, obj))
                     cond = get_list_condition(l, obj)

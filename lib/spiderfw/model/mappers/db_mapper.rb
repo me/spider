@@ -246,7 +246,7 @@ module Spider; module Model; module Mappers
         # Implements the Mapper#map method.
         # Converts a DB result row to an object.
         def map(request, result, obj_or_model)
-            if (!request)
+            if (!request || request == true)
                 request = Request.new
                 @model.elements_array.each{ |el| request.request(el.name) }
             end
@@ -821,6 +821,15 @@ module Spider; module Model; module Mappers
             end
             
             return value
+        end
+        
+        def map_back_value(type, value)
+            case type.name
+            when 'Spider::DataTypes::Bool'
+                return value if value.nil?
+                return value == 1 ? true : false
+            end
+            return super
         end
       
         

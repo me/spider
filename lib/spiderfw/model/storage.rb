@@ -9,16 +9,17 @@ module Spider; module Model
             Thread.current[:storages] ||= {}
             Thread.current[:storages][type] ||= {}
             return Thread.current[:storages][type][url] if Thread.current[:storages][type][url]
+            klass = nil
+            matches = url.match(/^(.+?):\/\/(.+)/)
+            adapter = matches[1]
+            rest = matches[2]
+            if (adapter =~ /(.+):(.+)/)
+                connector = $1
+                adapter = $2
+                url = "#{adapter}://#{rest}"
+            end
             case type
-            when 'db'
-                matches = url.match(/^(.+?):\/\/(.+)/)
-                adapter = matches[1]
-                rest = matches[2]
-                if (adapter =~ /(.+):(.+)/)
-                    connector = $1
-                    adapter = $2
-                    url = "#{adapter}://#{rest}"
-                end
+            when 'db' 
                 class_name = case adapter
                 when 'sqlite'
                     :SQLite
@@ -54,9 +55,19 @@ module Spider; module Model
                         klass.instance_eval{ include conn_mod }
                     end
                 end
-                Thread.current[:storages][type][url] = klass.new(url)
-                return Thread.current[:storages][type][url]
+            when 'doc'
+                class_name = case adapter
+                when 'mongodb'
+                    :Mongodb
+                end
+                klass = Spider::Model::Storage::Document.const_get(class_name)
+            when 'stub'
+                require 'spiderfw/test/stubs/storage_stub'
+                klass = Spider::Test::StorageStub
             end
+            return nil unless klass
+            Thread.current[:storages][type][url] = klass.new(url)
+            return Thread.current[:storages][type][url]
         end
         
         module StorageResult
@@ -81,3 +92,4 @@ module Spider; module Model
 end; end
 
 require 'spiderfw/model/storage/db/db'
+require 'spiderfw/model/storage/document/document'

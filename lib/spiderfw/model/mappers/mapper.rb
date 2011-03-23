@@ -817,9 +817,6 @@ module Spider; module Model
                 return value ? value.to_i : nil
             when 'Float'
                 return value ? value.to_f : nil
-            when 'Spider::DataTypes::Bool'
-                return value if value.nil?
-                return value == 1 ? true : false
             end
             return nil unless value
             case type.name

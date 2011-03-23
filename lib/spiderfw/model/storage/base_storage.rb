@@ -179,6 +179,10 @@ module Spider; module Model; module Storage
             return prepare_value(type, value)
         end
         
+        def value_to_mapper(type, value)
+            value
+        end
+        
         
         def prepare_value(type, value)
             return value

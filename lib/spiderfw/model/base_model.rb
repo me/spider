@@ -231,6 +231,7 @@ module Spider; module Model
             if attributes[:computed_from] && !attributes[:computed_from].is_a?(Enumerable)
                 attributes[:computed_from] = [attributes[:computed_from]]
             end
+            attributes[:embedded] = true if attributes[:owned] && attributes[:embedded].nil?
             type.set_element_attributes(attributes) if type < Spider::DataType
 
 
@@ -275,10 +276,11 @@ module Spider; module Model
                     assoc_type = first_model.const_set(assoc_type_name, Class.new(BaseModel))
                     assoc_type.attributes[:sub_model] = self
                     assoc_type.attributes[:sub_model_element] = name
-                    assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice, :junction_reference => true) # FIXME: must check if reverse exists?
+                    embedder = attributes[:junction_embedded] == false ? false : true
                     assoc_type.element(attributes[:junction_id], Spider::DataTypes::PK, :primary_key => true, :autoincrement => true, :hidden => true) if attributes[:junction_id]
+                    assoc_type.element(self_name, self, :hidden => true, :reverse => name, :association => :choice, :junction_reference => true, :embedder => embedder) # FIXME: must check if reverse exists?
                     # FIXME! fix in case of clashes with existent elements
-                    assoc_type.element(other_name, orig_type, :association => :choice, :junction_reference => true)
+                    assoc_type.element(other_name, orig_type, :association => :choice, :junction_reference => true, :embedded => attributes[:embedded])
                     assoc_type.integrate(other_name, :hidden => true, :no_pks => true) # FIXME: in some cases we want the integrated elements
                     assoc_type.send(:include, Spider::Model::Junction)
                     if (proc)                                   #        to be hidden, but the integrated el instead
@@ -294,6 +296,7 @@ module Spider; module Model
                     assoc_type.elements[attributes[:junction_their_element]].attributes[:polymorph] = attributes[:polymorph]
                     attributes.delete(:polymorph)
                 end
+                attributes[:embedded] = true unless attributes[:junction_embedded] == false
             end
             
             
@@ -319,6 +322,9 @@ module Spider; module Model
                         rev[:through] = assoc_type
                         rev[:junction_their_element] = self_name
                         rev[:junction_our_element] = other_name
+                    end
+                    if attributes[:embedded] && !attributes[:junction]
+                        rev[:embedder] = true
                     end
                     orig_type.element(rev_name, self, rev)
                 end
@@ -899,6 +905,22 @@ module Spider; module Model
             !!self.attributes[:sub_model]
         end
         
+        def self.not_embeddable
+            @embeddable = false
+        end
+        
+        def self.embeddable?
+            @embeddable.nil? ? true : @embeddable
+        end
+        
+        def self.only_embedded
+            @only_embedded = true
+        end
+        
+        def self.only_embedded?
+            @only_embedded
+        end
+        
         ########################################################
         #   Methods returning information about the elements   #
         ########################################################
@@ -1343,6 +1365,11 @@ module Spider; module Model
                 end
                 obj.set(element.reverse, self)
             end
+        end
+        
+        # Returns the object's embedder element, if any
+        def embedder
+            self.class.elements_array.select{ |el| el.attributes[:embedder] && self.element_has_value?(el) }[0]
         end
         
         
