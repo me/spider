@@ -407,7 +407,7 @@ module Spider; module Model
             element_methods = self.const_get(:ElementMethods)
 
             #instance variable getter
-            element_methods.send(:define_method, name) do
+            element_methods.send(:define_method, name) do                
                 element = self.class.elements[name]
                 raise "Internal error! Element method #{name} exists, but element not found" unless element
                 return element.attributes[:fixed] if element.attributes[:fixed]
@@ -550,6 +550,7 @@ module Spider; module Model
             self.elements_array.select{ |e| e.integrated? && e.integrated_from.name == el}.each{ |e| remove_element(e) }
             self.const_get(:ElementMethods).send(:remove_method, :"#{el}") rescue NameError
             self.const_get(:ElementMethods).send(:remove_method, :"#{el}=") rescue NameError
+            @extended_models.delete(element.type) if element && @extended_models && @extended_models[element.type] == el
             @elements.delete(el)
             @elements_order.delete(el)
             @primary_keys.delete_if{ |pk| pk.name == el}
