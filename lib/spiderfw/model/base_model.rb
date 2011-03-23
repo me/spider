@@ -748,9 +748,10 @@ module Spider; module Model
             @extended_models ||= {}
             @extended_models[model] = integrated_name
             attributes = {}
-            attributes[:hidden] = true unless (params[:hide_integrated] == false)
+            attributes[:hidden] = true unless params[:hide_integrated] == false
             attributes[:delete_cascade] = params[:delete_cascade]
             attributes[:extended_model] = true
+            attributes[:embedded] = true unless params[:embedded] == false
             attributes[:add_reverse] = params[:reverse]
             integrated = element(integrated_name, model, attributes)
             integrate_options = {:keep_pks => true}.merge((params[:integrate_options] || {}))
