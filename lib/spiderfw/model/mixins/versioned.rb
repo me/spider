@@ -7,6 +7,7 @@ module Spider; module Model
         
         
         def self.included(model)
+            return if model.is_a?(ClassMethods) && model.version_model
             model.extend(ClassMethods)
             model.mapper_include(Mapper)
             model.remove_element(:v_sha1) if model.elements[:v_sha1] && model.elements[:v_sha1].integrated?
@@ -92,29 +93,31 @@ module Spider; module Model
                   # debugger if elh[:attributes][:junction]
                   # vmod.send(elh[:method], elh[:name], elh[:type], elh[:attributes])
                   if (el.model?)
+                      is_version_content = el.type < Spider::Model::Versioned && el.attributes[:version_content] != false
                       if elh[:attributes][:integrated_model]
-                          
                           elh[:type].elements.each do |ielname, iel|
                               i = vmod.elements[ielname]
                               vmod.remove_element(ielname) if i && i.integrated? && i.integrated_from.name == el.name
                           end
                           elh[:attributes][:integrate] = true
+                          elh[:attributes].delete(:extended_model)
+                          elh[:attributes].delete(:embedded)
                       end
                       if el.attributes[:add_reverse] || el.attributes[:add_multiple_reverse]
                           rev = el.attributes[:add_reverse] || el.attributes[:add_multiple_reverse]
                           el.type.version_model.remove_element(rev[:name]) if el.type.respond_to?(:version_model)
                       end
-                      if vmod.elements[el.name] && elh[:attributes][:reverse] && !(el.model < Spider::Model::Versioned)
+                      if vmod.elements[el.name] && elh[:attributes][:reverse] && !is_version_content
                           vmod.elements[el.name].attributes.delete(:reverse)
                           vmod.elements[el.name].attributes.delete(:condition)
                       end
-                      if el.multiple? && !el.attributes[:junction] && !(el.model < Spider::Model::Versioned)
+                      if el.multiple? && !el.attributes[:junction] && !is_version_content
                           elh[:attributes].delete(:reverse)
                           elh[:attributes].delete(:add_reverse)
                           elh[:attributes].delete(:add_multiple_reverse)
                           vmod.remove_element(el.name)
                           vmod.send(elh[:method], el.name, el.type, elh[:attributes])
-                      elsif (!el.attributes[:added_reverse] &&  el.model < Spider::Model::Versioned)
+                      elsif !el.attributes[:added_reverse] && el.model < Spider::Model::Versioned
                           vmod.remove_element(el.name)
                           if elh[:method] == :tree
                               vmod.remove_element(elh[:attributes][:reverse])
@@ -126,10 +129,10 @@ module Spider; module Model
                               vmod.send(elh[:method], el.name, el.type.version_model, elh[:attributes])
                           end
                           @version_elements[el.name] = el.name
-                      elsif (el.attributes[:junction] && el.attributes[:owned])
+                      elsif el.attributes[:junction] && el.attributes[:owned]
                           # elh[:attributes][:has_single_reverse] = (el.attributes[:reverse] && !el.type.elements[el.attributes[:reverse]].multiple?)
                           junction = vmod.elements[el.name].attributes[:association_type]
-                          unless junction < Spider::Model::Versioned 
+                          unless junction < Spider::Model::Versioned || (el.attributes[:embedded] && self.storage.supports?(:embedding))
                               junction.module_eval{ include Spider::Model::Versioned } 
                               junction.versioning(branch)
                           end
@@ -139,13 +142,18 @@ module Spider; module Model
                               elh[:attributes][:junction_their_element] = "#{elh[:attributes][:junction_their_element]}".to_sym
                               vmod.remove_element(el.name)
                               junction_type = nil
-                              if el.type.respond_to?(:version_model)
+                              if is_version_content
                                   junction_type = el.type.version_model
                               else
                                   junction_type = el.type
                                   elh[:attributes].delete(:reverse)
                                   elh[:attributes].delete(:add_reverse)
                                   elh[:attributes].delete(:add_multiple_reverse)
+                                  v_junction = junction.version_model
+                                  v_junction.remove_element(elh[:attributes][:junction_their_element])
+                                  v_junction.element(elh[:attributes][:junction_their_element], el.type, :association => :choice, :junction_reference => true)
+                                  v_junction.integrate(elh[:attributes][:junction_their_element], :hidden => true, :no_pks => true)
+                                  
                               end
                               vmod.send(elh[:method], el.name, junction_type, elh[:attributes])
                               
@@ -155,7 +163,13 @@ module Spider; module Model
                       end
                   end
               end
-              vmod.elements_array.each{ |el| el.attributes[:unique] = false if el.attributes[:unique] }              
+              vmod.elements_array.each{ |el| el.attributes[:unique] = false if el.attributes[:unique] }            
+              if doc_storage = Spider.conf.get('storage.versioning.use_document')
+                  vmod.use_storage(doc_storage)
+                  vmod.elements_array.select{ |el| el.junction? }.each do |el|
+                      el.model.use_storage(doc_storage)
+                  end
+              end
            end
            
            def version_element(el=nil)
@@ -174,14 +188,15 @@ module Spider; module Model
                @version_models[branch] = model
            end
            
-           # Returns the elements that concurr to define the objects version
+           # Returns the elements that concur to define the objects version
            def version_contents
                #no_content_assocs = [:choice, :multiple_choice]
                no_content_assocs = []
+               supports_embed = self.storage.supports?(:embedding)
 
                self.elements_array.select{ |el|
                    el.attributes[:version_content] || mapper.have_references?(el.name) || (!el.attributes[:added_reverse] && !no_content_assocs.include?(el.association))
-               }.reject{ |el| el.model? && !(el.model < Spider::Model::Versioned) }
+               }.reject{ |el| el.attributes[:version_content] == false || (el.model? && !(el.model < Spider::Model::Versioned)) }
            end
            
            def version_ignored_elements
@@ -197,23 +212,27 @@ module Spider; module Model
         module Mapper
             
             def get_dependencies(task)
-
+                return super unless @model.respond_to?(:version_model)
                 deps = []
                 obj = task.object
                 action = task.action
                 version_contents = obj.class.version_contents
-                
+                vmod = @model.version_model
                 case action
                 when :save_version
-                    #Spider.logger.debug("PROCESSING DEPS ON #{obj}")
                     version_contents.each do |vc|
                         next unless vc.model?
                         next if vc.integrated?
+                        v_el = vmod.elements[vc.name]
+                        next unless v_el
+                        is_embedded = v_el.attributes[:embedded] && vmod.storage.supports?(:embedding)
+                        next if is_embedded && !vc.junction?
+                        Spider.logger.debug("VC #{vc.name}")
                         set = obj.send(vc.name)
                         next unless set
                         set = obj.prepare_version_object(vc.name, set) if obj.respond_to?(:prepare_version_object)
-                        next if set == self
-                        set = self.instance_variable_get("@#{vc.name}_junction") if vc.junction? && !vc.attributes[:keep_junction]
+                        next if set.eql?(obj)
+                        set = obj.instance_variable_get("@#{vc.name}_junction") if vc.junction? && !vc.attributes[:keep_junction]
                         next unless set
                         set = [set] unless vc.multiple?
                         set.each do |set_obj|
@@ -226,8 +245,12 @@ module Spider; module Model
                                 dejunct = obj.class.prepare_junction_version_object(vc.name, dejunct) if obj.class.respond_to?(:prepare_junction_version_object)
                                 dejunct_task = MapperTask.new(dejunct, :save_version)
                                 junction_task = MapperTask.new(set_obj, :save_version)
-                                deps << [junction_task, dejunct_task] if dejunct.class < Spider::Model::Versioned
-                                deps << [junction_task, task]
+                                if is_embedded
+                                    deps << [task, dejunct_task] if dejunct.class < Spider::Model::Versioned
+                                else
+                                    deps << [junction_task, dejunct_task] if dejunct.class < Spider::Model::Versioned
+                                    deps << [junction_task, task]
+                                end
                             else
                                 #Spider.logger.debug("Version on #{set_obj} (#{set_obj.class}) depends on #{obj} (#{obj.class})")
                                 deps << [MapperTask.new(set_obj, :save_version), task]
@@ -242,14 +265,12 @@ module Spider; module Model
             
             def execute_action(action, object, params) # :nodoc:
                 return super unless [:save_version, :save_junction_version].include?(action)
-                @unit_of_work_task = true
                 case action
                 when :save_version
                     save_version(object)
                 when :save_junction_version
                     save_junction_version(object)
                 end
-                @unit_of_work_task = false
             end
             
             def save_version(object)
@@ -384,7 +405,7 @@ module Spider; module Model
                         obj.each{ |o| except_objects << o }
                     else
                         except_objects << obj
-                    end 
+                    end
                 end
             end
             self.class.elements_array.each do |el|                
@@ -436,10 +457,12 @@ module Spider; module Model
             version_contents = self.class.version_contents
             
             self.class.elements_array.each do |el|
-                next unless vmod.elements[el.name]
+                v_el = vmod.elements[el.name]
+                next unless v_el
                 next if el.model? && el.type.attributes[:version_model]
-                next if el.integrated?
-                next if el.multiple? && el.model.respond_to?(:version_element)
+                next if el.integrated? && !(el.integrated_from.embedded? && vmod.storage.supports?(:embedding))
+                is_embedded = el.attributes[:embedded] && vmod.storage.supports?(:embedding)
+                next if el.multiple? && el.model.respond_to?(:version_element) && !is_embedded
                 is_version_content = version_contents.include?(el)
                 #debugger if el.name == :news_list
                 el_val = self.get(el)
@@ -448,14 +471,23 @@ module Spider; module Model
                 end
                 #next unless mod.mapper.have_references?(el)
                 if el_val && el.multiple?
-                    if !el.model.respond_to?(:version_element)
+                    if !(v_el.model < Spider::Model::VersionModel)
                         el_val.each do |v|
                             vobj.get(el.name) << v
                         end
+                    elsif is_embedded && el.junction?
+                        el_val = instance_variable_get("@#{el.name}_junction") if !el.attributes[:keep_junction]
+                        el_val.each do |v|
+                            jv = v_el.model.new
+                            jv_sha1 = v.version_sha1
+                            v.populate_version_object(jv)
+                            jv.v_sha1 = jv_sha1
+                            vobj.get(el.name) << jv
+                        end
                     end
-                elsif el.model? && el_val && el.model.respond_to?(:version_element) # && is_version_content 
+                elsif el.model? && el_val && v_el.type < Spider::Model::VersionModel # && is_version_content 
                     
-                    vobj.set(el.name, el_val.get(el.model.version_element))
+                    vobj.set(el.name, el_val.get(el.type.version_element))
                             # if self.class.attributes[:sub_model] && self.class.attributes[:sub_model].respond_to?(:prepare_junction_version_object)
                             #     prep_val = self.class.attributes[:sub_model].prepare_junction_version_object(self.class.attributes[:sub_model_element], el_val)
                             #     prep_val.save_version
