@@ -1672,7 +1672,16 @@ module Spider; module Model
         
         # Returns a string with the primary keys joined by ','
         def keys_string
-            self.class.primary_keys.map{ |pk| self.get(pk) }.join(',')
+            self.class.keys_string(self.primary_keys)
+        end
+        
+        
+        def self.keys_string(keys)
+            keys.join(',')
+        end
+        
+        def self.split_keys_string(string)
+            string.split(',')
         end
 
             
