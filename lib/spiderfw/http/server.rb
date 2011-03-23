@@ -47,7 +47,7 @@ module Spider; module HTTP
                 
                 port ||= Spider.conf.get('webserver.port')
                 server_name ||= Spider.conf.get('http.server')
-                pid_file = Spider.paths[:var]+'/run/server.pid'
+                pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                 puts _("Using webserver %s") % server_name if options[:verbose]
                 puts _("Listening on port %s") % port if options[:verbose]
                 server = Spider::HTTP.const_get(servers[server_name]).new
@@ -63,6 +63,7 @@ module Spider; module HTTP
                 thread = Thread.new do
                     server.start(:port => port, :cgi => options[:cgi])
                 end
+                $stdout << "Spider server running on port #{port}\n"
                 if options[:ssl]
                     options[:ssl_cert] ||= Spider.conf.get('orgs.default.cert')
                     options[:ssl_key] ||= Spider.conf.get('orgs.default.private_key')
@@ -80,6 +81,7 @@ module Spider; module HTTP
                     server.shutdown
                     ssl_server.shutdown if ssl_server
                     Spider.shutdown
+                    pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                     begin
                         File.unlink(pid_file)
                     rescue Errno::ENOENT
@@ -92,12 +94,15 @@ module Spider; module HTTP
                 ssl_thread.join if ssl_thread
             }
             if options[:daemonize]
+                require 'spiderfw'
                 require 'spiderfw/utils/fork'
+                pid_file = File.join(Spider.paths[:var], 'run/server.pid')
+                process_name = (options[:daemonize] == true) ? 'spider-server' : options[:daemonize]
                 forked = Spider.fork do
-                    File.open(@pid_file, 'w') do |f|
+                    File.open(pid_file, 'w') do |f|
                         f.write(Process.pid)
                     end
-                    $0 = 'spider-server'
+                    $0 = process_name
                     start.call
                 end
                 Process.detach(forked)
@@ -105,7 +110,10 @@ module Spider; module HTTP
                 Spider.init_base
                 if Spider.conf.get('webserver.respawn_on_change')
                     Spider.start_loggers
-                    Bundler.require :default, Spider.runmode.to_sym
+                    begin
+                        Bundler.require :default, Spider.runmode.to_sym
+                    rescue
+                    end
                     spawner = Spawner.new({'spawn' => start})
                     spawner.run('spawn')
                 else
@@ -134,8 +142,12 @@ module Spider; module HTTP
             if pid = fork
                 # Spawner
                 @child_pid = pid
-                trap('TERM', lambda{ Spider.logger.debug "Spawner exiting"; exit })
-                trap('INT', lambda{ Spider.logger.debug "Spawner exiting"; exit })
+                exit_spawner = lambda{ 
+                    Spider.logger.debug "Spawner exiting" 
+                    exit 
+                }
+                trap('TERM', exit_spawner)
+                trap('INT', exit_spawner)
                 
                 $0 = 'spider-spawner'
                 wr.close

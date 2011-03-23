@@ -25,7 +25,7 @@ class WebServerCommand < CmdParse::Command
                 raise CmdParse::InvalidArgumentError, _("The webserver %s is not supported") % server_name unless servers[server_name]
                 @server_name = server_name
             }
-            opt.on("--daemonize", _("Detach server process"), "-d"){ @daemonize = true }
+            opt.on("--daemonize [daemon_name]", _("Detach server process"), "-d"){ |daemon_name| @daemonize = daemon_name || true }
             opt.on("--cgi", _("Serve each request spawning a CGI subprocess. Useful in developement."), "-c"){
                 @cgi = true
             }
