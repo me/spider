@@ -608,6 +608,7 @@ module Spider; module Model
         
         def self.integrate_element(element_name, element_element, params={})
             el = element_element
+            el = self.elements[element_name].model.elements[el] if el.is_a?(Symbol)
             integrated_attributes = {}
             integrated_attributes[:primary_key] = false if params[:no_pks]
             integrated_attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
