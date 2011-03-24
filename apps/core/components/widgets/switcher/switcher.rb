@@ -38,7 +38,7 @@ module Spider; module Components
                 add_widget(content) if content.is_a?(Spider::Widget)
             end
             
-            super
+            
             
             # The widget object gets instantiated in super, so it is available now
             @inline_w_order.each do |id|
@@ -55,6 +55,8 @@ module Spider; module Components
             # content must not be set in inline, so it is not rendered by sp:run
             @current = @inline_widgets[content.id.to_sym] ? nil : content
             @current_label = label
+            
+            super
             
             @sections.each do |section, labels|
                 labels.each do |label|
