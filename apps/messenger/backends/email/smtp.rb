@@ -14,7 +14,8 @@ module Spider; module Messenger; module Backends; module Email
                 :domain => Spider.conf.get('messenger.smtp.domain'),
                 :user_name => Spider.conf.get('messenger.smtp.username'),
                 :password => Spider.conf.get('messenger.smtp.password'),
-                :authentication => Spider.conf.get('messenger.smtp.auth_scheme')
+                :authentication => Spider.conf.get('messenger.smtp.auth_scheme'),
+                :enable_starttls_auto => Spider.conf.get('messenger.smpt.enable_starttls_auto')
             }
             mail.deliver
             return true
