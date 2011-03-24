@@ -66,17 +66,29 @@ module Spider; module Model; module Storage; module Document
         def insert(collection, doc)
             Spider.logger.debug("Mongodb insert #{collection}:")
             Spider.logger.debug(doc)
-            collection(collection).insert(doc)
+            begin
+                collection(collection).insert(doc)
+            ensure
+                release
+            end
         end
         
         def update(collection, selector, vals)
             Spider.logger.debug("Mongodb update #{collection}, #{selector.inspect}:")
             Spider.logger.debug(vals)
-            collection(collection).update(selector, {'$set' => vals})
+            begin
+                collection(collection).update(selector, {'$set' => vals})
+            ensure
+                release
+            end
         end
         
         def delete(collection, doc)
-            collection(collection).remove({"_id" => doc["_id"]}, doc)
+            begin
+                collection(collection).remove({"_id" => doc["_id"]}, doc)
+            ensure
+                release
+            end
         end
         
         def prepare_value(type, value)
@@ -109,7 +121,11 @@ module Spider; module Model; module Storage; module Document
         def find(collection, condition, request, options)
             options[:fields] = request
             Spider.logger.debug("Mongodb find #{collection}, #{condition.inspect}")
-            res = collection(collection).find(condition, options).to_a
+            begin
+                res = collection(collection).find(condition, options).to_a
+            ensure
+                release
+            end
             res = res.map{ |row| keys_to_symbols(row) }
             res.extend(StorageResult)
             res.total_rows = res.length # FIXME
@@ -135,7 +151,11 @@ module Spider; module Model; module Storage; module Document
         
         def drop_db!
             conn = connection
-            conn.drop_database(@db_name)
+            begin
+                conn.drop_database(@db_name)
+            ensure
+                release
+            end
         end
         
         def generate_pk
