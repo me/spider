@@ -326,6 +326,10 @@ module Spider; module Model; module Mappers
                 end
             end
             order, order_joins = prepare_order(query)
+            cnt = 0
+            order_joins.each do |oj|
+                oj[:as] ||= "ORD#{cnt+=1}" if joins.select{ |j| j[:to] == oj[:to] }.length > 0
+            end
             joins += order_joins if order_joins
             seen_fields = {}
             model_pks = []
