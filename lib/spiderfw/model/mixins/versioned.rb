@@ -164,7 +164,8 @@ module Spider; module Model
                   end
               end
               vmod.elements_array.each{ |el| el.attributes[:unique] = false if el.attributes[:unique] }            
-              if doc_storage = Spider.conf.get('storage.versioning.use_document') && Spider.conf.get("storages.#{doc_storage}")
+              doc_storage = Spider.conf.get('storage.versioning.use_document')
+              if doc_storage && Spider.conf.get("storages.#{doc_storage}")
                   vmod.use_storage(doc_storage)
                   vmod.elements_array.select{ |el| el.junction? }.each do |el|
                       el.model.use_storage(doc_storage)
