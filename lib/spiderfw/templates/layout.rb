@@ -66,10 +66,34 @@ module Spider
                     end
                     if comp = ass[:compressed_path]
                         name = File.basename(comp)
-                        unless File.exist?(File.join(pub_dest, name))
-                            File.cp(comp, pub_dest)
+                        if ass[:compressed_rel_path]
+                            dir = File.dirname(ass[:compressed_rel_path])
+                            if ass[:copy_dir]
+                                start = dir
+                                if ass[:copy_dir].is_a?(Fixnum)
+                                    ass[:copy_dir].downto(0) do |i|
+                                        start = File.dirname(start)
+                                    end
+                                end
+                                dst_dir = File.join(pub_dest, start)
+                                unless File.dirname(start) == '.' || File.directory?(File.dirname(dst_dir))
+                                    FileUtils.mkdir_p(File.join(pub_dest, File.dirname(dst_dir)))
+                                end
+                                unless File.directory?(dst_dir)
+                                    FileUtils.cp_r(File.join(ass[:app].pub_path, start), dst_dir)
+                                end
+                            else
+                                FileUtils.mkdir_p(File.join(pub_dest, dir))
+                                File.cp(comp, File.join(pub_dest, dir)) unless File.exist?(File.join(pub_dest, dir))
+                            end
+                            src = dir+'/'+name
+                        else
+                            unless File.exist?(File.join(pub_dest, name))
+                                File.cp(comp, pub_dest)
+                            end
+                            src = name
                         end
-                        ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+name
+                        ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+src
                         assets[type] << ass
                     else
                         name = ass[:compress] || cname

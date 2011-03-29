@@ -1,11 +1,11 @@
 <div>
+    <tpl:asset type="js" src="ckeditor/ckeditor.js" compressed="true" copy_dir="true"/>
+    <tpl:asset type="js" src="ckeditor/adapters/jquery.js" compressed="true" />
     <tpl:asset name="jquery" />
     <tpl:asset type="js" src="input.js" />
     <tpl:asset type="js" src="html_area.js" /><tpl:asset type="js" src="text_area.js" />
     <!--- <tpl:asset type="css" src="jwysiwyg/jquery.wysiwyg.css" />
     <tpl:asset type="js" src="jwysiwyg/jquery.wysiwyg.js" /> -->
-    <tpl:asset type="js" src="ckeditor/ckeditor.js" compressed="true"/>
-    <tpl:asset type="js" src="ckeditor/adapters/jquery.js" />
     <div class="initial_html" style="display:none">{ @initial_html }</div>
     <div class="css" style="display:none">{ @css }</div>
     <div class="options" style="display:none">{ @options }</div>

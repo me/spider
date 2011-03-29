@@ -409,6 +409,7 @@ module Spider
             else
                 base_url = ''
             end
+            ass[:rel_path] = src
             ass[:src] = base_url + src
             ass_info = self.class.asset_types[type]
             if (ass_info && ass_info[:processor])
@@ -418,6 +419,7 @@ module Spider
             if cpr = attributes[:compressed] 
                 if cpr == "true"
                     ass[:compressed_path] = ass[:path]
+                    ass[:compressed_rel_path] = ass[:rel_path]
                     ass[:compressed] = base_url + File.basename(ass[:path])
                 else
                     compressed_res = Spider.find_resource(type.to_sym, cpr, @path, [owner_class, @definer_class])
@@ -425,6 +427,8 @@ module Spider
                     ass[:compressed] = base_url+cpr
                 end
             end
+            ass[:copy_dir] = attributes[:copy_dir]
+            ass[:copy_dir] = ass[:copy_dir] =~ /\d+/ ? ass[:copy_dir].to_i : true
             [:gettext, :media, :if_ie_lte, :cdn].each do |key|
                 ass[key] = attributes[key] if attributes.key?(key)
             end
