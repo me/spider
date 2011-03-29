@@ -10,7 +10,7 @@ class Date
 
     # Converts to a Time object in the local timezone.
     def to_local_time
-        to_time(new_offset(DateTime.now.offset), :local)
+        conv_to_time(new_offset(DateTime.now.offset), :local)
     end
     
     def to_date
@@ -38,7 +38,7 @@ class Date
     end
 
     private
-    def to_time(dest, method)
+    def conv_to_time(dest, method)
         #Convert a fraction of a day to a number of microseconds
         usec = (dest.send(:sec_fraction) * 60 * 60 * 24 * (10**6)).to_i
         if dest.respond_to?(:hour)
