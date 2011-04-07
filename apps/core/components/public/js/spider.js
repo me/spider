@@ -40,9 +40,11 @@ Spider.Widget = Class.extend({
 		this.ready();
 		this.applyReady();
 		this.plugins = [];
-		if (this.includePlugins) for (var i=0; i<this.includePlugins.length; i++){
-			this.plugin(this.includePlugins[i]);
-		}
+		if (this.includePlugins){
+		    for (var i=0; i<this.includePlugins.length; i++){
+    			this.plugin(this.includePlugins[i]);
+    		}
+		} 
     },
     
     remote: function(){
@@ -129,7 +131,8 @@ Spider.Widget = Class.extend({
 		for (var i=0; i<pathParts.length; i++){
 			param += "["+pathParts[i]+"]";
 		}
-		if (matches = key.match(/(.+)(\[.*\])/)){
+        var matches = key.match(/(.+)(\[.*\])/);
+		if (matches){
 			param += "["+matches[1]+"]"+matches[2];
 		}
 		else param += "["+key+"]";
@@ -234,6 +237,7 @@ Spider.Widget = Class.extend({
 					w.trigger('ajaxifyLoad', a);
 				}
 			});
+			return true;
 		});
 	},
 	
@@ -326,6 +330,7 @@ Spider.Widget = Class.extend({
             if (!this.onWidgetCallbacks[id]) this.onWidgetCallbacks[id] = [];
     		this.onWidgetCallbacks[id].push(callback);
         }
+        return true;
 	},
 	
 	removeOnWidget: function(id, callback){
@@ -347,7 +352,7 @@ Spider.Widget = Class.extend({
 });
 
 Spider.Widget.initFromEl = function(el){
-	if (!el || !el.attr('id')) return;
+	if (!el || !el.attr('id')) return null;
     var path = Spider.Widget.pathFromId(el.attr('id'));
 	if (Spider.widgets[path]){
 		var widget = Spider.widgets[path];
@@ -358,7 +363,8 @@ Spider.Widget.initFromEl = function(el){
     var cl_parts = cl.split(' ');
     var w_cl = null;
 	var config = {};
-    for (var i=0; i < cl_parts.length; i++){
+	var i;
+    for (i=0; i < cl_parts.length; i++){
         if (cl_parts[i].substr(0, 5) == 'wdgt-'){
             w_cl = cl_parts[i].substr(5);
         }
@@ -369,7 +375,7 @@ Spider.Widget.initFromEl = function(el){
     if (w_cl){
         var w_cl_parts = w_cl.split('-');
         var target = Widgets;
-        for (var i=0; i < w_cl_parts.length; i++){
+        for (i=0; i < w_cl_parts.length; i++){
             target = target[w_cl_parts[i]];
             if (!target) break;
         }
@@ -402,6 +408,8 @@ Spider.WidgetBackend = Class.extend({
 		return this.wUrl + '&_we='+method;
 	},
 
+    // Note: args must be plain values (no arrays or objects). If you need to pass
+    // an array or an object, you should encode it to a string (and decode it in the controller)
 	send: function(method, args, options){
 		if (!options) options = {};
 		var defaults = {
@@ -555,7 +563,7 @@ $(document).ready(function(){
 });
 
 $.fn.spiderWidget = function(){
-	if (!this.attr('id')) return;
+	if (!this.attr('id')) return null;
 	var path = Spider.Widget.pathFromId(this.attr('id'));
 	if (Spider.widgets[path]) return Spider.widgets[path];
 	return Spider.Widget.initFromEl(this);
@@ -591,9 +599,10 @@ $.fn.getDataModel = function(){
     var cl_parts = cl.split(' ');
     for (var i=0; i < cl_parts.length; i++){
 		if (cl_parts[i].substr(0, 6) == 'model-'){
-			return cl_parts[i].substr(6).replace(/-/g, '::');;
+			return cl_parts[i].substr(6).replace(/-/g, '::');
 		}
     }
+    return null;
 };
 
 Spider.htmlFunctions = [];
