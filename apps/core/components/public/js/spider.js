@@ -527,30 +527,7 @@ Spider.Controller = Class.extend({
 	},
 	
 	paramToQuery: function(value, prefix){
-		var res = null;
-		if (!prefix) prefix = '';
-		if (!value){
-			return '=null';
-		}
-		else if (value.push){ // array
-			for (var i=0; i < value.length; i++){
-				if (!res) res = "";
-				else res += '&';
-				res += this.paramToQuery(value[i], prefix+'[]');
-			}
-			return res;
-		}
-		else if (typeof (value) == 'object'){
-			for (var name in value){
-				if (!res) res = "";
-				else res += '&';
-				res += this.paramToQuery(value[name], prefix+'['+name+']');
-			}
-			return res;
-		}
-		else{
-			return prefix+"="+value;
-		}
+        return Spider.paramToQuery(value, prefix);
 	}
     
 });
@@ -635,6 +612,33 @@ Spider.newHTML = function(el){
 
 Spider.modelToCSS = function(name){
 	return name.split('::').join('-');
+};
+
+Spider.paramToQuery = function(value, prefix){
+	var res = null;
+	if (!prefix) prefix = '';
+	if (!value){
+		return '=null';
+	}
+	else if (value.push){ // array
+		for (var i=0; i < value.length; i++){
+			if (!res) res = "";
+			else res += '&';
+			res += this.paramToQuery(value[i], prefix+'[]');
+		}
+		return res;
+	}
+	else if (typeof (value) == 'object'){
+		for (var name in value){
+			if (!res) res = "";
+			else res += '&';
+			res += this.paramToQuery(value[name], prefix+'['+name+']');
+		}
+		return res;
+	}
+	else{
+		return prefix+"="+value;
+	}
 };
 
 jQuery.parseISODate = function(iso){
