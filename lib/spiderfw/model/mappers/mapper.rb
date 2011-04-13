@@ -592,25 +592,28 @@ module Spider; module Model
                         return false
                     end
                     set.total_rows = result.total_rows if (!was_loaded)
+                    merged = {}
                     result.each do |row|
                         obj =  map(query.request, row, @model) # set.model ?!?
                         next unless obj
-                        merge_object(set, obj, query.request)
+                        merged_obj = merge_object(set, obj, query.request)
+                        merged[merged_obj.object_id] = true
                         @raw_data[obj.object_id] = row
+                    end
+                    query.request.keys.each do |k, v|
+                        set.element_loaded(k) if have_references?(k)
+                    end
+                    set.each do |obj|
+                        next if merged[obj.object_id]
+                        query.request.keys.each do |element_name|
+                            el = @model.elements[element_name]
+                            next if el.primary_key?
+                            next if el.integrated? || @model.extended_models[el.model]
+                            obj.set_loaded_value(element_name, nil) 
+                        end
                     end
                 end
                 set = get_external(set, query)
-#                delay_put = true if (@model.primary_keys.select{ |k| @model.elements[k.name].integrated? }.length > 0)
-
-               
-                # if (delay_put)
-                #     set.no_autoload(false) do
-                #         set.each_index do |i|
-                #             set[i].primary_keys_set?
-                #             set[i] = im.put(set[i], true)
-                #         end
-                #     end
-                # end
             end
             return set
         end
@@ -624,14 +627,10 @@ module Spider; module Model
             if (obj_res && obj_res[0])
                 obj_res[0].set_parent(set, nil)
                 obj_res[0].merge!(obj, request)
-                request.each do |k, bool|
-                    obj_res[0].element_loaded(k)
-                end
-                # obj.loaded_elements.each do |name, bool| 
-                #     set.element_loaded(name) if request.key?(name)
-                # end
+                obj_res[0]
             else
                 set << obj
+                obj
             end
         end
         
