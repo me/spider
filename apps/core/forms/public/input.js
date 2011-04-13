@@ -22,7 +22,7 @@ Spider.defineWidget('Spider.Forms.Input', {
 	},
 	
 	val: function(){
-		this.el.val();
+		return this.el.val();
 	}
 	
 	
