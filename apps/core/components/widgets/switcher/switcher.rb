@@ -38,6 +38,7 @@ module Spider; module Components
                 add_widget(content) if content.is_a?(Spider::Widget)
             end
             
+            init_widgets
             
             
             # The widget object gets instantiated in super, so it is available now
