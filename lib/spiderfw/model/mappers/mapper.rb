@@ -710,7 +710,7 @@ module Spider; module Model
         # Loads an external element, according to query, and merges the result into an object or QuerySet.
         def get_external_element(element, query, objects)
 #            Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
-            return load_element(objects, element) if (have_references?(element))
+            return load_element(objects, element) if have_references?(element)
             return nil if objects.empty?
             index_by = []
             @model.primary_keys.each{ |key| index_by << :"#{element.attributes[:reverse]}.#{key.name}" }
@@ -1049,7 +1049,7 @@ module Spider; module Model
     
     # The MapperTask is used by the UnitOfWork.
     class MapperTask
-        attr_reader :dependencies, :object, :action
+        attr_reader :dependencies, :object, :action, :params
        
         def initialize(object, action, params={})
             @object = object
@@ -1070,6 +1070,9 @@ module Spider; module Model
         def eql?(task)
             return false unless task.class == self.class
             return false unless (task.object == self.object && task.action == self.action)
+            @params.each do |k, v|
+                return false unless task.params[k] == v
+            end
             return true
         end
         
@@ -1087,9 +1090,10 @@ module Spider; module Model
         
         def inspect
             if (@action && @object)
-                str = "#{@action} on #{@object} (#{object.class})"
+                str = "#{@action} on #{@object}##{@object.object_id} (#{object.class})"
+                str += " (#{@params.inspect})" unless @params.empty?
                 if (@dependencies.length > 0)
-                    str += " (dependencies: #{@dependencies.map{ |dep| "#{dep.action} on #{dep.object.class} #{dep.object}"}.join(', ')})"
+                    str += " (dependencies: #{@dependencies.map{ |dep| "#{dep.action} on #{dep.object.class} #{dep.object}##{dep.object.object_id}"}.join(', ')})"
                     # str += "-dependencies:\n"
                     #                    @dependencies.each do |dep|
                     #                        str += "---#{dep.action} on #{dep.object}\n"
