@@ -22,6 +22,8 @@ Spider::Template.define_named_asset 'spider-utils', [
     [:js, 'js/utils.js', Spider::Components, {:gettext => true}]
 ], :depends => ['spider']
 
+# jQuery UI
+
 Spider::Template.define_runtime_asset 'jquery-ui-datepicker-locale' do |request, response, scene|
     Spider::Components.pub_url+"/js/jquery/jquery-ui-1.8.9/ui/i18n/jquery.ui.datepicker-#{request.locale.language}.js"
 end
@@ -111,3 +113,31 @@ Spider::Template.define_named_asset 'jquery-effects', [
     [:js, 'js/jquery/jquery-ui-1.8.9/ui/jquery.effects.slide.js', Spider::Components],
     [:js, 'js/jquery/jquery-ui-1.8.9/ui/jquery.effects.transfer.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
+
+# jQuery Tools (http://flowplayer.org/tools/)
+
+Spider::Template.define_named_asset 'jquery-tools-overlay', [
+    [:js, 'js/jquery/jquery-tools-1.2.5/overlay/overlay.js', Spider::Components]
+], :depends => ['jquery']
+
+Spider::Template.define_named_asset 'jquery-tools-overlay-apple', [
+    [:js, 'js/jquery/jquery-tools-1.2.5/overlay/overlay.apple.js', Spider::Components]
+], :depends => ['jquery-tools-overlay']
+
+Spider::Template.define_named_asset 'jquery-tools-scrollable', [
+    [:js, 'js/jquery/jquery-tools-1.2.5/scrollable/scrollable.js', Spider::Components]
+], :depends => ['jquery']
+
+Spider::Template.define_named_asset 'jquery-tools-tabs', [
+    [:js, 'js/jquery/jquery-tools-1.2.5/tabs/tabs.js', Spider::Components],
+    [:css, 'js/jquery/jquery-tools-1.2.5/tabs/tabs.css', Spider::Components]
+], :depends => ['jquery']
+
+Spider::Template.define_named_asset 'jquery-tools-expose', [
+    [:js, 'js/jquery/jquery-tools-1.2.5/toolbox/toolbox.expose.js', Spider::Components]
+], :depends => ['jquery']
+
+Spider::Template.define_named_asset 'jquery-tools-tooltip', [
+    [:js, 'js/jquery/jquery-tools-1.2.5/tooltip/tooltip.js', Spider::Components],
+    [:js, 'js/jquery/jquery-tools-1.2.5/tooltip/tooltip.dynamic.js', Spider::Components]
+], :depends => ['jquery']
