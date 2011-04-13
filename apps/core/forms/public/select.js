@@ -8,7 +8,8 @@ Spider.defineWidget('Spider.Forms.Select', 'Spider.Forms.Input', {
 		    this.el.bsmSelect({
     			removeLabel: 'togli',
     			highlightAddedLabel: 'Aggiunto: ',
-    			highlightRemovedLabel: 'Tolto: '
+    			highlightRemovedLabel: 'Tolto: ',
+    			addItemTarget: 'top'
     		});
             $('.bsmSelect option:first', this.el.parent()).addClass('bsmSelectTitle')
                 .attr("selected", false)
