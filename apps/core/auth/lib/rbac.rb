@@ -5,7 +5,12 @@ module RBAC
     def self.define_context(name, permissions=nil, options={})
         permissions ||= Spider::OrderedHash[]
         @contexts ||= {}
-        @contexts[name] = permissions 
+        permissions.clone.each do |k, v|
+            unless v.is_a?(Hash)
+               permissions[k] = {:label => v}
+            end
+        end
+        @contexts[name] = permissions
         @options ||= {}
         @options[name] = options
     end
@@ -13,7 +18,7 @@ module RBAC
     def self.context(name)
         @contexts[name]
     end
-    
+        
     def self.context?(name)
         @contexts[name] != nil
     end
