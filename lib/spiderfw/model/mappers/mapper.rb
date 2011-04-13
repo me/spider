@@ -311,11 +311,11 @@ module Spider; module Model
         def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
-            if (element.attributes[:junction])
+            if element.attributes[:junction]
                 their_element = element.attributes[:junction_their_element]
-                if (val.model != element.model) # dereferenced junction
+                if val.model != element.model # dereferenced junction
                     val = [val] unless val.is_a?(Enumerable)
-                    unless (mode == :insert)
+                    unless mode == :insert
                         current = obj.get_new
                         current_val = current.get(element)
                         current_val = [current_val] unless current_val.is_a?(Enumerable)
@@ -357,7 +357,7 @@ module Spider; module Model
                     end
                 end
             else
-                if (element.multiple?)
+                if element.multiple?
                     condition = Condition.and
                     condition[our_element] = obj
                     val.each do |row|
@@ -365,7 +365,7 @@ module Spider; module Model
                         element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', row.get(el))}
                         condition << condition_row
                     end
-                    if (element.owned?)
+                    if element.owned?
                         element.mapper.delete(condition)
                     else
                         element.mapper.bulk_update({our_element => nil}, condition)

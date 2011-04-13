@@ -116,7 +116,7 @@ module Spider; module Model
                 params[:force] = action
                 action = :save
             end
-            if (obj.class == QuerySet)
+            if obj.class == QuerySet
                 obj.each do |item|
                     add(item, action, params)
                 end
