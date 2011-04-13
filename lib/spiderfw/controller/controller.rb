@@ -178,6 +178,7 @@ module Spider
             else
                 method = action
             end
+            method = method[0..-2] if !method.blank? && method[-1].chr == '/'
             method = self.class.default_action if !method || method.empty?
             return nil if method.empty?
             return [method.to_sym, additional_arguments]
