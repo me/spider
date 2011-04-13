@@ -216,9 +216,11 @@ module Spider
                     args = arguments + @executed_method_arguments
                     @controller_action = args[0]
                     arity = meth.arity
-                    arity = (-arity + 1) if arity < 0
-                    args = arity == 0 ? [] : args[0..(arity-1)]
-                    args = [nil] if meth.arity == 1 && args.empty?
+                    unless arity == -1
+                        arity = (-arity + 1) if arity < 0
+                        args = arity == 0 ? [] : args[0..(arity-1)]
+                        args = [nil] if meth.arity == 1 && args.empty?
+                    end
                     Spider.logger.info("Executing: #{self.class.name}##{@executed_method}.#{@request.format}")
                     send(@executed_method, *args)
                 else
