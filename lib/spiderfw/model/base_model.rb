@@ -186,7 +186,7 @@ module Spider; module Model
         #                             the object.
         # :desc::                     (true or Fixnum) Use this element for the to_s string. Multiple elements
         #                             with the :desc attribute will be joined by spaces; order may be specified if 
-        #                             a Fixnum is used for the parameter 
+        #                             a Fixnum is used for the parameter
         # 
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
         # See also Element.
@@ -1851,7 +1851,7 @@ module Spider; module Model
                 else
                     Spider.logger.warn("Element #{el.name} overwritten in #{obj.inspect}") if our_val && our_val != val
                 end
-                set_loaded_value(el, val, false) unless val.nil? && element.multiple?
+                set_loaded_value(el, val, false) # unless val.nil? && element.multiple?
             end
             self
         end
