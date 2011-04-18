@@ -774,7 +774,6 @@ module Spider; module Model
         # * :delete_cascade     (bool) delete cascade the superclass instance. True by default.
         # * :no_local_pk        (bool) do not define an id for this class
         def self.class_table_inheritance(params={})
-            
             self.extend_model(superclass, params)
         end
         
