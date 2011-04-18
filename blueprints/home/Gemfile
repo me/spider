@@ -1,0 +1,3 @@
+source "http://rubygems.org"
+
+self.instance_eval(Bundler.read_file('spider.gemfile'), 'spider.gemfile', 1)

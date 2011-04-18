@@ -1,0 +1,22 @@
+source "http://rubygems.org"
+
+gem 'fssm'
+
+gem "mysql", :groups => [:db, :mysql]
+
+gem "spiderfw", :path => '/usr/local/lib/spider'
+gem "json", :platforms => [:mri_18, :mri_19]
+gem "mongrel"
+gem "ripl", :platforms => [:ruby, :mingw]
+gem "ripl-multi_line", :platforms => [:ruby, :mingw]
+gem "ripl-multi_line", :platforms => [:ruby, :mingw]
+gem "cldr"
+gem "ruby-debug", :group => :development
+
+Dir.glob("apps/*/Gemfile") do |f|
+  self.instance_eval(Bundler.read_file(f), f, 1)
+end
+
+
+@dependencies.delete_if{ |d| d.name == 'me-rvideo' }
+gem "me-rvideo", :path => '/Users/cerebus/src/gems/rvideo'
