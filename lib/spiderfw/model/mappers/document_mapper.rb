@@ -101,6 +101,7 @@ module Spider; module Model; module Mappers
         end
         
         def document_element?(el, model=@model)
+            return true if el.attributes[:document_element]
             return false if el.multiple? && !el.attributes[:embedded]
             return false if el.attributes[:extended_model]
             return false if el.attributes[:added_reverse]
