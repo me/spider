@@ -231,6 +231,9 @@ module Spider
         
         def before(action='', *arguments)
             @call_path = action
+            if app = self.class.app
+                FastGettext.text_domain = app.short_name 
+            end
             catch(:done) do
                 #debug("#{self} before")
                 do_dispatch(:before, action, *arguments)

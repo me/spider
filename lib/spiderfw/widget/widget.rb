@@ -494,9 +494,12 @@ module Spider
         end
         
         def render
+            prev_domain = FastGettext.text_domain
+            FastGettext.text_domain = self.class.app.short_name
             prepare_scene(@scene)
             set_scene_vars(@scene)
             @template.render(@scene) unless @is_target_ancestor && !@is_target
+            FastGettext.text_domain = prev_domain
         end
         
         def execute(action='', *params)

@@ -90,6 +90,8 @@ module Spider
             Locale.init(:driver => :cgi)
             Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
             @request.locale = Locale.current[0]
+            FastGettext.locale = @request.locale.to_s
+            FastGettext.text_domain = 'spider'
             if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
                 action = $1
                 @request.format = $2.to_sym
