@@ -15,8 +15,6 @@ module Spider
         end
         
         def self.stop
-            Spider.request_mutex.unlock
-            Spider.request_mutex = nil
             result = RubyProf.stop
             @profiling_started = false
             printer = ::RubyProf::GraphHtmlPrinter.new(result)
@@ -25,6 +23,8 @@ module Spider
                 printer.print(f, :min_percent => 0)
             end
             Spider.logger.info("Written profiling info in #{file_name}")
+            Spider.request_mutex.unlock
+            Spider.request_mutex = nil
         end
         
         def self.started?
