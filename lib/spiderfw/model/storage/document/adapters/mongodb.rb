@@ -97,7 +97,7 @@ module Spider; module Model; module Storage; module Document
             when 'Time'
                 value = value.utc
             when 'DateTime'
-                value = value.utc.to_time
+                value = value.to_local_time.utc.to_time
             when 'Date'
                 value = value.to_gm_time.utc
             end
