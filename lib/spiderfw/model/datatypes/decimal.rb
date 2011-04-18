@@ -30,6 +30,9 @@ module Spider; module DataTypes
             to_f
         end
         
+        def to_json(options=nil)
+            to_f.to_json
+        end
 
 
     end
