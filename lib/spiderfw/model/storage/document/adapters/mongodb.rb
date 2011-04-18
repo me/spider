@@ -100,6 +100,9 @@ module Spider; module Model; module Storage; module Document
                 value = value.to_local_time.utc.to_time
             when 'Date'
                 value = value.to_gm_time.utc
+            when 'BigDecimal'
+                # FIXME: should multiply on value.attributes[:scale] and store an integer, converting it back on load
+                value = value.to_f
             end
             value 
         end
