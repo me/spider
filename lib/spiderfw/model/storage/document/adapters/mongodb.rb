@@ -190,10 +190,10 @@ module Spider; module Model; module Storage; module Document
                              # TODO
                          else
                              pks = []
-                             element.model.primary_keys.each do |k|
-                                 kv = v[k.name]
+                             element.model.primary_keys.each do |ek|
+                                 kv = v[ek.name]
                                  raise "Document mapper can't join #{element.name}: condition #{condition}" unless kv
-                                 pks << element.mapper.map_condition_value(k.type, kv)
+                                 pks << element.mapper.map_condition_value(ek.type, kv)
                              end
                              hash_v = element.model.keys_string(pks)
                              hash_v = {Mongodb::CONDITION_OPS[comp] => hash_v} unless comp == '='
