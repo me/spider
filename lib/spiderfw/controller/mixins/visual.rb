@@ -44,22 +44,8 @@ module Spider; module ControllerMixins
         end
         
         def output_format_headers(format)
-            case format
-            when :text
-                content_type('text/plain')
-            when :json
-                if (Spider.runmode == 'devel' && @request.params['_text'])
-                    content_type('text/plain')
-                else
-                    content_type('application/json')
-                end
-            when :js
-                content_type('application/x-javascript')
-            when :html
-                content_type('text/html')
-            when :xml
-                content_type('text/xml')
-            end
+            return content_type('application/json') if format == :json && Spider.runmode == 'devel' && @request.params['_text']
+            content_type(format)
         end
         
         def visual_params
