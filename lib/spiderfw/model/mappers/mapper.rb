@@ -735,7 +735,6 @@ module Spider; module Model
             objects.each_current do |obj|
                 search_params = {}
                 @model.primary_keys.each do |key|
-                    field = @schema.field(key.name)
                     search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                 end
                 sub_res = result.find(search_params)
