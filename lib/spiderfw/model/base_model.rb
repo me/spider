@@ -600,6 +600,7 @@ module Spider; module Model
             model.each_element do |el|
                 next if params[:except].include?(el.name)
                 next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
+                next if el.reverse == element_name && el.type == self
                 integrate_element(element_name, el, params)
             end
             model.attributes[:integrated_from_elements] ||= []
