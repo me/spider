@@ -88,6 +88,7 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
+            self.done = true
             if (exc.is_a?(Spider::Controller::NotFound))
                 @response.status = Spider::HTTP::NOT_FOUND
             elsif (exc.is_a?(Spider::Controller::BadRequest))

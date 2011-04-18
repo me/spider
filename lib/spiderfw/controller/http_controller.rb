@@ -147,6 +147,7 @@ module Spider
         
         def try_rescue(exc)
             log_done unless Spider::Request.current[:_http_logged_done]
+            self.done = true
             if exc.is_a?(Spider::Controller::NotFound)
                 Spider.logger.error("Not found: #{exc.path}")
             elsif exc.is_a?(Spider::Controller::Forbidden)
