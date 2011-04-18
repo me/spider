@@ -823,7 +823,7 @@ module Spider; module Model
             when 'Date', 'DateTime'
                 return type.parse(value) unless value.is_a?(Date)
             end
-            if (type < Spider::DataType)
+            if type < Spider::DataType && type.force_wrap?
                 value = type.from_value(value)
             end
             return value
