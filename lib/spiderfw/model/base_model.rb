@@ -378,7 +378,8 @@ module Spider; module Model
             end
             if self.attributes[:integrated_from_elements]
                 self.attributes[:integrated_from_elements].each do |imod, iel|
-                    imod.integrate_element(iel, self.elements[name]) unless imod.elements[name]
+                    imod.integrate_element(iel, self.elements[name]) unless imod.elements[name] || 
+                        (self.elements[name].reverse == iel && self.elements[name].type == imod)
                 end
             end
             if (@subclasses)
