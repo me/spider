@@ -11,9 +11,11 @@ module Spider; module Model
             @to_delete = {}
             @new_objects = []
             if (proc)
+                prev_uow = Spider.current[:unit_of_work]
                 start
                 yield self
                 stop
+                Spider.current[:unit_of_work] = prev_uow
             end
         end
         
