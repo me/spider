@@ -37,6 +37,8 @@ Then /^the test e-mail should be added to the queue$/ do
     @queued.from.should == TEST_EMAIL[:from]
     @queued.to.should == TEST_EMAIL[:to]
     @queued.body.should == TEST_EMAIL[:body]
+    @queued.next_try.should_not == nil
+    @queued.next_try.should <= DateTime.now
 end
 
 Then /^the test e-mail should be sent$/ do
