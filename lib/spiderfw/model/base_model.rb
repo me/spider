@@ -1512,8 +1512,9 @@ module Spider; module Model
         def set_loaded_value(element, value, mark_loaded=true)
             element_name = element.is_a?(Element) ? element.name : element
             element = self.class.elements[element_name]
-            if (element.integrated?)
-                get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
+            if element.integrated?
+                integrated = get(element.integrated_from)
+                integrated.set_loaded_value(element.integrated_from_element, value) if integrated
             else
                 value = prepare_child(element.name, value)
                 current = instance_variable_get("@#{element_name}")
