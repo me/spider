@@ -861,11 +861,6 @@ module Spider; module Model; module Mappers
             when :keys
                 deps << [task, MapperTask.new(obj, :save)] unless obj.primary_keys_set? || (!obj.mapper || !obj.mapper.class.write?)
             when :save
-                @model.primary_keys.each do |key|
-                    if key.integrated? && !obj.element_has_value?(key)
-                        deps << [MapperTask.new(obj.get(key.integrated_from), :save), task]
-                    end
-                end
                 elements = @model.elements.select{ |n, el| !el.integrated? && el.model? && obj.element_has_value?(el) && obj.element_modified?(el)}
                 
                 elements.each do |name, element|
