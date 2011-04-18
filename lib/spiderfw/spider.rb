@@ -70,11 +70,15 @@ module Spider
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
             end
+            
+            @apps.each do |name, mod|
+                mod.app_init if mod.respond_to?(:app_init)
+            end
             GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
-
-                GetText.bindtextdomain(mod.short_name) if File.directory?(mod.path+'/po')
-                mod.app_init if mod.respond_to?(:app_init)
+                if File.directory?(File.join(mod.path, 'po'))
+                    GetText.bindtextdomain(mod.short_name)
+                end
             end
             @init_done=true
         end
