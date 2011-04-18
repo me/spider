@@ -876,13 +876,12 @@ module Spider; module Model; module Mappers
                         prev_task = nil
                         
                         set.each do |set_obj|
-                            # set_obj.set(el.reverse, obj) if el.reverse
                             sub_task = MapperTask.new(set_obj, :keys)
                             if prev_task
                                 deps << [sub_task, prev_task]
                             elsif delete_ass
                                 sub_save = MapperTask.new(set_obj, :save)
-                                deps << [sub_save, delete_ass]
+                                deps << [sub_task, delete_ass]
                             end
                             deps << [task, sub_task]
                             prev_task = sub_task
