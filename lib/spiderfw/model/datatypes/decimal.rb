@@ -33,6 +33,11 @@ module Spider; module DataTypes
         def to_json(options=nil)
             to_f.to_json
         end
+        
+        def attributes
+            {:scale => 2}.merge(super)
+        end
+        
 
 
     end
