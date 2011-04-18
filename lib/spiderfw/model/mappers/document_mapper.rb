@@ -140,9 +140,6 @@ module Spider; module Model; module Mappers
                 return res
             end
             
-            assign_pk(obj)
-            h["_id"] = obj.keys_string
-
             document_elements(obj).each do |el|
                 next if el.primary_key?
                 name = el.name
@@ -177,6 +174,10 @@ module Spider; module Model; module Mappers
                 end
                 h[name] = hval
             end
+            
+            assign_pk(obj)
+            h["_id"] = obj.keys_string
+            
             h
         end
 
