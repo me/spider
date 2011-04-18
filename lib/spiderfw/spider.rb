@@ -85,6 +85,9 @@ module Spider
         def init_apps
             @apps.each do |name, mod|
                 mod.app_init if mod.respond_to?(:app_init)
+                if File.directory?(File.join(mod.path, 'po'))
+                    FastGettext.add_text_domain(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
+                end
             end
             GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
