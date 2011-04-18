@@ -110,7 +110,7 @@ module Spider
         def after(action='', *arguments)
             # FIXME: cache stripped action?
             action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
-            @request.session.persist if @request.session
+            @request.session.persist if @request.session && @request.session.respond_to?(:persist)
             super(action, *arguments)
         end
         
