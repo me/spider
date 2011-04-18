@@ -1,7 +1,6 @@
 module Zoo
     @description = ""
     @version = 0.1
-    @path = File.dirname(__FILE__)
     include Spider::App
     
     def self.test_setup
@@ -15,6 +14,3 @@ module Zoo
 end
 
 require 'apps/zoo/models/animal'
-Zoo.models.each do |mod|
-    mod.use_storage 'test'
-end
