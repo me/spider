@@ -30,7 +30,7 @@ module Spider; module Auth
             end
             perm_details = RBAC.context(context)[permission]
             if has_perm
-                return true unless perm_details[:with_models]
+                return true unless perm_details[:with_models] && obj
                 model_el = self.class.elements_array.select{ |el| 
                     el.attributes[:rbac] == [context, permission] && el.type == obj.class
                 }.first
