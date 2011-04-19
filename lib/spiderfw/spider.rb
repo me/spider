@@ -493,11 +493,14 @@ module Spider
             resource_config = @resource_types[resource_type]
             resource_rel_path = resource_config[:path]
             app_rel_path = app && app.respond_to?(:relative_path) ? app.relative_path : nil
-            root_search = File.join(Spider.paths[:root], resource_rel_path)
-            root_search = File.join(root_search, app_rel_path) if app_rel_path
-            # unless cur_path && cur_path == File.join(root_search, path)
-            search_locations = [[root_search, @home]]
-            # end
+            search_locations = []
+            unless Spider.conf.get('resources.disable_custom')
+                root_search = File.join(Spider.paths[:root], resource_rel_path)
+                root_search = File.join(root_search, app_rel_path) if app_rel_path
+                # unless cur_path && cur_path == File.join(root_search, path)
+                search_locations = [[root_search, @home]]
+                # end
+            end
             if app
                 if app.respond_to?("#{resource_type}_path")
                     search_locations << [app.send("#{resource_type}_path"), app]
