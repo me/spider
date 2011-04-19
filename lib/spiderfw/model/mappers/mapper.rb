@@ -1061,7 +1061,9 @@ module Spider; module Model
         end
         
         def execute()
-            Spider::Logger.debug "Executing #{@action} on #{@object.inspect}"
+            debug_str = "Executing #{@action} on #{@object.inspect}"
+            debug_str += " (#{@params.inspect})" unless @params.empty?
+            Spider::Logger.debug debug_str
             @object.mapper.execute_action(@action, @object, @params)
         end
         

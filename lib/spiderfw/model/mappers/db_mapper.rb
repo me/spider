@@ -863,53 +863,49 @@ module Spider; module Model; module Mappers
             when :save
                 @model.primary_keys.each do |key|
                     if key.integrated? && !obj.element_has_value?(key)
-                        deps << [MapperTask.new(obj.get(key.integrated_from), :save), task]
+                        obj.get(key.integrated_from) # ensure super object is instantiated, so it gets processed later
                     end
                 end
+                
                 elements = @model.elements.select{ |n, el| !el.integrated? && el.model? && obj.element_has_value?(el) && obj.element_modified?(el)}
                 
                 elements.each do |name, element|
-                    if !element.has_single_reverse? # n <-> n and n|1 <-> 1
-                        delete_ass = nil
-                        if element.junction?
-                            delete_ass = MapperTask.new(obj, :delete_associations, :element => element.name)
-                            deps << [task, delete_ass]
-                        end
-                        
-                        set = obj.send(element.name)
-                        set = [set] unless set.is_a?(Enumerable)
-                        prev_task = nil
-                        
-                        set.each do |set_obj|
-                            # set_obj.set(el.reverse, obj) if el.reverse
-                            sub_task = MapperTask.new(set_obj, :keys)
-                            if prev_task
-                                deps << [sub_task, prev_task]
-                            elsif delete_ass
-                                sub_save = MapperTask.new(set_obj, :save)
-                                deps << [sub_save, delete_ass]
-                            end
-                            deps << [task, sub_task]
-                            prev_task = sub_task
-                        end
+                    if have_references?(element)
+                        el_obj = obj.send(element.name)
+                        sub_task = MapperTask.new(el_obj, :keys)
+                        deps << [task, sub_task]
                     else
-                        # 1 -> n
                         if element.type.mapper && element.type.mapper.class.write?
-                            delete_ass = MapperTask.new(obj, :delete_associations, :element => element.name)
-                            deps << [task, delete_ass]
-                            set = obj.send(element.name)
-                            set = [set] unless set.is_a?(Enumerable)
-                            prev_task = nil
-                            set.each do |set_obj|
-                                # set_obj.set(el.reverse, obj) if el.reverse
-                                sub_task = MapperTask.new(set_obj, :save)
-                                if prev_task
-                                    deps << [sub_task, prev_task]
-                                else
-                                    deps << [sub_task, delete_ass]
+                            el_val = obj.send(element.name)
+                            if element.multiple?
+                                set = el_val
+                                if element.junction? && !element.attributes[:keep_junction]
+                                    set = obj.send("#{element.name}_junction")
                                 end
-                                deps << [sub_task, MapperTask.new(obj, :keys)]
-                                prev_task = sub_task
+                                delete_ass = nil
+                                if set.modified # queryset modified
+                                    delete_ass = MapperTask.new(obj, :delete_associations, :element => element.name)
+                                    deps << [task, delete_ass]
+                                end
+                                prev_task = nil
+                                set.each do |set_obj|
+                                    sub_task = MapperTask.new(set_obj, :save)
+                                    set_obj.set_modified(element.reverse) if element.reverse
+                                    if set_obj.class.attributes[:junction] && delete_ass
+                                        set_obj.class.primary_keys.each{ |pk| set_obj.set(pk, nil) }
+                                    end
+                                    if prev_task
+                                        deps << [sub_task, prev_task]
+                                    elsif delete_ass
+                                        deps << [sub_task, delete_ass]
+                                    else
+                                        deps << [sub_task, task]
+                                    end
+                                    prev_task = sub_task
+                                end
+                            else
+                                el_val.set_modified(element.reverse)
+                                deps << [task, MapperTask.new(el_val, :save)]
                             end
                         end
                     end
