@@ -60,16 +60,20 @@ module Spider; module Model
             end
             tasks = tsort()
             
-            Spider.logger.debug("Tasks:")
-            tasks.each do |task| 
-                Spider.logger.debug "-- #{task.action} on #{task.object.class} #{task.object.primary_keys}"
+            if Spider.logger.debug?
+                Spider.logger.debug("Tasks:")
+                tasks.each do |task| 
+                    debug_str = "-- #{task.action} on #{task.object.class} #{task.object.primary_keys}"
+                    debug_str += " #{task.params.inspect}" unless task.params.blank?
+                    Spider.logger.debug debug_str
+                end
             end
                         
             tasks.each do |task|
                 obj = task.object
                 if task.action == :save
                     next unless obj.mapper && obj.mapper.class.write?
-                    next unless obj.modified?
+                    next if !obj.modified? && obj.primary_keys_set?
                 end
                 #Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
