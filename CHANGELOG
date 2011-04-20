@@ -1,3 +1,10 @@
+= 0.6.0
+== 20 April, 2011
+* Test support
+* JRuby support
+* Document storage
+* Many bugfixes
+
 = 0.5.19
 == 23 December, 2010
 * Made Ripl an optional dependency, since Bond can't be build on JRuby
