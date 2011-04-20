@@ -1,5 +1,5 @@
 Spider::Template.define_named_asset 'jquery', [
-     [:js, 'js/jquery/jquery-1.4.3.js', Spider::Components, {:cdn => 'https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js'}]
+     [:js, 'js/jquery/jquery-1.5.2.js', Spider::Components, {:cdn => 'https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js'}]
  ]
 
 Spider::Template.define_named_asset 'spider', [
