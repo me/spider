@@ -1,13 +1,14 @@
-Spider.Sortable = Spider.Plugin.extend({
-	
-	
+Spider.Sortable = Spider.Plugin.extend({	
     makeSortable: function(options){
         var options = $.extend({
             listSelector: '>ul',
             items: '>li',			
             update: this.handleSort.bind(this),
             receive: this.handleReceive.bind(this),
-            onSort: function(){}
+            onSort: function(){},
+            // if true, an element with class sort-pos inside the li is used to determine the li position in the storage.
+            // This is useful if the displayed items are a subset (with holes) of the sorted items in the storage
+            useSortPos: false
         }, options);
         this.listEl = options.listEl;
         if (!this.listEl) this.listEl = $(options.listSelector, this.el);
@@ -130,12 +131,20 @@ Spider.Sortable = Spider.Plugin.extend({
 
     findLiPosition: function(item){
         var cnt = 1;
-        var li = $(this.sortableOptions.items, this.listEl);
-        li.each(function(){
+        var lis = $(this.sortableOptions.items, this.listEl);
+        lis.each(function(){
             if (this == item.get(0)) return false;
             cnt++;
         });
-        if (cnt > li.length) return -1; // the row was dropped outside
+        if (cnt > lis.length) return -1; // the row was dropped outside
+        if (this.sortableOptions.useSortPos && lis.length > 1){
+            var realPos = -1;
+            if (cnt == 1){
+                realPos = parseInt(item.next().find('> .sort-pos').text(), 10) - 1;
+            }
+            else realPos = parseInt(item.prev().find('> .sort-pos').text(), 10) + 1;
+            return realPos;
+        } 
         return cnt;
     },
 
