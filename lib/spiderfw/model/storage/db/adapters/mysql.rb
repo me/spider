@@ -437,6 +437,15 @@ module Spider; module Model; module Storage; module Db
              return db_attributes
          end
          
+         def function(func)
+             case func.func_name
+             when :rownum
+                 "if(@rn, @rn:=@rn+1, @rn:=1)-1"
+             else
+                 super
+             end
+         end
+         
          def schema_field_text_equal?(current, field)
              # FIXME
              return true

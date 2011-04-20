@@ -181,6 +181,8 @@ module Spider; module Model; module Storage; module Db
                 return "SUBSTR(#{fields.join(', ')}, #{arguments})"
             when :subtract
                 return "(#{fields[0]} - #{fields[1]})"
+            when :rownum
+                return "ROWNUM()"
             end
             raise NotImplementedError, "#{self.class} does not support function #{func.func_name}"
         end
