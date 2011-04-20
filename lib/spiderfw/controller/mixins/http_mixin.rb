@@ -58,7 +58,17 @@ module Spider; module ControllerMixins
         end
         
         def content_type(ct)
-            @response.headers["Content-Type"] = "#{ct};charset=#{output_charset}"
+            if ct.is_a?(Symbol)
+                ct = {
+                    :text       => 'text/plain',
+                    :json       => 'application/json',
+                    :js         => 'application/x-javascript',
+                    :javascript => 'application/x-javascript',
+                    :html       => 'text/html',
+                    :xml        => 'text/xml'
+                }[ct]
+            end
+            @response.headers["Content-Type"] = "#{ct};charset=utf-8"
         end
         
         def before(action='', *arguments)
@@ -88,6 +98,7 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
+            self.done = true
             if (exc.is_a?(Spider::Controller::NotFound))
                 @response.status = Spider::HTTP::NOT_FOUND
             elsif (exc.is_a?(Spider::Controller::BadRequest))

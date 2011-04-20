@@ -70,11 +70,15 @@ module Spider
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
             end
+            
+            @apps.each do |name, mod|
+                mod.app_init if mod.respond_to?(:app_init)
+            end
             GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
-
-                GetText.bindtextdomain(mod.short_name) if File.directory?(mod.path+'/po')
-                mod.app_init if mod.respond_to?(:app_init)
+                if File.directory?(File.join(mod.path, 'po'))
+                    GetText.bindtextdomain(mod.short_name)
+                end
             end
             @init_done=true
         end
@@ -489,11 +493,14 @@ module Spider
             resource_config = @resource_types[resource_type]
             resource_rel_path = resource_config[:path]
             app_rel_path = app && app.respond_to?(:relative_path) ? app.relative_path : nil
-            root_search = File.join(Spider.paths[:root], resource_rel_path)
-            root_search = File.join(root_search, app_rel_path) if app_rel_path
-            # unless cur_path && cur_path == File.join(root_search, path)
-            search_locations = [[root_search, @home]]
-            # end
+            search_locations = []
+            unless Spider.conf.get('resources.disable_custom')
+                root_search = File.join(Spider.paths[:root], resource_rel_path)
+                root_search = File.join(root_search, app_rel_path) if app_rel_path
+                # unless cur_path && cur_path == File.join(root_search, path)
+                search_locations = [[root_search, @home]]
+                # end
+            end
             if app
                 if app.respond_to?("#{resource_type}_path")
                     search_locations << [app.send("#{resource_type}_path"), app]

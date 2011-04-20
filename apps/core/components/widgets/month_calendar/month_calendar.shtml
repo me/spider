@@ -4,10 +4,11 @@
         <thead>
             <tr>
                 <th colspan="7">
-                    <a href="{ @request[:path] }?_w{ @widget[:param] }[d]={ @prev_link }"><span>&lt;&lt;</span></a>
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }%5Bd%5D={ @prev_link }"><span>&lt;&lt;</span></a>
                     { @current_month_name } { @year }
-                    <a href="{ @request[:path] }?_w{ @widget[:param] }[d]={ @next_link }"><span>&gt;&gt;</span></a>
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }%5Bd%5D={ @next_link }"><span>&gt;&gt;</span></a>
                 </th>
+            </tr>
             <tr>
                 <th sp:each="@week_days |i|">{ @days_short_names[i] }</th>
             </tr>

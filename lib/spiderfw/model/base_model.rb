@@ -74,6 +74,9 @@ module Spider; module Model
         attr_accessor :_subclass_object
         # This object won't be put into the identity mapper
         attr_accessor :_no_identity_mapper
+        # Elements that were modified since a load or a save (note: this only keeps track of changed references on the object;
+        # it doesn't consider if a associated object or QuerySet has changed. Use element_modified? to get that information)
+        attr_reader :_modified_elements
         
         class <<self
             # An Hash of model attributes. They can be used freely.
@@ -378,7 +381,8 @@ module Spider; module Model
             end
             if self.attributes[:integrated_from_elements]
                 self.attributes[:integrated_from_elements].each do |imod, iel|
-                    imod.integrate_element(iel, self.elements[name]) unless imod.elements[name]
+                    imod.integrate_element(iel, self.elements[name]) unless imod.elements[name] || 
+                        (self.elements[name].reverse == iel && self.elements[name].type == imod)
                 end
             end
             if (@subclasses)
@@ -469,7 +473,7 @@ module Spider; module Model
                         get(element.integrated_from).merge!(integrated_obj)
                     end
                     if !element.primary_key? && integrated_obj.element_modified?(name)
-                        @modified_elements[name] = true
+                        @_modified_elements[name] = true
                     end
                     return res
                 end
@@ -506,7 +510,7 @@ module Spider; module Model
                     end
                 end
                 old_val = instance_variable_get(ivar)
-                @modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
+                @_modified_elements[name] = true if !element.primary_key? && (!was_loaded || val != old_val)
                 instance_variable_set(ivar, val)
                 set_reverse(element, val) if element.model?
                 if val && element.model? && !self.class.attributes[:no_type_check]
@@ -600,6 +604,7 @@ module Spider; module Model
             model.each_element do |el|
                 next if params[:except].include?(el.name)
                 next if elements[el.name] unless params[:overwrite] # don't overwrite existing elements
+                next if el.reverse == element_name && el.type == self
                 integrate_element(element_name, el, params)
             end
             model.attributes[:integrated_from_elements] ||= []
@@ -773,7 +778,6 @@ module Spider; module Model
         # * :delete_cascade     (bool) delete cascade the superclass instance. True by default.
         # * :no_local_pk        (bool) do not define an id for this class
         def self.class_table_inheritance(params={})
-            
             self.extend_model(superclass, params)
         end
         
@@ -1175,7 +1179,7 @@ module Spider; module Model
             @_autoload = true
             @_has_values = false
             @loaded_elements = {}
-            @modified_elements = {}
+            @_modified_elements = {}
             @value_observers = nil
             @all_values_observers = nil
             @_extra = {}
@@ -1512,8 +1516,9 @@ module Spider; module Model
         def set_loaded_value(element, value, mark_loaded=true)
             element_name = element.is_a?(Element) ? element.name : element
             element = self.class.elements[element_name]
-            if (element.integrated?)
-                get(element.integrated_from).set_loaded_value(element.integrated_from_element, value)
+            if element.integrated?
+                integrated = get(element.integrated_from)
+                integrated.set_loaded_value(element.integrated_from_element, value) if integrated
             else
                 value = prepare_child(element.name, value)
                 current = instance_variable_get("@#{element_name}")
@@ -1524,7 +1529,7 @@ module Spider; module Model
             value.loaded = true if (value.is_a?(QuerySet))
             element_loaded(element_name) if mark_loaded
             set_reverse(element, value) if element.model? && value
-            @modified_elements[element_name] = false
+            @_modified_elements[element_name] = false
         end
         
         # Records that the element has been loaded.
@@ -1752,9 +1757,9 @@ module Spider; module Model
         # Returns true if the element value has been modified since instantiating or loading
         def element_modified?(element)
             element = self.class.get_element(element)
-            set_mod = @modified_elements[element.name]
+            set_mod = @_modified_elements[element.name]
             return set_mod if set_mod
-            if (element.integrated?)
+            if element.integrated?
                 return false unless integrated = get_no_load(element.integrated_from)
                 return integrated.element_modified?(element.integrated_from_element)
             end
@@ -1773,9 +1778,9 @@ module Spider; module Model
         
         # Returns true if any element, or any child object, has been modified
         def modified?
-            return true unless @modified_elements.reject{ |key, val| !val }.empty?
+            return true unless @_modified_elements.reject{ |key, val| !val }.empty?
             self.class.elements_array.select{ |el| 
-                !el.model? && element_has_value?(el) && el.type.is_a?(Spider::DataType)
+                element_has_value?(el) && (el.type.is_a?(Spider::DataType) || el.multiple?)
             }.each do |el|
                 return true if get(el).modified?
             end
@@ -1789,17 +1794,19 @@ module Spider; module Model
         
         # Given elements are set as modified
         def set_modified(request) #:nodoc:
+            request = {request => true} unless request.is_a?(Hash)
             request.each do |key, val| # FIXME: go deep
-                @modified_elements[key] = true
+                key = key.name if key.is_a?(Element)
+                @_modified_elements[key] = true
             end
         end
         
         # Resets modified elements
         def reset_modified_elements(*elements) #:nodoc:
             if (elements.length > 0)
-                elements.each{ |el_name| @modified_elements.delete(el_name) }
+                elements.each{ |el_name| @_modified_elements.delete(el_name) }
             else
-                @modified_elements = {}
+                @_modified_elements = {}
             end
             elements = self.class.elements_array.map{ |el| el.name } if elements.empty?
             elements.each do |el_name|

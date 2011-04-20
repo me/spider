@@ -97,9 +97,12 @@ module Spider; module Model; module Storage; module Document
             when 'Time'
                 value = value.utc
             when 'DateTime'
-                value = value.utc.to_time
+                value = value.to_local_time.utc.to_time
             when 'Date'
                 value = value.to_gm_time.utc
+            when 'BigDecimal'
+                # FIXME: should multiply on value.attributes[:scale] and store an integer, converting it back on load
+                value = value.to_f
             end
             value 
         end
@@ -187,10 +190,10 @@ module Spider; module Model; module Storage; module Document
                              # TODO
                          else
                              pks = []
-                             element.model.primary_keys.each do |k|
-                                 kv = v[k.name]
+                             element.model.primary_keys.each do |ek|
+                                 kv = v[ek.name]
                                  raise "Document mapper can't join #{element.name}: condition #{condition}" unless kv
-                                 pks << element.mapper.map_condition_value(k.type, kv)
+                                 pks << element.mapper.map_condition_value(ek.type, kv)
                              end
                              hash_v = element.model.keys_string(pks)
                              hash_v = {Mongodb::CONDITION_OPS[comp] => hash_v} unless comp == '='

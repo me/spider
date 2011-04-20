@@ -110,7 +110,7 @@ module Spider
         def after(action='', *arguments)
             # FIXME: cache stripped action?
             action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
-            @request.session.persist if @request.session
+            @request.session.persist if @request.session && @request.session.respond_to?(:persist)
             super(action, *arguments)
         end
         
@@ -147,6 +147,7 @@ module Spider
         
         def try_rescue(exc)
             log_done unless Spider::Request.current[:_http_logged_done]
+            self.done = true
             if exc.is_a?(Spider::Controller::NotFound)
                 Spider.logger.error("Not found: #{exc.path}")
             elsif exc.is_a?(Spider::Controller::Forbidden)

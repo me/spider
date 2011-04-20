@@ -37,3 +37,9 @@ class Integer
     to_s
   end
 end
+
+def BigDecimal
+   def to_json(options = nil) #:nodoc:
+       to_f.to_json
+   end
+end

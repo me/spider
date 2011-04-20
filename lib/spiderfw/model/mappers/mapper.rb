@@ -735,7 +735,6 @@ module Spider; module Model
             objects.each_current do |obj|
                 search_params = {}
                 @model.primary_keys.each do |key|
-                    field = @schema.field(key.name)
                     search_params[:"#{element.attributes[:reverse]}.#{key.name}"] = obj.get(key)
                 end
                 sub_res = result.find(search_params)
@@ -823,7 +822,7 @@ module Spider; module Model
             when 'Date', 'DateTime'
                 return type.parse(value) unless value.is_a?(Date)
             end
-            if (type < Spider::DataType)
+            if type < Spider::DataType && type.force_wrap?
                 value = type.from_value(value)
             end
             return value
@@ -1062,7 +1061,9 @@ module Spider; module Model
         end
         
         def execute()
-            Spider::Logger.debug "Executing #{@action} on #{@object.inspect}"
+            debug_str = "Executing #{@action} on #{@object.inspect}"
+            debug_str += " (#{@params.inspect})" unless @params.empty?
+            Spider::Logger.debug debug_str
             @object.mapper.execute_action(@action, @object, @params)
         end
         

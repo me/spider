@@ -122,6 +122,9 @@ module Spider; module QueryFuncs
 
     class CurrentDate < ZeroArityFunction
     end
+    
+    class RowNum < ZeroArityFunction
+    end
 
     class Length < UnaryFunction
     end

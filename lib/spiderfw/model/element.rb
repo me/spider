@@ -104,7 +104,7 @@ module Spider; module Model
             self.attributes[:reverse]
         end
         
-        # True if the element has a reverse, and it is not multiple (i.e., the relationship is 1 <-> 1|n)
+        # True if the element has a reverse, and that reverse is not multiple
         def has_single_reverse?
             return true if self.attributes[:reverse] && !model.elements[self.attributes[:reverse]].multiple?
         end

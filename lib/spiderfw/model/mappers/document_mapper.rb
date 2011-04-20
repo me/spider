@@ -101,6 +101,7 @@ module Spider; module Model; module Mappers
         end
         
         def document_element?(el, model=@model)
+            return true if el.attributes[:document_element]
             return false if el.multiple? && !el.attributes[:embedded]
             return false if el.attributes[:extended_model]
             return false if el.attributes[:added_reverse]
@@ -139,9 +140,6 @@ module Spider; module Model; module Mappers
                 return res
             end
             
-            assign_pk(obj)
-            h["_id"] = obj.keys_string
-
             document_elements(obj).each do |el|
                 next if el.primary_key?
                 name = el.name
@@ -176,6 +174,10 @@ module Spider; module Model; module Mappers
                 end
                 h[name] = hval
             end
+            
+            assign_pk(obj)
+            h["_id"] = obj.keys_string
+            
             h
         end
 
