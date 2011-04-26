@@ -891,7 +891,7 @@ module Spider; module Model; module Mappers
                                 set.each do |set_obj|
                                     sub_task = MapperTask.new(set_obj, :save)
                                     set_obj.set_modified(element.reverse) if element.reverse
-                                    if set_obj.class.attributes[:junction] && delete_ass
+                                    if set_obj.class.attributes[:sub_model] && delete_ass
                                         set_obj.class.primary_keys.each{ |pk| set_obj.set(pk, nil) }
                                     end
                                     if prev_task
