@@ -214,7 +214,7 @@ module Spider
             dest = "#{pub_dest}/#{compiled_name}"
             File.cp(tmp_combined, combined)
             File.unlink(tmp_combined)
-            compressor = YUI::JavaScriptCompressor.new("charset" => "UTF-8")
+            compressor = ::YUI::JavaScriptCompressor.new("charset" => "UTF-8")
             io = open(combined, 'r')
             cjs = compressor.compress(io)
             open(dest, 'w') do |f|
@@ -225,6 +225,7 @@ module Spider
         end
         
         def compress_css(cpr)
+            require 'yui/compressor'
             
             pub_dest = Spider::HomeController.pub_path+'/'+COMPILED_FOLDER
             name = cpr[:name]
@@ -319,7 +320,7 @@ module Spider
             dest = "#{pub_dest}/#{compiled_name}"
             File.cp(tmp_combined, combined)
             File.unlink(tmp_combined)
-            compressor = YUI::CssCompressor.new("charset" => "UTF-8")
+            compressor = ::YUI::CssCompressor.new("charset" => "UTF-8")
             io = open(combined, 'r')
             cjs = compressor.compress(io)
             open(dest, 'w') do |f|

@@ -295,14 +295,16 @@ module Spider; module Model
                 vobj.set(:version_date, DateTime.now)
                 # vobj.set(:version_comment, comment)
                 object.mapper.do_update(object)
+                dup = false
                 begin
                     vobj.mapper.insert(vobj)
                     #vobj.insert
                 rescue Spider::Model::Storage::DuplicateKey
+                    dup = true
                     Spider.logger.error("Duplicate version for #{self}")
                 end
                 object.autoload(true)
-                object.trigger(:version_saved)
+                object.trigger(:version_saved) unless dup
             end
             
             def save_junction_version(object)
