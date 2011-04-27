@@ -23,7 +23,7 @@ module Spider
         
         def self.process_queues
             self.queues.each_key do |queue|
-                self.process_queue(queue)
+                self.process_queue(queue) unless Spider.conf.get("messenger.#{queue}.backends").empty?
             end
         end
         
@@ -69,6 +69,19 @@ module Spider
                         else
                             backend_response = exc ? exc.to_s : res
                             msg.add_failure(backend_response)
+                            msg.attempts ||= 0
+                            msg.attempts += 1
+                            msg.last_try = now
+                            if (exc)
+                                msg.backend_response = exc.to_s
+                            else
+                                msg.backend_response = res
+                            end
+                            if (msg.attempts >= Spider.conf.get("messenger.#{queue}.retries"))
+                                msg.next_try = nil
+                            else
+                                msg.next_try = msg.last_try.to_local_time + (msg.attempts * Spider.conf.get("messenger.#{queue}.retry_time") * 60)
+                            end
                             msg.save
                         end
                             
