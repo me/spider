@@ -1,6 +1,7 @@
 .spider.forms.form .errors{
     margin: 0px 15px;
     padding: 10px;
+    border: 1px solid #D9766F;
 }
 
 .spider.forms.form .errors ul{
@@ -28,7 +29,10 @@
 }
 
 .spider.forms.form .row.error label{
-    padding-left: 4px;
+}
+
+.spider.forms.form .row.error input{
+    background-color: #FF9999;
 }
 
 .spider.forms.form .row{
