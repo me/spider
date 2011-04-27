@@ -79,9 +79,10 @@ module Spider
                             load @scripts_dir+'/'+script
                         end
                     end
-                    Spider::Worker.every("#{Spider.conf.get('worker.jobs_interval')}s") do
-                        Spider::Worker.run_jobs
-                    end
+                    # TODO: remove worker jobs completely, they are a bad idea
+                    #Spider::Worker.every("#{Spider.conf.get('worker.jobs_interval')}s") do
+                    #    Spider::Worker.run_jobs
+                    #end
                     Spider.apps.each do |name, mod|
                         if File.directory?(mod.path+'/config/worker')
                             Dir.glob(mod.path+'/config/worker/*.rb').each do |path|
