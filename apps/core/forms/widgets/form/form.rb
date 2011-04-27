@@ -287,6 +287,11 @@ module Spider; module Forms
                 input.condition = el.condition if el.condition
             end
             @multipart = true if input.needs_multipart?
+            if errs = @errors[el.name]
+                while err = errs.pop
+                    input.add_error(err)
+                end
+            end
             return input
         end
         
@@ -406,7 +411,11 @@ module Spider; module Forms
         def add_error(message, element_name=nil, exception=nil)
             @error = true
             @errors[element_name] ||= []
-            @errors[element_name] << message
+            if @inputs[element_name]
+                @inputs[element_name].add_error(message) 
+            else
+                @errors[element_name] << message
+            end
         end
         
         def is_new?
