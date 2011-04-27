@@ -7,6 +7,11 @@ module Spider; module Messenger; module Backends; module Email
         
         def self.send_message(msg)
             Spider.logger.debug("Sending e-mail #{msg.ticket}")
+            if msg.to.blank?
+                Spider.logger.error("Message has no recipient, can't send:")
+                Spider.logger.error(msg)
+                raise "E-mail with no recipient"                
+            end
             mail = prepare_mail(msg)
             mail.delivery_method :smtp, {
                 :address => Spider.conf.get('messenger.smtp.address'),
