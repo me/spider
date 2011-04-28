@@ -83,6 +83,7 @@ Spider.Widget = Class.extend({
 	startup: function(){},
 	ready: function(){},
 	update: function(){},
+	afterReplace: function(){},
 	
 	replaceHTML: function(html){
 		var el = $(html);
@@ -92,7 +93,7 @@ Spider.Widget = Class.extend({
 		this.ready();
 		Spider.newHTML(this.el);
 		this.applyReady();
-		
+		this.afterReplace();
 	},
 	
 	replaceEl: function(el){
@@ -101,6 +102,7 @@ Spider.Widget = Class.extend({
 		this.update();
 		this.ready();
 		this.applyReady();
+		this.afterReplace();
 	},
 	
 	findWidgets: function(){
