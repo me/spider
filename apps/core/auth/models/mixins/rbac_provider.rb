@@ -17,7 +17,8 @@ module Spider; module Auth
             el = self.class.rbac_provider_elements[context]
             options = RBAC.options(context)
             if options[:superuser]
-                val = self.get(options[:superuser])
+                val = nil
+                val = self.get(options[:superuser]) if self.class.elements[options[:superuser]]
                 return true if val
             end
             val = self.get(el)
