@@ -7,6 +7,7 @@ module Spider
 
         def self.install(specs, home_path, options)
             options[:use_git] = true unless options[:use_git] == false
+            options[:home_path] = home_path
             specs = [specs] unless specs.is_a?(Array)
             pre_setup(specs, options)
             specs.each do |spec|
@@ -16,6 +17,7 @@ module Spider
                     pack_install(spec, home_path, options)
                 end
             end
+            post_setup(specs, options)
         end
 
         def self.git_install(spec, home_path, options={})
@@ -67,21 +69,17 @@ module Spider
             require 'rubygems/command.rb'
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
-                gems = specs.map{ |s| s.gems }
-                # unless options[:no_optional_gems]
-                #     gems += specs.map{ |s| s.gems_optional }
-                # end
-                gems = gems.flatten.uniq
-                gems.reject!{ |g| Gem.available?(g) }
-                unless gems.empty?
-                    puts _("Installing the following needed gems:")
-                    puts gems.inspect
+                unless Gem.available?('bundler')
+                    puts _("Installing bundler gem")
                     inst = Gem::DependencyInstaller.new
-                    gems.each do |g|
-                        inst.install g
-                    end
+                    inst.install 'bundler'
                 end
             end
+        end
+        
+        def self.post_setup(specs, options={})
+            require 'bundler'
+            Bundler::Installer.install(options[:home_path], Bundler.definitions, {})
         end
         
         def self.update(specs, home_path, options)

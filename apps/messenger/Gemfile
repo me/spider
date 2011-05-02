@@ -1,0 +1,1 @@
+gem "mail", "~> 2.3.0", :groups => [:messenger, :messenger_email, :email]

@@ -4,7 +4,6 @@ require 'rubygems'
 require 'find'
 require 'fileutils'
 require 'pathname'
-require 'bundler/setup'
 require 'spiderfw/autoload'
 require 'spiderfw/requires'
 
@@ -67,6 +66,9 @@ module Spider
                 $SPIDER_CONFIG_SETS.each{ |set| @configuration.include_set(set) }
             end
             init_file = File.join($SPIDER_RUN_PATH, 'init.rb')
+            ENV['BUNDLE_GEMFILE'] ||= File.join($SPIDER_RUN_PATH, 'Gemfile')
+            require 'bundler/setup' if File.exists? ENV['BUNDLE_GEMFILE']
+            
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
             end
@@ -609,9 +611,8 @@ module Spider
             if Spider.conf.get('debugger.start') || File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                 init_debug
             end
-            if (mode != 'production')
-                Spider.paths[:var] = File.join(Spider.paths[:var], mode)
-            end
+            Spider.paths[:var] = File.join(Spider.paths[:var], mode) if mode != 'production'
+            Bundler.require(:default, @runmode.to_sym) if defined?(Bundler)
         end
         
         def init_debug
