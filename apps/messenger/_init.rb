@@ -21,8 +21,6 @@ require 'apps/messenger/messenger'
 require 'apps/messenger/controllers/messenger_controller'
 require 'apps/messenger/controllers/mixins/messenger_helper'
 
-# gem dependencies: mailfactory for sending email from templates
-
 available_backends = {}
 base = File.join(Spider::Messenger.path, 'backends')
 Dir.new(base).each do |type|
