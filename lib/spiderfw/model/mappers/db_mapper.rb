@@ -890,16 +890,26 @@ module Spider; module Model; module Mappers
                                 prev_task = nil
                                 set.each do |set_obj|
                                     sub_task = MapperTask.new(set_obj, :save)
-                                    set_obj.set_modified(element.reverse) if element.reverse
                                     if set_obj.class.attributes[:sub_model] && delete_ass
                                         set_obj.class.primary_keys.each{ |pk| set_obj.set(pk, nil) }
                                     end
                                     if prev_task
                                         deps << [sub_task, prev_task]
-                                    elsif delete_ass
-                                        deps << [sub_task, delete_ass]
                                     else
                                         deps << [sub_task, task]
+                                    end
+                                    if delete_ass
+                                        del_dep = set_obj
+                                        if element.reverse
+                                            set_obj.set_modified(element.reverse)
+                                            el = set_obj.class.elements[element.reverse]
+                                            # ensure the real owner is added as a dependency
+                                            while el.integrated?
+                                                del_dep = set_obj.get(el.integrated_from)
+                                                el = del_dep.class.elements[el.integrated_from_element]
+                                            end
+                                        end
+                                        deps << [MapperTask.new(del_dep, :save), delete_ass]
                                     end
                                     prev_task = sub_task
                                 end
