@@ -1800,6 +1800,11 @@ module Spider; module Model
             request.each do |key, val| # FIXME: go deep
                 key = key.name if key.is_a?(Element)
                 @_modified_elements[key] = true
+                el = self.class.elements[key]
+                if el.integrated? && sub = self.get(el.integrated_from)
+                    sub.set_modified(el.integrated_from_element)
+                end
+                
             end
         end
         
