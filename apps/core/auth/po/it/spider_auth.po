@@ -6,10 +6,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Auth 0.1\n"
-"POT-Creation-Date: 2010-11-29 12:48+0100\n"
+"POT-Creation-Date: 2011-05-09 17:37+0200\n"
 "PO-Revision-Date: 2010-11-02 18:13+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -47,7 +48,7 @@ msgstr "Ultima login"
 msgid "Login count"
 msgstr "Numero login"
 
-#: models/mixins/rbac_provider.rb:41
+#: models/mixins/rbac_provider.rb:68
 msgid "%s permissions"
 msgstr "Permessi %s"
 

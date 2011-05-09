@@ -6,10 +6,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Messenger 0.1\n"
-"POT-Creation-Date: 2010-11-29 12:48+0100\n"
+"POT-Creation-Date: 2011-05-09 17:37+0200\n"
 "PO-Revision-Date: 2010-11-29 12:53+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -19,8 +20,7 @@ msgstr ""
 msgid "From"
 msgstr "Mittente"
 
-#: models/email.rb:8
-#: models/sms.rb:7
+#: models/email.rb:8 models/sms.rb:7
 msgid "To"
 msgstr "Destinatario"
 
@@ -100,18 +100,14 @@ msgstr "Testo"
 msgid "Queues"
 msgstr "Code"
 
-#: views/index.shtml:7
-#: views/queue.shtml:2
+#: views/index.shtml:7 views/queue.shtml:2
 msgid "Sent messages"
 msgstr "Messaggi inviati"
 
-#: views/index.shtml:8
-#: views/queue.shtml:4
+#: views/index.shtml:8 views/queue.shtml:4
 msgid "Queued messages"
 msgstr "Messaggi in coda"
 
-#: views/index.shtml:9
-#: views/queue.shtml:6
+#: views/index.shtml:9 views/queue.shtml:6
 msgid "Failed messages"
 msgstr "Messaggi falliti"
-
