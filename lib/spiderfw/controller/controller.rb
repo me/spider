@@ -278,8 +278,11 @@ module Spider
         end
         
         def prepare_scene(scene)
+            req_path = @request.path
+            req_path += 'index' if !req_path.blank? && req_path[-1].chr == '/'
             scene.request = {
-                :path => @request.path
+                :path => @request.path,
+                :page_path => req_path
             }
             scene.controller = {
                 :request_path => request_path,
