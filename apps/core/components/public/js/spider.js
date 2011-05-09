@@ -75,6 +75,10 @@ Spider.Widget = Class.extend({
 			callback = params;
 			params = {};
 		}
+        if ($.browser.msie){
+            if (!params) params = {};
+            params['_t'] = (new Date).valueOf();
+        }
 		$C.loadWidget(this.path, params, callback);
 	},
 	
