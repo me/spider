@@ -13,6 +13,8 @@ function $W(path){
 
 
 Spider = function(){};
+if (window.SPIDER_BASE_URL) Spider.baseUrl = window.SPIDER_BASE_URL;
+else Spider.baseUrl = "";
 
 Spider.widgets = {};
 

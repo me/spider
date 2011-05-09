@@ -341,6 +341,16 @@ module Spider
                     ass = {:src => ass} if ass.is_a?(String)
                     $out << "<script type=\"text/javascript\" src=\"#{ass[:src]}\"></script>\n"
                 end
+                unless @not_first_js
+                    $out << "<script type=\"text/javascript\">"
+                    @not_first_js = true
+                    $out << "window.SPIDER_BASE_URL = '#{self[:base_url]}'; "
+                    $out << "if (window.Spider) Spider.baseUrl = window.SPIDER_BASE_URL;\n"
+                    unless self[:js_translations].blank?
+                        $out << self[:js_translations]+"\n"
+                    end
+                    $out << "</script>"
+                end
             end
             if types.include?(:css)
                 self.assets[:css].each do |ass|
