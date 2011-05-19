@@ -1788,7 +1788,9 @@ module Spider; module Model
             self.class.elements_array.select{ |el| 
                 element_has_value?(el) && (el.type.is_a?(Spider::DataType) || el.multiple?)
             }.each do |el|
-                return true if get(el).modified?
+                obj = get(el)
+                check = obj.is_a?(QuerySet) ? obj.modified : obj.modified?
+                return true if check
             end
             return false
         end
