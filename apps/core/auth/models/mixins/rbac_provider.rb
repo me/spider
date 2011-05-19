@@ -60,11 +60,13 @@ module Spider; module Auth
                 @rbac_provider_elements[context] = :"#{context}_permissions"
                 inline_data = Spider::OrderedHash.new
                 permissions = RBAC.context(context)
+                options = RBAC.options(context)
                 permissions.each do |k, v|
                     inline_data[k] = v[:label]
                 end
+                rbac_name = @rbac_provider_elements[context]
                 
-                self.multiple_choice @rbac_provider_elements[context], inline_data,
+                self.multiple_choice rbac_name, inline_data,
                     :label => _("%s permissions") % context.to_s.gsub(/_+/, ' ').capitalize,
                     :inline_model => [[:id, String, {:primary_key => true}], [:desc, String]]
                 permissions.each do |k, v|
@@ -97,9 +99,25 @@ module Spider; module Auth
                                 el_name ||= "#{context}_#{k}_#{model_name}".to_sym
                                 reverse_name ||= "#{context}_#{k}_#{self_name}".to_sym
                             end
-                            self.many el_name, model, :add_multiple_reverse => {
-                                :name => reverse_name, :rbac_reverse => [context, k], :version_content => false
-                            }, :delete_cascade => true, :rbac => [context, k], :version_content => false
+                            choice_condition = Spider::Model::Condition.new{ |provider| (provider.__el(rbac_name) == k) }
+                            if self.elements[options[:superuser]]
+                                choice_condition.and(Spider::Model::Condition.new{ |provider|
+                                    (provider.__el(options[:superuser]) .not true)
+                                })
+                            end
+                            attributes = {
+                                :add_multiple_reverse => {
+                                    :name => reverse_name, :rbac_reverse => [context, k], :version_content => false, :association => :multiple_choice,
+                                    :choice_condition => choice_condition
+                                }, :delete_cascade => true, :rbac => [context, k], :version_content => false, 
+                                   :association => :multiple_choice
+                            }
+                            labels = v[:model_labels]
+                            if labels && labels[model] && lbls = labels[model][self.name]
+                                attributes[:label] = lbls[0]
+                                attributes[:add_multiple_reverse][:label] = lbls[1]
+                            end
+                            self.many el_name, model, attributes
                         end
                     end
                 end
