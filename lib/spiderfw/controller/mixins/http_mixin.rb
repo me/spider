@@ -40,6 +40,7 @@ module Spider; module ControllerMixins
         
         # Returns the request_path prefixed with http:// and the current host.
         def request_url
+            return request_path unless @request.env['HTTP_HOST']
             'http://'+@request.env['HTTP_HOST']+request_path
         end
         
