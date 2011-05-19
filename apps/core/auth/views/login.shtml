@@ -9,7 +9,7 @@
     <div class='logout' sp:if='@did_logout'>
         Logout eseguito
     </div>
-    <form action='do_login' method='POST'>
+    <form action='{ @controller[:request_url] }/do_login' method='POST'>
         <input type="hidden" name="redirect" value="{ @redirect }">
         <div class='row'>
             <label for='login'>Login:</label>
