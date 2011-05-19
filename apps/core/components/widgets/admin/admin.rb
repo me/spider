@@ -20,6 +20,7 @@ module Spider; module Components
         i_attribute :models, :process => lambda{ |models| models.split(/,[\s\n]*/).map{|m| const_get_full(m) } }
         is_attr_accessor :title, :default => lambda{ _("Administration") }
         is_attr_accessor :logout_url, :default => Spider::Auth.request_url+'/login/logout'
+        attr_accessor :custom_widgets
         
         def init
             @items = []
@@ -34,6 +35,11 @@ module Spider; module Components
                 crud = Crud.new(@request, @response)
                 crud.id = model.name.to_s.gsub('::', '_').downcase
                 crud.model = model
+                if @custom_widgets && @custom_widgets[model]
+                    crud.table_widget = @custom_widgets[model][:table] if @custom_widgets[model][:table]
+                    crud.form_widget = @custom_widgets[model][:form] if @custom_widgets[model][:form]
+                end
+                
                 @widgets[:switcher].add(model.label_plural, crud, _('Manage Data'))
             end
             if (@request.respond_to?(:user) && @request.user)
@@ -50,11 +56,39 @@ module Spider; module Components
             super
         end
         
+        def self.parse_content(doc)
+            assets_widgets = []
+            doc.search('admin:model').each do |mod|
+                if table = mod.get_attribute('table')
+                    assets_widgets << table 
+                end
+                if form = mod.get_attribute('form')
+                    assets_widgets << form 
+                end
+            end
+            assets_widgets.uniq!
+            rc, ov = super
+            unless assets_widgets.empty?
+                ov << Hpricot("<tpl:prepend><tpl:assets widgets=\"#{assets_widgets.uniq.join(',')}\"></tpl:prepend>").root
+            end
+            [rc, ov]
+        end
+        
         def parse_runtime_content(doc, src_path)
+            @custom_widgets ||= {}
             doc = super
             mods = []
             doc.search('admin:model').each do |mod|
-                mods << const_get_full(mod.innerText)
+                model = const_get_full(mod.innerText)
+                mods << model
+                if table = mod.get_attribute('table')
+                    @custom_widgets[model] ||= {}
+                    @custom_widgets[model][:table] = table
+                end
+                if form = mod.get_attribute('form')
+                    @custom_widgets[model] ||= {}
+                    @custom_widgets[model][:form] = form
+                end
             end
             doc.search('admin:app').each do |app_tag|
                 except = []

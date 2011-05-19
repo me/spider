@@ -28,14 +28,15 @@
                 Crea nuovo
             </a>
         </div>
-        <div class="table_search" sp:if="@action == :table">
+        <div class="table_search" sp:if="@action == :table && @show_table_search">
             <form action="{ @request[:path] }" method="GET">
                 <input type="text" name="_w{ param_name(@widget) }[table_q]" value="{ @table_q }">
                 <input type="submit" name="submit" value="Trova">
                 <input type="submit" name="_w{ param_name(@widget) }[clear_table_q]" value="Pulisci">
             </form>
         </div>
-        <core:table sp:if="@action == :table" id="table" model="@model">
+        <sp:run sp:if="@action == :table && @custom_table" obj="@custom_table" />
+        <core:table sp:if="@action == :table && !@custom_table" id="table" model="@model">
             <tpl:override-content search="table .row td">
                 <a href="{ @links_to_form[row_i] }" sp:tag-if="element == @key_element"><tpl:overridden /></a>
             </tpl:override-content>
@@ -55,6 +56,7 @@
             </tpl:append>
             <tpl:override-attr search="table .paginator td" name="colspan" value="{ elements.size + 1 }" />
         </core:table>
-        <forms:form sp:if="@action == :form" id="form" model="@model" show_related="true" show_additional_buttons="true" />
+        <sp:run sp:if="@action == :from && @custom_form" obj="@custom_form" />
+        <forms:form sp:if="@action == :form && !@custom_form" id="form" model="@model" show_related="true" show_additional_buttons="true" />
     </sp:pass>
 </div>
