@@ -1278,9 +1278,10 @@ module Spider; module Model
         # Returns a new instance for given element name.
         def instantiate_element(name)
             element = self.class.elements[name]
-            if (element.model?)
-                if (element.multiple?)
+            if element.model?
+                if element.multiple?
                     val = QuerySet.static(element.model)
+                    val.modified = true
                 else
                     val = element.type.new
                     val.autoload = autoload?
