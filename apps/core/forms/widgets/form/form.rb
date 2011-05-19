@@ -284,7 +284,7 @@ module Spider; module Forms
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?
                 input.model = el.type if input.respond_to?(:model)
-                input.condition = el.condition if el.condition
+                input.condition = el.attributes[:choice_condition] || el.condition
             end
             @multipart = true if input.needs_multipart?
             if errs = @errors[el.name]
