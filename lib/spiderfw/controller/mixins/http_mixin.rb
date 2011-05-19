@@ -94,6 +94,7 @@ module Spider; module ControllerMixins
         def prepare_scene(scene)
             scene = super
             scene.base_url = base_url
+            scene.controller[:request_url] = request_url
             return scene
         end
         
