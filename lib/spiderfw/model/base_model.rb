@@ -1766,8 +1766,11 @@ module Spider; module Model
                 return false unless integrated = get_no_load(element.integrated_from)
                 return integrated.element_modified?(element.integrated_from_element)
             end
-            if element_has_value?(element) && (val = get(element)).respond_to?(:modified?)
-                return val.modified?
+            if element_has_value?(element)
+                val = get(element)
+                # don't call modified? on QuerySets, since we don't need to query sub objects (this could lead to infinite loops)
+                return val.modified if val.is_a?(QuerySet) 
+                return val.modified? if val.respond_to?(:modified?)
             end
             return false
         end
