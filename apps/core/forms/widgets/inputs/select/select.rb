@@ -6,6 +6,7 @@ module Spider; module Forms
         is_attr_accessor :multiple
         is_attr_accessor :blank_option, :type => TrueClass, :default => nil
         is_attr_accessor :condition
+        attribute :tree_element, :default => nil
         attr_accessor :data
         
         def widget_init(action='')
@@ -37,20 +38,32 @@ module Spider; module Forms
         end
         
         def run
-            
             @scene.data = @data || @model.all
-            if (@condition)
+            if @condition
                 @scene.data.condition = @condition
             end
             conn_cond = connection_condition
-            if (conn_cond == false)
+            if conn_cond == false
                 @scene.data = Spider::Model::QuerySet.static(@model)
-            elsif (conn_cond)
+            elsif conn_cond
                 @scene.data.condition.and(conn_cond)
             end
             @scene.values = {}
             @scene.selected = {}
-            if (@value)
+            if @model || (@scene.data.is_a?(QuerySet) && @scene.data.autoload?)
+                tree_el = nil
+                if attributes[:tree_element]
+                    tree_el = @model.elements[attributes[:tree_element]]
+                else
+                    tree_el = @model.elements_array.select{ |el| el.association == :tree }.first
+                end
+                if tree_el
+                    @scene.data = @scene.data.model.send("#{tree_el.name}_all", @scene.data.condition)
+                    @scene.data.reject!{ |obj| obj == @form.obj } if @form && @form.obj
+                    @scene.tree_depth = tree_el.attributes[:tree_depth]
+                end
+            end
+            if @value
                 val = @multiple ? @value : [@value]
                 val.each do |v|
                     @scene.selected[@model.primary_keys.map{|k| v.get(k) }.join(',')] = true
