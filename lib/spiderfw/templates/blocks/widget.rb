@@ -51,14 +51,13 @@ module Spider; module TemplateBlocks
             
             template = klass.load_template(template_attr || klass.default_template)
             template.asset_profiles = asset_profiles if asset_profiles
-            if (overrides.length > 0)
-                #template_name = klass.find_template(template_attr)
+            # @template is the containing template, template is the widget's template
+            if overrides.length > 0
                 template.add_overrides overrides
                 @template.add_subtemplate(id, template, klass)
             else
                 @template.add_widget_template(template, klass)
             end
-            # end
 
             init = ""
             t_param = 'nil'
