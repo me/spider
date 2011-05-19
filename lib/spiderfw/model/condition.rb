@@ -391,8 +391,15 @@ module Spider; module Model
     
     module ConditionMixin # :nodoc:
         
+        def __el(meth)
+            __create_condition_element(meth)
+        end
         
         def method_missing(meth, *arguments)
+            __create_condition_element(meth)
+        end
+        
+        def __create_condition_element(meth)
             if (meth == :q)
                 return ConditionElementCreator.new
             end
