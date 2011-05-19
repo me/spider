@@ -554,6 +554,7 @@ module Spider
         end
         
         def create_widget(klass, id,  *params)
+            klass = Spider::Template.get_registered_class(klass) unless klass.is_a?(Class)
             params.unshift(@response)
             params.unshift(@request)
             obj = klass.new(*params)
