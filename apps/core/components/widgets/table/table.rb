@@ -15,8 +15,8 @@ module Spider; module Components
         attribute :link_id, :type => Symbol
         attribute :link
         attribute :sort
-        i_attribute :queryset
-        i_attribute :model
+        i_attr_accessor :queryset
+        i_attr_accessor :model
         attr_accessor :queryset, :condition, :page
         
         def condition
