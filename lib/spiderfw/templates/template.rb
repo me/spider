@@ -85,7 +85,7 @@ module Spider
             def registered?(tag)
                 return true if @@registered[tag]
                 ns, tag = tag.split(':')
-                if (tag) # that is, if there is a ns
+                if tag # that is, if there is a ns
                     return false unless @@namespaces[ns]
                     return @@namespaces[ns].has_tag?(tag)
                 end
@@ -100,11 +100,11 @@ module Spider
             
             # Returns the Class registered for the given tag.
             def get_registered_class(name)
-                if (@@registered[name])
+                if @@registered[name]
                     klass = @@registered[name]
                 else
                     ns, tag = name.split(':')
-                    klass = @@namespaces[ns].get_tag(tag) if (tag && @@namespaces[ns])
+                    klass = @@namespaces[ns].get_tag(tag) if tag && @@namespaces[ns]
                 end
                 return nil unless klass
                 klass = const_get_full(klass) if klass.is_a?(Symbol)
@@ -392,9 +392,9 @@ module Spider
             raise "Asset type not given for #{src}" unless type
             res = Spider.find_resource(type.to_sym, src, @path, [owner_class, @definer_class])
             controller = nil
-            if (res && res.definer)
+            if res && res.definer
                 controller = res.definer.controller
-            elsif (owner_class < Spider::Controller)
+            elsif owner_class < Spider::Controller
                 controller = owner_class
             end
             ass[:path] = res.path if res
@@ -412,7 +412,7 @@ module Spider
             ass[:rel_path] = src
             ass[:src] = base_url + src
             ass_info = self.class.asset_types[type]
-            if (ass_info && ass_info[:processor])
+            if ass_info && ass_info[:processor]
                 processor = TemplateAssets.const_get(ass_info[:processor])
                 ass = processor.process(ass)
             end
@@ -463,7 +463,7 @@ module Spider
             root.search('.to_delete').remove
             add_overrides overrides
             @overrides += orig_overrides
-            if (root.name == 'tpl:extend')
+            if root.name == 'tpl:extend'
 
                 orig_overrides = @overrides
                 @overrides = []
@@ -483,7 +483,7 @@ module Spider
                     ext_app = ext_owner.app
                 end
                 ext_search_paths = nil
-                if (ext_owner && ext_owner.respond_to?(:template_paths))
+                if ext_owner && ext_owner.respond_to?(:template_paths)
                     ext_search_paths = ext_owner.template_paths
                 end 
                 ext = self.class.real_path(ext_src, @path, ext_owner, ext_search_paths)
@@ -503,7 +503,7 @@ module Spider
                     end
                 end
                 @overrides += orig_overrides
-                if (assets && !assets.empty?)
+                if assets && !assets.empty?
                     assets.each do |ass|
                         root.innerHTML += ass.to_html
                     end
@@ -543,11 +543,11 @@ module Spider
         def process_tags(el)
             block = TemplateBlocks.get_block_type(el, true)
             raise "Bad html in #{@path}, can't parse" if el.is_a?(Hpricot::BogusETag)
-            if (block == :Tag)
+            if block == :Tag
                 sp_attributes = {}
                 # FIXME: should use blocks instead
                 el.attributes.to_hash.each do |key, value|
-                    if (key[0..1] == 'sp')
+                    if key[0..1] == 'sp'
                         sp_attributes[key] = value
                         el.remove_attribute(key)
                     end
@@ -583,14 +583,14 @@ module Spider
             @widgets[id.to_sym] ||= widget
             widget.id = id
             widget.id_path = @id_path + [id]
-            if (attributes) # don't use merge to trigger custom []=(k, v) method
+            if attributes # don't use merge to trigger custom []=(k, v) method
                 attributes.each{ |k, v| widget.attributes[k] = v }
             end
             widget.containing_template = self
             widget.template = template if template
             widget.parent = @owner
             widget.parse_runtime_content_xml(content, @path) if content
-            if (@widget_procs[id.to_sym])
+            if @widget_procs[id.to_sym]
                 @widget_procs[id.to_sym].each do |wp|
                     apply_widget_proc(widget, wp)
                 end
@@ -718,9 +718,9 @@ module Spider
         def add_overrides(overrides)
             overrides.each do |ov|
                 w = ov.get_attribute('widget')
-                if (w)
+                if w
                     first, rest = w.split('/', 2)
-                    if (rest)
+                    if rest
                         ov.set_attribute('widget', rest)
                     else
                         ov.remove_attribute('widget')
@@ -744,13 +744,13 @@ module Spider
             end
             search_string = override.get_attribute('search')
             override.name = 'tpl:override-content' if override.name == 'tpl:inline-override'
-            if (search_string)
+            if search_string
                 # # Fix Hpricot bug!
                 # search_string.gsub!(/nth-child\((\d+)\)/) do |match|
                 #     "nth-child(#{$1.to_i-2})"
                 # end
                 found = el.parent.search(search_string)
-            elsif (override.name == 'tpl:content')
+            elsif override.name == 'tpl:content'
                 found = el.search("tpl:placeholder[@name='#{override.get_attribute('name')}']")
             else
                 if ['sp:pass', 'tpl:pass', 'sp:template'].include?(el.name)
@@ -760,12 +760,12 @@ module Spider
                 end
             end
             
-            if (override.name == 'tpl:delete')
+            if override.name == 'tpl:delete'
                 found.remove
             else
                 found.each do |f|
                     o_doc = nil
-                    if (override.name == 'tpl:override-content')
+                    if override.name == 'tpl:override-content'
                         overridden = f.innerHTML
                         f.innerHTML = override.innerHTML
                         f.search('tpl:overridden').each do |o| 
@@ -776,7 +776,7 @@ module Spider
                             end 
                             o.swap(ovr)
                         end
-                    elsif (override.name == 'tpl:override' || override.name == 'tpl:content')
+                    elsif override.name == 'tpl:override' || override.name == 'tpl:content'
                         overridden = f.to_html
                         parent = f.parent
                         f.swap(override.innerHTML)
@@ -788,18 +788,18 @@ module Spider
                             end
                             o.swap(ovr)
                         end
-                    elsif (override.name == 'tpl:override-attr')
+                    elsif override.name == 'tpl:override-attr'
                         f.set_attribute(override.get_attribute("name"), override.get_attribute("value"))
-                    elsif (override.name == 'tpl:append-attr')
+                    elsif override.name == 'tpl:append-attr'
                         f.set_attribute(override.get_attribute("name"), \
                         (f.get_attribute(override.get_attribute("name")) || '')+override.get_attribute("value")) 
-                    elsif (override.name == 'tpl:append')
+                    elsif override.name == 'tpl:append'
                         f.innerHTML += override.innerHTML
-                    elsif (override.name == 'tpl:prepend')
+                    elsif override.name == 'tpl:prepend'
                         f.innerHTML = override.innerHTML + f.innerHTML
-                    elsif (override.name == 'tpl:before')
+                    elsif override.name == 'tpl:before'
                         f.before(override.innerHTML)
-                    elsif (override.name == 'tpl:after')
+                    elsif override.name == 'tpl:after'
                         f.after(override.innerHTML)
                     end
                 end
@@ -812,13 +812,13 @@ module Spider
             @widget_procs[first.to_sym] ||= []
             wp = {:target => rest, :proc => proc }
             @widget_procs[first.to_sym] << wp
-            if (@widgets[first.to_sym])
+            if @widgets[first.to_sym]
                 apply_widget_proc(@widgets[first.to_sym], wp)
             end
         end
         
         def apply_widget_proc(widget, wp)
-            if (wp[:target])
+            if wp[:target]
                 widget.with_widget(wp[:target], &wp[:proc])
             else
                 widget.instance_eval(wp[:proc])
