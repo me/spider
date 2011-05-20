@@ -448,6 +448,7 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 .ui-tabs-panel .ui-button { border-width: 0px; background: transparent; }
 
 /* === Datepicker === */
+#ui-datepicker-div{ display: none; }
 .ui-datepicker { width: 17em; padding: .2em .2em 0; background: #FFFFFF url(images/datepicker.gif) left top repeat-x; -moz-box-shadow: 0px 5px 10px rgba(0,0,0,0.8); -webkit-box-shadow: 0px 5px 10px rgba(0,0,0,0.8); box-shadow: 0px 5px 10px rgba(0,0,0,0.8); }
 .ui-datepicker .ui-datepicker-header { position:relative; padding:2px 0px 6px 0px; background: transparent; -moz-border-radius: 0px; -webkit-border-radius: 0px; border-radius: 0px; border: 0px none; }
 .ui-datepicker .ui-datepicker-prev, .ui-datepicker .ui-datepicker-next { position:absolute; top: 6px; width: 16px; height: 16px; border: 0px none; cursor: pointer; }
