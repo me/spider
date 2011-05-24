@@ -603,7 +603,7 @@ module Spider; module Model
                     query.request.keys.each do |k, v|
                         set.element_loaded(k) if have_references?(k)
                     end
-                    set.each do |obj|
+                    set.each_current do |obj|
                         next if merged[obj.object_id]
                         query.request.keys.each do |element_name|
                             el = @model.elements[element_name]
