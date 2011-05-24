@@ -22,8 +22,8 @@ module Spider; module Forms
     class Form < Spider::Widget
         tag 'form'
         is_attribute :form_action
-        i_attribute :model
-        i_attribute :elements
+        i_attr_accessor :model
+        i_attr_accessor :elements
         i_attribute :widget_types
         i_attribute :read_only
         i_attribute :disabled
