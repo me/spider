@@ -117,7 +117,7 @@ module Spider
             def template_path
                 return @template_path if @template_path
                 @template_path = @widget_path
-                @template_path += '/templates' if ::File.directory?(@template_path+'/templates')
+                @template_path += '/templates' if @template_path && ::File.directory?(@template_path+'/templates')
                 @template_path
             end
             
