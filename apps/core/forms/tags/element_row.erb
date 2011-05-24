@@ -1,11 +1,12 @@
 <%
-    tag_attrs = ['required', 'element', 'error_condition']
-    error_condition = @attributes['error_condition'] ? @attributes['error_condition'] : "@inputs[#{@attributes['element']}].error?"
-    required =  @attributes['required'] ? @attributes['required'] : "@inputs[#{@attributes['element']}].required?"
+    tag_attrs = ['required', 'element', 'error_condition', 'inputs_hash']
+    inputs_hash = @attributes['inputs_hash'] || 'inputs'
+    error_condition = @attributes['error_condition'] ? @attributes['error_condition'] : "#{inputs_hash}[#{@attributes['element']}].error?"
+    required =  @attributes['required'] ? @attributes['required'] : "#{inputs_hash}[#{@attributes['element']}].required?"
 %>
-<forms:row error_condition="<%=error_condition%>" required="<%=required%>">
-    <forms:element_label element="<%=@attributes['element']%>" required="<%=required%>"/>
-    <sp:run obj="@inputs[<%=@attributes['element']%>]" widget="<%=@attributes['element']%>">
+<forms:row error_condition="<%=error_condition%>" required="<%=required%>" element="<%=@attributes['element']%>">
+    <forms:element_label element="<%=@attributes['element']%>" required="<%=required%>" inputs_hash="<%=inputs_hash%>"/>
+    <sp:run obj="@<%=inputs_hash%>[<%=@attributes['element']%>]" widget="<%=@attributes['element']%>">
       <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="required" value="<%=(@attributes['required']=='true')? 'true' : ''%>" />
       <%
         (@attributes.keys - tag_attrs).each do |k|
