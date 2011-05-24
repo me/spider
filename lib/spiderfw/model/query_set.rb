@@ -358,27 +358,19 @@ module Spider; module Model
 
         # Iterates on objects, loading when needed.
         def each
-            tmp = []
-            prev_parents = []
-            self.each_index do |i|
+            self.each_rolling_index do |i|
                 obj = @objects[i]
                 prev_parent = obj._parent
                 prev_parent_element = obj._parent_element
                 obj.set_parent(self, nil)
-                tmp << obj
-                prev_parents << [prev_parent, prev_parent_element]
-            end
-            tmp.each do |obj|
                 yield obj
-            end
-            tmp.each_index do |i|
-                prev_parent, prev_parent_element = prev_parents[i]
-                tmp[i].set_parent(prev_parent, prev_parent_element)
+                obj.set_parent(prev_parent, prev_parent_element)
             end
         end
 
-        # Iterates yielding objects index. Will load when needed.
-        def each_index
+        # Iterates yielding the internal objects index. Will load when needed. If a window is
+        # used, the index will roll back to 0 on every window.
+        def each_rolling_index
             @window_current_start = nil if (@fetch_window)
             while (!@fetch_window || has_more?)
                 load_next unless !autoload? || (!@fetch_window && @loaded)
@@ -389,6 +381,14 @@ module Spider; module Model
             end
         end
         
+        # Iterates yielding the queryset index. Will load when needed.
+        def each_index
+            self.each_rolling_index do |i|
+                i += @window_current_start-1 if @window_current_start
+                yield i
+            end
+        end
+
         # Iterates on indexes without loading.
         def each_current_index
             @objects.each_index do |i|
