@@ -390,7 +390,13 @@ module Spider
             ass[:app] = owner_class.app 
             # FIXME! @definer_class is not correct for Spider::HomeController
             raise "Asset type not given for #{src}" unless type
-            res = Spider.find_resource(type.to_sym, src, @path, [owner_class, @definer_class])
+            search_classes = [owner_class, @definer_class]
+            dfnr = @definer_class.superclass if @definer_class && @definer_class.respond_to?(:superclass)
+            while dfnr && dfnr < Spider::Widget
+                search_classes << dfnr
+                dfnr = dfnr.respond_to?(:superclass) ? dfnr.superclass : nil
+            end
+            res = Spider.find_resource(type.to_sym, src, @path, search_classes)
             controller = nil
             if res && res.definer
                 controller = res.definer.controller
