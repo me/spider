@@ -4,6 +4,7 @@
     <tpl:asset name="jquery" />
     <tpl:asset type="js" src="input.js" />
     <tpl:asset type="js" src="html_area.js" /><tpl:asset type="js" src="text_area.js" />
+    <tpl:asset type="css" src="css/html_area.css" />
     <!--- <tpl:asset type="css" src="jwysiwyg/jquery.wysiwyg.css" />
     <tpl:asset type="js" src="jwysiwyg/jquery.wysiwyg.js" /> -->
     <div class="initial_html" style="display:none">{ @initial_html }</div>
