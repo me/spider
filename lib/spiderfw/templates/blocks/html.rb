@@ -41,7 +41,7 @@ module Spider; module TemplateBlocks
                     cl += ' ' unless cl.empty?
                     cl += '{ @widget[:css_classes] }'
                 end
-                @el.set_attribute('class', cl)
+                @el.set_attribute('class', cl) unless cl.blank?
             end
             start = "$out << '<"+@el.name
             @el.attributes.to_hash.each do |key, val|
