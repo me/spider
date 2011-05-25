@@ -137,7 +137,7 @@ module Spider; module Forms
             # else
             if @obj
                 @fixed.each {|k, v| @obj.set(k, v)} if (@fixed)
-                set_values(@obj) if @action == :form
+                set_values(@obj) if @action == :form && !@submit_action
             end
 #            end
             super
