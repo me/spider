@@ -1295,8 +1295,11 @@ module Spider; module Model
         
         # Prepares an object that is being set as a child.
         def prepare_child(name, obj)
-            return obj if obj.nil?
             element = self.class.elements[name]
+            if obj.nil?
+                obj = QuerySet.static(element.model) if element.multiple?
+                return obj 
+            end
             if (element.model?)
                 # convert between junction and real type if needed
                 if element.attributes[:junction]
