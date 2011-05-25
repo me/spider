@@ -6,10 +6,10 @@ Spider.defineWidget('Spider.Forms.Select', 'Spider.Forms.Input', {
 		if (this.el.is('select[multiple]')){
             this.el.attr('title', 'Aggiungi...');
 		    this.el.bsmSelect({
-    			removeLabel: 'togli',
-    			highlightAddedLabel: 'Aggiunto: ',
-    			highlightRemovedLabel: 'Tolto: ',
-    			addItemTarget: 'top'
+                removeLabel: 'togli',
+                highlightAddedLabel: 'Aggiunto: ',
+                highlightRemovedLabel: 'Tolto: ',
+                addItemTarget: 'bottom'
     		});
             $('.bsmSelect option:first', this.el.parent()).addClass('bsmSelectTitle')
                 .attr("selected", false)
