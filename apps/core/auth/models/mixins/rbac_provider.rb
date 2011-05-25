@@ -61,13 +61,12 @@ module Spider; module Auth
                 inline_data = Spider::OrderedHash.new
                 permissions = RBAC.context(context)
                 options = RBAC.options(context)
-                permissions.each do |k, v|
-                    inline_data[k] = v[:label]
-                end
+                inline_data = RBAC.labels(context)
                 rbac_name = @rbac_provider_elements[context]
+                el_label = options[:element_label] || _("%s permissions") % context.to_s.gsub(/_+/, ' ').capitalize
                 
                 self.multiple_choice rbac_name, inline_data,
-                    :label => _("%s permissions") % context.to_s.gsub(/_+/, ' ').capitalize,
+                    :label => el_label,
                     :inline_model => [[:id, String, {:primary_key => true}], [:desc, String]]
                 permissions.each do |k, v|
                     if models = v[:with_models]
