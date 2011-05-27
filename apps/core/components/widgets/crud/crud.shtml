@@ -56,7 +56,7 @@
             </tpl:append>
             <tpl:override-attr search="table .paginator td" name="colspan" value="{ elements.size + 1 }" />
         </core:table>
-        <sp:run sp:if="@action == :from && @custom_form" obj="@custom_form" />
+        <sp:run sp:if="@action == :form && @custom_form" obj="@custom_form" />
         <forms:form sp:if="@action == :form && !@custom_form" id="form" model="@model" show_related="true" show_additional_buttons="true" />
     </sp:pass>
 </div>
