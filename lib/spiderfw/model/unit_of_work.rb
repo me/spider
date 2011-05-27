@@ -142,8 +142,10 @@ module Spider; module Model
             @new_objects << obj unless curr
             if action == :save
                 children = obj.mapper.children_for_unit_of_work(obj, action)
+                prms = params.clone
+                prms.delete(:force)
                 children.each do |child|
-                    add(child, action, params)
+                    add(child, action, prms)
                 end
             end
         end
