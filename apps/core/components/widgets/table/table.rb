@@ -92,7 +92,7 @@ module Spider; module Components
             @elements.each do |el|
                 @scene.labels[el] = @model.elements[el].label
             end
-            @rows = prepare_queryset(@queryset ? @queryset : @model.all)
+            @rows = prepare_queryset(@queryset ? @queryset : @model.list)
             @rows.condition.and(self.condition) if self.condition && !self.condition.empty?
             if (@attributes[:paginate])
                 @rows.limit = @attributes[:row_limit]

@@ -1119,6 +1119,12 @@ module Spider; module Model
             return self.where
         end
         
+        # Returns a queryset with the objects that should be shown to the user. By default
+        # returns self.all
+        def self.list
+            return self.all
+        end
+        
         # Constructs a Query based on params, and returns a QuerySet
         # Allowed parameters are:
         # * a Query object
