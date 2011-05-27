@@ -37,6 +37,7 @@
 
 .spider.forms.form .row{
     clear: both;
+    overflow: hidden;
     margin-top: 5px;
 }
 

@@ -20,7 +20,7 @@ Spider.defineWidget('Spider.Forms.HTMLArea', 'Spider.Forms.Input', {
         if (cssEl.length > 0){
             css = cssEl.text();
         }
-        var options = $.parseJSON($('.options', this.el).text());
+        options = $.parseJSON($('.options', this.el).text());
         var config = {
             extraPlugins : 'autogrow'
         };
@@ -41,7 +41,7 @@ Spider.defineWidget('Spider.Forms.HTMLArea', 'Spider.Forms.Input', {
             ['Maximize', 'ShowBlocks']
         ];
         config.toolbar = 'simple';
-        config.filebrowserBrowseUrl = options.file_manager;
+        config.filebrowserBrowseUrl = options.link_manager;
         config.filebrowserImageBrowseUrl = options.image_manager;
         config.filebrowserWindowFeatures = 'modal=yes,alwaysRaised=yes';
         config.fullPage = options.full_page;
@@ -49,7 +49,7 @@ Spider.defineWidget('Spider.Forms.HTMLArea', 'Spider.Forms.Input', {
         this.textarea.ckeditor(config);
         this.ckeditor = this.textarea.ckeditorGet();
         
-        if (css) this.ckeditor.addCss(css);
+        if (css){ this.ckeditor.addCss(css); }
         
 	}
 });

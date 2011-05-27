@@ -8,14 +8,20 @@ module Spider; module Forms
         is_attr_accessor :rows, :type => Fixnum, :default => 6
         is_attr_accessor :cols, :type => Fixnum, :default => 80
         attribute :"full-page", :type => Spider::Bool
+        attribute :"file-manager"
+        attribute :"image-manager"
+        attribute :"link-manager"
         
         def prepare
             super
             @scene.initial_html = @initial_html ? CGI.escapeHTML(@initial_html) : ''
             @scene.css = @css
-            options = {}
-            options[:file_manager] = Spider::Files.http_url(:manager) if Spider.app?('spider_files')
-            options[:image_manager] = Spider::Images.http_url(:manager) if Spider.app?('spider_images')
+            options = {
+                :image_manager => attributes[:"image-manager"],
+                :link_manager => attributes[:"link-manager"] || attributes[:"file-manager"]
+            }
+            options[:link_manager] ||= Spider::Files.http_url(:manager) if Spider.app?('spider_files')
+            options[:image_manager] ||= Spider::Images.http_url(:manager) if Spider.app?('spider_images')
             options[:full_page] = attributes[:"full-page"]
             @scene.options = options.to_json
         end

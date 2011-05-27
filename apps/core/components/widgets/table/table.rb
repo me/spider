@@ -15,8 +15,8 @@ module Spider; module Components
         attribute :link_id, :type => Symbol
         attribute :link
         attribute :sort
-        i_attribute :queryset
-        i_attribute :model
+        i_attr_accessor :queryset
+        i_attr_accessor :model
         attr_accessor :queryset, :condition, :page
         
         def condition
@@ -92,7 +92,7 @@ module Spider; module Components
             @elements.each do |el|
                 @scene.labels[el] = @model.elements[el].label
             end
-            @rows = prepare_queryset(@queryset ? @queryset : @model.all)
+            @rows = prepare_queryset(@queryset ? @queryset : @model.list)
             @rows.condition.and(self.condition) if self.condition && !self.condition.empty?
             if (@attributes[:paginate])
                 @rows.limit = @attributes[:row_limit]

@@ -22,8 +22,8 @@ module Spider; module Forms
     class Form < Spider::Widget
         tag 'form'
         is_attribute :form_action
-        i_attribute :model
-        i_attribute :elements
+        i_attr_accessor :model
+        i_attr_accessor :elements
         i_attribute :widget_types
         i_attribute :read_only
         i_attribute :disabled
@@ -284,7 +284,7 @@ module Spider; module Forms
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
                 input.multiple = true if el.multiple?
                 input.model = el.type if input.respond_to?(:model)
-                input.condition = el.condition if el.condition
+                input.condition = el.attributes[:choice_condition] || el.condition
             end
             @multipart = true if input.needs_multipart?
             if errs = @errors[el.name]
