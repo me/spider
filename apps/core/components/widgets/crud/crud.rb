@@ -83,7 +83,8 @@ module Spider; module Components
                 end
                 table_page = 1 if params['table_q'] || params['clear_table_q']
                 @widgets[:table].page = table_page if @widgets[:table].respond_to?(:page)
-                if t_els = @attributes[:table_elements] && @widgets[:table].class.attribute?(:elements)
+                t_els = @attributes[:table_elements]
+                if t_els && @widgets[:table].class.attribute?(:elements)
                     @widgets[:table].attributes[:elements] = t_els
                 end
                 @widgets[:table].scene.key_element = @key_element
