@@ -249,6 +249,7 @@ module Spider
                         app_relative_path = 'spider'
                         app_path = Spider::SpiderController.pub_path
                     end
+                    app_pathname = Pathname.new(app_path)
 
                     pub_app = "#{pub_dest}/#{app_relative_path}"
                     FileUtils.mkdir_p(pub_app)
@@ -263,14 +264,20 @@ module Spider
                         url = url.first
                         next if url =~ %r{^/} || url =~ %r{^[a-z]+://}
                         path = ""
-                        url_dest = File.expand_path(File.join(pub_app, url))
                         url_src = File.expand_path(File.join(src_dir, url))
-                        unless url_src.index(app_path) == 0
+                        src_pathname = Pathname.new(url_src)
+                        src_rel = nil
+                        begin
+                            src_rel = src_pathname.relative_path_from(app_pathname)
+                        rescue ArgumentError
                             raise "Can't combine CSS if paths go outside app: #{url} in #{path}"
                         end
+                        
+                        url_dest = File.join(pub_app, src_rel.to_s)
+                        
                         FileUtils.mkdir_p(File.dirname(url_dest))
                         cachebuster = Spider.conf.get('css.cachebuster')
-                        new_url = "#{app_relative_path}/#{url}"
+                        new_url = "#{app_relative_path}/#{src_rel}"
                         if File.exist?(url_src)
                             mtime = File.mtime(url_src).to_i
                             if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest).to_i
