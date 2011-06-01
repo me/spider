@@ -14,6 +14,8 @@ module Spider
                 block = :Text
             elsif el.class == ::Hpricot::Comment
                 block = :Comment
+            elsif !skip_attributes && el.has_attribute?('sp:lambda')
+                block = :Lambda
             elsif !skip_attributes && (el.has_attribute?('sp:if') || el.has_attribute?('sp:run-if'))
                 block = :If
             elsif !skip_attributes && el.has_attribute?('sp:tag-if')
@@ -39,6 +41,8 @@ module Spider
                 block = :Debugger
             elsif el.name == 'sp:parent-context'
                 block = :ParentContext
+            elsif el.name == 'sp:recurse'
+                block = :Recurse
             elsif Spider::Template.registered?(el.name)
                 klass = Spider::Template.get_registered_class(el.name)
                 if klass < ::Spider::Widget
@@ -208,5 +212,7 @@ require 'spiderfw/templates/blocks/debugger'
 require 'spiderfw/templates/blocks/parent_context'
 require 'spiderfw/templates/blocks/output'
 require 'spiderfw/templates/blocks/layout_assets'
+require 'spiderfw/templates/blocks/lambda'
+require 'spiderfw/templates/blocks/recurse'
 
 
