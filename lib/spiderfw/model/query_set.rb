@@ -810,6 +810,7 @@ module Spider; module Model
         # Performs a deep copy
         def clone
             c = self.class.new(self.model, self.query.clone)
+            c.autoload = self.autoload?
             c_objects = c.instance_variable_get(:@objects)
             @objects.each do |o|
                 c_objects << o.clone
