@@ -90,7 +90,7 @@ module Spider; module Model
                    end
                    
                    define_method("#{name}_all") do
-                       qs = QuerySet.new(self)
+                       qs = QuerySet.static(self)
                        self.send("#{name}_roots").each do |root|
                            qs += root.tree_all(name)
                        end
