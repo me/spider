@@ -32,6 +32,11 @@ module Spider; module Components
         
         def prepare_widgets
             @models.each do |model|
+                if @user_checks && user_check = @user_checks[model]
+                    next unless @request.user
+                    next unless @request.user.respond_to?(user_check)
+                    next unless @request.user.send(user_check)
+                end
                 crud = Crud.new(@request, @response)
                 crud.id = model.name.to_s.gsub('::', '_').downcase
                 crud.model = model
@@ -76,6 +81,7 @@ module Spider; module Components
         
         def parse_runtime_content(doc, src_path)
             @custom_widgets ||= {}
+            @user_checks ||= {}
             doc = super
             mods = []
             doc.search('admin:model').each do |mod|
@@ -88,6 +94,9 @@ module Spider; module Components
                 if form = mod.get_attribute('form')
                     @custom_widgets[model] ||= {}
                     @custom_widgets[model][:form] = form
+                end
+                if user_check = mod.get_attribute('if-user')
+                    @user_checks[model] = user_check.to_sym
                 end
             end
             doc.search('admin:app').each do |app_tag|
