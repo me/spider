@@ -19,6 +19,7 @@ module Spider; module Model
             q = Query.new(c)
             q.order_by(left_el)
             res = element.model.find(q)
+            return [] unless res
             right_stack = []
             res.each do |obj|
                 if (right_stack.length > 0)
