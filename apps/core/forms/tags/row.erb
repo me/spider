@@ -3,10 +3,11 @@ if @attributes['element']
     error_condition = @attributes['error_condition'] || "@inputs[#{@attributes['element']}].error?"
     required =  @attributes['required'] || "@inputs[#{@attributes['element']}].required?"
     el_class = "{ #{@attributes['element']} }_element"
+    el_class += " #{@attributes['class']}" if @attributes['class']
 else
     error_condition = @attributes['error_condition']
     required = @attributes['required']
-    el_class = ''
+    el_class = @attributes['class'] || ''
 end
 %>
 <div class="row <%=el_class%> { (<%=error_condition%>) ? ' error' : '' }{ (<%=required%>) ? ' required' : '' }">
