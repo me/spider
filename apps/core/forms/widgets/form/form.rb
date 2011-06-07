@@ -266,6 +266,7 @@ module Spider; module Forms
                     end
                     input.id = el.name
                     input.form = self
+                    input.required = el.required?
 #                    input.name = '_w'+param_name(input.id_path[0..-2]+['data']+input.id_path[-1..-1])
                     input.label = @labels[el.name]
                     @inputs[el.name] = input
