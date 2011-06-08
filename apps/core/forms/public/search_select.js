@@ -139,12 +139,12 @@ Spider.defineWidget('Spider.Forms.SearchSelect', 'Spider.Forms.Input', {
 	val: function(){
 		if (this.multiple){
 			var v = [];
-			$('input[type=hidden]', this.el).each(function(){
+			$('input[type=hidden].hidden-val', this.el).each(function(){
 				v.push($(this).val());
 			});
 			return v;
 		}
-		else return $('input[type=hidden]', this.el).val();
+		else return $('input[type=hidden].hidden-val', this.el).val();
 	}
     
 });
