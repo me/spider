@@ -45,7 +45,7 @@ module Spider; module Forms
             conn_cond = connection_condition
             if conn_cond == false
                 @scene.data = Spider::Model::QuerySet.static(@model)
-            elsif conn_cond
+            elsif conn_cond && !conn_cond.empty?
                 @scene.data.condition.and(conn_cond)
             end
             @scene.values = {}

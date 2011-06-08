@@ -93,6 +93,11 @@ module Spider
                     if (@options[key][:params] && @options[key][:params][:type] == :conf)
                         @values[key] ||= Configuration.new(@prefix+".#{key}") # FIXME: needed?
                         val.each do |h_key, h_val|
+                            unless h_val.is_a?(Hash)
+                                # Reference to another subconf item
+                                self[key][h_key] = self[key][h_val]
+                                next
+                            end
                             self[key][h_key] = Configuration.new(@prefix+".#{key}.x")
                             self[key][h_key].hash_key = h_key
                             h_val.each { |k, v| self[key][h_key].set(k, v) }

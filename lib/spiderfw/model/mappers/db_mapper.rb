@@ -977,6 +977,10 @@ module Spider; module Model; module Mappers
             @storage.column_type(type, attributes)
         end
         
+        def storage_column_attributes(type, attributes)
+            @storage.column_attributes(type, attributes)
+        end
+        
         def base_type(type)
             if type <= Spider::DataTypes::PK
                 Fixnum
@@ -1008,7 +1012,7 @@ module Spider; module Model; module Mappers
                     storage_type = base_type(element.type)
                     db_attributes = column.attributes if column
                     if (!db_attributes || db_attributes.empty?)
-                        db_attributes = @storage.column_attributes(storage_type, element.attributes)
+                        db_attributes = storage_column_attributes(storage_type, element.attributes)
                         db_attributes.merge(element.attributes[:db]) if (element.attributes[:db]) 
                         if (element.attributes[:autoincrement] && !db_attributes[:autoincrement])
                             schema.set_sequence(element.name, @storage.sequence_name("#{schema.table}_#{element.name}"))

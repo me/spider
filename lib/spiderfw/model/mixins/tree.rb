@@ -19,6 +19,7 @@ module Spider; module Model
             q = Query.new(c)
             q.order_by(left_el)
             res = element.model.find(q)
+            return [] unless res
             right_stack = []
             res.each do |obj|
                 if (right_stack.length > 0)
@@ -89,7 +90,7 @@ module Spider; module Model
                    end
                    
                    define_method("#{name}_all") do
-                       qs = QuerySet.new(self)
+                       qs = QuerySet.static(self)
                        self.send("#{name}_roots").each do |root|
                            qs += root.tree_all(name)
                        end
