@@ -49,7 +49,7 @@ module Spider; module Model; module Storage; module Db
             251 => 'LONG_BLOB',
             252 => 'BLOB',
             253 => 'VARCHAR',
-            254 => 'STRING',
+            254 => 'CHAR',
             255 => 'GEOMETRY'
         }
         @field_flags = {
@@ -343,7 +343,7 @@ module Spider; module Model; module Storage; module Db
                  fields.each do |f|
                      type =  self.class.field_types[f.type]
                      length = f.length;
-                     length /= 3 if (type == 'VARCHAR')
+                     length /= 3 if ['CHAR', 'VARCHAR'].include?(type)
                      scale = nil
                      precision = f.decimals
                      # FIXME
@@ -444,6 +444,11 @@ module Spider; module Model; module Storage; module Db
              else
                  super
              end
+         end
+         
+         def schema_field_int_equal?(current, field)
+             # FIXME
+             return true
          end
          
          def schema_field_text_equal?(current, field)
