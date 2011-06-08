@@ -8,3 +8,5 @@ module Spider; module DataTypes
     
     
 end; end
+
+Spider::Text = Spider::DataTypes::Text
