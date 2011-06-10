@@ -38,10 +38,14 @@ module Spider
 
                 cwd = Dir.getwd
                 Dir.chdir(dest_path)
-                repo = Grit::Repo.init(dest_path)
-                repo.add('apps', 'config', 'init.rb', 'public')
-                repo.add('.gitignore')
-                repo.commit_index(_("Created repository"))
+                begin
+                    repo = Grit::Repo.init(dest_path)
+                    repo.add('apps', 'config', 'init.rb', 'public')
+                    repo.add('.gitignore')
+                    repo.commit_index(_("Created repository"))
+                rescue => exc
+                    puts "Unable to init Git repo, please init manually"
+                end
                 Dir.chdir(cwd)
             rescue LoadError
                 puts "Grit not installed, cannot init repo"

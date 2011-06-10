@@ -1,3 +1,8 @@
+= 0.6.2
+= 10 June, 2011
+* More flexible Admin widget
+* Fixes and enhancements
+
 = 0.6.1
 == 2 May, 2011
 * Bundler support
