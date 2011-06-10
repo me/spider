@@ -1165,7 +1165,7 @@ module Spider; module Model; module Mappers
 
         # Returns a create table structure description.
         def create_table(table_name, schema, attributes) # :nodoc:
-            fields = schema[:fields_order].map do |f| 
+            fields = schema[:fields_order].uniq.map do |f| 
                 details = schema[:columns][f.name]
                 {
                     :name => f.name,
