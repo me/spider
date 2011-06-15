@@ -4,8 +4,10 @@ module Spider; module Forms
         attr_accessor :element, :form, :errors
         i_attr_accessor :name
         is_attribute :value
+        is_attr_accessor :default
         is_attr_accessor :label
         is_attr_accessor :required, :type => Spider::DataTypes::Bool
+
         
         
         def init
@@ -43,6 +45,7 @@ module Spider; module Forms
         end
         
         def format_value
+            @value ||= @default
             @value.respond_to?(:format) ? @value.format : @value
         end
         
@@ -87,6 +90,7 @@ module Spider; module Forms
         end
         
         def check
+            #debugger
             if required? && !has_value?
                 add_error( _("%s is required") % self.label )
             end
