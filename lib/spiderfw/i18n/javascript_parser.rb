@@ -6,7 +6,7 @@ module Spider; module I18n
     module JavascriptParser
         module_function
         
-        GettextRegexp = /\W_\(['"]([^\)'"]+)['"](,\s*[^\)]\s*)*\)/
+        GettextRegexp = /\W_\(['"]([^\)'"]+)['"](,\s*[^\)]+\s*)*\)/
         
         
 
