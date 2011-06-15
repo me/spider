@@ -42,6 +42,7 @@ module Spider; module HTTP
             }
             
             start = lambda{
+                $SPIDER_WEB_SERVER = true
                 require 'spiderfw'
                 require 'spiderfw/controller/http_controller'
                 

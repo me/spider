@@ -71,6 +71,7 @@ module Spider; module CommandLine
             end
             cmd_name ||= 'help'
             if !@cmd.main_command.commands[cmd_name]
+                $SPIDER_CMD = true
                 require 'spiderfw'
                 if Spider.apps_by_short_name[cmd_name] && Spider.apps_by_short_name[cmd_name].const_defined?(:Cmd)
                     app_cmd = Spider.apps_by_short_name[cmd_name].const_get(:Cmd).new
