@@ -315,7 +315,7 @@ END_OF_EVAL
                 h
             end
             
-            def to_json
+            def to_json(opts=nil)
                 to_h.to_json
             end
             
