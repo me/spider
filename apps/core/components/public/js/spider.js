@@ -744,9 +744,13 @@ $.extend(Spider.Widget.prototype, Spider.EventTarget);
 var translations = {};
 
 function _(s){
+    var str = s;
     var tr = translations[s];
-    if (tr) return tr;
-    return s;
+    if (tr) str = tr;
+    for (var i=1; i<arguments.length; i++){
+        str = str.replace('%s', arguments[i]);
+    }
+    return str;
 }
 
 if(!window.console) {

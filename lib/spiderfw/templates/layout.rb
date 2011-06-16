@@ -107,7 +107,11 @@ module Spider
                 end
                 if ass[:gettext] && type == :js
                     msg_path = asset_gettext_messages_file(ass[:path])
-                    js_messages += JSON.parse(File.read(msg_path))
+                    if File.exists?(msg_path)
+                        js_messages += JSON.parse(File.read(msg_path))
+                    else
+                        Spider.logger.warn("Javascript Gettext file #{msg_path} not found")
+                    end
                 end
             end
             assets[:js].each do |ass|
