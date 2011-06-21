@@ -124,6 +124,7 @@ module Spider; module Model
                               vmod.remove_element(elh[:attributes][:tree_left])
                               vmod.remove_element(elh[:attributes][:tree_right])
                               vmod.remove_element(elh[:attributes][:tree_depth])
+                              vmod.remove_element(elh[:attributes][:tree_position])
                               vmod.tree(el.name, elh[:attributes])
                           else
                               vmod.send(elh[:method], el.name, el.type.version_model, elh[:attributes])
