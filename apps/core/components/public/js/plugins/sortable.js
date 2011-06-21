@@ -100,6 +100,7 @@ Spider.Sortable = Spider.Plugin.extend({
             return;
         }
         var pos = this.findLiPosition(ui.item);
+        if (pos == -1) return;
         return this.acceptFromSender(ui.sender, ui.item, pos);
     },
 
