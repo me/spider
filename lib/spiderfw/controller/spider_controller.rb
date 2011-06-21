@@ -6,7 +6,7 @@ module Spider
         
         
         def self.pub_path
-            $SPIDER_PATH+'/public'
+            File.join($SPIDER_PATH, 'public')
         end
         
         def self.pub_url
