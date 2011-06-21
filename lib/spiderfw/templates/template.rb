@@ -296,6 +296,10 @@ module Spider
                             w_templates = $2.split('|')
                         end
                         klass = Spider::Template.get_registered_class(w)
+                        unless klass
+                            Spider.logger.warn("tpl:assets requested non existent widget #{w}")
+                            next
+                        end
                         w_templates ||= [klass.default_template]
                         w_templates.each do |wt| 
                             t = klass.load_template(wt)
