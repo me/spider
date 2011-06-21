@@ -509,7 +509,7 @@ module Spider
                     ass_src = ass.get_attribute('src')
                     if ass_src && ass_src[0].chr != '/'
                         # ass.set_attribute('src', "/#{ext_app.relative_path}/#{ass_src}")
-                        ass.set_attribute('app', ext_app.relative_path)
+                        ass.set_attribute('app', ext_app.relative_path) if ass.get_attribute('app').blank?
                     end
                 end
                 @overrides += orig_overrides
