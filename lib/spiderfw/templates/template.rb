@@ -381,6 +381,9 @@ module Spider
                     parse_asset(nmdass[:type], nmdass[:src], nmdass)
                 }.flatten
             end
+            if attributes[:profiles]
+                ass[:profiles] = attributes[:profiles].split(/,\s*/).map{ |p| p.to_sym }
+            end
             if attributes[:app] == :runtime
                 ass[:runtime] = src
                 return [ass]
@@ -445,9 +448,6 @@ module Spider
             ass[:copy_dir] = ass[:copy_dir] =~ /\d+/ ? ass[:copy_dir].to_i : true
             [:gettext, :media, :if_ie_lte, :cdn].each do |key|
                 ass[key] = attributes[key] if attributes.key?(key)
-            end
-            if attributes[:profiles]
-                ass[:profiles] = attributes[:profiles].split(/,\s*/).map{ |p| p.to_sym }
             end
             return [ass]
         end
