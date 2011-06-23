@@ -94,7 +94,8 @@ module Spider; module Model
                    define_method("#{name}_all") do
                        qs = QuerySet.static(self)
                        self.send("#{name}_roots").each do |root|
-                           qs += root.tree_all(name)
+                           ta = root.tree_all(name)
+                           qs += ta if ta
                        end
                        return qs
                    end
