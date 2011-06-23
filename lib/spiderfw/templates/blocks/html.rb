@@ -37,7 +37,7 @@ module Spider; module TemplateBlocks
                     if options[:owner_class]
                         cl += " wdgt-#{options[:owner_class].name.gsub('::', '-')}"
                     end
-                    @el.set_attribute('id', "{ @widget[:full_id] }")
+                    @el.set_attribute('id', "{ @widget[:shown_id] }")
                     cl += ' ' unless cl.empty?
                     cl += '{ @widget[:css_classes] }'
                 end

@@ -10,6 +10,7 @@ module Spider; module Helpers
             scene = super
             if (self.is_a?(Widget))
                 scene.widget = widget_to_scene(self)
+                scene.widget[:shown_id] = attributes[:keep_id] ? self.local_id : self.full_id
             end
             scene.widgets = {}
             if (@widgets)
