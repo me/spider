@@ -186,6 +186,9 @@ module Spider; module Model
 
             def before_save(obj, mode)
                 @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
+                    unless obj.element_modified?(el.attributes[:reverse]) || obj.element_modified?(el.attributes[:tree_position])
+                        next 
+                    end
                     if mode == :update
                         tree_remove(el, obj)
                     end
