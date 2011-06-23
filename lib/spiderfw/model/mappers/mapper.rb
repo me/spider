@@ -762,6 +762,7 @@ module Spider; module Model
             res = path.empty? ? obj : obj.all_children(path)
             raise RuntimeError, "Broken object path" if (obj && !path.empty? &&  res.length < 1)
             res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
+            res = res.select{ |obj| obj.primary_keys_set? }
             return res
         end
         

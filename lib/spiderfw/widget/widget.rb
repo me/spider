@@ -238,6 +238,8 @@ module Spider
         i_attribute :use_template
         attribute :"sp:target-only"
         attribute :class
+        # shows the widget's local id in the html instead of the full id
+        attribute :keep_id, :type => Spider::Bool, :default => false
         
         default_asset 'jquery'
         default_asset 'spider'

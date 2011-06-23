@@ -15,6 +15,7 @@ module Spider
         end
         
         def render(*args)
+            $PUB_URL = Spider::HomeController.pub_url
             prepare_assets unless @assets_prepared
             super
         end

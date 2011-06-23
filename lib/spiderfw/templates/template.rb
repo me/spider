@@ -296,6 +296,10 @@ module Spider
                             w_templates = $2.split('|')
                         end
                         klass = Spider::Template.get_registered_class(w)
+                        unless klass
+                            Spider.logger.warn("tpl:assets requested non existent widget #{w}")
+                            next
+                        end
                         w_templates ||= [klass.default_template]
                         w_templates.each do |wt| 
                             t = klass.load_template(wt)
@@ -377,6 +381,9 @@ module Spider
                     parse_asset(nmdass[:type], nmdass[:src], nmdass)
                 }.flatten
             end
+            if attributes[:profiles]
+                ass[:profiles] = attributes[:profiles].split(/,\s*/).map{ |p| p.to_sym }
+            end
             if attributes[:app] == :runtime
                 ass[:runtime] = src
                 return [ass]
@@ -406,9 +413,13 @@ module Spider
             ass[:path] = res.path if res
             base_url = nil
             if controller.respond_to?(:pub_url)
-                if src[0].chr == '/' && !(controller <= Spider::HomeController)
+                if src[0].chr == '/' 
+                    if controller <= Spider::HomeController
+                        src = src[(1+controller.pub_path.length)..-1]
+                    else
                     # strips the app path from the src. FIXME: should probably be done somewhere else
-                    src = src[(2+controller.app.relative_path.length)..-1]
+                        src = src[(2+controller.app.relative_path.length)..-1]
+                    end
                 end
                 base_url = controller.pub_url+'/'
                 
@@ -437,9 +448,6 @@ module Spider
             ass[:copy_dir] = ass[:copy_dir] =~ /\d+/ ? ass[:copy_dir].to_i : true
             [:gettext, :media, :if_ie_lte, :cdn].each do |key|
                 ass[key] = attributes[key] if attributes.key?(key)
-            end
-            if attributes[:profiles]
-                ass[:profiles] = attributes[:profiles].split(/,\s*/).map{ |p| p.to_sym }
             end
             return [ass]
         end
@@ -505,7 +513,7 @@ module Spider
                     ass_src = ass.get_attribute('src')
                     if ass_src && ass_src[0].chr != '/'
                         # ass.set_attribute('src', "/#{ext_app.relative_path}/#{ass_src}")
-                        ass.set_attribute('app', ext_app.relative_path)
+                        ass.set_attribute('app', ext_app.relative_path) if ass.get_attribute('app').blank?
                     end
                 end
                 @overrides += orig_overrides

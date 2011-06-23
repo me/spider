@@ -460,11 +460,16 @@ Spider.defineWidget = function(name, parent, w){
         if (!curr[parts[i]]) curr[parts[i]] = function(){};
         curr = curr[parts[i]];
     }
-	if (parent) parent = Spider.widgetClasses[parent];
-	else parent = Spider.Widget;
-    var widget = parent.extend(w);
     var last = parts[parts.length-1];
-    if (curr[last]) widget = curr[last].extend(widget);
+    var widget;
+    if (curr[last]){
+        widget = curr[last].extend(w);
+    } 
+    else{
+        if (parent) parent = Spider.widgetClasses[parent];
+    	else parent = Spider.Widget;
+    	widget = parent.extend(w);
+    }
 	curr[last] = widget;
 	Spider.widgetClasses[name] = widget;
 	if (w.autoInit){

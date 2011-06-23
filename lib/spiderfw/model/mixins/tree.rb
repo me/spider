@@ -44,11 +44,13 @@ module Spider; module Model
                attributes[:tree_left] ||= :"#{name}_left"
                attributes[:tree_right] ||= :"#{name}_right"
                attributes[:tree_depth] ||= :"#{name}_depth"
+               attributes[:tree_position] ||= :"#{name}_position"
                choice(attributes[:reverse], self, attributes[:reverse_attributes])
                element(name, self, attributes)
-               element(attributes[:tree_left], Fixnum, :hidden => true, :tree_element => name)
+               element(attributes[:tree_left], Fixnum, :hidden => true, :tree_element => name, :order => true)
                element(attributes[:tree_right], Fixnum, :hidden => true, :tree_element => name)
                element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true, :tree_element => name)
+               element(attributes[:tree_position], Fixnum, :unmapped => true, :hidden => true, :tree_element => name)
 #               sequence(name)
                qs_module ||= Module.new
                
@@ -92,7 +94,8 @@ module Spider; module Model
                    define_method("#{name}_all") do
                        qs = QuerySet.static(self)
                        self.send("#{name}_roots").each do |root|
-                           qs += root.tree_all(name)
+                           ta = root.tree_all(name)
+                           qs += ta if ta
                        end
                        return qs
                    end
@@ -146,6 +149,23 @@ module Spider; module Model
                        
                    end
                end
+               
+               define_method(attributes[:tree_position]) do
+                   i = instance_variable_get("@#{attributes[:tree_position]}")
+                   return i if i
+                   element = self.class.elements[name]
+                   left_el = element.attributes[:tree_left]
+                   right_el = element.attributes[:tree_right]
+                   parent_el = element.attributes[:reverse]
+                   parent = self.get(parent_el)
+                   return nil unless parent
+                   cnt = 0
+                   parent.get(name).each do |sub|
+                       cnt += 1
+                       return cnt if sub == self
+                   end
+                   return nil
+               end
 
            end
            
@@ -167,12 +187,25 @@ module Spider; module Model
 
             def before_save(obj, mode)
                 @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
-                    if (mode == :update)
+                    unless obj.element_modified?(el.attributes[:reverse]) || obj.element_modified?(el.attributes[:tree_position])
+                        next 
+                    end
+                    if mode == :update
                         tree_remove(el, obj)
                     end
                     parent = obj.get(el.attributes[:reverse])
-                    if (parent)
-                        tree_insert_node_under(el, obj, parent)
+                    if parent
+                        sub = parent.get(el.name)
+                        if obj.element_modified?(el.attributes[:tree_position]) && sub.length > 0
+                            pos = obj.get(el.attributes[:tree_position]) 
+                            if pos == 1
+                                tree_insert_node_first(el, obj, parent)
+                            else
+                                tree_insert_node_right(el, obj, sub[pos-2])
+                            end
+                        else
+                            tree_insert_node_under(el, obj, parent)
+                        end
                     else
                         tree_insert_node(el, obj)
                     end
