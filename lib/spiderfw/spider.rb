@@ -626,7 +626,13 @@ module Spider
                     Debugger.start
                 end
             rescue LoadError, RuntimeError => exc
-                Spider.logger.warn(exc.message)
+                msg = _('Unable to start debugger. Ensure ruby-debug is installed (or set debugger.start to false).')
+                if Spider.logger
+                    Spider.logger.warn(exc.message)
+                    Spider.logger.warn(msg) 
+                else
+                    puts msg
+                end
             end
         end
         
