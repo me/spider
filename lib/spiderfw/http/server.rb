@@ -109,7 +109,7 @@ module Spider; module HTTP
                 Process.detach(forked)
             else
                 Spider.init_base
-                spawner_started = true
+                spawner_started = false
                 if Spider.conf.get('webserver.respawn_on_change')
                     Spider.start_loggers
                     begin
@@ -119,7 +119,9 @@ module Spider; module HTTP
                         end
                         spawner = Spawner.new({'spawn' => start})
                         spawner.run('spawn')
-                    rescue
+                        spawner_started = true
+                    rescue LoadError => exc
+                        raise unless exc.message =~ /fssm/
                         Spider.logger.error("Install 'fssm' gem to enable respawning")
                     end
                 end
