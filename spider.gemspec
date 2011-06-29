@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
       'spider.gemspec'] \
       + Dir.glob('apps/**/*') \
       + Dir.glob('bin/*') \
-      + Dir.glob('blueprints/**/*') \
+      + Dir.glob('blueprints/**/*', File::FNM_DOTMATCH) \
       + Dir.glob('data/**/*') \
       + Dir.glob('lib/**/*.rb') \
       + Dir.glob('views/**/*')

@@ -1173,6 +1173,7 @@ module Spider; module Model
             def extended(obj)
                 obj.define_schema &@schema_define_proc if @schema_define_proc
                 obj.with_schema &@schema_proc if @schema_proc
+                obj.no_map(*@no_map_elements.keys) if @no_map_elements
             end
             
             def no_map(*els)

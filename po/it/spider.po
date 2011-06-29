@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Spider 0.6.1\n"
-"POT-Creation-Date: 2011-05-09 17:36+0200\n"
+"Project-Id-Version: Spider 0.6.3\n"
+"POT-Creation-Date: 2011-06-29 11:56+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: \n"
@@ -235,6 +235,10 @@ msgstr "Il percorso dove creare l'installazione (di default il percorso corrente
 #: lib/spiderfw/cmd/commands/create.rb:40
 msgid "Don't launch wizard"
 msgstr "Non eseguire il wizard"
+
+#: lib/spiderfw/cmd/commands/create.rb:41
+msgid "Non interactive"
+msgstr "Non interattivo"
 
 #: lib/spiderfw/cmd/commands/model.rb:6
 msgid "Manage models"
@@ -728,15 +732,15 @@ msgstr "Si è verificato un errore"
 msgid "Site error"
 msgstr "Errore del sito"
 
-#: lib/spiderfw/create.rb:44
+#: lib/spiderfw/create.rb:45
 msgid "Created repository"
 msgstr "Creato repository"
 
-#: lib/spiderfw/http/server.rb:51
+#: lib/spiderfw/http/server.rb:52
 msgid "Using webserver %s"
 msgstr "Utilizzo il webserver %s"
 
-#: lib/spiderfw/http/server.rb:52
+#: lib/spiderfw/http/server.rb:53
 msgid "Listening on port %s"
 msgstr "In ascolto sulla porta %s"
 
@@ -796,11 +800,11 @@ msgstr "circa 1 anno"
 msgid "over %d years"
 msgstr "più di %d anni"
 
-#: lib/spiderfw/model/base_model.rb:1499
+#: lib/spiderfw/model/base_model.rb:1509
 msgid "'%s' is not a valid date"
 msgstr "%s non è una data valida"
 
-#: lib/spiderfw/model/base_model.rb:1560
+#: lib/spiderfw/model/base_model.rb:1570
 msgid "'%s' is not in the correct format"
 msgstr "%s non è nel formato corretto"
 
@@ -840,11 +844,11 @@ msgstr "Creato"
 msgid "Modified"
 msgstr "Modificato"
 
-#: lib/spiderfw/model/mappers/mapper.rb:1157
+#: lib/spiderfw/model/mappers/mapper.rb:1158
 msgid "Element %s is required"
 msgstr "L'elemento %s è obbligatorio"
 
-#: lib/spiderfw/model/mappers/mapper.rb:1161
+#: lib/spiderfw/model/mappers/mapper.rb:1162
 msgid "Another item with the same %s is already present"
 msgstr "È già presente un'altro oggetto con lo stesso elemento %s"
 
@@ -990,6 +994,10 @@ msgstr "Verifico se il db esiste... "
 #: lib/spiderfw/setup/spider_setup_wizard.rb:332
 msgid "Database %s does not exist."
 msgstr "Il database %s non esiste."
+
+#: lib/spiderfw/spider.rb:629
+msgid "Unable to start debugger. Ensure ruby-debug is installed (or set debugger.start to false)."
+msgstr "Impossibile avviare il debugger. Assicurati che ruby-debug sia installato (o imposta debugger.start a false)."
 
 #: views/errors/404.shtml:4
 msgid "We are sorry, but the required page was not found"

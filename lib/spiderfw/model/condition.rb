@@ -378,7 +378,7 @@ module Spider; module Model
         def conditions_for(*element_names)
             conds = []
             element_names.each do |el|
-                if self[el]
+                if self.key?(el)
                     conds << self
                     break
                 end
