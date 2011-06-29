@@ -1,3 +1,7 @@
+= 0.6.5
+== 29 June, 2011
+* Mapper fixes
+
 = 0.6.4
 == 29 June, 2011
 * Fixed non-interactive "spider create home"
