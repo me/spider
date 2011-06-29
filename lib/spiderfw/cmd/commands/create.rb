@@ -32,12 +32,15 @@ class CreateCommand < CmdParse::Command
         install = CmdParse::Command.new('home', false)
         install.short_desc = _("Create an installation")
         install.options = CmdParse::OptionParserWrapper.new do |opt|
-            opt.on("--path", 
+            opt.on("--path [PATH]", 
                    _("The path where to create the installation (defaults to the path)"),
                    "-p"){ |path|
                 @path = path
             }
-            opt.on("--no-wizard", _("Don't launch wizard"), "-W"){ |w| @no_wizard }
+            opt.on("--no-wizard", _("Don't launch wizard"), "-W"){ |w| @no_wizard = true }
+            opt.on("--non-interactive", _("Non interactive"), "-i"){ |i|
+                @no_wizard = true
+            }
         end
         install.set_execution_block do |installs|
             @path ||= Dir.pwd
