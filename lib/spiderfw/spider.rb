@@ -237,6 +237,9 @@ module Spider
             @paths[:tmp] = File.join(root, 'tmp')
             @paths[:data] = File.join(root, 'data')
             @paths[:log] = File.join(@paths[:var], 'log')
+            @paths.each do |k, path|
+                @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
+            end
         end
         
         # Finds an app by name, looking in paths[:apps] and paths[:core_apps]. Returns the found path.
