@@ -12,7 +12,7 @@ module Spider; module ControllerMixins
             klass.extend(ClassMethods)
         end
         
-        def redirect(url, code=Spider::HTTP::MOVED_PERMANENTLY)
+        def redirect(url, code=Spider::HTTP::SEE_OTHER)
             debug "REDIRECTING TO #{url}"
             @request.session.persist if @request.session # It might be too late afterwards
             @response.status = code
