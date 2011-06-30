@@ -500,7 +500,7 @@ module Spider
                 if ext_owner && ext_owner.respond_to?(:template_paths)
                     ext_search_paths = ext_owner.template_paths
                 end 
-                ext = self.class.real_path(ext_src, @path, ext_owner, ext_search_paths)
+                ext = self.class.real_path(ext_src, path, ext_owner, ext_search_paths)
                 assets = []
                 if root.children
                     assets = root.children_of_type('tpl:asset')
