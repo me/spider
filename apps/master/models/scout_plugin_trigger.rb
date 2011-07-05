@@ -247,8 +247,8 @@ module Spider; module Master
             path_html = MasterController.find_resource_path(:email, template+'.html', nil, MasterController)
             
             # ERB data
-            server_id = self.plugin_instance.servant.id
-            server_name = self.plugin_instance.servant.name
+            server_id = self.plugin_instance.server.id
+            server_name = self.plugin_instance.server.name
             plugin_id = self.plugin_instance.id
             plugin_name = self.plugin_instance.name
             message = msg

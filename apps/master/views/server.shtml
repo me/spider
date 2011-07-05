@@ -1,36 +1,36 @@
 <div>
-    <tpl:pass sp:if="@servant">
+    <tpl:pass sp:if="@server">
         <div class="page-title title-block">
-            <h2>{ @servant.name }</h2>
+            <h2>{ @server.name }</h2>
             <tpl:pass sp:if="!@edit">
                 <a href="?edit" class="manage edit">_(Edit)</a>
             </tpl:pass>
         </div>
         <div class="info-block main">
             <div class="row">
-                <label>Uuid:</label> { @servant.uuid }
+                <label>Uuid:</label> { @server.uuid }
             </div>
-            <div class="row" sp:if="@servant.customer">
+            <div class="row" sp:if="@server.customer">
                 <label>_(Customer):</label>
-                <a href="{ Master.url }/customers/{ @servant.customer.id }">
-                    { @servant.customer }
+                <a href="{ Master.url }/customers/{ @server.customer.id }">
+                    { @server.customer }
                 </a>
             </div>
         </div>
     </tpl:pass>
     <div class="page-title title-block">
-        <h2 sp:if="!@servant">
-            _(New servant) <tpl:pass sp:if="@customer">_(for customer %s) % @customer.name</tpl:pass>
+        <h2 sp:if="!@server">
+            _(New server) <tpl:pass sp:if="@customer">_(for customer %s) % @customer.name</tpl:pass>
         </h2>
     </div>
     <tpl:pass sp:if="@edit">
-        <forms:form id="servant_form" model="Spider::Master::Servant" pk="@pk" auto_redirect="true"/>
+        <forms:form id="server_form" model="Spider::Master::Server" pk="@pk" auto_redirect="true"/>
     </tpl:pass>
     <tpl:pass sp:if="!@edit">
         <div class="list-title title-block">
             <h3>_(Sites)</h3>
-            <a href="{ Master.url_for_servant(@servant) }/sites/create" class="add manage">_(New site)</a>
-            <a href="{ Master.url_for_servant(@servant) }/sites/create" class="add manage">_(Add existing site)</a>
+            <a href="{ Master.url_for_server(@server) }/sites/create" class="add manage">_(New site)</a>
+            <a href="{ Master.url_for_server(@server) }/sites/create" class="add manage">_(Add existing site)</a>
         </div>
         <table class="list-table">
             <!-- <tr sp:each="@servant.scout_plugins |plugin|">
@@ -56,10 +56,10 @@
             </div>
         </div>
         <table class="list-table">
-            <tr sp:each="@servant.scout_plugins |plugin|">
+            <tr sp:each="@server.scout_plugins |plugin|">
                 <td>
-                    <a href="{ Master.url }/servants/{ @servant.id }/plugins/{ plugin.id }">{ plugin.name }</a>
-                    <a href="{ @servant.id }?remove_plugin={ plugin.id }" class="manage remove">_(Remove)</a>
+                    <a href="{ Master.url }/server/{ @server.id }/plugins/{ plugin.id }">{ plugin.name }</a>
+                    <a href="{ @server.id }?remove_plugin={ plugin.id }" class="manage remove">_(Remove)</a>
                 </td>
             </tr>
         </table>

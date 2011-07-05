@@ -1,7 +1,7 @@
 <div class="site-edit">
     <div class="page-title title-block">
         <h2 sp:if="@site && @site.id">_(Edit Site %s) % @site.name</h2>
-        <h2 sp:if="!@site || !@site.id">_(Create new Site for %s) % @servant.name</h2>
+        <h2 sp:if="!@site || !@site.id">_(Create new Site for %s) % @server.name</h2>
     </div>
     <div sp:if="!@site_type">
         _(Choose site type):

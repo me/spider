@@ -7,7 +7,7 @@ module Spider; module Master
     class ScoutPluginInstance < Spider::Model::Managed
         element :plugin_id, String
         element :name, String
-        element :servant, Servant, :add_multiple_reverse => :scout_plugins
+        element :server, Server, :add_multiple_reverse => :scout_plugins
         element :settings_json, Text
         element :timeout, Fixnum, :default => 60
         element :poll_interval, Fixnum, :default => 0
@@ -98,7 +98,7 @@ module Spider; module Master
         end
         
         def to_s
-            "#{self.name} - #{self.servant}"
+            "#{self.name} - #{self.server}"
         end
         
         def average(field, type)
@@ -269,11 +269,11 @@ module Spider; module Master
             
             def before_save(obj, mode)
                 if mode == :insert
-                    obj.servant.admins.each do |servant_adm|
+                    obj.server.admins.each do |server_adm|
                         obj.admins << ScoutPluginInstance::Admins.new(
-                           :admin => servant_adm.admin,
-                           :receive_notifications => servant_adm.receive_notifications,
-                           :manage => servant_adm.manage_plugins
+                           :admin => server_adm.admin,
+                           :receive_notifications => server_adm.receive_notifications,
+                           :manage => server_adm.manage_plugins
                         )
                     end
                 end
@@ -288,9 +288,9 @@ module Spider; module Master
                         trigger.save
                     end
                 end
-                if obj.servant
-                    obj.servant.scout_plan_changed = DateTime.now
-                    obj.servant.save
+                if obj.server
+                    obj.server.scout_plan_changed = DateTime.now
+                    obj.server.save
                 end
                 super
             end

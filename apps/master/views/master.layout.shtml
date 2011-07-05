@@ -18,7 +18,7 @@
                 <ul id="top-nav">
                     <li><a href="{ Master.url }">_(Home)</a></li>
                     <li><a href="{ Master.url }/customers" sp:if="@user.global?">_(Customers)</a></li>
-                    <li><a href="{ Master.url }/servants">_(Servants)</a></li>
+                    <li><a href="{ Master.url }/servers">_(Servers)</a></li>
                 </ul>
                 <ul id="navigation">
                     <li sp:each_with_index="@navigation |nav, i|">

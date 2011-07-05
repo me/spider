@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Master 0.1\n"
-"POT-Creation-Date: 2011-05-09 17:37+0200\n"
+"POT-Creation-Date: 2011-07-05 18:34+0200\n"
 "PO-Revision-Date: 2011-05-09 17:31+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,20 +17,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: controllers/master_controller.rb:50 views/customers.shtml:3
+#: controllers/master_controller.rb:51 views/customers.shtml:3
 #: views/index.shtml:2 views/master.layout.shtml:20
 msgid "Customers"
 msgstr ""
 
-#: controllers/master_controller.rb:81
+#: controllers/master_controller.rb:82
 msgid "No customer"
 msgstr ""
 
-#: controllers/master_controller.rb:83
+#: controllers/master_controller.rb:84
 msgid "User can't access this customer"
 msgstr ""
 
-#: controllers/master_controller.rb:102
+#: controllers/master_controller.rb:103
 msgid "User can't list customers"
 msgstr ""
 
@@ -134,12 +134,12 @@ msgstr ""
 msgid "New customer"
 msgstr ""
 
-#: views/customer.shtml:8 views/servant.shtml:6
+#: views/customer.shtml:8 views/server.shtml:6
 msgid "Edit"
 msgstr ""
 
 #: views/customer.shtml:21 views/index.shtml:3 views/master.layout.shtml:21
-msgid "Servants"
+msgid "Servers"
 msgstr ""
 
 #: views/customer.shtml:21 views/customer.shtml:32 views/customers.shtml:3
@@ -251,59 +251,59 @@ msgstr ""
 msgid "edit"
 msgstr ""
 
-#: views/servant.shtml:14 views/trigger_edit.shtml:8
+#: views/server.shtml:14 views/trigger_edit.shtml:8
 msgid "Customer"
 msgstr ""
 
-#: views/servant.shtml:23 views/servants.shtml:4
-msgid "New servant"
+#: views/server.shtml:23 views/servers.shtml:4
+msgid "New server"
 msgstr ""
 
-#: views/servant.shtml:23
+#: views/server.shtml:23
 msgid "for customer %s"
 msgstr ""
 
-#: views/servant.shtml:31
+#: views/server.shtml:31
 msgid "Sites"
 msgstr ""
 
-#: views/servant.shtml:32
+#: views/server.shtml:32
 msgid "New site"
 msgstr ""
 
-#: views/servant.shtml:33
+#: views/server.shtml:33
 msgid "Add existing site"
 msgstr ""
 
-#: views/servant.shtml:39 views/servant.shtml:62
+#: views/server.shtml:39 views/server.shtml:62
 msgid "Remove"
 msgstr ""
 
-#: views/servant.shtml:44
+#: views/server.shtml:44
 msgid "Plugins"
 msgstr ""
 
-#: views/servant.shtml:47
+#: views/server.shtml:47
 msgid "Add plugin"
 msgstr ""
 
-#: views/servant.shtml:70
+#: views/server.shtml:70
 msgid "Servant %s"
 msgstr ""
 
-#: views/servant.shtml:73
+#: views/server.shtml:73
 msgid "Last check"
 msgstr ""
 
-#: views/servant.shtml:78
+#: views/server.shtml:78
 msgid "Manage resources"
 msgstr ""
 
-#: views/servant.shtml:81
+#: views/server.shtml:81
 msgid "Resources"
 msgstr ""
 
-#: views/servant.shtml:94
+#: views/server.shtml:94
 msgid "System details"
 msgstr ""
 
@@ -328,7 +328,7 @@ msgid "New Trigger for plugin %s"
 msgstr ""
 
 #: views/trigger_edit.shtml:12
-msgid "Servant"
+msgid "Server"
 msgstr ""
 
 #: views/trigger_edit.shtml:16

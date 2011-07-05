@@ -4,13 +4,13 @@
         <h2 sp:if="!@trigger.id">_(New Trigger for plugin %s) % @instance.name</h2>
     </div>
     <form method="post" class="spider forms form">
-        <div class="row" sp:if="@servant.customer">
+        <div class="row" sp:if="@server.customer">
             <label>_(Customer):</label>
-            <span class="data">{ @servant.customer.name }</span>
+            <span class="data">{ @server.customer.name }</span>
         </div>
         <div class="row">
-            <label>_(Servant):</label>
-            <span class="data">{ @servant.name }</span>
+            <label>_(Server):</label>
+            <span class="data">{ @server.name }</span>
         </div>
          <div class="row">
             <label>_(Plugin):</label>

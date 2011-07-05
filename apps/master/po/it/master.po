@@ -5,92 +5,106 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Spider::Master\n"
-"POT-Creation-Date: 2010-09-24 20:50+0200\n"
-"PO-Revision-Date: 2010-09-24 20:51+0100\n"
+"Project-Id-Version: Spider::Master 0.1\n"
+"POT-Creation-Date: 2011-07-05 18:34+0200\n"
+"PO-Revision-Date: 2011-07-05 18:39+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: controllers/master_controller.rb:48
+#: controllers/master_controller.rb:51
 #: views/customers.shtml:3
 #: views/index.shtml:2
-#: views/master.layout.shtml:18
+#: views/master.layout.shtml:20
 msgid "Customers"
 msgstr "Clienti"
 
-#: controllers/master_controller.rb:79
+#: controllers/master_controller.rb:82
 msgid "No customer"
 msgstr "Nessun cliente"
 
-#: controllers/master_controller.rb:81
+#: controllers/master_controller.rb:84
 msgid "User can't access this customer"
 msgstr "L'utente non è autorizzato a vedere questo cliente"
 
-#: controllers/master_controller.rb:100
+#: controllers/master_controller.rb:103
 msgid "User can't list customers"
 msgstr "L'utente non è autorizzato a vedere la lista cliente"
 
-#: models/scout_plugin_trigger.rb:6
+#: models/scout_plugin_instance.rb:21
+msgid "Ok"
+msgstr "Ok"
+
+#: models/scout_plugin_instance.rb:22
+msgid "Error"
+msgstr "Errore"
+
+#: models/scout_plugin_instance.rb:23
+msgid "Alert"
+msgstr "Avviso"
+
+#: models/scout_plugin_trigger.rb:8
 msgid "Peak trigger"
 msgstr "Trigger di picco"
 
-#: models/scout_plugin_trigger.rb:7
+#: models/scout_plugin_trigger.rb:9
 msgid "Plateau trigger"
 msgstr "Trigger di plateau"
 
-#: models/scout_plugin_trigger.rb:8
+#: models/scout_plugin_trigger.rb:10
 msgid "Trend trigger"
 msgstr "Trigger di tendenza"
 
-#: models/scout_plugin_trigger.rb:13
+#: models/scout_plugin_trigger.rb:15
 msgid "Up"
 msgstr "Su"
 
-#: models/scout_plugin_trigger.rb:14
+#: models/scout_plugin_trigger.rb:16
 msgid "Down"
 msgstr "Giù"
 
-#: models/scout_plugin_trigger.rb:15
+#: models/scout_plugin_trigger.rb:17
 msgid "Either"
 msgstr "Su o giù"
 
-#: models/scout_plugin_trigger.rb:20
+#: models/scout_plugin_trigger.rb:22
 #: views/trigger_edit.shtml:76
 msgid "yesterday's average"
 msgstr "media di ieri"
 
-#: models/scout_plugin_trigger.rb:21
+#: models/scout_plugin_trigger.rb:23
 #: views/trigger_edit.shtml:79
 msgid "previous 7-day average"
 msgstr "media dei 7 giorni precedenti"
 
-#: models/scout_plugin_trigger.rb:22
+#: models/scout_plugin_trigger.rb:24
 #: views/trigger_edit.shtml:82
 msgid "preceding window"
 msgstr "finestra precedente"
 
-#: models/scout_plugin_trigger.rb:25
+#: models/scout_plugin_trigger.rb:27
 msgid "normal"
 msgstr "normale"
 
-#: models/scout_plugin_trigger.rb:26
+#: models/scout_plugin_trigger.rb:28
 msgid "fired"
 msgstr "scattato"
 
-#: models/scout_plugin_trigger.rb:90
-#: models/scout_plugin_trigger.rb:98
+#: models/scout_plugin_trigger.rb:93
+#: models/scout_plugin_trigger.rb:101
+#: models/scout_plugin_trigger.rb:230
 msgid "%d minutes"
 msgstr "%d minuti"
 
-#: models/scout_plugin_trigger.rb:108
+#: models/scout_plugin_trigger.rb:111
 msgid "Alert me when %s exceeds %s"
 msgstr "Avvisami quando %s supera %s"
 
-#: models/scout_plugin_trigger.rb:110
+#: models/scout_plugin_trigger.rb:113
 msgid ""
 "Alert me when %s goes %s more than %s over the preceding %s (relative to %s), \n"
 "                as long as the value is at least %s"
@@ -98,9 +112,21 @@ msgstr ""
 "Avvisami quando %s va %s più di %s nei precedenti %s (relativo a %s), \n"
 "               purché il valore sia almeno %s"
 
-#: models/scout_plugin_trigger.rb:116
+#: models/scout_plugin_trigger.rb:119
 msgid "Alert me when %s stays above %s for %s or more"
 msgstr "Avvisami quando %s sta sopra %s per %s o più"
+
+#: models/scout_plugin_trigger.rb:224
+msgid "%s exceeded %s, increasing to %s at %s"
+msgstr "%s ha superato %s, salendo fino a %s alle %s"
+
+#: models/scout_plugin_trigger.rb:232
+msgid "%s went %s more than %s over the preceding %s minutes with respect to %s, and is now %s"
+msgstr "%s è andato %s più di %s  nei precendenti %s minuti rispetto a %s, e ora è %s"
+
+#: models/scout_plugin_trigger.rb:241
+msgid "%s exceeded %s, increasing to %s at %s, and is still continuing at %s as of %s"
+msgstr "%s ha superato %s, salendo a %s alle %s, e sta continuando a %s alle %s"
 
 #: views/admin.layout.shtml:5
 msgid "\"Administration\""
@@ -111,20 +137,20 @@ msgid "New customer"
 msgstr "Nuovo cliente"
 
 #: views/customer.shtml:8
-#: views/servant.shtml:6
+#: views/server.shtml:6
 msgid "Edit"
 msgstr "Modifica"
 
 #: views/customer.shtml:21
 #: views/index.shtml:3
-#: views/master.layout.shtml:19
-msgid "Servants"
+#: views/master.layout.shtml:21
+msgid "Servers"
 msgstr "Server"
 
 #: views/customer.shtml:21
 #: views/customer.shtml:32
 #: views/customers.shtml:3
-#: views/plugin_instance.shtml:20
+#: views/plugin_instance.shtml:33
 msgid "Add"
 msgstr "Aggiungi"
 
@@ -165,9 +191,17 @@ msgstr "Salva"
 msgid "Targets"
 msgstr "Destinazioni"
 
-#: views/master.layout.shtml:17
+#: views/master.layout.shtml:19
 msgid "Home"
 msgstr "Home"
+
+#: views/plugin_data.shtml:13
+msgid "Compare"
+msgstr "Confronta"
+
+#: views/plugin_data.shtml:22
+msgid "Show in same scale"
+msgstr "Mostra nella stessa scala"
 
 #: views/plugin_edit.shtml:3
 msgid "Edit plugin \"%s\""
@@ -197,69 +231,104 @@ msgstr "Timeout"
 msgid "Update"
 msgstr "Aggiorna"
 
-#: views/plugin_instance.shtml:4
+#: views/plugin_instance.shtml:5
 msgid "Edit settings"
 msgstr "Modifica impostazioni"
 
 #: views/plugin_instance.shtml:8
-#: views/trigger_edit.shtml:12
-msgid "Servant"
-msgstr "Server"
+msgid "Last report"
+msgstr "Ultimo report"
 
-#: views/plugin_instance.shtml:12
-#: views/servant.shtml:14
+#: views/plugin_instance.shtml:19
+msgid "Field"
+msgstr "Campo"
+
+#: views/plugin_instance.shtml:20
+msgid "Value"
+msgstr "Valore"
+
+#: views/plugin_instance.shtml:24
+msgid "@labels[key]"
+msgstr "@labels[key]"
+
+#: views/plugin_instance.shtml:33
+msgid "Triggers"
+msgstr "Trigger"
+
+#: views/plugin_instance.shtml:38
+msgid "edit"
+msgstr "modifica"
+
+#: views/server.shtml:14
 #: views/trigger_edit.shtml:8
 msgid "Customer"
 msgstr "Cliente"
 
-#: views/plugin_instance.shtml:20
-msgid "Triggers"
-msgstr "Trigger"
-
-#: views/plugin_instance.shtml:25
-msgid "edit"
-msgstr "modifica"
-
-#: views/servant.shtml:23
-#: views/servants.shtml:4
-msgid "New servant"
+#: views/server.shtml:23
+#: views/servers.shtml:4
+msgid "New server"
 msgstr "Nuovo server"
 
-#: views/servant.shtml:23
+#: views/server.shtml:23
 msgid "for customer %s"
 msgstr "per il cliente %s"
 
-#: views/servant.shtml:31
-msgid "Plugins"
-msgstr "Plugin"
+#: views/server.shtml:31
+msgid "Sites"
+msgstr "Siti"
 
-#: views/servant.shtml:34
-msgid "Add plugin"
-msgstr "Aggiungi plugin"
+#: views/server.shtml:32
+msgid "New site"
+msgstr "Nuovo sito"
 
-#: views/servant.shtml:49
+#: views/server.shtml:33
+msgid "Add existing site"
+msgstr "Aggiungi sito esistente"
+
+#: views/server.shtml:39
+#: views/server.shtml:62
 msgid "Remove"
 msgstr "Elimina"
 
-#: views/servant.shtml:57
+#: views/server.shtml:44
+msgid "Plugins"
+msgstr "Plugin"
+
+#: views/server.shtml:47
+msgid "Add plugin"
+msgstr "Aggiungi plugin"
+
+#: views/server.shtml:70
 msgid "Servant %s"
 msgstr "Server %s"
 
-#: views/servant.shtml:60
+#: views/server.shtml:73
 msgid "Last check"
 msgstr "Ultimo controllo"
 
-#: views/servant.shtml:65
+#: views/server.shtml:78
 msgid "Manage resources"
 msgstr "Gestisci risorse"
 
-#: views/servant.shtml:68
+#: views/server.shtml:81
 msgid "Resources"
 msgstr "Risorse"
 
-#: views/servant.shtml:81
+#: views/server.shtml:94
 msgid "System details"
 msgstr "Dettagli sistema"
+
+#: views/site_edit.shtml:3
+msgid "Edit Site %s"
+msgstr "Modifica Sito %s"
+
+#: views/site_edit.shtml:4
+msgid "Create new Site for %s"
+msgstr "Crea nuovo Sito per %s"
+
+#: views/site_edit.shtml:7
+msgid "Choose site type"
+msgstr "Scegli tipo di sito"
 
 #: views/trigger_edit.shtml:3
 msgid "Edit Trigger %s"
@@ -268,6 +337,10 @@ msgstr "Modifica Trigger %s"
 #: views/trigger_edit.shtml:4
 msgid "New Trigger for plugin %s"
 msgstr "Nuovo Trigger per il plugin %s"
+
+#: views/trigger_edit.shtml:12
+msgid "Server"
+msgstr "Server"
 
 #: views/trigger_edit.shtml:16
 msgid "Plugin"

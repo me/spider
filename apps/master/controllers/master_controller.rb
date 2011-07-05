@@ -1,5 +1,6 @@
-require 'apps/master/controllers/servant_controller'
+require 'apps/master/controllers/server_controller'
 require 'apps/master/controllers/login_controller'
+require 'json'
 
 
 module Spider; module Master
@@ -11,10 +12,10 @@ module Spider; module Master
         layout 'master'
         
         route /customers\/(\d+)\/installations\//, :installations
-        route /customers\/(\d+)\/servants\//, :servants
-        route /servants\/(\d+)\/plugins\/(\d+)(?:\/(\w+))?(?:\/(.+))?/, :plugin_instance
-        route /servants\/(\d+)\/sites\/(\d+|new|create)(?:\/(\w+))?(?:\/(.+))?/, :site
-        #route /servants\/([^\/]+)/, ServantController, :do => lambda{ |id| @request.misc[:servant] = Servant.new(id) }
+        route /customers\/(\d+)\/servers\//, :servers
+        route /servers\/(\d+)\/plugins\/(\d+)(?:\/(\w+))?(?:\/(.+))?/, :plugin_instance
+        route /servers\/(\d+)\/sites\/(\d+|new|create)(?:\/(\w+))?(?:\/(.+))?/, :site
+        #route /servers\/([^\/]+)/, ServerController, :do => lambda{ |id| @request.misc[:server] = Server.new(id) }
         route 'login', LoginController
         
         require_user Master::Admin, :unless => [:login, :admin], :redirect => 'login'
@@ -51,21 +52,21 @@ module Spider; module Master
             trigger = @trigger
             instance = @instance
             instance ||= trigger.instance if trigger
-            servant = @servant
-            servant ||= instance.servant if instance
+            server = @server
+            server ||= instance.server if instance
             customer = @customer
-            customer ||= servant.customer if servant
+            customer ||= server.customer if server
             @navigation << { :url => "#{Master.url}/customers/#{customer.id}", :name => customer.name } if customer
-            @navigation << { :url => "#{Master.url}/customers/#{customer.id}/servants/#{servant.id}", :name => servant.name } if servant
-            @navigation << { :url => "#{Master.url}/servants/#{servant.id}/plugins/#{instance.id}", :name => instance.name } if instance
+            @navigation << { :url => "#{Master.url}/customers/#{customer.id}/server/#{server.id}", :name => server.name } if server
+            @navigation << { :url => "#{Master.url}/servers/#{server.id}/plugins/#{instance.id}", :name => instance.name } if instance
             @navigation << { 
-                :url => "#{Master.url}/servants/#{servant.id}/plugins/#{instance.id}/triggers/#{trigger.id}", 
+                :url => "#{Master.url}/servers/#{server.id}/plugins/#{instance.id}/triggers/#{trigger.id}", 
                 :name => "#{_('Trigger')} #{trigger.label}"
             } if trigger
             @scene << {
                 :trigger => trigger,
                 :instance => instance,
-                :servant => servant,
+                :server => server,
                 :customer => customer
             }
             super
@@ -75,7 +76,7 @@ module Spider; module Master
             customer = nil
             if obj.is_a?(Customer)
                 customer = obj
-            elsif obj.is_a?(Servant)
+            elsif obj.is_a?(Server)
                 customer = obj.customer
             end
             raise Spider::Auth::Unauthorized.new(_("No customer")) if !customer && !@user.global?
@@ -135,60 +136,60 @@ module Spider; module Master
         end
         
         __.html
-        def servants(id=nil, customer_id=nil)
+        def servers(id=nil, customer_id=nil)
             customer_id ||= @request.params['customer']
             customer_id ||= @user.customers[0] unless @user.global?
             available_plugins = Master.scout_plugins.map{ |p| ScoutPlugin.new(p) }
             @scene.available_plugins = available_plugins
             if id
-                visual_params[:template] = 'servant'
-                @servant = Servant.new(id) if id && id != 'new'
-                check_access(@servant) if @servant
-                @scene.edit = (@request.params['_w'] && @request.params['_w'].key?('servant_form')) || @request.params.key?('edit') || id == 'new'
+                visual_params[:template] = 'server'
+                @server = Server.new(id) if id && id != 'new'
+                check_access(@server) if @server
+                @scene.edit = (@request.params['_w'] && @request.params['_w'].key?('server_form')) || @request.params.key?('edit') || id == 'new'
                 @scene.pk = id
                 get_template
-                if id == 'new' && @template.widgets[:servant_form]
-                    @template.widgets[:servant_form].attributes[:auto_redirect] = Master.url+'/servants'
+                if id == 'new' && @template.widgets[:server_form]
+                    @template.widgets[:server_form].attributes[:auto_redirect] = Master.url+'/servers'
                 else
                     if @request.params['submit_add_plugin']
                         plugin = ScoutPlugin.new(@request.params['plugin'])
-                        current = ScoutPluginInstance.where(:servant => @servant, :plugin_id => plugin.id).total_rows
+                        current = ScoutPluginInstance.where(:server => @server, :plugin_id => plugin.id).total_rows
                         name = plugin.name
                         name += " #{current + 1}" if current > 0
-                        instance = ScoutPluginInstance.create(:servant => @servant, :plugin_id => plugin.id, :name => name)
-                        @servant.scout_plan_changed = DateTime.now
-                        @servant.save
+                        instance = ScoutPluginInstance.create(:server => @server, :plugin_id => plugin.id, :name => name)
+                        @server.scout_plan_changed = DateTime.now
+                        @server.save
                         redirect(@request.path)
                     end
                     if @request.params['remove_plugin']
-                        instance = ScoutPluginInstance.load(:id => @request.params['remove_plugin'], :servant => id)
+                        instance = ScoutPluginInstance.load(:id => @request.params['remove_plugin'], :server => id)
                         instance.delete if instance
-                        @servant.scout_plan_changed = DateTime.now
-                        @servant.save
+                        @server.scout_plan_changed = DateTime.now
+                        @server.save
                         redirect(@request.path)
                     end
                 end
                 if customer_id
                     @customer = Customer.new(customer_id) 
-                    if @template.widgets[:servant_form]
-                        @template.widgets[:servant_form].attributes[:auto_redirect] = Master.url+"/customers/#{customer_id}"
-                        @template.widgets[:servant_form].fixed = {:customer => @customer}
+                    if @template.widgets[:server_form]
+                        @template.widgets[:server_form].attributes[:auto_redirect] = Master.url+"/customers/#{customer_id}"
+                        @template.widgets[:server_form].fixed = {:customer => @customer}
                     end
                 end
             else
-                @scene.servants = Servant.all
+                @scene.servers = Server.all
                 if customer_id
-                    @scene.servants.where(:customer => @request.params['customer'])
+                    @scene.servers.where(:customer => @request.params['customer'])
                 end
-                visual_params[:template] = 'servants'
+                visual_params[:template] = 'servers'
             end
         end
         
         __.html
-        def plugin_instance(servant_id, id, action=nil, sub_action=nil)
-            instance = ScoutPluginInstance.load(:id => id, :servant => servant_id)
-            raise NotFound.new("Plugin #{id} for servant #{servant_id}") unless instance
-            @servant = Servant.new(:id => servant_id)
+        def plugin_instance(server_id, id, action=nil, sub_action=nil)
+            instance = ScoutPluginInstance.load(:id => id, :server => server_id)
+            raise NotFound.new("Plugin #{id} for server #{server_id}") unless instance
+            @server = Server.new(:id => server_id)
             @scene.plugin = instance.plugin
             fields = []
             last = instance.last_reported
@@ -215,7 +216,7 @@ module Spider; module Master
                 redirect @request.path
             end 
             if action == "edit"
-                plugin_edit(@servant, @scene.plugin, @instance)
+                plugin_edit(@server, @scene.plugin, @instance)
             elsif action == "triggers"
                 trigger_edit(sub_action)
             elsif action == "data"
@@ -226,10 +227,10 @@ module Spider; module Master
         end
         
         __.html
-        def site(servant_id, id, action=nil, sub_action=nil)
+        def site(server_id, id, action=nil, sub_action=nil)
             if @request.params['submit']
             end
-            @servant = Servant.new(servant_id)
+            @server = Server.new(server_id)
             @scene.site_type = @request.params['site_type']
             if @request.params['edit'] || id == 'new' || id == 'create'
                 render('site_edit')
@@ -239,14 +240,14 @@ module Spider; module Master
         end
         
         __.html
-        def plugin_edit(servant, plugin, instance)
+        def plugin_edit(server, plugin, instance)
             if @request.params['submit']
                 instance.name = @request.params['name']
                 instance.settings = @request.params['settings']
                 instance.poll_interval = @request.params['poll_interval'] unless @request.params['poll_interval'].blank?
                 instance.timeout = @request.params['timeout'] unless @request.params['timeout'].blank?
                 instance.save
-                redirect("#{Master.url}/servants/#{@servant.id}/plugins/#{@instance.id}")
+                redirect("#{Master.url}/server/#{@server.id}/plugins/#{@instance.id}")
             end
             render('plugin_edit')
         end
@@ -259,7 +260,7 @@ module Spider; module Master
                 trigger.data = @request.params['data_series']
             else
                 trigger = ScoutPluginTrigger.load(:id => id, :plugin_instance => @instance)
-                raise NotFound.new("Trigger #{id} of servant #{@scene.servant}") unless trigger
+                raise NotFound.new("Trigger #{id} of server #{@scene.server}") unless trigger
             end
             @trigger = trigger
             if @request.params['submit'] && (id != 'new' || @request.params['data'])
@@ -268,7 +269,7 @@ module Spider; module Master
                     trigger.set(k, v) if trigger.class.elements[k.to_sym]
                 end
                 trigger.save
-                redirect("#{Master.url}/servants/#{@servant.id}/plugins/#{@instance.id}")
+                redirect("#{Master.url}/server/#{@server.id}/plugins/#{@instance.id}")
             end
             render 'trigger_edit'
         end
@@ -313,17 +314,17 @@ module Spider; module Master
         
         __.action
         def ping
-            servant_id = @request.params['servant_id']
-            servant = Master::Servant.load(:id => servant_id)
-            new_servant = false
-            unless servant
-                servant = Master::Servant.static(:id => servant_id)
-                new_servant = true
+            server_id = @request.params['server_id']
+            server = Master::Server.load(:id => server_id)
+            new_server = false
+            unless server
+                server = Master::Server.static(:id => server_id)
+                new_server = true
             end
-            servant.last_check = DateTime.now
-            servant.name = @request.params['servant_name']
-            servant.system_status = @request.params['system_status']
-            curr_resources = servant.resources_by_type
+            server.last_check = DateTime.now
+            server.name = @request.params['server_name']
+            server.system_status = @request.params['system_status']
+            curr_resources = server.resources_by_type
             resources = []
             if @request.params['resources']
                 @request.params['resources'].each do |res_type, type_resources|
@@ -340,16 +341,16 @@ module Spider; module Master
                     end
                 end
             end
-            servant.resources = resources
-            if new_servant
-                servant.insert
+            server.resources = resources
+            if new_server
+                server.insert
             else
-                servant.update
+                server.update
             end
             response = {
                 :pong => DateTime.new
             }
-            servant.pending_commands.each do |command|
+            server.pending_commands.each do |command|
                 response[:commands] ||= []
                 response[:commands] << command.to_h
             end

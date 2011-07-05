@@ -1,11 +1,11 @@
 module Spider; module Master
     
-    class ServantController < Spider::PageController
+    class ServerController < Spider::PageController
         
         __.html
         def index
-            @scene.servant = @request.misc[:servant]
-            render('servant')
+            @scene.server = @request.misc[:server]
+            render('server')
         end
         
         def resources

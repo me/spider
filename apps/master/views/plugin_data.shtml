@@ -12,7 +12,7 @@
         <div id="chart_setup">
             <h5>_(Compare):</h5>
             <select id="chart_add_column" name="add_column">
-                <tpl:pass sp:each="@servant.scout_plugins |plugin|">
+                <tpl:pass sp:each="@server.scout_plugins |plugin|">
                     <option value="" disabled="disabled">{ plugin.name }</option>
                     <option sp:each="plugin.plugin.metadata |k, d|" 
                         value="{ plugin.id }|{ k }">--- { (d["label"].blank? ? k : d["label"]) }</option>

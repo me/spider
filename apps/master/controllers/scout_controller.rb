@@ -5,16 +5,16 @@ module Spider; module Master
     class ScoutController < Spider::PageController
         
         route /([\w\d]{8}-[\w\d]{4}-[\w\d]{4}-[\w\d]{4}-[\w\d]{12})/, self, :do => lambda{ |uuid|
-            @servant = Servant.load(:uuid => uuid)
+            @server = Server.load(:uuid => uuid)
             @uuid = uuid
-            raise NotFound.new("Servant #{uuid}") unless @servant
+            raise NotFound.new("Server #{uuid}") unless @server
         }
         
 
         __.json
         def plan
-            last_modified = (@servant.scout_plan_changed || @servant.obj_modified).to_local_time
-            @servant.scout_plugins.each do |instance|
+            last_modified = (@server.scout_plan_changed || @server.obj_modified).to_local_time
+            @server.scout_plugins.each do |instance|
                 stat = File.lstat(instance.plugin.rb_path)
                 mtime = stat.mtime
                 last_modified = mtime if mtime > last_modified
@@ -29,7 +29,7 @@ module Spider; module Master
                 raise HTTPStatus.new(Spider::HTTP::NOT_MODIFIED) if last_modified <= if_modified
             end
             @response.headers['Last-Modified'] = last_modified.httpdate
-            $out << @servant.scout_plan.to_json
+            $out << @server.scout_plan.to_json
         end
         
         
@@ -73,7 +73,7 @@ module Spider; module Master
                 next if had_previous
                 subject = alert["fields"]["subject"]
                 instance = ScoutPluginInstance.new(alert["plugin_id"])
-                subject = "#{instance.servant} - #{subject}"
+                subject = "#{instance.server} - #{subject}"
                 alert = ScoutAlert.create(
                     :plugin_instance => alert["plugin_id"],
                     :subject => alert["fields"]["subject"],
@@ -94,7 +94,7 @@ module Spider; module Master
                 end
                 subject = err["fields"]["subject"]
                 instance = ScoutPluginInstance.new(err["plugin_id"])
-                subject = "#{instance.servant} - #{subject}"
+                subject = "#{instance.server} - #{subject}"
                 error = ScoutError.create(
                     :plugin_instance => err["plugin_id"],
                     :subject => err["fields"]["subject"],

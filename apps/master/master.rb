@@ -14,16 +14,16 @@ module Spider
            res
        end
        
-       def self.url_for_servant(id)
+       def self.url_for_server(id)
            id = id.id if id.is_a?(Spider::Model::BaseModel)
-           servant = Servant.new(id)
-           "#{self.url}/servants/#{servant.id}"
+           server = Server.new(id)
+           "#{self.url}/servers/#{server.id}"
        end
        
        def self.url_for_plugin(id)
            id = id.id if id.is_a?(Spider::Model::BaseModel)
            instance = ScoutPluginInstance.new(id)
-           "#{self.url}/servants/#{instance.servant.id}/plugins/#{id}"
+           "#{self.url}/servers/#{instance.server.id}/plugins/#{id}"
        end
        
        def self.add_site_type(type)

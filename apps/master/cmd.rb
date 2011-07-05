@@ -27,7 +27,7 @@ module Spider; module Master
                 if @instance_id
                     instances = [@instance_id]
                 elsif @server_id
-                    instances = ScoutPluginInstance.where{ |i| (i.servant == @server_id) }.map{ |i| i.id }
+                    instances = ScoutPluginInstance.where{ |i| (i.server == @server_id) }.map{ |i| i.id }
                 # else
                 #     instances = ScoutPluginInstance.all.map{ |i| i.id }
                 end
