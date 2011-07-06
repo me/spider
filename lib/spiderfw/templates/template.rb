@@ -403,7 +403,7 @@ module Spider
                 search_classes << dfnr
                 dfnr = dfnr.respond_to?(:superclass) ? dfnr.superclass : nil
             end
-            res = Spider.find_resource(type.to_sym, src, @path, search_classes)
+            res = Spider.find_resource(type.to_sym, src, File.dirname(@path), search_classes)
             controller = nil
             if res && res.definer
                 controller = res.definer.controller
@@ -439,7 +439,7 @@ module Spider
                     ass[:compressed_rel_path] = ass[:rel_path]
                     ass[:compressed] = base_url + File.basename(ass[:path])
                 else
-                    compressed_res = Spider.find_resource(type.to_sym, cpr, @path, [owner_class, @definer_class])
+                    compressed_res = Spider.find_resource(type.to_sym, cpr, File.dirname(@path), [owner_class, @definer_class])
                     ass[:compressed_path] = compressed_res.path
                     ass[:compressed] = base_url+cpr
                 end
