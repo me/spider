@@ -138,6 +138,7 @@ module Spider; module Components
                                     sub = sub.get(element.attributes[:junction_their_element]) 
                                 end
                                 sub_desc = sub.nil? ? '' : sub.to_s
+                                sub_desc ||= ''
                                 sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
                                 list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
                             }
