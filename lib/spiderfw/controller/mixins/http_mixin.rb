@@ -26,6 +26,7 @@ module Spider; module ControllerMixins
             return '' unless url
             if (maps = Spider.conf.get('http.proxy_mapping'))
                 maps.each do |proxy, spider|
+                    spider ||= ''
                     return proxy + url[spider.length..-1] if (spider == "" || url[0..spider.length-1] == spider)
                 end
             end
