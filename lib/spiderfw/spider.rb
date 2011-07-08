@@ -491,7 +491,7 @@ module Spider
                     return Resource.new(found, definer) if found
                 end
             end
-            raise "Resource #{path} not found"
+            resource_type, path, cur_path=nil, owner_classes=nil, search_paths
             return Resource.new(path)
         end
         
