@@ -29,9 +29,9 @@ module Spider; module Messenger
         
         def self.send_email(klass, template, scene, from, to, headers={}, attachments=[], params={})
             path_txt = klass.find_resource_path(:email, template+'.txt')
-            path_txt = nil unless File.exist?(path_txt)
+            path_txt = nil unless path_txt && File.exist?(path_txt)
             path_html = klass.find_resource_path(:email, template+'.html')
-            path_html = nil unless File.exist?(path_html)
+            path_html = nil unless path_html && File.exist?(path_html)
             scene_binding = scene.instance_eval{ binding }
             if (path_txt || path_html)
                 text = ERB.new(IO.read(path_txt)).result(scene_binding) if path_txt
