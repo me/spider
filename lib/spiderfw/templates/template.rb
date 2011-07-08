@@ -269,7 +269,7 @@ module Spider
             doc = open(@path){ |f| Hpricot.XML(f) }
             root = get_el(doc)
             el = process_tags(root)
-            @overrides.each{ |o| apply_override(root, o) } if @overrides
+            apply_overrides(root)
             root.search('tpl:placeholder').remove # remove empty placeholders
             owner_class = @owner ? @owner.class : @owner_class
             @assets += owner_class.assets if owner_class
@@ -749,6 +749,13 @@ module Spider
         
         def overrides_for(widget_id)
             @widgets_overrides[widget_id] || []
+        end
+
+        def apply_overrides(el)
+            if @overrides
+                @overrides.each{ |o| apply_override(el, o) }
+            end
+            el
         end
         
         # Applies an override to an (Hpricot) element.
