@@ -17,7 +17,7 @@ module Spider; module Model
             c = Condition.and
             c[left_el] = (left..right)
             q = Query.new(c)
-            q.order_by(left_el)
+            q.order_by(left_el) unless element.attributes[:order] == false
             res = element.model.find(q)
             return [] unless res
             right_stack = []
@@ -47,7 +47,8 @@ module Spider; module Model
                attributes[:tree_position] ||= :"#{name}_position"
                choice(attributes[:reverse], self, attributes[:reverse_attributes])
                element(name, self, attributes)
-               element(attributes[:tree_left], Fixnum, :hidden => true, :tree_element => name, :order => true)
+               order = attributes[:order] == false ? false : true
+               element(attributes[:tree_left], Fixnum, :hidden => true, :tree_element => name, :order => order)
                element(attributes[:tree_right], Fixnum, :hidden => true, :tree_element => name)
                element(attributes[:tree_depth], Fixnum, :unmapped => true, :hidden => true, :tree_element => name)
                element(attributes[:tree_position], Fixnum, :unmapped => true, :hidden => true, :tree_element => name)
