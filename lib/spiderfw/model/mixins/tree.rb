@@ -23,7 +23,7 @@ module Spider; module Model
             right_stack = []
             res.each do |obj|
                 if (right_stack.length > 0)
-                    right_stack.pop while (right_stack[right_stack.length-1] < obj.get(right_el))
+                    right_stack.pop while (right_stack[right_stack.length-1] && right_stack[right_stack.length-1] < obj.get(right_el))
                     obj.set(element.attributes[:tree_depth], right_stack.length)
                 end
                 right_stack << obj.get(right_el)
