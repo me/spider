@@ -163,9 +163,10 @@ module Spider; module Model
                    cnt = 0
                    parent.get(name).each do |sub|
                        cnt += 1
-                       return cnt if sub == self
+                       break if sub == self
                    end
-                   return nil
+                   cnt = nil if cnt = 0
+                   cnt
                end
 
            end
