@@ -191,18 +191,20 @@ module Spider; module ControllerMixins
                 template = get_template(path, scene, options)
             end
             layout = nil
-            chosen_layouts = options[:layout] || @layout
-            chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
-            if (chosen_layouts)
-                t = template
-                layout = nil
-                (chosen_layouts.length-1).downto(0) do |i|
-                    layout = init_layout(chosen_layouts[i])
-                    layout.template = t
-                    t = layout
+            unless options.key?(:layout) && !options[:layout]
+                chosen_layouts = options[:layout] || @layout
+                chosen_layouts = [chosen_layouts] if chosen_layouts && !chosen_layouts.is_a?(Array)
+                if (chosen_layouts)
+                    t = template
+                    layout = nil
+                    (chosen_layouts.length-1).downto(0) do |i|
+                        layout = init_layout(chosen_layouts[i])
+                        layout.template = t
+                        t = layout
+                    end
                 end
+                layout.init(scene) if layout
             end
-            layout.init(scene) if layout
             init_widgets(template, layout)
             return template if done?
             if layout
