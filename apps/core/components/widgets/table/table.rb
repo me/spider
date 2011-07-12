@@ -90,6 +90,7 @@ module Spider; module Components
             @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.sortable?(el) ? true : false }
             @scene.labels = {}
             @elements.each do |el|
+                raise "No element #{el} in #{@model} for table #{@id}" unless @model.elements[el]
                 @scene.labels[el] = @model.elements[el].label
             end
             @rows = prepare_queryset(@queryset ? @queryset : @model.list)
