@@ -41,11 +41,13 @@ module Spider
         def to_s
             s = "http://#{@domain}"
             s += ":#{@port}" if @port != 80
+            s
         end
         
         def ssl_to_s
             s = "https://#{@domain}"
             s += ":#{@ssl_port}" if @ssl_port != 443
+            s
         end
         
     end 
