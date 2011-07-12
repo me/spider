@@ -454,7 +454,7 @@ module Spider
                     return Resource.new(path, self)
                 elsif (cur_path)
                     if (path[0..1] == './')
-                        return Resource.new(first_found(extensions, cur_path+path[1..-1]), owner_class)
+                        return Resource.new(first_found(extensions, File.dirname(cur_path)+path[1..-1]), owner_class)
                     elsif (path[0..1] == '../')
                         return Resource.new(first_found(extensions, File.dirname(cur_path)+path[2..-1]), owner_class)
                     end
