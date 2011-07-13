@@ -526,7 +526,7 @@ module Spider
             else
                 assets_html = ""
                 root.search('tpl:include').each do |incl|
-                    resource = Spider.find_resource(:views, incl.get_attribute('src'), File.dirname(@path), [@owner.class, @definer_class])
+                    resource = Spider.find_resource(:views, incl.get_attribute('src'), @path, [@owner.class, @definer_class])
                     src = resource.path
                     @dependencies << src
                     incl_el = self.get_el(src)
