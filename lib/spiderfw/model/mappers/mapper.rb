@@ -149,8 +149,8 @@ module Spider; module Model
                 if (!el.integrated? && el.required? && (mode == :insert || obj.element_modified?(el)) && !obj.element_has_value?(el))
                     raise RequiredError.new(el) 
                 end
-                if (el.unique? && !el.integrated? && obj.element_modified?(el))
-                    existent = @model.where(el.name => obj.get(el))
+                if (el.unique? && !el.integrated? && obj.element_modified?(el) && curr_val = obj.get(el))
+                    existent = @model.where(el.name => curr_val)
                     if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
                         raise NotUniqueError.new(el)
                     end
