@@ -459,6 +459,7 @@ module Spider
             doc = nil
             if path_or_doc.is_a?(Hpricot::Doc)
                 doc = path_or_doc
+                path = @path
             else
                 path = path_or_doc
                 path ||= @path
@@ -478,7 +479,6 @@ module Spider
             add_overrides overrides
             @overrides += orig_overrides
             if root.name == 'tpl:extend'
-
                 orig_overrides = @overrides
                 @overrides = []
                 ext_src = root.get_attribute('src')
@@ -501,6 +501,7 @@ module Spider
                     ext_search_paths = ext_owner.template_paths
                 end 
                 ext = self.class.real_path(ext_src, path, ext_owner, ext_search_paths)
+                raise "Extended template #{ext_src} not found (search path #{path}, owner #{ext_owner}, search paths #{ext_search_paths.inspect}" unless ext
                 assets = []
                 if root.children
                     assets = root.children_of_type('tpl:asset')
