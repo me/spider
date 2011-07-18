@@ -34,15 +34,20 @@ module Spider; module Worker
                     Worker.options[:fork] = false
                     Worker.options[:detach] = false
                 end
-                Worker.start
+                Spider.conf.set('worker.enable', true)
+                #Worker.start
+                Spider.main_process_startup
                 if (@daemonize)
+                    Worker.start
                     STDIN.reopen "/dev/null"       # Free file descriptors and
                     STDOUT.reopen "/dev/null", "a" # point them somewhere sensible
                     STDERR.reopen STDOUT           # STDOUT/STDERR should go to a logfile
                 else
-                    # trap('TERM') { Worker.app_shutdown }
-                    #                     trap('INT') { Worker.app_shutdown }
+                    Spider.startup
                     Worker.join
+                    # trap('TERM') { Spider.shutdown; exit }
+                    # trap('INT') { Spider.shutdown; exit }
+                    # Worker.join
                 end
             end
             self.add_command(start)
@@ -50,7 +55,7 @@ module Spider; module Worker
             stop = CmdParse::Command.new('stop', false)
             stop.short_desc = _("Stop worker")
             stop.set_execution_block do
-                Worker.app_shutdown
+                Spider.shutdown
             end
             self.add_command(stop)
             

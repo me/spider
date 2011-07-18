@@ -151,21 +151,82 @@ module Spider
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
-
             @startup_done = true
+            at_exit do
+                Spider.shutdown
+            end
+        end
+        
+        def main_process_startup
+            require 'fssm'
+            monitor = FSSM::Monitor.new
+
+            monitor.path(Spider.paths[:tmp], 'restart.txt') do
+                create { |base, relative| Process.kill 'HUP', $$ }
+                update { |base, relative| Process.kill 'HUP', $$ }            
+                  
+            end
+            
+            @fssm_thread = Thread.new do
+                monitor.run
+            end
+            trap('TERM'){ Spider.main_process_shutdown; exit }
+            trap('INT'){ Spider.main_process_shutdown; exit }
+            trap('HUP'){ Spider.respawn! }
+            
+            if @main_process_startup_blocks
+                @main_process_startup_blocks.each{ |block| block.call }
+            end
+            
+        end
+        
+        def on_main_process_startup(&proc)
+            @main_process_startup_blocks ||= []
+            @main_process_startup_blocks << proc
         end
         
         def startup_done?
             @startup_done
         end
         
+        def on_shutdown(&block)
+            @shutdown_blocks ||= []
+            @shutdown_blocks << block
+        end
+        
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
-        def shutdown
-            return unless Thread.current == Thread.main
+        def shutdown(force=false)
+            unless force
+                #return unless Thread.current == Thread.main
+                return if @shutdown_done
+            end
+            @shutdown_done = true
+            Spider.logger.debug("Shutdown")
             Debugger.post_mortem = false if Object.const_defined?(:Debugger) && Debugger.post_mortem?
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
             end
+            if @shutdown_blocks
+                @shutdown_blocks.each{ |b| b.call }
+            end
+        end
+        
+        def shutdown!
+            shutdown(true)
+        end
+        
+        def main_process_shutdown
+            if startup_done?
+                shutdown!
+            end
+            if @main_process_shutdown_blocks
+                @main_process_shutdown_blocks.each{ |b| b.call }
+            end
+        end
+        
+        def on_main_process_shutdown(&block)
+            @main_process_shutdown_blocks ||= []
+            @main_process_shutdown_blocks << block
         end
         
         def current
@@ -641,12 +702,23 @@ module Spider
         end
         
         def respawn!
-            # TODO
-            raise "Unimplemented"
-            Spider.logger.info("Respawning")
-            @spawner.write('spawn')
-            @spawner.close
-            Process.kill "KILL", Process.pid
+            require 'rbconfig'
+            Spider.logger.info("Restarting")
+            ruby = File.join(Config::CONFIG['bindir'], Config::CONFIG['ruby_install_name']).sub(/.*\s.*/m, '"\&"')
+            Spider.main_process_shutdown
+            return if $SPIDER_NO_RESPAWN
+            cmd = $SPIDER_PROC_NAME || $0
+            args = $SPIDER_PROC_ARGS || ARGV
+            if RUBY_PLATFORM =~ /win32|mingw32/
+                start_cmd = "start cmd /C #{ruby} #{cmd} #{args.join(' ')}"
+                Spider.logger.debug(start_cmd)
+                IO.popen(start_cmd)
+                sleep 5
+            else
+                start_cmd = "#{ruby} #{cmd} #{args.join(' ')}"
+                Spider.logger.debug(start_cmd)
+                exec(start_cmd)
+            end
         end
         
         def runmode=(mode)
