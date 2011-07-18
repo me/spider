@@ -286,7 +286,11 @@ module Spider
             GetText::LocalePath.add_default_rule(File.join(path, "data/locale/%{lang}/LC_MESSAGES/%{name}.mo"))
         end
         
+        
         def load_apps(*l)
+            if l.empty?
+                l = Spider.conf.get('apps')
+            end
             l.each do |app|
                 load_app(app)
             end

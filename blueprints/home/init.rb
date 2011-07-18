@@ -1,3 +1,3 @@
-Spider.load_apps 'core'
+Spider.load_apps
 
 Spider.route_apps
