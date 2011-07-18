@@ -1,7 +1,7 @@
 <div class="tabs">
     <ul>
         <li sp:each="@tabs |tab_id|">
-            <a href="#aaa">{ @tabs_labels[tab_id] }</a>
+            <a href="?{ widget_param_u('tab') }={ tab_id }">{ @tabs_labels[tab_id] }</a>
         </li>
     </ul>
     <div id="tabs_content"></div>

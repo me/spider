@@ -13,7 +13,9 @@ module Spider; module TemplateBlocks
 #            c += "debugger\n"
             parent_c, parent_init = compile_content(c, init, options)
             parent_c.gsub!("'", "\\\\'")
-            parent_init.gsub!("'", "\\\\'")
+            #parent_init.gsub!("'", "\\\\'")
+            init = parent_init
+            init.gsub!('scene[', 'scene[:_parent][')
             c += "self[:_parent].instance_eval('def __run_block\n;#{parent_c}\nend\n')\n"
             c += "yield :_parent\n"
             return CompiledBlock.new(init, c)

@@ -27,7 +27,7 @@ module Spider
         attr_accessor :mode # :widget, ...
         attr_accessor :assets
         attr_accessor :runtime_overrides
-        attr_reader :overrides, :path, :subtemplates, :widgets
+        attr_reader :overrides, :path, :subtemplates, :widgets, :content
         attr_accessor :asset_profiles
         
         @@registered = {}
@@ -686,6 +686,7 @@ module Spider
             scene.instance_eval("def __run_template\n"+@compiled.run_code+"end\n", @compiled.cache_path+'/run.rb', 0)
             scene.__run_template do |yielded|
                 if yielded == :_parent
+                    @owner.parent.template.content.merge!(@content)
                     @owner.parent.template.run_block
                 else
                     @content[yielded].render if @content[yielded]
