@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module Spider
     
     class ConfigurationEditor
@@ -80,13 +82,13 @@ module Spider
                         
             def commit_ml(res, key, val, curr)
                 if curr
+                    curr.instance_eval("def to_yaml_style; :multiline; end")
                     res << {key => curr}.to_yaml.split("\n")[2..-1].join("\n") + "\n"
                 else
                     res << val
                 end
                 
             end
-            
             @changed.each do |file, data|
                 dirname = File.dirname(file)
                 basename = File.basename(file)
@@ -111,7 +113,7 @@ module Spider
                             end
                             add_next = nil
                         end
-                        if line =~ /(\s*)(\w[^:]+):\s*([\S]+)?$/
+                        if line =~ /(\s*)(\w[^:]+):\s*(.+)?$/
                             indent = $1
                             key = $2
                             value = $3
@@ -149,6 +151,7 @@ module Spider
                             if value
                                 if curr
                                     res << indent
+                                    curr.instance_eval("def to_yaml_style; :inline; end")
                                     res << {key => curr}.to_yaml.split("\n")[1..-1].join("\n") + "\n"
                                 else
                                     res << line
@@ -186,8 +189,8 @@ module Spider
                     end
                     
                     res.close
-                    File.mv(file, "#{file}.bak")
-                    File.mv(tmp_file, file)
+                    FileUtils.mv(file, "#{file}.bak")
+                    FileUtils.mv(tmp_file, file)
                 end
             end
         end
