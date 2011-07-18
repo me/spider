@@ -309,9 +309,10 @@ module Spider
             end
         end
         
-        def find_all_apps
+        def find_all_apps(paths=nil)
+            paths ||= [@paths[:core_apps], @paths[:apps]]
             app_paths = []
-            Find.find(@paths[:core_apps], @paths[:apps]) do |path|
+            Find.find(*paths) do |path|
                 if (File.basename(path) == '_init.rb')
                     app_paths << File.dirname(path)
                     Find.prune
@@ -349,6 +350,35 @@ module Spider
             return true if @apps_by_path[path_or_name]
             return true if @apps_by_short_name[path_or_name]
             return false
+        end
+        
+        def activate_apps(apps, specs=nil)
+            require 'spiderfw/config/configuration_editor'
+            init_base
+            unless specs
+                specs = {}
+                Spider.home.apps.each do |k, v|
+                    specs[k] = v[:spec] if apps.include?(k)
+                end
+            end
+            editor = Spider::ConfigurationEditor.new
+            Spider.config.loaded_files.each do |f|
+                editor.load(f)
+            end
+            c_apps = Spider.config.get('apps')
+            c_apps = (c_apps + apps).uniq
+            editor.set('apps', Spider.apps_load_order(c_apps, specs))
+            editor.save
+        end
+        
+        def apps_load_order(apps, specs)
+            # TODO
+            require 'spiderfw/app'
+            sort = Spider::App::RuntimeSort.new
+            apps.each do |a|
+                sort.add(specs[a] ? specs[a] : a)
+            end
+            sort.tsort
         end
         
         def load_configuration(path)
