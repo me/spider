@@ -671,6 +671,28 @@ module Spider; module Model; module Storage; module Db
             col
         end
         
+        def dump(stream, tables=nil, options={})
+            tables ||= list_tables
+            options = ({
+                :include_create => true
+            }).merge(options)
+            tables.each do |t|
+                 Spider.logger.info("Dumping table #{t}")
+                 begin
+                     if options[:include_create]
+                         create = get_table_create_sql(t)
+                         stream << create
+                         stream << "\n\n"
+                     end
+                     dump_table_data(t, stream)
+                     stream << "\n\n"
+                 rescue => exc
+                     Spider.logger.error("Failed to dump table #{t}")
+                     Spider.logger.error(exc.message)
+                 end
+             end
+         end
+        
         ##############################################################
         #   Aggregates                                               #
         ##############################################################
