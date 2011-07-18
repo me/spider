@@ -15,7 +15,7 @@ module Spider; module Model; module Storage; module Db
             :transactions => true,
             :foreign_keys => true
         }
-        @reserved_keywords = superclass.reserved_keywords
+        @reserved_keywords = superclass.reserved_keywords + ['interval']
         @safe_conversions = DbStorage.safe_conversions.merge({
             'CHAR' => ['VARCHAR', 'CLOB'],
             'VARCHAR' => ['CLOB'],
