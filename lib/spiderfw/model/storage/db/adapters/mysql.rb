@@ -337,6 +337,7 @@ module Spider; module Model; module Storage; module Db
              columns = {}
              primary_keys = []
              foreign_keys = []
+             order = []
              connection do |c|
                  res = c.query("select * from #{table} where 1=0")
                  fields = res.fetch_fields
@@ -363,6 +364,7 @@ module Spider; module Model; module Storage; module Db
                          col[flag_name] = (flags & flag_val == 0) ? false : true
                      end
                      columns[f.name] = col
+                     order << f.name
                      primary_keys << f.name if f.is_pri_key?
                  end                 
                  res = c.query("select * from INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE constraint_schema = '#{@db_name}' and table_name = '#{table}'")
@@ -379,7 +381,7 @@ module Spider; module Model; module Storage; module Db
                  end
                  
              end
-             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
+             return {:columns => columns, :order => order, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
          end
 
          def table_exists?(table)

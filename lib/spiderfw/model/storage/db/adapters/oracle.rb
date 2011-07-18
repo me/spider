@@ -277,8 +277,13 @@ module Spider; module Model; module Storage; module Db
              primary_keys = []
              o_foreign_keys = {}
              columns = {}
+             order = []
              connection do |conn|
-                 columns = do_describe_table(conn, table)
+                 cols = do_describe_table(conn, table)
+                 cols.each do |col|
+                     columns[col[:name]] = col
+                     order << col[:name]
+                 end
                  res = execute("SELECT cols.table_name, cols.COLUMN_NAME, cols.position, cons.status, cons.owner
                  FROM user_constraints cons, user_cons_columns cols
                  WHERE cons.constraint_type = 'P'
@@ -310,7 +315,7 @@ module Spider; module Model; module Storage; module Db
              o_foreign_keys.each do |fk_name, fk_hash|
                  foreign_keys << ForeignKeyConstraint.new(fk_name, fk_hash[:table], fk_hash[:columns])
              end
-             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
+             return {:columns => columns, :order => order, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
 
          end
 
