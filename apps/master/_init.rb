@@ -13,6 +13,8 @@ require 'apps/master/master'
 
 require 'apps/master/models/admin'
 require 'apps/master/models/customer'
+require 'apps/master/models/installation'
+require 'apps/master/models/remote_log'
 require 'apps/master/models/server'
 require 'apps/master/models/scout_plugin_info'
 require 'apps/master/models/scout_plugin_instance'

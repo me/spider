@@ -1,9 +1,9 @@
 <div>
-    <div class="actions">
+    <div class="actions" sp:if="@customer">
         <a href="{ Master.url }/customers/{ @customer.id }">_(Back to customer)</a>
     </div>
     <div sp:if="!@installation">
-        <h3>_(New installation for %s) % @customer.name</h3>
+        <h2>_(New installation for %s) % @customer.name</h2>
         <form action="" method="POST">
             <div class="row">
                 <label for="installation_name">_(Name):</label>
@@ -12,24 +12,36 @@
             </div>
         </form>
     </div>
-    <div sp:if="@installation">
-        <h3 sp:if="@installation">_(Installation "%s" for %s) % [@installation.name, @customer.name] </h3>
-        <core:tabs id="install_tabs">
-            <tab id="edit" label="_(Edit installation)">
+    <tpl:pass sp:if="@edit">
+           <forms:form id="installation_form" model="Spider::Master::Installation" pk="@pk" auto_redirect="true"/>
+       </tpl:pass>
+    <div sp:if="@installation && !@edit">
+        <div class="page-title title-block">
+            <h2>_(Installation "%s") % [@installation]</h2>
+            <a href="?edit" class="manage edit">_(Edit)</a>
+        </div>
+        <core:tabs id="tabs">
+            <tab label="_(Apps)" id="apps">
                 <div class="apps">
                     <h4>_(Apps)</h4>
-                    <form action="" method="POST">
-                        <ul>
-                            <li sp:each="@apps |app|">
-                                <input type="checkbox" name="apps[{ app.app_id }]" value="true" sp:attr-if="@install_apps.include?(app.app_id),checked">
-                                { app.name }
-                            </li>
-                        </ul>
-                        <input type="submit" name="save_apps" value="_(Save)">
-                    </form>
+                    <ul>
+                        <li sp:each="@install_apps |id, details|">
+                            { @apps[id].name } { details["version"] }
+                        </li>
+                    </ul>
                 </div>
             </tab>
-            <tab id="targets" label="_(Targets)">
+            <tab label="_(Configuration)" id="config">
+                <div class="config">
+                    <h4>_(Configuration)</h4>
+                    <textarea>{ @installation.configuration }</textarea>
+                </div>
+            </tab>
+            <tab label="_(Logs)" id="logs">
+                <div class="logs">
+                    <h4>_(Logs)</h4>
+                    <core:table id="logs_table" queryset="@logs" sort="time,desc" />
+                </div>
             </tab>
         </core:tabs>
     </div>

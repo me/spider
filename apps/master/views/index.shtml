@@ -1,4 +1,3 @@
 <div>
-    <a href="{ Master.url }/customers">_(Customers)</a>
-    <a href="{ Master.url }/servers">_(Servers)</a>
+    
 </div>

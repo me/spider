@@ -18,7 +18,7 @@ module Spider; module Master
         #route /servers\/([^\/]+)/, ServerController, :do => lambda{ |id| @request.misc[:server] = Server.new(id) }
         route 'login', LoginController
         
-        require_user Master::Admin, :unless => [:login, :admin], :redirect => 'login'
+        require_user Master::Admin, :unless => [:login, :admin, :ping], :redirect => 'login'
         require_user Spider::Auth::SuperUser, :only => [:admin]
         
         
@@ -35,6 +35,8 @@ module Spider; module Master
             customers = @user.customers
             if customers.length == 1
                 redirect "customers/#{customers[0].id}"
+            else
+                redirect "customers"
             end
         end
     
@@ -110,29 +112,39 @@ module Spider; module Master
         
         
         __.html :template => 'installation'
-        def installations(id, customer_id)
-            @customer = load_customer(customer_id)
-            @installation = Installation.new(id) unless id == 'new'
-            if id == 'new'
-                if @request.params.key?('installation_create') && !@request.params['installation_name'].empty?
-                    i = Installation.new(:name => @request.params['installation_name'])
-                    i.customer = @customer
-                    i.save
-                    redirect(File.dirname(@request.path)+"/#{i.id}")
-                end
-            else
-                if @request.params.key?('save_apps')
-                    @installation.apps = @request.params['apps'].keys.join(',')
-                    @installation.save
-                    redirect(request.path)
-                end
-                @scene.install_apps = (@installation.apps && !@installation.apps.empty?)  ? @installation.apps.split(',') : []
-                @scene.apps = Spider::AppServer.apps
+        def installs(id=nil, customer_id=nil)
+            @customer = load_customer(customer_id) if customer_id
+            if id
+                @installation = Installation.new(id) unless id == 'new'
+                @scene.edit = (@request.params['_w'] && @request.params['_w'].key?('installation_form')) || @request.params.key?('edit') || id == 'new'
+                @scene.pk = id
+            
+                # if id == 'new'
+                #     if @request.params.key?('installation_create') && !@request.params['installation_name'].empty?
+                #         i = Installation.new(:name => @request.params['installation_name'])
+                #         i.customer = @customer
+                #         i.save
+                #         redirect(File.dirname(@request.path)+"/#{i.id}")
+                #     end
+                # else
+                #     if @request.params.key?('save_apps')
+                #         @installation.apps = @request.params['apps'].keys.join(',')
+                #         @installation.save
+                #         redirect(request.path)
+                #     end
+                #     @scene.install_apps = JSON.parse(@installation.apps) unless @installation.apps.blank?
+                #     @scene.install_apps ||= []
+                #     @scene.apps = Spider::AppServer.apps_by_id
+                # end
+                @scene.install_apps = JSON.parse(@installation.apps) unless @installation.apps.blank?
+                @scene.install_apps ||= []
+                @scene.apps = Spider::AppServer.apps_by_id
+                @scene.logs = RemoteLog.where(:installation => @installation)
+                @scene << {
+                    :customer => @customer,
+                    :installation => @installation
+                }
             end
-            @scene << {
-                :customer => @customer,
-                :installation => @installation
-            }
         end
         
         __.html
@@ -312,49 +324,40 @@ module Spider; module Master
             $out << res.to_json
         end
         
-        __.action
+        __.json
         def ping
-            server_id = @request.params['server_id']
-            server = Master::Server.load(:id => server_id)
-            new_server = false
-            unless server
-                server = Master::Server.static(:id => server_id)
-                new_server = true
+            install_id = @request.params['install_id']
+            unless install_id
+                Spider.logger.error("No install_id passed in ping")
+                done
             end
-            server.last_check = DateTime.now
-            server.name = @request.params['server_name']
-            server.system_status = @request.params['system_status']
-            curr_resources = server.resources_by_type
-            resources = []
-            if @request.params['resources']
-                @request.params['resources'].each do |res_type, type_resources|
-                    type_resources.each do |name, details|
-                        if curr_resources[res_type]
-                            res = curr_resources[res_type][name]
-                        end
-                        res ||= Resource.static
-                        res.resource_type = res_type
-                        res.name = name
-                        res.description = details['description']
-                        res.save
-                        resources << res
-                    end
-                end
-            end
-            server.resources = resources
-            if new_server
-                server.insert
-            else
-                server.update
+            install = Spider::Master::Installation.load_or_create(:uuid => install_id)
+            install.last_check = DateTime.now
+            install.apps = @request.params['apps']
+            install.interval = @request.params['interval']
+            install.configuration = decompress_string(@request.params['configuration'])
+            install.save
+            log_lines = JSON.parse(@request.params['log'])
+            log_lines.each do |log|
+                time, level, desc = *log
+                time = Time.parse(time)
+                next if log[2] =~ /^Not found/
+                RemoteLog.create(:text => desc, :level => level, :time => time, :installation => install)
             end
             response = {
                 :pong => DateTime.new
             }
-            server.pending_commands.each do |command|
-                response[:commands] ||= []
-                response[:commands] << command.to_h
-            end
+            # server.pending_commands.each do |command|
+            #     response[:commands] ||= []
+            #     response[:commands] << command.to_h
+            # end
             $out << response.to_json
+        end
+        
+        private
+        
+        def decompress_string(str)
+            Zlib::GzipReader.new(StringIO.new(str)).read
         end
         
     end
