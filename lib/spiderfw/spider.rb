@@ -109,6 +109,7 @@ module Spider
             load_configuration File.join($SPIDER_PATH, 'config')
             load_configuration File.join(@root, 'config')
             Locale.default = Spider.conf.get('i18n.default_locale')
+            setup_env
             @init_base_done = true
         end
         
@@ -118,15 +119,21 @@ module Spider
         #         mod.app_stop if mod.respond_to?(:app_stop)
         #     end
         # end
-
-
-        # Invoked before a server is started. Apps may implement the app_startup method, that will be called.
-        def startup
+        
+        def setup_env
             unless File.exists?(File.join(Spider.paths[:root], 'init.rb'))
-                raise "The server must be started from the root directory"
+                raise "This command must be run from the root directory"
             end
             FileUtils.mkdir_p(Spider.paths[:tmp])
             FileUtils.mkdir_p(Spider.paths[:var])
+            FileUtils.mkdir_p(File.join(Spider.paths[:var], 'memory'))
+            
+        end
+
+
+        # Invoked before a long running service started. Apps may implement the app_startup method, that will be called.
+        def startup
+            setup_env
             if Spider.conf.get('template.cache.reload_on_restart')
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
