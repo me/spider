@@ -9,6 +9,11 @@ require 'spiderfw/requires'
 
 require 'spiderfw/version'
 
+begin
+    require 'fssm'
+rescue LoadError
+end
+
 
 module Spider
     
@@ -158,17 +163,18 @@ module Spider
         end
         
         def main_process_startup
-            require 'fssm'
-            monitor = FSSM::Monitor.new
+            if Object.const_defined?(:FSSM)
+                monitor = FSSM::Monitor.new
 
-            monitor.path(Spider.paths[:tmp], 'restart.txt') do
-                create { |base, relative| Process.kill 'HUP', $$ }
-                update { |base, relative| Process.kill 'HUP', $$ }            
-                  
-            end
-            
-            @fssm_thread = Thread.new do
-                monitor.run
+                monitor.path(Spider.paths[:tmp], 'restart.txt') do
+                    create { |base, relative| Process.kill 'HUP', $$ }
+                    update { |base, relative| Process.kill 'HUP', $$ }            
+
+                end
+
+                @fssm_thread = Thread.new do
+                    monitor.run
+                end
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
