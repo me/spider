@@ -36,8 +36,6 @@ module Spider
             return unless @runner || Spider.conf.get('worker.enable')
             @mutex.try_lock || return
             Spider::Logger.info("Shutting down worker in #{Process.pid}")
-            Spider::Logger.debug("Runner: #{@runner}")
-            Spider::Logger.debug("PID FILE: #{File.exist?(@pid_file)}")
             if @runner
                 unless @runner == Thread.current
                     @runner.stop
@@ -45,9 +43,7 @@ module Spider
                 end
             elsif File.exist?(@pid_file)
                 begin
-                    puts "uno"
                     pid = IO.read(@pid_file).to_i
-                    puts "PID: #{pid}"
                     unless pid == Process.pid
                         Spider::Logger.info("Sending TERM signal to worker #{pid}")
                         Process::kill 'TERM', pid
@@ -110,15 +106,10 @@ module Spider
                     $SPIDER_NO_RESPAWN = true if $SPIDER_SPAWNED
                     Spider.main_process_startup
                     Spider.on_main_process_shutdown do
-                        # if $SPIDER_SPAWNED
-                        #     $SPIDER_PROC_NAME = 'spider'
-                        #     $SPIDER_PROC_ARGS = ['worker', 'start', '-d']
-                        # end
                         Worker.app_shutdown
                     end
-                    # trap('TERM') { app_shutdown }
-                    # trap('INT') { app_shutdown }
                     start.call
+                    Spider.logger.debug("Forked worker started")
                     @runner.join if @runner
                 end
                 Process.detach(@forked) if (options[:detach])
