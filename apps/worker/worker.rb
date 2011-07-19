@@ -101,7 +101,6 @@ module Spider
             if (options[:fork])
                 Spider.logger.debug("Forking worker in #{Process.pid}")
                 @forked = Spider.fork do
-                    $SPIDER_PROC_NAME ||= $0
                     $0 = 'spider-worker'
                     $SPIDER_NO_RESPAWN = true if $SPIDER_SPAWNED
                     Spider.main_process_startup

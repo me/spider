@@ -103,7 +103,7 @@ module Spider; module HTTP
                     File.open(pid_file, 'w') do |f|
                         f.write(Process.pid)
                     end
-                    $SPIDER_PROC_NAME ||= $0
+                    $SPIDER_SCRIPT ||= $0
                     $0 = process_name
                     STDIN.reopen "/dev/null"       # Free file descriptors and
                     STDOUT.reopen "/dev/null", "a" # point them somewhere sensible
@@ -167,7 +167,7 @@ module Spider; module HTTP
                     }
                     Spider.on_main_process_shutdown(&exit_spawner)
                     Spider.main_process_startup
-                    $SPIDER_PROC_NAME ||= $0
+                    $SPIDER_SCRIPT ||= $0
                     $0 = 'spider-spawner'
                 end
                 @already_forked = true

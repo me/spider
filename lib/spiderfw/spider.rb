@@ -175,6 +175,9 @@ module Spider
                 @fssm_thread = Thread.new do
                     monitor.run
                 end
+                Spider.logger.debug("Monitoring restart.txt")
+            else
+                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt")
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
@@ -713,8 +716,9 @@ module Spider
             ruby = File.join(Config::CONFIG['bindir'], Config::CONFIG['ruby_install_name']).sub(/.*\s.*/m, '"\&"')
             Spider.main_process_shutdown
             return if $SPIDER_NO_RESPAWN
-            cmd = $SPIDER_PROC_NAME || $0
+            cmd = $SPIDER_SCRIPT || $0
             args = $SPIDER_PROC_ARGS || ARGV
+            Spider.logger.debug("CWD: #{Dir.pwd}")
             if RUBY_PLATFORM =~ /win32|mingw32/
                 start_cmd = "start cmd /C #{ruby} #{cmd} #{args.join(' ')}"
                 Spider.logger.debug(start_cmd)
