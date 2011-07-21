@@ -413,6 +413,7 @@ module Spider
             if !@is_target && @widget_target
                 first, rest = @widget_target.split('/', 2)
                 @_widget = find_widget(first)
+                raise "#{self} couldn't find widget #{first} for target #{@widget_target}" unless @_widget
                 @_widget.is_target_ancestor = true
                 @_widget.widget_target = rest
                 @_widget.is_target = true unless rest

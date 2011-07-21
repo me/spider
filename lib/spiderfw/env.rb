@@ -15,3 +15,10 @@ $:.push($SPIDER_PATH)
 
 $SPIDER_RUNMODE ||= ENV['SPIDER_RUNMODE']
 $SPIDER_CONFIG_SETS = ENV['SPIDER_CONFIG_SETS'].split(/\s+,\s+/) if ENV['SPIDER_CONFIG_SETS']
+
+$SPIDER_SCRIPT = $0
+if $SPIDER_SCRIPT =~ /Rack|Passenger/
+    $SPIDER_RACK = true
+    $SPIDER_SCRIPT = ::File.expand_path('./bin/spider')
+    $SPIDER_NO_RESPAWN = true
+end

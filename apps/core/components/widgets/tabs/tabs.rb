@@ -16,13 +16,16 @@ module Spider; module Components
         end
         
         def prepare
-            super
+            @active_tab = params['tab']
+            @active_tab ||= transient_session[:tab]
             @active_tab ||= @tabs.first
+            transient_session[:tab] = @active_tab
             @scene << {
                 :active_tab => @active_tab,
                 :tabs => @tabs,
                 :tabs_labels => @tabs_labels
             }
+            super
         end
         
         def self.parse_content(doc)
@@ -32,7 +35,7 @@ module Spider; module Components
             tabs_override = '<tpl:override search="#tabs_content">'
             doc.search('tab').each do |tab|
                 tab_id = tab.get_attribute('id')
-                tabs_override += '<div sp:if="@active_tab == \''+tab_id+'\'>'
+                tabs_override += '<div sp:if="@active_tab == \''+tab_id+'\'">'
                 tabs_override += '<sp:parent-context>'
                 tabs_override += tab.innerHTML
                 tabs_override += '</sp:parent-context>'
@@ -40,7 +43,7 @@ module Spider; module Components
                 tab.innerHTML = ''
             end
             tabs_override += '</tpl:override>'
-            overrides << Hpricot(tabs_override).root
+            overrides << Hpricot.XML(tabs_override).root
             return doc.to_s, overrides
         end
         
@@ -50,6 +53,9 @@ module Spider; module Components
             doc.search('tab').each do |tab|
                 tab_id = tab.get_attribute('id')
                 label = tab.get_attribute('label')
+                if label =~ /_\((.+)\)/
+                    label = _($1)
+                end
                 add_tab(tab_id, label)
             end
             return doc

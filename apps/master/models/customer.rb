@@ -1,5 +1,3 @@
-require 'apps/master/models/installation'
-
 module Spider; module Master
     
     class Customer < Spider::Model::Managed
@@ -7,7 +5,6 @@ module Spider; module Master
         element :uuid, UUID
         element :public_key, Text
         element :private_key, Text
-        many :installs, Installation, :add_reverse => :customer
         multiple_choice :admins, Master::Admin, :add_multiple_reverse => {:name => :customers, :association => :multiple_choice} do
             element :receive_notifications, Bool, :default => true
             element :manage_plugins, Bool, :default => true

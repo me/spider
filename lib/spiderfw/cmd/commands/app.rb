@@ -39,17 +39,19 @@ class AppCommand < CmdParse::Command
         end
         list.set_execution_block do |args|
             if @installed
-                require 'spiderfw'
+                require 'spiderfw/home'
+                home = Spider::Home.new(Dir.pwd)
                 installed = {}
-                Spider.home.list_apps.each do |app|
+                Spider.init_base
+                active = Spider.config.get('apps')
+                Spider.home.apps.each do |app, info|
                     installed[app] = {
-                        :active => Spider.apps_by_path[app] ? true : false
+                        :active => active.include?(app)
                     }
-                    if appspec = Dir.glob("#{Spider.paths[:apps]}/#{app}/*.appspec")[0]
-                        info = Spider::App::AppSpec.load(appspec)
+                    if spec = info[:spec]
                         installed[app].merge!({
-                            :version => info.version
-                        })
+                            :version => spec.version
+                        })                        
                     end
                 end
             end
@@ -71,19 +73,19 @@ class AppCommand < CmdParse::Command
             end
             if @installed
                 puts
-                puts "*** INSTALLED APPS ***"
+                puts "*** "+_('INSTALLED APPS')+" ***"
                 puts  
                 installed.keys.sort.each do |app|                  
                     details = installed[app]
                     str = app
                     str += " #{details[:version]}" if details[:version]
-                    str += " (#{_('active')})" if details[:active]
+                    str += " (#{_('not loaded')})" unless details[:active]
                     puts str
                 end
             end
             if @remote
                 puts
-                puts "*** REMOTE APPS ***"
+                puts "*** "+_('REMOTE APPS')+" ***"
                 puts
                 remote.keys.sort.each do |app|
                     details = remote[app]
@@ -110,6 +112,7 @@ class AppCommand < CmdParse::Command
                 @no_optional_gems = true
             }
             opt.on("--ssh-user [USERNAME]", _("SSH user")){ |s| @ssh_user = s }
+            opt.on("--no-activate", _("Don't activate installed apps")){ |s| @no_activate = true }
         end
         install.set_execution_block do |args|
             unless File.exist?('init.rb') && File.directory?('apps')
@@ -127,6 +130,7 @@ class AppCommand < CmdParse::Command
                     puts "Grit not available; install Grit for Git support"
                 end
             end
+            
             apps = args
             existent = []
             apps.each do |app|
@@ -135,7 +139,6 @@ class AppCommand < CmdParse::Command
                     existent << app
                 end
             end
-            apps -= existent
             require 'spiderfw/setup/app_manager'
             specs = []
             client = Spider::AppServerClient.new(@server_url)
@@ -155,7 +158,14 @@ class AppCommand < CmdParse::Command
                 :no_optional_gems => @no_optional_gems
             }
             options[:ssh_user] = @ssh_user if @ssh_user
-            Spider::AppManager.install(specs, Dir.pwd, options)
+            inst_specs = specs.reject!{ |s| existent.include? s.app_id }
+            Spider::AppManager.install(inst_specs, Dir.pwd, options)
+            unless @no_activate
+                require 'spiderfw/spider'
+                specs_hash = {}
+                specs.each{ |s| specs_hash[s.app_id] = s }
+                Spider.activate_apps(deps, specs_hash)
+            end
         end
         self.add_command(install)
         

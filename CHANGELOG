@@ -1,3 +1,13 @@
+= 0.6.6
+== 19 July, 2011
+* Fix: use SEE_OTHER as default redirect code to avoid FF 5 caching
+* Fix: follow symlinks in base paths
+* Fix: reworked resource paths, views inclusion and extension now more reliable
+* Tree mixin now has tree_position, ordering
+* DB dumping
+* Better process management
+* Added bin/spider to default home
+
 = 0.6.5
 == 29 June, 2011
 * Mapper fixes

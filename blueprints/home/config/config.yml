@@ -1,6 +1,5 @@
 runmode: 'devel'
-session.store: 'file'
-client.text_editor: 'textmate'
+apps: ['core']
 
 storages:
     default: 
@@ -9,4 +8,4 @@ storages:
 set devel:
     template.cache.disable: true
     debugger.start: true
-    debug.console.level: DEBUG
+    log.level: DEBUG

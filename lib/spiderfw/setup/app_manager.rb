@@ -77,15 +77,19 @@ module Spider
             end
         end
         
+        def pre_update
+        end
+        
         def self.post_setup(specs, options={})
-            require 'bundler'
-            Bundler::Installer.install(options[:home_path], Bundler.definitions, {})
+            #require 'bundler'
+            #Bundler::Installer.install(options[:home_path], Bundler.definitions, {})
         end
         
         def self.update(specs, home_path, options)
             options[:use_git] = true unless options[:use_git] == false
             specs = [specs] unless specs.is_a?(Array)
             pre_setup(specs, options)
+            pre_update(specs, option)
             specs.each do |spec|
                 if spec.git_repo && options[:use_git]
                     git_update(spec, home_path, options)

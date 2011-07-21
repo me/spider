@@ -1,4 +1,7 @@
 require 'pathname'
+require 'spiderfw/spider'
+require 'spiderfw/app'
+
 
 module Spider
 
@@ -21,14 +24,38 @@ module Spider
         def load_apps(*args)
             Spider.load_apps(*args)
         end
+        
+        def apps_path
+            @apps_path = Spider.paths[:apps] if Spider.respond_to?(:paths)
+            @apps_path ||= File.join(@path, 'apps')
+        end
 
         def list_apps
-            apps_path = Spider.respond_to?(:paths) ? Spider.paths[:apps] : File.join(@path, 'apps')
-            apps_dir = Pathname.new(apps_path)
+            apps_dir = Pathname.new(self.apps_path)
+            paths = Spider.find_all_apps(self.apps_path)
             apps = []
-            Dir.glob("#{apps_path}/**/_init.rb").each do |path|
-                dir = Pathname.new(File.dirname(path))
+            paths.each do |path|
+                dir = Pathname.new(path)
                 apps << dir.relative_path_from(apps_dir).to_s
+            end
+            apps
+        end
+        
+        def apps
+            apps = {}
+            list_apps.each do |path|
+                spec_file = Dir.glob(File.join(self.apps_path, path, "*.appspec")).first
+                spec = nil
+                if spec_file
+                    spec = Spider::App::AppSpec.load(spec_file)
+                    app_name = spec.app_id
+                else
+                    app_name = path
+                end
+                apps[app_name] = {
+                    :path => path,
+                    :spec => spec
+                }
             end
             apps
         end

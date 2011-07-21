@@ -78,18 +78,18 @@ module Spider; module HTTP
                             :ssl_cert => options[:ssl_cert], :ssl_private_key => options[:ssl_key])
                     end
                 end
-                do_shutdown = lambda{ |arg|
+                do_shutdown = lambda{
+                    Debugger.post_mortem = false
+                    # debugger
                     server.shutdown
                     ssl_server.shutdown if ssl_server
-                    Spider.shutdown
                     pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                     begin
                         File.unlink(pid_file)
                     rescue Errno::ENOENT
                     end
                 }
-                trap('TERM', &do_shutdown)
-                trap('INT', &do_shutdown)
+                Spider.on_shutdown(&do_shutdown)
                 
                 thread.join
                 ssl_thread.join if ssl_thread
@@ -103,7 +103,11 @@ module Spider; module HTTP
                     File.open(pid_file, 'w') do |f|
                         f.write(Process.pid)
                     end
+                    $SPIDER_SCRIPT ||= $0
                     $0 = process_name
+                    STDIN.reopen "/dev/null"       # Free file descriptors and
+                    STDOUT.reopen "/dev/null", "a" # point them somewhere sensible
+                    STDERR.reopen STDOUT           # STDOUT/STDERR should go to a logfile
                     start.call
                 end
                 Process.detach(forked)
@@ -125,7 +129,11 @@ module Spider; module HTTP
                         Spider.logger.error("Install 'fssm' gem to enable respawning")
                     end
                 end
-                start.call unless spawner_started
+                unless spawner_started
+                    Spider.main_process_startup
+                    Spider.startup
+                    start.call 
+                end
             end
         end
         
@@ -148,15 +156,22 @@ module Spider; module HTTP
             rd, wr = IO.pipe
             if pid = fork
                 # Spawner
+                Spider.logger.debug("Spawner forked")
                 @child_pid = pid
-                exit_spawner = lambda{ 
-                    Spider.logger.debug "Spawner exiting" 
-                    exit 
-                }
-                trap('TERM', exit_spawner)
-                trap('INT', exit_spawner)
-                
-                $0 = 'spider-spawner'
+
+                unless @already_forked
+                    Spider.main_process_startup
+                    exit_spawner = lambda{ 
+                        Spider.logger.debug "Spawner exiting" 
+                        Process.kill 'KILL', @monitor_thread[:spawner_child_pid]
+                    }
+                    Spider.on_main_process_shutdown(&exit_spawner)
+                    Spider.main_process_startup
+                    $SPIDER_SCRIPT ||= $0
+                    $0 = 'spider-spawner'
+                end
+                @already_forked = true
+
                 wr.close
                 @monitor_thread[:spawner_child_pid] = pid
                 # TODO
@@ -166,6 +181,9 @@ module Spider; module HTTP
 
             else
                 # Child
+                $SPIDER_SPAWNED = true
+                trap('TERM'){ }
+                trap('INT'){ }
                 rd.close
                 Spider.spawner = wr
                 return unless @actions[action]

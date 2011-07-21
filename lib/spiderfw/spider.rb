@@ -9,6 +9,11 @@ require 'spiderfw/requires'
 
 require 'spiderfw/version'
 
+begin
+    require 'fssm'
+rescue LoadError
+end
+
 
 module Spider
     
@@ -109,6 +114,7 @@ module Spider
             load_configuration File.join($SPIDER_PATH, 'config')
             load_configuration File.join(@root, 'config')
             Locale.default = Spider.conf.get('i18n.default_locale')
+            setup_env
             @init_base_done = true
         end
         
@@ -118,15 +124,21 @@ module Spider
         #         mod.app_stop if mod.respond_to?(:app_stop)
         #     end
         # end
-
-
-        # Invoked before a server is started. Apps may implement the app_startup method, that will be called.
-        def startup
+        
+        def setup_env
             unless File.exists?(File.join(Spider.paths[:root], 'init.rb'))
-                raise "The server must be started from the root directory"
+                raise "This command must be run from the root directory"
             end
             FileUtils.mkdir_p(Spider.paths[:tmp])
             FileUtils.mkdir_p(Spider.paths[:var])
+            FileUtils.mkdir_p(File.join(Spider.paths[:var], 'memory'))
+            
+        end
+
+
+        # Invoked before a long running service started. Apps may implement the app_startup method, that will be called.
+        def startup
+            setup_env
             if Spider.conf.get('template.cache.reload_on_restart')
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
@@ -144,21 +156,86 @@ module Spider
             @apps.each do |name, mod|
                 mod.app_startup if mod.respond_to?(:app_startup)
             end
-
             @startup_done = true
+            at_exit do
+                Spider.shutdown
+            end
+        end
+        
+        def main_process_startup
+            if Object.const_defined?(:FSSM)
+                monitor = FSSM::Monitor.new
+
+                monitor.path(Spider.paths[:tmp], 'restart.txt') do
+                    create { |base, relative| Process.kill 'HUP', $$ }
+                    update { |base, relative| Process.kill 'HUP', $$ }            
+
+                end
+
+                @fssm_thread = Thread.new do
+                    monitor.run
+                end
+                Spider.logger.debug("Monitoring restart.txt")
+            else
+                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt")
+            end
+            trap('TERM'){ Spider.main_process_shutdown; exit }
+            trap('INT'){ Spider.main_process_shutdown; exit }
+            trap('HUP'){ Spider.respawn! }
+            
+            if @main_process_startup_blocks
+                @main_process_startup_blocks.each{ |block| block.call }
+            end
+            
+        end
+        
+        def on_main_process_startup(&proc)
+            @main_process_startup_blocks ||= []
+            @main_process_startup_blocks << proc
         end
         
         def startup_done?
             @startup_done
         end
         
+        def on_shutdown(&block)
+            @shutdown_blocks ||= []
+            @shutdown_blocks << block
+        end
+        
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
-        def shutdown
-            return unless Thread.current == Thread.main
+        def shutdown(force=false)
+            unless force
+                #return unless Thread.current == Thread.main
+                return if @shutdown_done
+            end
+            @shutdown_done = true
+            Spider.logger.debug("Shutdown")
             Debugger.post_mortem = false if Object.const_defined?(:Debugger) && Debugger.post_mortem?
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
             end
+            if @shutdown_blocks
+                @shutdown_blocks.each{ |b| b.call }
+            end
+        end
+        
+        def shutdown!
+            shutdown(true)
+        end
+        
+        def main_process_shutdown
+            if startup_done?
+                shutdown!
+            end
+            if @main_process_shutdown_blocks
+                @main_process_shutdown_blocks.each{ |b| b.call }
+            end
+        end
+        
+        def on_main_process_shutdown(&block)
+            @main_process_shutdown_blocks ||= []
+            @main_process_shutdown_blocks << block
         end
         
         def current
@@ -286,7 +363,11 @@ module Spider
             GetText::LocalePath.add_default_rule(File.join(path, "data/locale/%{lang}/LC_MESSAGES/%{name}.mo"))
         end
         
+        
         def load_apps(*l)
+            if l.empty?
+                l = Spider.conf.get('apps')
+            end
             l.each do |app|
                 load_app(app)
             end
@@ -298,9 +379,10 @@ module Spider
             end
         end
         
-        def find_all_apps
+        def find_all_apps(paths=nil)
+            paths ||= [@paths[:core_apps], @paths[:apps]]
             app_paths = []
-            Find.find(@paths[:core_apps], @paths[:apps]) do |path|
+            Find.find(*paths) do |path|
                 if (File.basename(path) == '_init.rb')
                     app_paths << File.dirname(path)
                     Find.prune
@@ -338,6 +420,35 @@ module Spider
             return true if @apps_by_path[path_or_name]
             return true if @apps_by_short_name[path_or_name]
             return false
+        end
+        
+        def activate_apps(apps, specs=nil)
+            require 'spiderfw/config/configuration_editor'
+            init_base
+            unless specs
+                specs = {}
+                Spider.home.apps.each do |k, v|
+                    specs[k] = v[:spec] if apps.include?(k)
+                end
+            end
+            editor = Spider::ConfigurationEditor.new
+            Spider.config.loaded_files.each do |f|
+                editor.load(f)
+            end
+            c_apps = Spider.config.get('apps')
+            c_apps = (c_apps + apps).uniq
+            editor.set('apps', Spider.apps_load_order(c_apps, specs))
+            editor.save
+        end
+        
+        def apps_load_order(apps, specs)
+            # TODO
+            require 'spiderfw/app'
+            sort = Spider::App::RuntimeSort.new
+            apps.each do |a|
+                sort.add(specs[a] ? specs[a] : a)
+            end
+            sort.tsort
         end
         
         def load_configuration(path)
@@ -600,12 +711,24 @@ module Spider
         end
         
         def respawn!
-            # TODO
-            raise "Unimplemented"
-            Spider.logger.info("Respawning")
-            @spawner.write('spawn')
-            @spawner.close
-            Process.kill "KILL", Process.pid
+            require 'rbconfig'
+            Spider.logger.info("Restarting")
+            ruby = File.join(Config::CONFIG['bindir'], Config::CONFIG['ruby_install_name']).sub(/.*\s.*/m, '"\&"')
+            Spider.main_process_shutdown
+            return if $SPIDER_NO_RESPAWN
+            cmd = $SPIDER_SCRIPT || $0
+            args = $SPIDER_PROC_ARGS || ARGV
+            Spider.logger.debug("CWD: #{Dir.pwd}")
+            if RUBY_PLATFORM =~ /win32|mingw32/
+                start_cmd = "start cmd /C #{ruby} #{cmd} #{args.join(' ')}"
+                Spider.logger.debug(start_cmd)
+                IO.popen(start_cmd)
+                sleep 5
+            else
+                start_cmd = "#{ruby} #{cmd} #{args.join(' ')}"
+                Spider.logger.debug(start_cmd)
+                exec(start_cmd)
+            end
         end
         
         def runmode=(mode)

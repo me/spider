@@ -180,10 +180,11 @@ module Spider; module Model; module Storage; module Db; module Connectors
         end
         
         def do_describe_table(conn, table)
-            columns = {}
+            columns = []
             t = conn.describe_table(table)
             t.columns.each do |c|
                 col = {
+                    :name => c.name,
                     :type => c.data_type.to_s.upcase,
                     :length => c.data_size,
                     :precision => c.precision,
@@ -191,7 +192,7 @@ module Spider; module Model; module Storage; module Db; module Connectors
                     :null => c.nullable?
                 }
                 col.delete(:length) if (col[:precision])
-                columns[c.name] = col
+                columns << col
             end
             columns
         end

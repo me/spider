@@ -270,15 +270,92 @@ module Spider; module Model; module Storage; module Db
          end
 
          def list_tables
-             return execute("SELECT TABLE_NAME FROM user_tables ORDER BY table_name").map{ |r| r['TABLE_NAME'] }
+             tables = execute("SELECT TABLE_NAME FROM user_tables ORDER BY table_name").map{ |r| r['TABLE_NAME'] }
+             mv = execute("SELECT OBJECT_NAME FROM user_objects WHERE OBJECT_TYPE = 'MATERIALIZED VIEW'").map{ |r| r['OBJECT_NAME'] }
+             tables - mv
+         end
+         
+         def get_table_create_sql(table)
+             sql = nil
+             connection do |c|
+                 out = nil
+                 cursor = c.parse('BEGIN :out1 := DBMS_METADATA.GET_DDL(object_type=>:in1, name=>:in2); END;')
+                 cursor.bind_param(1, out, OCI8::CLOB)
+                 cursor.bind_param(2, 'TABLE', String)
+                 cursor.bind_param(3, table, String)
+                 res = cursor.exec
+                 sql = cursor[1].read
+                 cursor.close
+                 # cursor = c.parse('BEGIN DBMS_METADATA_UTIL.LOAD_STYLESHEETS(); END;')
+                 # cursor.exec
+             end
+             sql
+         end
+         
+         def dump(stream, tables=nil)
+             stream << "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS';\n\n"
+             super(stream, tables)
+         end
+         
+         def dump_table_data(table, stream)
+             connection do |c|
+                 cursor = c.parse("SELECT COUNT(*) AS N FROM #{table}")
+                 cursor.exec
+                 num = cursor.fetch[0]
+                 cursor.close
+                 cursor = c.parse("select * from #{table}")
+                 cursor.exec
+                 if num > 0
+                     info = describe_table(table)
+                     fields = info[:columns]
+                     stream << "INSERT INTO #{table} (#{info[:order].map{ |f| "#{f}"}.join(', ')})\n"
+                     stream << "VALUES\n"
+                     cnt = 0
+                     while row = cursor.fetch
+                         cnt += 1
+                         stream << "("
+                         info[:order].each_with_index do |f, i|
+                             stream << dump_value(row[i], fields[f])
+                             stream << ", " if i < fields.length - 1
+                         end
+                         stream << ")"
+                         if cnt < num
+                             stream << ",\n"
+                         else
+                             stream << ";\n"
+                         end
+                     end
+                     stream << "\n\n"
+                 end
+                 cursor.close
+             end
+         end
+         
+         def dump_value(val, field)
+             return 'NULL' if val.nil?
+             type =  field[:type]
+             if ['CHAR', 'VARCHAR', 'VARCHAR2', 'BLOB', 'CLOB'].include?(type)
+                 val = val.gsub("'", "''").gsub("\n", '\n').gsub("\r", '\r')
+                 return "'#{val}'"
+             elsif ['DATE', 'TIME', 'DATETIME'].include?(type)
+                 val = val.strftime("%Y-%m-%d %H:%M:%S")
+                 return "'#{val}'"
+             else
+                 return val.to_s
+             end
          end
 
          def describe_table(table)
              primary_keys = []
              o_foreign_keys = {}
              columns = {}
+             order = []
              connection do |conn|
-                 columns = do_describe_table(conn, table)
+                 cols = do_describe_table(conn, table)
+                 cols.each do |col|
+                     columns[col[:name]] = col
+                     order << col[:name]
+                 end
                  res = execute("SELECT cols.table_name, cols.COLUMN_NAME, cols.position, cons.status, cons.owner
                  FROM user_constraints cons, user_cons_columns cols
                  WHERE cons.constraint_type = 'P'
@@ -310,7 +387,7 @@ module Spider; module Model; module Storage; module Db
              o_foreign_keys.each do |fk_name, fk_hash|
                  foreign_keys << ForeignKeyConstraint.new(fk_name, fk_hash[:table], fk_hash[:columns])
              end
-             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
+             return {:columns => columns, :order => order, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
 
          end
 

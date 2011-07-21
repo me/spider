@@ -4,6 +4,8 @@ module Spider
         :action => Proc.new{ |option| Spider.runmode = option unless Spider.runmode || $SPIDER_RUNMODE}
     )
     
+    config_option('apps', _('Apps to load'), :type => Array, :yaml_style => :inline)
+    
     # Storage
     # config_option('storage.type', '')
     # config_option('storage.url', '')
@@ -37,7 +39,7 @@ module Spider
     config_option 'static_content.auto_publish', _("Automatically publish content to the home's public folder"),
         :type => Spider::DataTypes::Bool, :default => false
     # Client
-    config_option 'client.text_editor', _("The text editor installed on the client")
+    config_option 'client.text_editor', _("The text editor installed on the client"), :default => 'textmate'
     
     # Templates
     config_option 'template.cache.disable', _("Refresh template cache every time"), :default => false, :type => Spider::DataTypes::Bool

@@ -1,4 +1,4 @@
 name "Servant"
 version "0.1"
 author "Ivan Pirlik"
-gems "ohai >0.3", "httpclient"
+gems "httpclient"

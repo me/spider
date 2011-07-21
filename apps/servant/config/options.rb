@@ -1,0 +1,1 @@
+Spider.config_option 'spider.master.url', _('Url of spider master')

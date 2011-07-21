@@ -305,16 +305,17 @@ module Spider; module Model; module Storage; module Db; module Connectors
         def do_describe_table(conn, table)
             md = get_db_metadata(conn)
             res = md.getColumns(nil, @user.upcase, table, nil)
-            columns = {}
+            columns = []
             while res.next()
                 col_name = res.getString("COLUMN_NAME")
                 col = {
+                    :name => col_name,
                     :type => res.getString("TYPE_NAME"),
                     :length => res.getInt("COLUMN_SIZE"),
                     :precision => res.getInt("DECIMAL_DIGITS"),
                 }
                 col.delete(:length) if (col[:precision])
-                columns[col_name] = col
+                columns << col
             end
             columns
         end

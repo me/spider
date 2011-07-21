@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'tsort'
 
 module Spider
     
@@ -244,6 +245,7 @@ module Spider
                     @#{name} ||= #{options[:default].inspect}
                     @#{name}
                 end
+                alias :#{name}= :#{name}
 END_OF_EVAL
                 class_eval(str)
             end
@@ -268,6 +270,7 @@ END_OF_EVAL
             array_attribute :authors
             array_attribute :depends
             array_attribute :depends_optional
+            array_attribute :load_after
             array_attribute :can_use
             array_attribute :gems
             array_attribute :gems_optional
@@ -322,11 +325,56 @@ END_OF_EVAL
             def self.parse_hash(h)
                 spec = self.new
                 h.each do |key, value|
-                    spec.send(:"#{key}", value)
+                    if value.is_a?(Array)
+                        spec.send(:"#{key}", *value)
+                    else
+                        spec.send(:"#{key}", value)
+                    end
                 end
                 spec
             end
+            
+            def load_after(*vals)
+                @load_after = vals unless vals.empty?
+                unless @load_after
+                    return self.depends + self.depends_optional
+                end
+            end
 
+        end
+        
+        class RuntimeSort
+            
+            def initialize
+                @apps = []
+                @apps_hash = {}
+            end
+            
+            def add(app)
+                @apps << app
+                if app.is_a?(AppSpec)
+                    @apps_hash[app.app_id] = app
+                else
+                    @apps_hash[app] = app
+                end
+            end
+            
+            def tsort_each_node(&block)
+                @apps.each(&block)
+            end
+            
+            def tsort_each_child(node, &block)
+                return unless node.is_a?(AppSpec)
+                node.load_after.map{ |a| @apps_hash[a] }.each(&block)
+            end
+            
+            def tsort
+                sorted = super
+                sorted.map{ |a| a.is_a?(AppSpec) ? a.app_id : a }
+            end
+            
+            include TSort
+            
         end
         
     end

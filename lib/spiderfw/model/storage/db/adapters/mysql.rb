@@ -15,7 +15,7 @@ module Spider; module Model; module Storage; module Db
             :transactions => true,
             :foreign_keys => true
         }
-        @reserved_keywords = superclass.reserved_keywords
+        @reserved_keywords = superclass.reserved_keywords + ['interval']
         @safe_conversions = DbStorage.safe_conversions.merge({
             'CHAR' => ['VARCHAR', 'CLOB'],
             'VARCHAR' => ['CLOB'],
@@ -337,6 +337,7 @@ module Spider; module Model; module Storage; module Db
              columns = {}
              primary_keys = []
              foreign_keys = []
+             order = []
              connection do |c|
                  res = c.query("select * from #{table} where 1=0")
                  fields = res.fetch_fields
@@ -363,6 +364,7 @@ module Spider; module Model; module Storage; module Db
                          col[flag_name] = (flags & flag_val == 0) ? false : true
                      end
                      columns[f.name] = col
+                     order << f.name
                      primary_keys << f.name if f.is_pri_key?
                  end                 
                  res = c.query("select * from INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE constraint_schema = '#{@db_name}' and table_name = '#{table}'")
@@ -379,7 +381,7 @@ module Spider; module Model; module Storage; module Db
                  end
                  
              end
-             return {:columns => columns, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
+             return {:columns => columns, :order => order, :primary_keys => primary_keys, :foreign_key_constraints => foreign_keys}
          end
 
          def table_exists?(table)
@@ -391,6 +393,57 @@ module Spider; module Model; module Storage; module Db
                  return true
              rescue ::Mysql::Error
                  return false
+             end
+         end
+         
+         def get_table_create_sql(table)
+             sql = nil
+             connection do |c|
+                 res = c.query("SHOW CREATE TABLE #{table}")
+                 sql = res.fetch_row[1]
+             end
+             sql
+         end
+         
+         
+         def dump_table_data(table, stream)
+             connection do |c|
+                 res = c.query("select * from #{table}")
+                 num = res.num_rows
+                 if num > 0
+                     fields = res.fetch_fields
+                     stream << "INSERT INTO `#{table}` (#{fields.map{ |f| "`#{f.name}`"}.join(', ')})\n"
+                     stream << "VALUES\n"
+                     cnt = 0
+                     while row = res.fetch_row
+                         cnt += 1
+                         stream << "("
+                         fields.each_with_index do |f, i|
+                             stream << dump_value(row[i], f)
+                             stream << ", " if i < fields.length - 1
+                         end
+                         stream << ")"
+                         if cnt < num
+                             stream << ",\n"
+                         else
+                             stream << ";\n"
+                         end
+                     end
+                     stream << "\n\n"
+                 end
+             end
+         end
+         
+         def dump_value(val, field)
+             return 'NULL' if val.nil?
+             type =  self.class.field_types[field.type]
+             if ['CHAR', 'VARCHAR', 'BLOB', 'TINY_BLOB', 'MEDIUM_BLOB', 'LONG_BLOB'].include?(type)
+                 val = val.gsub("'", "''").gsub("\n", '\n').gsub("\r", '\r')
+                 return "'#{val}'"
+             elsif ['DATE', 'TIME', 'DATETIME'].include?(type)
+                 return "'#{val}'"
+             else
+                 return val.to_s
              end
          end
          
