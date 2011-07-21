@@ -175,9 +175,9 @@ module Spider
                 @fssm_thread = Thread.new do
                     monitor.run
                 end
-                Spider.logger.debug("Monitoring restart.txt")
+                Spider.logger.debug("Monitoring restart.txt") if Spider.logger
             else
-                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt")
+                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt") if Spider.logger
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
