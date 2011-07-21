@@ -422,6 +422,20 @@ module Spider
             return false
         end
         
+        def get_app_deps(apps, options={})
+            new_apps = apps.clone
+            specs = {}
+            init_base
+            while !new_apps.empty? && curr = new_apps.pop
+                raise "Could not find app #{curr}" unless Spider.home.apps[curr]
+                spec = Spider.home.apps[curr][:spec]
+                specs[curr] = spec
+                new_apps += spec.depends.reject{ |app| specs[app] }
+                new_apps += spec.depends_optional.reject{ |app| specs[app] } if options[:optional]
+            end
+            specs.keys
+        end
+        
         def activate_apps(apps, specs=nil)
             require 'spiderfw/config/configuration_editor'
             init_base
@@ -448,7 +462,7 @@ module Spider
             apps.each do |a|
                 sort.add(specs[a] ? specs[a] : a)
             end
-            sort.tsort
+            sort.tsort.reject{ |a| a.nil? }
         end
         
         def load_configuration(path)

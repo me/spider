@@ -169,6 +169,16 @@ class AppCommand < CmdParse::Command
         end
         self.add_command(install)
         
+        activate = CmdParse::Command.new('activate', false )
+        activate.short_desc = _("Activate an app")
+        activate.set_execution_block do |args|
+            apps = args
+            require 'spiderfw/spider'
+            apps = Spider.get_app_deps(apps)
+            Spider.activate_apps(apps)
+        end
+        self.add_command(activate)
+        
         update = CmdParse::Command.new( 'update', false )
         update.short_desc = _("Update an app")
         update.options = CmdParse::OptionParserWrapper.new do |opt|
