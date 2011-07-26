@@ -98,7 +98,7 @@ module Spider
                     context = []
                     indents = {}
                     prev_indent = ""
-                    curr = data
+                    curr = data.dup
                     curr_val = ""
                     last_key = nil
                     level = 0
