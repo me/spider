@@ -4,6 +4,129 @@ require 'fileutils'
 module Spider
 
     module AppManager
+        
+        def self.install_or_update(apps, options={})
+            require 'spiderfw/home'
+            home = Spider::Home.new(Dir.pwd)
+            installed = {}
+            Spider.init_base
+            active = Spider.config.get('apps')
+            Spider.home.apps.each do |app, info|
+                installed[app] = {
+                    :active => active.include?(app)
+                }
+                if spec = info[:spec]
+                    installed[app].merge!({
+                        :version => spec.version
+                    })                        
+                end
+            end
+            to_inst = apps.select{ |a| !installed[a] }
+            to_upd = apps.select{ |a| installed[a] }
+            install_apps(to_inst, options)
+            update_apps(to_upd, options)
+            return {:installed => to_inst, :updated => to_upd}
+        end
+        
+        def self.install_apps(apps, options={})
+            return if apps.empty?
+            require 'spiderfw/setup/app_server_client'
+            use_git = false
+            unless options[:no_git]
+                begin
+                    require 'grit'
+                    use_git = true
+                rescue => exc
+                    puts exc.message
+                    puts "Grit not available; install Grit for Git support"
+                end
+            end
+            
+            existent = []
+            apps.each do |app|
+                if File.exist?("apps/#{app}")
+                    puts _("%s already exists, skipping") % app
+                    existent << app
+                end
+            end
+            require 'spiderfw/setup/app_manager'
+            specs = []
+            url = options[:url]
+            unless url
+                require 'spiderfw/spider'
+                Spider.init_base
+                url = Spider.config.get('app_server.url')
+            end
+            client = Spider::AppServerClient.new(url)
+            if options[:no_deps]
+                specs = client.get_specs(apps)
+            else
+                specs = client.get_deps(apps, :no_optional => options[:no_optional])
+            end
+            deps = specs.map{ |s| s.app_id }
+            unless (deps - apps).empty?
+                puts _("The following apps will be installed as a dependency:")
+                puts (deps - apps).inspect
+            end
+            i_options = {
+                :use_git => use_git, 
+                :no_gems => options[:no_gems],
+                :no_optional_gems => options[:no_optional_gems]
+            }
+            i_options[:ssh_user] = options[:ssh_user] if options[:ssh_user]
+            inst_specs = specs.reject!{ |s| existent.include? s.app_id }
+            Spider::AppManager.install(inst_specs, Dir.pwd, i_options)
+            unless options[:no_activate]
+                require 'spiderfw/spider'
+                specs_hash = {}
+                specs.each{ |s| specs_hash[s.app_id] = s }
+                Spider.activate_apps(deps, specs_hash)
+            end
+            
+        end
+        
+        def self.update_apps(apps, options={})
+            require 'spiderfw/spider'
+            require 'spiderfw/setup/app_server_client'
+            Spider.init_base
+            url = options[:url] || Spider.conf.get('app_server.url')
+            use_git = false
+            unless options[:no_git]
+                begin
+                    require 'grit'
+                    use_git = true
+                rescue
+                    puts "Grit not available; install Grit for Git support"
+                end
+            end
+            if options[:all]
+                require 'spiderfw/home'
+                home = Spider::Home.new(Dir.pwd)
+                apps = home.list_apps
+            end
+            if apps.empty?
+                puts _("No app to update")
+                exit
+            end
+            require 'spiderfw/setup/app_manager'
+            specs = []
+            client = Spider::AppServerClient.new(url)
+            if options[:no_deps]
+                specs = client.get_specs(apps)
+            else
+                specs = client.get_deps(apps, :no_optional => options[:no_optional])
+            end
+            deps = specs.map{ |s| s.app_id }
+            unless (deps - apps).empty?
+                puts _("The following apps will be updated as a dependency:")
+                puts (deps - apps).inspect
+            end
+            Spider::AppManager.update(specs, Dir.pwd, {
+                :use_git => use_git, 
+                :no_gems => options[:no_gems],
+                :no_optional_gems => options[:no_optional_gems]
+            })
+        end
 
         def self.install(specs, home_path, options)
             options[:use_git] = true unless options[:use_git] == false
@@ -77,7 +200,7 @@ module Spider
             end
         end
         
-        def pre_update
+        def self.pre_update(specs, options={})
         end
         
         def self.post_setup(specs, options={})
@@ -89,7 +212,7 @@ module Spider
             options[:use_git] = true unless options[:use_git] == false
             specs = [specs] unless specs.is_a?(Array)
             pre_setup(specs, options)
-            pre_update(specs, option)
+            pre_update(specs, options)
             specs.each do |spec|
                 if spec.git_repo && options[:use_git]
                     git_update(spec, home_path, options)

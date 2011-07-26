@@ -5,7 +5,6 @@ class AppCommand < CmdParse::Command
         super('app', true, true )
         @short_desc = _("Manage apps")
         
-        @server_url = 'http://www.soluzionipa.it/euroservizi/spider/app_server'
         
         self.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--proxy [SERVER]", _("Proxy server to use (http://user:pass@host:port)"), "-p"){ |p|
@@ -57,6 +56,11 @@ class AppCommand < CmdParse::Command
             end
             if @remote
                 require 'spiderfw/setup/app_server_client'
+                unless @server_url
+                    require 'spiderfw/spider'
+                    Spider.init_base
+                    @server_url = Spider.config.get('app_server.url')
+                end
                 client = Spider::AppServerClient.new(@server_url)
                 remote = {}
                 client.specs.each do |app|
@@ -119,53 +123,13 @@ class AppCommand < CmdParse::Command
                 puts _("Please execute this command from the home folder")
                 exit
             end
-            require 'spiderfw/setup/app_server_client'
-            use_git = false
-            unless @no_git
-                begin
-                    require 'grit'
-                    use_git = true
-                rescue => exc
-                    puts exc.message
-                    puts "Grit not available; install Grit for Git support"
-                end
-            end
-            
-            apps = args
-            existent = []
-            apps.each do |app|
-                if File.exist?("apps/#{app}")
-                    puts _("%s already exists, skipping") % app
-                    existent << app
-                end
-            end
             require 'spiderfw/setup/app_manager'
-            specs = []
-            client = Spider::AppServerClient.new(@server_url)
-            if @no_deps
-                specs = client.get_specs(apps)
-            else
-                specs = client.get_deps(apps, :no_optional => @no_optional)
-            end
-            deps = specs.map{ |s| s.app_id }
-            unless (deps - apps).empty?
-                puts _("The following apps will be installed as a dependency:")
-                puts (deps - apps).inspect
-            end
             options = {
-                :use_git => use_git, 
-                :no_gems => @no_gems,
-                :no_optional_gems => @no_optional_gems
+                :no_git => @no_git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
+                :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
             }
-            options[:ssh_user] = @ssh_user if @ssh_user
-            inst_specs = specs.reject!{ |s| existent.include? s.app_id }
-            Spider::AppManager.install(inst_specs, Dir.pwd, options)
-            unless @no_activate
-                require 'spiderfw/spider'
-                specs_hash = {}
-                specs.each{ |s| specs_hash[s.app_id] = s }
-                Spider.activate_apps(deps, specs_hash)
-            end
+            options[:url] = @server_url if @server_url
+            Spider::AppManager.install_apps(args, options)
         end
         self.add_command(install)
         
@@ -198,44 +162,13 @@ class AppCommand < CmdParse::Command
                 puts _("Please execute this command from the home folder")
                 exit
             end
-            require 'spiderfw/setup/app_server_client'
-            use_git = false
-            unless @no_git
-                begin
-                    require 'grit'
-                    use_git = true
-                rescue
-                    puts "Grit not available; install Grit for Git support"
-                end
-            end
-            apps = args
-            if @all
-                require 'spiderfw/home'
-                home = Spider::Home.new(Dir.pwd)
-                apps = home.list_apps
-            end
-            if apps.empty?
-                puts _("No app to update")
-                exit
-            end
             require 'spiderfw/setup/app_manager'
-            specs = []
-            client = Spider::AppServerClient.new(@server_url)
-            if @no_deps
-                specs = client.get_specs(apps)
-            else
-                specs = client.get_deps(apps, :no_optional => @no_optional)
-            end
-            deps = specs.map{ |s| s.app_id }
-            unless (deps - apps).empty?
-                puts _("The following apps will be updated as a dependency:")
-                puts (deps - apps).inspect
-            end
-            Spider::AppManager.update(specs, Dir.pwd, {
-                :use_git => use_git, 
-                :no_gems => @no_gems,
-                :no_optional_gems => @no_optional_gems
-            })
+            options = {
+                :no_git => @no_git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
+                :no_gems => @no_gems, :no_optional_gems => @no_optional_gems
+            }
+            options[:url] = @server_url if @server_url
+            Spider::AppManager.update_apps(args, options)
         end
         self.add_command(update)
         
