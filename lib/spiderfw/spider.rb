@@ -318,6 +318,7 @@ module Spider
             @paths[:tmp] = File.join(root, 'tmp')
             @paths[:data] = File.join(root, 'data')
             @paths[:log] = File.join(@paths[:var], 'log')
+            @paths[:restart_file] = File.join(@paths[:tmp], 'restart.txt')
             @paths.each do |k, path|
                 @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
             end
