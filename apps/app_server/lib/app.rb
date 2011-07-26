@@ -13,7 +13,7 @@ module Spider; module AppServer
             @spec.send(name, *args) if @spec.respond_to?(name)
         end
         
-        def to_json
+        def to_json(options=nil)
             @spec.to_json
         end
         
