@@ -40,6 +40,9 @@ module Spider; module ControllerMixins
             output_format_headers(format)
             @executed_format = format
             @executed_format_params = format_params
+            if Spider.runmode != 'devel' && File.exists?(File.join(Spider.paths[:tmp], 'maintenance.txt'))
+                raise Spider::Controller::Maintenance
+            end
             super
         end
         
@@ -182,7 +185,7 @@ module Spider; module ControllerMixins
         def render(path=nil, options={})
             scene = options[:scene] || @scene
             scene ||= get_scene
-            scene = prepare_scene(scene)
+            scene = prepare_scene(scene) unless options[:no_prepare_scene]
             request = options[:request] || @request
             response = options[:response] || @response
             if (path.is_a?(Spider::Template))
@@ -215,6 +218,11 @@ module Spider; module ControllerMixins
             return template
         end
         
+        def render_error(path, options)
+            options[:no_prepare_scene] = true
+            render(path, options)
+        end
+        
         def find_widget(name)
             @template.find_widget(name)
         end
@@ -239,19 +247,26 @@ module Spider; module ControllerMixins
             return obj
         end
         
-        def try_rescue(exc)            
+        def try_rescue(exc)
             exc.uuid = UUIDTools::UUID.random_create.to_s if exc.respond_to?(:uuid=)
             format = self.class.output_format(:error) || :html
-            return super unless @executed_format == :html
-            return super unless action_target?
-            return super if target_mode?
+            unless exc.is_a?(Spider::Controller::Maintenance) || exc.is_a?(Spider::Controller::NotFound)
+                return super unless @executed_format == :html
+                return super unless action_target?
+                return super if target_mode?
+            end
             output_format_headers(format)
-            if (exc.is_a?(Spider::Controller::NotFound))
-                error_page = '404'
+            layout = 'errors/error'
+            if exc.is_a?(Spider::Controller::Maintenance)
+                error_page = 'maintenance'
+                layout = 'generic'
+            elsif exc.is_a?(Spider::Controller::NotFound)
+                error_page = 'errors/404'
+                layout = 'errors/simple'
                 @scene.error_msg = _("Page not found")
                 @scene.email_subject = @scene.error_msg
             else
-                error_page = 'error_generic'
+                error_page = 'errors/error_generic'
                 if (exc.is_a?(HTTPMixin::HTTPStatus))
                     @scene.error_msg = exc.status_message
                 end
@@ -259,13 +274,13 @@ module Spider; module ControllerMixins
                 @scene.email_subject = @scene.error_msg
             end
             
-            if (exc.respond_to?(:uuid))
+            if exc.respond_to?(:uuid)
                 exc.extend(UUIDExceptionMessage)
                 @scene.exception_uuid = exc.uuid
-                @scene.email_subject += " (#{exc.uuid})"
+                @scene.email_subject += " (#{exc.uuid})" if @scene.email_subject
             end
             @scene.admin_email = Spider.conf.get('site.tech_admin.email')
-            if (Spider.runmode == 'devel')
+            if Spider.runmode == 'devel'
                 begin
                     @scene.devel = true
                     @scene.backtrace = build_backtrace(exc)
@@ -294,7 +309,7 @@ module Spider; module ControllerMixins
                 rescue => exc2
                 end
             end
-            render "errors/#{error_page}", :layout => "errors/error"
+            render_error "#{error_page}", :layout => layout
             super
         end
         

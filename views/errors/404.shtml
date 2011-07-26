@@ -3,4 +3,7 @@
 	<div class="error_description">
 		_(We are sorry, but the required page was not found).
 	</div>
+	<div class="link_back">
+	    <a href="{ Spider.site }/{ Spider::ControllerMixins::HTTPMixin.base_url }">_(Return to the site)</a>
+	</div>
 </div>

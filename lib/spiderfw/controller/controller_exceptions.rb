@@ -22,6 +22,9 @@ module Spider
         class ControllerError < RuntimeError
         end
         
+        class Maintenance < RuntimeError
+        end
+        
     end
     
 end
