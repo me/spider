@@ -185,7 +185,7 @@ module Spider
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
-            trap('HUP'){ Spider.respawn! }
+            trap('HUP'){ Spider.respawn! } unless RUBY_PLATFORM =~ /win32|mingw32/
             
             if @main_process_startup_blocks
                 @main_process_startup_blocks.each{ |block| block.call }
