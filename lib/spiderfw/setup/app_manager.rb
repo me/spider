@@ -34,11 +34,11 @@ module Spider
             use_git = false
             unless options[:no_git]
                 begin
-                    require 'grit'
+                    require 'git'
                     use_git = true
                 rescue => exc
                     puts exc.message
-                    puts "Grit not available; install Grit for Git support"
+                    puts "git gem not available; install git gem for Git support"
                 end
             end
             
@@ -74,7 +74,7 @@ module Spider
                 :no_optional_gems => options[:no_optional_gems]
             }
             i_options[:ssh_user] = options[:ssh_user] if options[:ssh_user]
-            inst_specs = specs.reject!{ |s| existent.include? s.app_id }
+            inst_specs = specs.reject{ |s| existent.include? s.app_id }
             Spider::AppManager.install(inst_specs, Dir.pwd, i_options)
             unless options[:no_activate]
                 require 'spiderfw/spider'
@@ -93,10 +93,10 @@ module Spider
             use_git = false
             unless options[:no_git]
                 begin
-                    require 'grit'
+                    require 'git'
                     use_git = true
                 rescue
-                    puts "Grit not available; install Grit for Git support"
+                    puts "git gem not available; install git gem for Git support"
                 end
             end
             if options[:all]
@@ -131,7 +131,8 @@ module Spider
         def self.install(specs, home_path, options)
             options[:use_git] = true unless options[:use_git] == false
             options[:home_path] = home_path
-            specs = [specs] unless specs.is_a?(Array)
+            specs = [specs] if specs && !specs.is_a?(Array)
+            specs ||= []
             pre_setup(specs, options)
             specs.each do |spec|
                 if spec.git_repo && options[:use_git]
@@ -144,22 +145,25 @@ module Spider
         end
 
         def self.git_install(spec, home_path, options={})
-            require 'grit'
+            require 'git'
             if ::File.exist?("apps/#{spec.id}")
                 puts _("%s already installed, skipping") % spec.id
                 return
             end
-            repo = Grit::Repo.new(home_path)
+            repo = Git.open(home_path)
             puts _("Fetching %s from %s") % [spec.app_id, spec.git_repo]
             repo_url = spec.git_repo
             if options[:ssh_user] && repo_url =~ /ssh:\/\/([^@]+@)?(.+)/
                 repo_url = "ssh://#{options[:ssh_user]}@#{$2}"
             end
-            `#{Grit::Git.git_binary} submodule add #{repo_url} apps/#{spec.id}`
-            repo.git.submodule({}, "init")
-            repo.git.submodule({}, "update")
-            repo.add('.gitmodules', "apps/#{spec.id}")
-            repo.commit_index(_("Added app %s") % spec.id) 
+            
+            Dir.chdir(home_path) do
+                `git submodule add #{repo_url} apps/#{spec.id}`
+                `git submodule init`
+                `git submodule update`
+            end
+            repo.add(['.gitmodules', "apps/#{spec.id}"])
+            repo.commit(_("Added app %s") % spec.id) 
         end
 
         def self.pack_install(spec, home_path, options={})
@@ -223,30 +227,29 @@ module Spider
         end
         
         def self.git_update(spec, home_path, options={})
-            require 'grit'
-            home_repo = Grit::Repo.new(home_path)
+            require 'git'
+            home_repo = Git.open(home_path)
             app_path = File.join(home_path, "apps/#{spec.id}")
-            app_repo = Grit::Repo.new(app_path)
+            app_repo = Git.open(app_path)
             puts _("Updating %s from %s") % [spec.app_id, spec.git_repo]
             Dir.chdir(app_path) do
-                app_repo.git.checkout({}, "master")
+                app_repo.branch('master').checkout
             end
-            cmd = "#{Grit::Git.git_binary} --git-dir='#{app_path}/.git' pull"
             response = err = nil
             Dir.chdir(app_path) do
-                response, err = app_repo.git.wild_sh(cmd)
+                `git --git-dir='#{app_path}/.git' pull`
             end
             if response =~ /Aborting/
                 puts err
                 return
             end
             Dir.chdir(app_path) do
-                app_repo.git.reset({:hard => true}, 'HEAD')
-                app_repo.git.checkout
+                app_repo.reset('HEAD', :hard => true)
+                app_repo.branch('master').checkout
             end
             
             home_repo.add("apps/#{spec.id}")
-            home_repo.commit_index(_("Updated app %s") % spec.id) 
+            home_repo.commit(_("Updated app %s") % spec.id) 
         end
         
         def self.pack_update(spec, home_path, options={})
