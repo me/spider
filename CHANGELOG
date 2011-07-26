@@ -1,3 +1,7 @@
+= 0.6.8
+== 26 July, 2011
+* Windows fix (no HUP trapping)
+
 = 0.6.7
 == 26 July, 2011
 * Process management and app setup enhancements
