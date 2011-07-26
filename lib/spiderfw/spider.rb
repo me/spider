@@ -78,6 +78,11 @@ module Spider
                 @home.instance_eval(File.read(init_file), init_file)
             end
             
+            init_apps
+            @init_done=true
+        end
+        
+        def init_apps
             @apps.each do |name, mod|
                 mod.app_init if mod.respond_to?(:app_init)
             end
@@ -87,7 +92,6 @@ module Spider
                     GetText.bindtextdomain(mod.short_name)
                 end
             end
-            @init_done=true
         end
         
         def init_done?
