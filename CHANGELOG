@@ -1,3 +1,7 @@
+= 0.6.7
+== 26 July, 2011
+* Process management and app setup enhancements
+
 = 0.6.6
 == 19 July, 2011
 * Fix: use SEE_OTHER as default redirect code to avoid FF 5 caching
