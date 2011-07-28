@@ -85,7 +85,6 @@ module Spider
         def init_apps
             @apps.each do |name, mod|
                 if File.directory?(File.join(mod.path, 'po'))
-                    Spider.logger.debug("Adding text domain #{mod.short_name}")
                     FastGettext.add_text_domain(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
                 end
             end
