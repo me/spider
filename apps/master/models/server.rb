@@ -13,7 +13,7 @@ module Spider; module Master
         many :commands, Master::Command, :add_reverse => :server
         element_query :pending_commands, :commands, :condition => Spider::Model::Condition.new{ |c| c.status == 'pending' }
         many :resources, Master::Resource, :delete_cascade => true
-        choice :customer, Master::Customer, :add_multiple_reverse => :server
+        choice :customer, Master::Customer, :add_multiple_reverse => :servers
         element :scout_plan_changed, DateTime, :hidden => true
         multiple_choice :admins, Master::Admin, :add_multiple_reverse => :server do
             element :receive_notifications, Bool, :default => true
