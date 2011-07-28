@@ -44,6 +44,7 @@ module Spider
                     repo.add('.gitignore')
                     repo.commit(_("Created repository"))
                 rescue => exc
+                    puts exc.message
                     puts "Unable to init Git repo, please init manually"
                 end
                 Dir.chdir(cwd)
