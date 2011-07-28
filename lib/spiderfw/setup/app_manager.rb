@@ -157,6 +157,7 @@ module Spider
                 repo_url = "ssh://#{options[:ssh_user]}@#{$2}"
             end
             
+            ENV['GIT_WORK_TREE'] = nil
             Dir.chdir(home_path) do
                 `git submodule add #{repo_url} apps/#{spec.id}`
                 `git submodule init`
