@@ -1,3 +1,8 @@
+= 0.6.9
+== 28 July, 2011
+* App installer now uses Git gem instead of Grit for better Windows compatibility
+* Switched from GetText to FastGettext
+
 = 0.6.8
 == 26 July, 2011
 * Windows fix (no HUP trapping)
