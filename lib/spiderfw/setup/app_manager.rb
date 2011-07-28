@@ -237,7 +237,7 @@ module Spider
             end
             response = err = nil
             Dir.chdir(app_path) do
-                `git --git-dir='#{app_path}/.git' pull`
+                `git --git-dir='#{app_path}/.git' pull origin master`
             end
             if response =~ /Aborting/
                 puts err
