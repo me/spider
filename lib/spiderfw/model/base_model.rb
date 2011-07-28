@@ -99,7 +99,11 @@ module Spider; module Model
             @subclasses ||= []
             @subclasses << subclass
             each_element do |el|
-                subclass.add_element(el.clone) unless el.attributes[:local_pk]
+                unless el.attributes[:local_pk]
+                    cl_el = el.clone
+                    cl_el.definer_model = el.definer_model
+                    subclass.add_element(cl_el) 
+                end
             end
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
             subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
@@ -116,7 +120,7 @@ module Spider; module Model
         def self.app
             return @app if @app
             app = self
-            while (!app.include?(Spider::App))
+            while !app.include?(Spider::App)
                 app = app.parent_module
             end
             @app = app
@@ -527,6 +531,7 @@ module Spider; module Model
         def self.add_element(el)
             @elements ||= {}
             @elements[el.name] = el
+            el.definer_model ||= self
             @elements_order ||= []
             if (el.attributes[:element_position])
                 @elements_order.insert(el.attributes[:element_position], el.name)
@@ -880,13 +885,29 @@ module Spider; module Model
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
-            _(@label || self.name || '')
+            unless sing
+                Spider::GetText.in_domain(self.app.short_name){
+                    _(@label || self.name || '')
+                }
+            end
         end
         
         # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
-            _(@label_plural || self.name || '')
+            unless val
+                Spider::GetText.in_domain(self.app.short_name){
+                    _(@label_plural || self.name || '')
+                }
+            end
+        end
+        
+        def self.label_
+            @label
+        end
+        
+        def self.label_plural_
+            @label_plural
         end
         
         def self.auto_primary_keys?
