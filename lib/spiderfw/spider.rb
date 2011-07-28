@@ -84,16 +84,13 @@ module Spider
         
         def init_apps
             @apps.each do |name, mod|
-                mod.app_init if mod.respond_to?(:app_init)
                 if File.directory?(File.join(mod.path, 'po'))
+                    Spider.logger.debug("Adding text domain #{mod.short_name}")
                     FastGettext.add_text_domain(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
                 end
             end
-            GetText::LocalePath.memoize_clear # since new paths have been added to GetText
             @apps.each do |name, mod|
-                if File.directory?(File.join(mod.path, 'po'))
-                    GetText.bindtextdomain(mod.short_name)
-                end
+                mod.app_init if mod.respond_to?(:app_init)
             end
         end
         
@@ -368,7 +365,6 @@ module Spider
             last_name = File.basename(path)
             app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
             app_files.each{ |f| require File.join(relative_path, f) if File.exist?(File.join(path, f)) }
-            GetText::LocalePath.add_default_rule(File.join(path, "data/locale/%{lang}/LC_MESSAGES/%{name}.mo"))
         end
         
         

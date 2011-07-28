@@ -249,7 +249,9 @@ module Spider
             super
             @is_target = false
             @widgets = {}
-            @attributes = WidgetAttributes.new(self)
+            Spider::GetText.in_domain(self.class.app.short_name){
+                @attributes = WidgetAttributes.new(self)
+            }
             @id_path = []
             @widget_attributes = {}
             locale = @request.locale.language
@@ -317,13 +319,15 @@ module Spider
         end
         
         def widget_before(action='')
-            #Spider.logger.debug("Widget #{self} widget_before(#{action})")
-            widget_init(action)
-            return unless active?
-            #Spider.logger.debug("Preparing widget #{self}")
-            prepare_scene(@scene)
-            prepare
-            @before_done = true
+            Spider::GetText.in_domain(self.class.app.short_name){
+                widget_init(action)
+                if active?
+                    prepare_scene(@scene)
+                    prepare
+                    @before_done = true
+                end
+            }
+
         end
         
         
@@ -425,7 +429,7 @@ module Spider
         
         # Instantiates this widget's own subwidgets.
         def load_widgets(template=@template)
-            if (self.class.scene_attributes)
+            if self.class.scene_attributes
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end
@@ -472,7 +476,7 @@ module Spider
         
         def run(action='')
             @widgets.each do |wname, w|
-                w.run if w.run?
+                w.do_run if w.run?
             end
             if (@parent)
                 @parent.after_widget(@id.to_sym)
@@ -489,36 +493,43 @@ module Spider
         end
         
         def index
-            run
+            do_run
             render
         end
         
+        def do_run
+            Spider::GetText.in_domain(self.class.app.short_name){
+                run
+            }
+        end
+        
         def render
-            prev_domain = FastGettext.text_domain
-            FastGettext.text_domain = self.class.app.short_name
-            prepare_scene(@scene)
-            set_scene_vars(@scene)
-            @template.render(@scene) unless @is_target_ancestor && !@is_target
-            FastGettext.text_domain = prev_domain
+            Spider::GetText.in_domain(self.class.app.short_name){
+                prepare_scene(@scene)
+                set_scene_vars(@scene)
+                @template.render(@scene) unless @is_target_ancestor && !@is_target 
+            }
         end
         
         def execute(action='', *params)
             Spider.logger.debug("Widget #{self} executing #{action}")
-            widget_execute = @request.params['_we']
-            if (@is_target)
-                if (widget_execute)
-                    super(widget_execute, *params)
+            Spider::GetText.in_domain(self.class.app.short_name){
+                widget_execute = @request.params['_we']
+                if (@is_target)
+                    if (widget_execute)
+                        super(widget_execute, *params)
+                    else
+                        do_run
+                        render
+                    end
+                elsif (@_widget)
+                    @_widget.set_action(widget_execute)
+                    @_widget.before(@_widget_rest, *params)
+                    @_widget.execute(@_widget_rest, *params)
                 else
-                    run
-                    render
+                    super
                 end
-            elsif (@_widget)
-                @_widget.set_action(widget_execute)
-                @_widget.before(@_widget_rest, *params)
-                @_widget.execute(@_widget_rest, *params)
-            else
-                super
-            end
+            }
         end
                         
         def try_rescue(exc)
@@ -754,7 +765,7 @@ module Spider
         end
         
         def set_scene_vars(scene)
-            if (self.class.scene_attributes) # Repeat for new instance variables
+            if self.class.scene_attributes # Repeat for new instance variables
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end

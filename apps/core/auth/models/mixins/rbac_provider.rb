@@ -89,8 +89,8 @@ module Spider; module Auth
                                         model_name = parts[i..-2].join('_')+'_'
                                         self_name = self_parts[i..-2].join('_')+'_'
                                     end
-                                    model_name += model.label_plural
-                                    self_name += self.label_plural
+                                    model_name += model.label_plural_
+                                    self_name += self.label_plural_
                                     model_name.downcase!
                                     self_name.downcase!
                                     break

@@ -18,9 +18,11 @@ module Spider; module Model
                 self.data = val if (val)
                 d = @data
                 if self.translate?
-                    @data.each do |k, v|
-                        d[k] = _(v)
-                    end
+                    Spider::GetText.in_domain(self.app.short_name){
+                        @data.each do |k, v|
+                            d[k] = _(v)
+                        end
+                    }
                 end
                 d
             end

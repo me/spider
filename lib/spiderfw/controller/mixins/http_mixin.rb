@@ -94,7 +94,7 @@ module Spider; module ControllerMixins
         end
         
         def base_url
-            self.class.base_url
+            HTTPMixin.reverse_proxy_mapping("")
         end
 
         def prepare_scene(scene)
