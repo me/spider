@@ -90,7 +90,7 @@ module Spider; module Servant
             installed = []
             gems.each do |g|
                 v = g['version'] || Gem::Requirement.default
-                unless Gem.available?(g['name'], v)
+                unless Spider.gem_available?(g['name'], v)
                     inst.install g['name'], v
                     installed << g
                 end

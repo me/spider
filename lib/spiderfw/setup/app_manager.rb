@@ -196,7 +196,7 @@ module Spider
             require 'rubygems/command.rb'
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
-                unless Gem.available?('bundler')
+                unless Spider.gem_available?('bundler')
                     puts _("Installing bundler gem")
                     inst = Gem::DependencyInstaller.new
                     inst.install 'bundler'
@@ -269,7 +269,6 @@ module Spider
                 FileUtils.mv(tmp_app_path, app_path)
             end
         end
-        
         
 
     end
