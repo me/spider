@@ -108,7 +108,6 @@ module Spider
                 puts _("No app to update")
                 exit
             end
-            require 'spiderfw/setup/app_manager'
             specs = []
             client = Spider::AppServerClient.new(url)
             if options[:no_deps]
