@@ -197,11 +197,25 @@ module Spider
             require 'rubygems/command.rb'
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
-                unless Spider.gem_available?('bundler')
-                    puts _("Installing bundler gem")
-                    inst = Gem::DependencyInstaller.new
-                    inst.install 'bundler'
+               gems = specs.map{ |s| s.gems }
+               # unless options[:no_optional_gems]
+               #     gems += specs.map{ |s| s.gems_optional }
+               # end
+               gems = gems.flatten.uniq
+               gems.reject!{ |g| Spider.gem_available?(g) }
+               unless gems.empty?
+                   puts _("Installing the following needed gems:")
+                   puts gems.inspect
+                   inst = Gem::DependencyInstaller.new
+                    gems.each do |g|
+                        inst.install g
+                    end
                 end
+                # unless Spider.gem_available?('bundler')
+                #     puts _("Installing bundler gem")
+                #     inst = Gem::DependencyInstaller.new
+                #     inst.install 'bundler'
+                # end
             end
         end
         
