@@ -32,7 +32,7 @@ module Spider
             return if apps.empty?
             require 'spiderfw/setup/app_server_client'
             use_git = false
-            unless options[:no_git]
+            if options[:git]
                 begin
                     require 'git'
                     use_git = true
@@ -128,7 +128,6 @@ module Spider
         end
 
         def self.install(specs, home_path, options)
-            options[:use_git] = true unless options[:use_git] == false
             options[:home_path] = home_path
             specs = [specs] if specs && !specs.is_a?(Array)
             specs ||= []
@@ -188,7 +187,15 @@ module Spider
                     end
                 end
             end
-
+            if File.directory?(File.join(home_path, '.git'))
+                begin
+                    require 'git'
+                    repo = Git.open(home_path)
+                    repo.add("apps/#{spec.id}")
+                    repo.commit(_("Added app %s") % spec.id)
+                rescue
+                end
+            end
         end
         
         def self.pre_setup(specs, options={})
@@ -227,12 +234,16 @@ module Spider
         end
         
         def self.update(specs, home_path, options)
-            options[:use_git] = true unless options[:use_git] == false
             specs = [specs] unless specs.is_a?(Array)
             pre_setup(specs, options)
             pre_update(specs, options)
             specs.each do |spec|
+                use_git = false
                 if spec.git_repo && options[:use_git]
+                    app_path = File.join(home_path, "apps/#{spec.id}")
+                    use_git = true if File.directory?(File.join(app_path, '.git'))
+                end
+                if use_git
                     git_update(spec, home_path, options)
                 else
                     pack_update(spec, home_path, options)

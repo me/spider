@@ -106,7 +106,7 @@ class AppCommand < CmdParse::Command
         install = CmdParse::Command.new( 'install', false )
         install.short_desc = _("Install an app")
         install.options = CmdParse::OptionParserWrapper.new do |opt|
-            opt.on("--no-git", _("Don't use git for installing apps"), "-g"){ |r| @no_git = true }
+            opt.on("--git", _("Use git for installing apps"), "-g"){ |r| @git = true }
             opt.on("--no-dependencies", _("Don't install other apps this one depends on"), "-d"){ |d| 
                 @no_deps = true 
             }
@@ -125,7 +125,7 @@ class AppCommand < CmdParse::Command
             end
             require 'spiderfw/setup/app_manager'
             options = {
-                :no_git => @no_git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
+                :git => @git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
                 :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
             }
             options[:url] = @server_url if @server_url
