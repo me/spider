@@ -78,16 +78,19 @@ module Spider
                 @home.instance_eval(File.read(init_file), init_file)
             end
             
+            init_apps
+            @init_done=true
+        end
+        
+        def init_apps
+            @apps.each do |name, mod|
+                if File.directory?(File.join(mod.path, 'po'))
+                    FastGettext.add_text_domain(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
+                end
+            end
             @apps.each do |name, mod|
                 mod.app_init if mod.respond_to?(:app_init)
             end
-            GetText::LocalePath.memoize_clear # since new paths have been added to GetText
-            @apps.each do |name, mod|
-                if File.directory?(File.join(mod.path, 'po'))
-                    GetText.bindtextdomain(mod.short_name)
-                end
-            end
-            @init_done=true
         end
         
         def init_done?
@@ -175,13 +178,13 @@ module Spider
                 @fssm_thread = Thread.new do
                     monitor.run
                 end
-                Spider.logger.debug("Monitoring restart.txt")
+                Spider.logger.debug("Monitoring restart.txt") if Spider.logger
             else
-                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt")
+                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt") if Spider.logger
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
-            trap('HUP'){ Spider.respawn! }
+            trap('HUP'){ Spider.respawn! } unless RUBY_PLATFORM =~ /win32|mingw32/
             
             if @main_process_startup_blocks
                 @main_process_startup_blocks.each{ |block| block.call }
@@ -314,6 +317,7 @@ module Spider
             @paths[:tmp] = File.join(root, 'tmp')
             @paths[:data] = File.join(root, 'data')
             @paths[:log] = File.join(@paths[:var], 'log')
+            @paths[:restart_file] = File.join(@paths[:tmp], 'restart.txt')
             @paths.each do |k, path|
                 @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
             end
@@ -360,7 +364,6 @@ module Spider
             last_name = File.basename(path)
             app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
             app_files.each{ |f| require File.join(relative_path, f) if File.exist?(File.join(path, f)) }
-            GetText::LocalePath.add_default_rule(File.join(path, "data/locale/%{lang}/LC_MESSAGES/%{name}.mo"))
         end
         
         
@@ -422,6 +425,20 @@ module Spider
             return false
         end
         
+        def get_app_deps(apps, options={})
+            new_apps = apps.clone
+            specs = {}
+            init_base
+            while !new_apps.empty? && curr = new_apps.pop
+                raise "Could not find app #{curr}" unless Spider.home.apps[curr]
+                spec = Spider.home.apps[curr][:spec]
+                specs[curr] = spec
+                new_apps += spec.depends.reject{ |app| specs[app] }
+                new_apps += spec.depends_optional.reject{ |app| specs[app] } if options[:optional]
+            end
+            specs.keys
+        end
+        
         def activate_apps(apps, specs=nil)
             require 'spiderfw/config/configuration_editor'
             init_base
@@ -448,7 +465,7 @@ module Spider
             apps.each do |a|
                 sort.add(specs[a] ? specs[a] : a)
             end
-            sort.tsort
+            sort.tsort.reject{ |a| a.nil? }
         end
         
         def load_configuration(path)

@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+	<tpl:asset type="css" src="css/error_page.css" />
+    <head>
+        <title>{ @error_msg }</title>
+        <script sp:each='@assets[:js] |script|' type="text/javascript" src="{ script }"></script>
+        <link sp:each='@assets[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
+    </head>
+    <body>
+		<div id="header">
+		</div>
+        <div id="content">
+            <sp:yield />
+        </div>
+    </div>
+</div>

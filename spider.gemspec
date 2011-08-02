@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.executables = ['spider']
   s.default_executable = 'spider'
   s.add_dependency("cmdparse", ["> 2.0.0"])
-  s.add_dependency("gettext", ["> 2.0.0"])
+  s.add_dependency("fast_gettext", [">= 0.5.13"])
   s.add_dependency("hpricot", ["> 0.8"])
   s.add_dependency("json_pure", ["> 1.1"])
   s.add_dependency("uuidtools", ["> 2.1"])

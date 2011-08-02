@@ -227,7 +227,7 @@ module Spider
             require 'rubygems'
             require 'rubygems/command.rb'
             require 'rubygems/dependency_installer.rb'
-            unless Gem.available?('mysql') || Gem.available?('ruby-mysql')
+            unless Spider.gem_available?('mysql') || Spider.gem_available?('ruby-mysql')
                 if ask? _("Mysql gem is not available. Install?")
                     ok = false
                     while !ok

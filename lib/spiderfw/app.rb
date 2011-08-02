@@ -365,6 +365,7 @@ END_OF_EVAL
             
             def tsort_each_child(node, &block)
                 return unless node.is_a?(AppSpec)
+                return unless node.load_after
                 node.load_after.map{ |a| @apps_hash[a] }.each(&block)
             end
             

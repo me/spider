@@ -40,6 +40,11 @@ module Spider
             
         end
         
+        def try_rescue(exc)
+            super
+            self.done = true
+        end
+        
         
     end
     

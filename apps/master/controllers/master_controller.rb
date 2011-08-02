@@ -18,7 +18,7 @@ module Spider; module Master
         #route /servers\/([^\/]+)/, ServerController, :do => lambda{ |id| @request.misc[:server] = Server.new(id) }
         route 'login', LoginController
         
-        require_user Master::Admin, :unless => [:login, :admin, :ping], :redirect => 'login'
+        require_user Master::Admin, :unless => [:login, :admin, :ping, :servant_event], :redirect => 'login'
         require_user Spider::Auth::SuperUser, :only => [:admin]
         
         
@@ -118,28 +118,34 @@ module Spider; module Master
                 @installation = Installation.new(id) unless id == 'new'
                 @scene.edit = (@request.params['_w'] && @request.params['_w'].key?('installation_form')) || @request.params.key?('edit') || id == 'new'
                 @scene.pk = id
-            
-                # if id == 'new'
-                #     if @request.params.key?('installation_create') && !@request.params['installation_name'].empty?
-                #         i = Installation.new(:name => @request.params['installation_name'])
-                #         i.customer = @customer
-                #         i.save
-                #         redirect(File.dirname(@request.path)+"/#{i.id}")
-                #     end
-                # else
-                #     if @request.params.key?('save_apps')
-                #         @installation.apps = @request.params['apps'].keys.join(',')
-                #         @installation.save
-                #         redirect(request.path)
-                #     end
-                #     @scene.install_apps = JSON.parse(@installation.apps) unless @installation.apps.blank?
-                #     @scene.install_apps ||= []
-                #     @scene.apps = Spider::AppServer.apps_by_id
-                # end
+                
+                if @request.params['add_command']
+                    command = @request.params['command']
+                    args = @request.params['arguments']
+                    arguments = args
+                    # FIXME: move somewhere else
+                    case command
+                    when 'gems', 'apps'
+                        arguments = args.split(/\s*,\s*/).to_json
+                    end
+                    Master::Command.create(
+                        :installation => @installation,
+                        :name => @request.params['command'],
+                        :arguments => arguments,
+                        :status => 'pending'
+                    )
+                    redirect(@request.path)
+    
+                end
                 @scene.install_apps = JSON.parse(@installation.apps) unless @installation.apps.blank?
                 @scene.install_apps ||= []
                 @scene.apps = Spider::AppServer.apps_by_id
                 @scene.logs = RemoteLog.where(:installation => @installation)
+                @scene.commands = Master::Command.where{ |c| (c.installation == @installation) }.order_by(:obj_created)
+                @scene.available_commands = {
+                    'gems' => _('Install or update gems'),
+                    'apps' => _('Install or update apps')
+                }
                 @scene << {
                     :customer => @customer,
                     :installation => @installation
@@ -345,14 +351,65 @@ module Spider; module Master
                 RemoteLog.create(:text => desc, :level => level, :time => time, :installation => install)
             end
             response = {
-                :pong => DateTime.new
+                :pong => DateTime.now
             }
-            # server.pending_commands.each do |command|
-            #     response[:commands] ||= []
-            #     response[:commands] << command.to_h
-            # end
+            commands = []
+            Master::Command.where{ |c| (c.installation == install) & (c.status == 'pending') }.each do |c|
+                commands << {
+                    :id => c.uuid,
+                    :name => c.name,
+                    :arguments => c.arguments ? JSON.parse(c.arguments) : nil
+                }
+            end
+            response[:commands] = commands unless commands.empty?
             $out << response.to_json
+            Master::Command.where{ |c| (c.installation == install) & (c.status == 'pending') }.each do |c|
+                c.sent = DateTime.now
+                c.status = 'sent'
+                c.save
+            end
         end
+        
+        __.json
+        def servant_event
+            params = @request.params.clone
+            name = params.delete('event')
+            install_id = params.delete('install_id')
+            unless install_id
+                Spider.logger.error("No install_id passed in ping")
+                done
+            end
+            install = Spider::Master::Installation.load_or_create(:uuid => install_id)
+            details = @request.params['details']
+            params = JSON.parse(details)
+            Event.create(
+                :installation => install,
+                :name => name,
+                :details => details
+            )
+            case name.to_sym
+            when :command_done
+                cmd = Master::Command.load(:uuid => params['id'])
+                cmd.done = DateTime.now
+                cmd.result = params['res'].to_json
+                cmd.status = 'success'
+                cmd.save
+            when :plan_done
+                results = params['results']
+                results.each do |res|
+                    cmd = Master::Command.load(:uuid => res['command_id'])
+                    if res['previous_error']
+                        cmd.status = 'not_done'
+                        cmd.save
+                    elsif res['error']
+                        cmd.status = 'error'
+                        cmd.save
+                    end
+                end
+            end
+        end
+        
+        
         
         private
         

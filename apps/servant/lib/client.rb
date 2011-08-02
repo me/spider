@@ -10,9 +10,14 @@ module Spider
             def initialize(url)
                 @url = url
             end
+            
+            def http_client
+                HTTPClient.new
+            end
         
-            def ping_server(url=@url)
-                clnt = HTTPClient.new
+            def ping_server(url=nil)
+                url ||= @url
+                clnt = self.http_client
                 status = Servant.status
                 status[:apps] = status[:apps].to_json
                 last_check_file = File.join(Spider.paths[:var], 'memory', 'servant_last_check')
@@ -29,15 +34,24 @@ module Spider
                 end
                 File.open(last_check_file, 'w'){ |f| f << Time.now.to_s }
                 res = JSON.parse(res.content)
-                if res[:commands]
-                    res[:commands].each do |command|
-                        command_result = execute_command(command[:name], command[:arguments])
-                        clnt.post()
-                    end
+                if res['commands']
+                    processor = Servant.command_processor.new(url)
+                    processor.run_commands(res['commands'])
                 end
             end
             
+            def process_commands(commands)
+            end
+            
+            def send_event(name, details)
+                self.http_client.post("#{@url}/servant_event", {
+                    :event => name, :install_id => Servant.install_id, :details => details.to_json
+                })
+            end
+
+            
             private
+
             
             def compress_string(str)
                 compr = ""

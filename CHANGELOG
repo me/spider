@@ -1,3 +1,26 @@
+= 0.6.9
+== 28 July, 2011
+* App installer now uses Git gem instead of Grit for better Windows compatibility
+* Switched from GetText to FastGettext; text domains are now used for each app
+
+= 0.6.8
+== 26 July, 2011
+* Windows fix (no HUP trapping)
+
+= 0.6.7
+== 26 July, 2011
+* Process management and app setup enhancements
+
+= 0.6.6
+== 19 July, 2011
+* Fix: use SEE_OTHER as default redirect code to avoid FF 5 caching
+* Fix: follow symlinks in base paths
+* Fix: reworked resource paths, views inclusion and extension now more reliable
+* Tree mixin now has tree_position, ordering
+* DB dumping
+* Better process management
+* Added bin/spider to default home
+
 = 0.6.5
 == 29 June, 2011
 * Mapper fixes

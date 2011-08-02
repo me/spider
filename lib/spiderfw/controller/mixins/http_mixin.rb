@@ -89,8 +89,12 @@ module Spider; module ControllerMixins
             super
         end
         
-        def base_url()
+        def self.base_url
             HTTPMixin.reverse_proxy_mapping("")
+        end
+        
+        def base_url
+            HTTPMixin.base_url
         end
 
         def prepare_scene(scene)
@@ -101,7 +105,6 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
-            self.done = true
             if (exc.is_a?(Spider::Controller::NotFound))
                 @response.status = Spider::HTTP::NOT_FOUND
             elsif (exc.is_a?(Spider::Controller::BadRequest))

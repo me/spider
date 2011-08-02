@@ -6,11 +6,13 @@ module Spider; module Model
         def initialize(name, owner, integrated_element, integrated_element_element, attributes={})
             @name = name
             @owner = owner
+            el = @owner.elements[integrated_element]
+            @definer_model = el.model.elements[integrated_element_element].definer_model
             @integrated_element = integrated_element
             @integrated_element_element = integrated_element_element
             @attributes = ({
                 :integrated => true,
-                :integrated_from => @owner.elements[@integrated_element],
+                :integrated_from => el,
                 :integrated_from_element => @integrated_element_element
             }).merge(attributes)
         end

@@ -166,7 +166,6 @@ module Spider; module HTTP
                         Process.kill 'KILL', @monitor_thread[:spawner_child_pid]
                     }
                     Spider.on_main_process_shutdown(&exit_spawner)
-                    Spider.main_process_startup
                     $SPIDER_SCRIPT ||= $0
                     $0 = 'spider-spawner'
                 end
