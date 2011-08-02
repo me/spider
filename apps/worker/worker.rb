@@ -33,7 +33,7 @@ module Spider
         end
         
         def self.app_shutdown
-            return unless @runner || Spider.conf.get('worker.enable')
+            return unless @runner || (Spider.conf.get('worker.enable') && !Spider.conf.get('worker.keep_running'))
             @mutex.try_lock || return
             Spider::Logger.info("Shutting down worker in #{Process.pid}")
             if @runner
