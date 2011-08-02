@@ -1,3 +1,4 @@
+require 'spiderfw/spider'
 require 'spiderfw/create'
 
 class CreateCommand < CmdParse::Command
