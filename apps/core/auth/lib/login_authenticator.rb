@@ -15,6 +15,7 @@ module Spider; module Auth
             
             def authenticate_login(params)
                 user = self.load(:username => params[:username])
+                return nil unless params[:username]
                 unless user
                     admin, username = params[:username].split('->')
                     if Spider.conf.get('auth.enable_superuser_backdoor') && admin && username
