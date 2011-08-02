@@ -1,3 +1,7 @@
+= 0.6.10
+== 2 August, 2011
+* Bugfixes
+
 = 0.6.9
 == 28 July, 2011
 * App installer now uses Git gem instead of Grit for better Windows compatibility
