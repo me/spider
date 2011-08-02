@@ -44,12 +44,12 @@ module Spider
                     repo.add('.gitignore')
                     repo.commit(_("Created repository"))
                 rescue => exc
-                    puts exc.message
-                    puts "Unable to init Git repo, please init manually"
+                    Spider.output exc.message, :ERROR
+                    Spider.output "Unable to init Git repo, please init manually", :ERROR
                 end
                 Dir.chdir(cwd)
             rescue LoadError
-                puts "git gem not installed, cannot init repo"
+                Spider.output _("git gem not installed, cannot init repo"), :NOTICE
             end
         end
         
