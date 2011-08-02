@@ -98,7 +98,7 @@ module Spider
                     context = []
                     indents = {}
                     prev_indent = ""
-                    curr = data.dup
+                    curr = data
                     curr_val = ""
                     last_key = nil
                     level = 0
@@ -151,7 +151,9 @@ module Spider
                             if value
                                 if curr
                                     res << indent
-                                    curr.instance_eval("def to_yaml_style; :inline; end")
+                                    if curr.is_a?(Hash) || curr.is_a?(Array)
+                                        curr.instance_eval("def to_yaml_style; :inline; end")
+                                    end
                                     res << {key => curr}.to_yaml.split("\n")[1..-1].join("\n") + "\n"
                                 else
                                     res << line
@@ -189,9 +191,9 @@ module Spider
                     end
                     
                     res.close
-                    FileUtils.mv(file, "#{file}.bak")
-                    FileUtils.mv(tmp_file, file)
                 end
+                FileUtils.mv(file, ".#{file}.previous")
+                FileUtils.mv(tmp_file, file)
             end
         end
         
