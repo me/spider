@@ -36,7 +36,7 @@ module Spider
                 begin
                     require 'git'
                     use_git = true
-                rescue => exc
+                rescue LoadError => exc
                     Spider.output exc.message, :ERROR
                     Spider.output "git gem not available; install git gem for Git support", :ERROR
                 end
@@ -90,15 +90,6 @@ module Spider
             require 'spiderfw/setup/app_server_client'
             Spider.init_base
             url = options[:url] || Spider.conf.get('app_server.url')
-            use_git = false
-            unless options[:no_git]
-                begin
-                    require 'git'
-                    use_git = true
-                rescue
-                    Spider.output "git gem not available; install git gem for Git support"
-                end
-            end
             if options[:all]
                 require 'spiderfw/home'
                 home = Spider::Home.new(Dir.pwd)
@@ -121,7 +112,7 @@ module Spider
                 Spider.output((deps - apps).inspect)
             end
             Spider::AppManager.update(specs, Dir.pwd, {
-                :use_git => use_git, 
+                :use_git => !options[:no_git], 
                 :no_gems => options[:no_gems],
                 :no_optional_gems => options[:no_optional_gems]
             })
@@ -190,10 +181,13 @@ module Spider
             if File.directory?(File.join(home_path, '.git'))
                 begin
                     require 'git'
+                rescue LoadError
+                end
+                begin
                     repo = Git.open(home_path)
                     repo.add("apps/#{spec.id}")
                     repo.commit(_("Added app %s") % spec.id)
-                rescue
+                rescue => exc
                 end
             end
         end
@@ -237,11 +231,22 @@ module Spider
             specs = [specs] unless specs.is_a?(Array)
             pre_setup(specs, options)
             pre_update(specs, options)
+            git_available = nil
             specs.each do |spec|
                 use_git = false
                 if spec.git_repo && options[:use_git]
                     app_path = File.join(home_path, "apps/#{spec.id}")
                     use_git = true if File.directory?(File.join(app_path, '.git'))
+                end
+                use_git = false if git_available == false
+                if use_git && git_available.nil?
+                    begin
+                        require 'git'
+                        use_git = true
+                    rescue LoadError => exc
+                        Spider.output "git gem not available; install git gem for Git support"
+                        use_git = false
+                    end
                 end
                 if use_git
                     git_update(spec, home_path, options)
@@ -288,9 +293,11 @@ module Spider
             FileUtils.mv(app_path, tmp_app_path)
             begin
                 pack_install(spec, home_path)
-                FileUtils.rmdir(tmp_app_path)
-            rescue
+                FileUtils.rm_rf(tmp_app_path)
+            rescue => exc
                 Spider.output _("Update of %s failed") % spec.id, :ERROR
+                Spider.output exc, :ERROR
+                FileUtils.rm_rf(app_path)
                 FileUtils.mv(tmp_app_path, app_path)
             end
         end
