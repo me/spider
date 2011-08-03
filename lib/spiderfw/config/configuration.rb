@@ -68,7 +68,7 @@ module Spider
         end
         
         def translate_key(key)
-            if (!@options[key])
+            if (!@options[key] && key != 'locale')
                 locale = Spider.locale
                 locale = $1 if locale =~ /^([^@\.]+)[@\.].+/
                 a = @@lang_aliases[locale][key] if @@lang_aliases[locale]

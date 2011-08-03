@@ -98,6 +98,9 @@ module Spider
         end
         
         def init_base(force=false)
+            l = Spider.locale.to_s
+            l = $1 if l =~ /(\w\w)_+/
+            FastGettext.locale = l
             return if @init_base_done && !force
             
             @apps_to_load = []
@@ -774,7 +777,15 @@ module Spider
         end
         
         def locale
-            Locale.current[0]
+            c_l = Spider.conf.get('locale')
+            return c_l if c_l
+            begin
+                @current_locale = Locale.current[0]
+            rescue
+                # There are problems with subsequent requests on Windows, 
+                # so use cached locale if Locale.current fails
+                @current_locale || 'en'
+            end
         end
         
         def i18n(l = self.locale)
