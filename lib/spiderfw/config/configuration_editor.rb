@@ -192,7 +192,8 @@ module Spider
                     
                     res.close
                 end
-                FileUtils.mv(file, ".#{file}.previous")
+                bak_file = File.join(dirname, ".#{basename}.previous")
+                FileUtils.mv(file, bak_file)
                 FileUtils.mv(tmp_file, file)
             end
         end

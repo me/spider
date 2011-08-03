@@ -305,8 +305,12 @@ module Spider
         
         def get_editor
             require 'spiderfw/config/configuration_editor'
+            require 'pathname'
             editor = ConfigurationEditor.new
+            config_path = Pathname.new(Spider.paths[:config]).realpath.to_s
             @loaded_files.each do |f|
+                f = Pathname.new(f).realpath.to_s
+                next unless f.index(config_path) == 0
                 editor.load(f)
             end
             editor

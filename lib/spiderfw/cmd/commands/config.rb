@@ -54,11 +54,8 @@ class ConfigCommand < CmdParse::Command
         set.set_execution_block do |args|
             require 'spiderfw/spider'
             require 'lib/spiderfw/config/configuration_editor'
-            editor = Spider::ConfigurationEditor.new
             Spider.init_base
-            Spider.config.loaded_files.each do |f|
-                editor.load(f)
-            end
+            editor = Spider.config.get_editor
             editor.set(*args)
             editor.save
         end
