@@ -1,6 +1,7 @@
 require 'apps/master/controllers/server_controller'
 require 'apps/master/controllers/login_controller'
 require 'json'
+require 'socket'
 
 
 module Spider; module Master
@@ -342,6 +343,11 @@ module Spider; module Master
             install.apps = @request.params['apps']
             install.interval = @request.params['interval']
             install.configuration = decompress_string(@request.params['configuration'])
+            curr_ip = install.ip_address
+            install.ip_address = @request.env['REMOTE_HOST']
+            if install.ip_address != curr_ip
+                install.hostname = Socket::getaddrinfo(install.ip_address,nil)[0][2]
+            end
             install.save
             log_lines = JSON.parse(@request.params['log'])
             log_lines.each do |log|
