@@ -333,12 +333,10 @@ END_OF_EVAL
                 end
                 spec
             end
-            
-            def load_after(*vals)
-                @load_after = vals unless vals.empty?
-                unless @load_after
-                    return self.depends + self.depends_optional
-                end
+
+            def get_runtime_dependencies
+                return self.load_after if @load_after
+                return self.depends + self.depends_optional
             end
 
             def gems_list
@@ -373,8 +371,7 @@ END_OF_EVAL
             
             def tsort_each_child(node, &block)
                 return unless node.is_a?(AppSpec)
-                return unless node.load_after
-                node.load_after.map{ |a| @apps_hash[a] }.each(&block)
+                node.get_runtime_dependencies.map{ |a| @apps_hash[a] }.each(&block)
             end
             
             def tsort
