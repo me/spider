@@ -197,7 +197,7 @@ module Spider
             require 'rubygems/command.rb'
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
-               gems = specs.map{ |s| s.gems }
+               gems = specs.map{ |s| s.gems_list }
                gems = gems.flatten.uniq
                gems.reject!{ |g| Spider.gem_available?(g) }
                unless gems.empty?
@@ -209,7 +209,8 @@ module Spider
                     end
                 end
                 unless options[:no_optional_gems]
-                    gems = specs.map{ |s| s.gems_optional || [] }
+                    gems = specs.map{ |s| s.gems_optional_list }
+                    gems = gems.flatten.uniq
                     gems.reject!{ |g| Spider.gem_available?(g) }
                     unless gems.empty?
                         Spider.output _("Installing the following optional gems:")

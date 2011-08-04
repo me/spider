@@ -341,6 +341,14 @@ END_OF_EVAL
                 end
             end
 
+            def gems_list
+                self.gems.map{ |g| g.is_a?(Array) ? g.first : g }
+            end
+
+            def gems_optional_list
+                self.gems_optional.map{ |g| g.is_a?(Array) ? g.first : g }
+            end
+
         end
         
         class RuntimeSort
