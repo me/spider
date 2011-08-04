@@ -140,8 +140,9 @@ module Spider
                 return
             end
             repo = Git.open(home_path)
-            Spider.output _("Fetching %s from %s") % [spec.app_id, spec.git_repo]
-            repo_url = spec.git_repo
+            repo_url = spec.git_repo_rw || spec.git_repo
+            Spider.output _("Fetching %s from %s") % [spec.app_id, repo_url]
+            
             if options[:ssh_user] && repo_url =~ /ssh:\/\/([^@]+@)?(.+)/
                 repo_url = "ssh://#{options[:ssh_user]}@#{$2}"
             end
