@@ -8,11 +8,26 @@ class ConfigCommand < CmdParse::Command
         list = CmdParse::Command.new( 'list', false )
         list.short_desc = _("List configuration options")
         list.options = CmdParse::OptionParserWrapper.new do |opt|
+            opt.on("--info", _("Show info"), "-i"){ |i|
+                @info = true
+            }
         end
         
         list.set_execution_block do |args|
-            require 'spiderfw'
-            Spider.config.options.sort.each{ |o| puts o }
+            require 'spiderfw/spider'
+            Spider.init_base
+            search = args.first
+            max_len = 0
+            Spider.config.options.each{ |o| max_len = o.length if o.length > max_len }
+            Spider.config.options.sort.each{ |o| 
+                next if search && o.index(search) != 0
+                str = o.ljust(max_len + 2)
+                if @info
+                    option = Spider.config.option(o)
+                    str += " #{option[:description]}" if option
+                end
+                puts str
+            }
         end
         
         self.add_command(list)
@@ -20,7 +35,8 @@ class ConfigCommand < CmdParse::Command
         info = CmdParse::Command.new('info', false)
         info.short_desc = _("Get information about a configuration option")
         info.set_execution_block do |args|
-            require 'spiderfw'
+            require 'spiderfw/spider'
+            Spider.init_base
             option = Spider.config.option(args.first)
             if option && option[:params]
                 print args[0]
@@ -43,7 +59,8 @@ class ConfigCommand < CmdParse::Command
         get = CmdParse::Command.new('get', false)
         get.short_desc = _("Get the current value of a configuration option")
         get.set_execution_block do |args|
-            require 'spiderfw'
+            require 'spiderfw/spider'
+            Spider.init_base
             puts Spider.conf.get(args.first)
         end
         
