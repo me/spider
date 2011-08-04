@@ -61,7 +61,7 @@ module Spider
             if options[:no_deps]
                 specs = client.get_specs(apps)
             else
-                specs = client.get_deps(apps, :no_optional => options[:no_optional])
+                specs = client.get_deps(apps, :no_optional => !options[:optional])
             end
             deps = specs.map{ |s| s.app_id }
             unless (deps - apps).empty?
