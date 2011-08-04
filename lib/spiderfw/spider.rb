@@ -777,14 +777,16 @@ module Spider
         end
         
         def locale
-            c_l = Spider.conf.get('locale')
-            return c_l if c_l
+            unless Thread.current[:current_languages] # Locale sets this
+                c_l = Spider.conf.get('locale')
+                return c_l if c_l
+            end
             begin
                 @current_locale = Locale.current[0]
             rescue
                 # There are problems with subsequent requests on Windows, 
                 # so use cached locale if Locale.current fails
-                @current_locale || 'en'
+                @current_locale || Locale::Tag.parse('en')
             end
         end
         
