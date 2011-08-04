@@ -344,7 +344,7 @@ module Spider; module Master
             install.interval = @request.params['interval']
             install.configuration = decompress_string(@request.params['configuration'])
             curr_ip = install.ip_address
-            install.ip_address = @request.env['REMOTE_HOST']
+            install.ip_address = @request.env['REMOTE_ADDR']
             if install.ip_address != curr_ip
                 install.hostname = Socket::getaddrinfo(install.ip_address,nil)[0][2]
             end
