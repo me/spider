@@ -198,9 +198,6 @@ module Spider
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
                gems = specs.map{ |s| s.gems }
-               # unless options[:no_optional_gems]
-               #     gems += specs.map{ |s| s.gems_optional }
-               # end
                gems = gems.flatten.uniq
                gems.reject!{ |g| Spider.gem_available?(g) }
                unless gems.empty?
@@ -211,6 +208,23 @@ module Spider
                         inst.install g
                     end
                 end
+                unless options[:no_optional_gems]
+                    gems = specs.map{ |s| s.gems_optional || [] }
+                    gems.reject!{ |g| Spider.gem_available?(g) }
+                    unless gems.empty?
+                        Spider.output _("Installing the following optional gems:")
+                        Spider.output gems.inspect
+                        inst = Gem::DependencyInstaller.new
+                        gems.each do |g|
+                            begin
+                                inst.install g
+                            rescue => exc
+                                Spider.output _("Unable to install optional gem %s:") % g
+                                Spider.output exc, :ERROR
+                            end
+                        end
+                    end
+               end
                 # unless Spider.gem_available?('bundler')
                 #     puts _("Installing bundler gem")
                 #     inst = Gem::DependencyInstaller.new
