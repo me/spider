@@ -304,7 +304,7 @@ module Spider
             app_path = File.join(home_path, "apps/#{spec.id}")
             tmp_path = File.join(home_path, 'tmp')
             FileUtils.mkdir_p(tmp_path)
-            tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now}")
+            tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
             FileUtils.mv(app_path, tmp_app_path)
             begin
                 pack_install(spec, home_path)
