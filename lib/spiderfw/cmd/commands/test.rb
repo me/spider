@@ -50,6 +50,22 @@ class TestCommand < CmdParse::Command
         end
         self.add_command(self_cmd)
 
+        issue = CmdParse::Command.new('issue', false)
+        issue.short_desc = _("Test for an issue")
+        issue.set_execution_block do |args|
+            id = args.first
+            require 'spiderfw/spider'
+            require 'spiderfw/test'
+            
+            test_path = File.join($SPIDER_PATH, 'test', 'issues')
+            issue_no = id.rjust(5, "0")
+            Dir.glob(File.join(test_path, "#{issue_no}-*")).each do |f|
+                require f
+            end
+            
+        end
+        self.add_command(issue)
+
 
     end
 
