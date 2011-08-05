@@ -994,7 +994,10 @@ module Spider; module Model; module Mappers
             had_schema = schema ? true : false
             schema ||= DbSchema.new
             n = @model.name.sub('::Models', '')
-            n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
+            app = @model.app
+            app_name = app.name if app
+            short_prefix = app.short_prefix if app
+            n.sub!(app_name, short_prefix) if short_prefix
             schema.table ||= @model.attributes[:db_table] || @storage.table_name(n)
             integrated_pks = []
             @model.each_element do |element|
