@@ -1061,6 +1061,10 @@ module Spider; module Model
             st = self.use_storage
             return st ? get_storage(st) : get_storage
         end
+
+        def self.storage=(val)
+            @storage = val
+        end
         
         # Returns an instancethe storage corresponding to the storage_string if it is given, 
         # or of the default storage otherwise.
