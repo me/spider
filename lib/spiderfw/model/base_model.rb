@@ -2158,6 +2158,10 @@ module Spider; module Model
                 yield
             end
         end
+
+        def saving?
+            !@_saving.nil?
+        end
                 
         # Loads the object from the storage
         # Acceptable arguments are:
