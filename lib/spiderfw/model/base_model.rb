@@ -120,7 +120,7 @@ module Spider; module Model
         def self.app
             return @app if @app
             app = self
-            while !app.include?(Spider::App)
+            while app && !app.include?(Spider::App)
                 app = app.parent_module
             end
             @app = app
