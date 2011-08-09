@@ -515,6 +515,11 @@ Spider.Controller = Class.extend({
     
 	remote: function(method, params, callback, options){
 		var args = Array.prototype.slice.call(arguments); 
+		if ($.isFunction(params)){
+		    options = callback;
+		    callback = params;
+		    params = null;
+		}
 		if (!callback) callback = function(){};
 		var url = this.url+'/'+method+'.json';
 		var defaults = {
