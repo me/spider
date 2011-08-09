@@ -559,7 +559,7 @@ module Spider
                 extensions.each do |ext|
                     full = path
                     full += '.'+ext if ext
-                    return full if (File.exist?(full))
+                    return full if File.file?(full)
                 end
                 return nil
             end
@@ -605,7 +605,7 @@ module Spider
                 else
                     app = owner_class.app if (owner_class && owner_class.app)
                 end
-                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
+                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.file?(cur_path+'/'+path) # !app
                 raise "Can't find owner app for resource #{path}" unless app
                 search_locations = resource_search_locations(resource_type, app)
                 search_paths.each do |p|
