@@ -345,6 +345,14 @@ module Spider
     
     module LayoutScene
         
+        def output_meta(type=nil)
+            type ||= :default
+            case type
+            when :default
+                $out << "<link rel=\"index\" href=\"#{self.controller[:request_url]}\">"
+            end
+        end
+        
         def output_assets(type=nil)
             types = type ? [type] : self.assets.keys
             use_cdn = Spider.conf.get('assets.use_cdn')
