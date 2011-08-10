@@ -98,6 +98,9 @@ module Spider
         end
         
         def init_base(force=false)
+            l = Spider.locale.to_s
+            l = $1 if l =~ /(\w\w)_+/
+            FastGettext.locale = l
             return if @init_base_done && !force
             
             @apps_to_load = []
@@ -118,6 +121,7 @@ module Spider
             load_configuration File.join(@root, 'config')
             Locale.default = Spider.conf.get('i18n.default_locale')
             setup_env
+            @logger = Spider::Logger
             @init_base_done = true
         end
         
@@ -178,9 +182,9 @@ module Spider
                 @fssm_thread = Thread.new do
                     monitor.run
                 end
-                Spider.logger.debug("Monitoring restart.txt") if Spider.logger
+                Spider.output("Monitoring restart.txt")
             else
-                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt") if Spider.logger
+                Spider.output("FSSM not installed, unable to monitor restart.txt")
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
@@ -273,8 +277,7 @@ module Spider
         
         # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers(force=false)
-            return if @logger && !force
-            @logger ||= Spider::Logger
+            return if @logger_started && !force
             @logger.close_all
             @logger.open(STDERR, Spider.conf.get('log.console')) if Spider.conf.get('log.console')
             begin
@@ -299,6 +302,7 @@ module Spider
             end
             $LOG = @logger
             Object.const_set(:LOGGER, @logger)
+            @logger_started = true
         end
         
         def start_loggers!
@@ -481,13 +485,9 @@ module Spider
                     begin
                         @configuration.load_yaml(File.join(path, f))
                     rescue ConfigurationException => exc
-                        if (exc.type == :yaml)
+                        if exc.type == :yaml
                             err = "Configuration file #{path+f} is not valid YAML"
-                            if @logger
-                                @logger.error(err)
-                            else
-                                puts err
-                            end
+                            Spider.output(err, :ERROR)
                         else
                             raise
                         end
@@ -559,7 +559,7 @@ module Spider
                 extensions.each do |ext|
                     full = path
                     full += '.'+ext if ext
-                    return full if (File.exist?(full))
+                    return full if File.file?(full)
                 end
                 return nil
             end
@@ -605,7 +605,7 @@ module Spider
                 else
                     app = owner_class.app if (owner_class && owner_class.app)
                 end
-                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
+                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.file?(cur_path+'/'+path) # !app
                 raise "Can't find owner app for resource #{path}" unless app
                 search_locations = resource_search_locations(resource_type, app)
                 search_paths.each do |p|
@@ -771,17 +771,23 @@ module Spider
                 end
             rescue LoadError, RuntimeError => exc
                 msg = _('Unable to start debugger. Ensure ruby-debug is installed (or set debugger.start to false).')
-                if Spider.logger
-                    Spider.logger.warn(exc.message)
-                    Spider.logger.warn(msg) 
-                else
-                    puts msg
-                end
+                Spider.output(exc.message)
+                Spider.output(msg)
             end
         end
         
         def locale
-            Locale.current[0]
+            unless Thread.current[:current_languages] # Locale sets this
+                c_l = Spider.conf.get('locale')
+                return c_l if c_l
+            end
+            begin
+                @current_locale = Locale.current[0]
+            rescue
+                # There are problems with subsequent requests on Windows, 
+                # so use cached locale if Locale.current fails
+                @current_locale || Locale::Tag.parse('en')
+            end
         end
         
         def i18n(l = self.locale)
@@ -803,6 +809,15 @@ module Spider
         def _test_teardown
             @apps.each do |name, mod|
                 mod.test_teardown if mod.respond_to?(:test_teardown)
+            end
+        end
+        
+        def output(str, level=:INFO)
+            if @logger_started
+                @logger.log(level, str)
+            else
+                str = "#{level}: #{str}" if level == :ERROR
+                puts str
             end
         end
         

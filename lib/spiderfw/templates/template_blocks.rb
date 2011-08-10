@@ -28,7 +28,9 @@ module Spider
             elsif el.name == 'tpl:output'
                 block = :Output
             elsif el.name == 'tpl:output-assets'
-                block = :LayoutAssets    
+                block = :LayoutAssets
+            elsif el.name == 'tpl:output-meta'
+                block = :LayoutMeta
             elsif el.name == 'sp:render'
                 block = :Render
             elsif el.name == 'sp:run'
@@ -212,6 +214,7 @@ require 'spiderfw/templates/blocks/debugger'
 require 'spiderfw/templates/blocks/parent_context'
 require 'spiderfw/templates/blocks/output'
 require 'spiderfw/templates/blocks/layout_assets'
+require 'spiderfw/templates/blocks/layout_meta'
 require 'spiderfw/templates/blocks/lambda'
 require 'spiderfw/templates/blocks/recurse'
 

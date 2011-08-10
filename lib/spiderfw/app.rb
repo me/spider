@@ -37,7 +37,7 @@ module Spider
                         @version = Gem::Version.new(@version.to_s) if @version && !@version.is_a?(Gem::Version)
                         spec_path = File.join(@path, "#{@short_name}.appspec")
                         load_spec(spec_path) if File.exists?(spec_path)
-                        @route_url ||= Inflector.underscore(self.name)
+                        @route_url ||= Inflector.underscore(self.short_name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
                         @gettext_parsers ||= []
                         @gettext_dirs ||= ['lib','bin','controllers','models','views','widgets','public']
@@ -333,12 +333,18 @@ END_OF_EVAL
                 end
                 spec
             end
-            
-            def load_after(*vals)
-                @load_after = vals unless vals.empty?
-                unless @load_after
-                    return self.depends + self.depends_optional
-                end
+
+            def get_runtime_dependencies
+                return self.load_after if @load_after
+                return self.depends + self.depends_optional
+            end
+
+            def gems_list
+                self.gems.map{ |g| g.is_a?(Array) ? g.first : g }
+            end
+
+            def gems_optional_list
+                self.gems_optional.map{ |g| g.is_a?(Array) ? g.first : g }
             end
 
         end
@@ -365,8 +371,7 @@ END_OF_EVAL
             
             def tsort_each_child(node, &block)
                 return unless node.is_a?(AppSpec)
-                return unless node.load_after
-                node.load_after.map{ |a| @apps_hash[a] }.each(&block)
+                node.get_runtime_dependencies.map{ |a| @apps_hash[a] }.each(&block)
             end
             
             def tsort

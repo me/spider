@@ -297,7 +297,7 @@ module Spider; module Model; module Storage
         # Utility methods
         
         def sequence_file_path(name)
-            path = 'var/sequences/'+name
+            path = File.join(Spider.paths[:var], 'sequences', name)
             return path
         end
         

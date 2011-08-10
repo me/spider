@@ -12,7 +12,11 @@ module Spider; module Worker
             status.set_execution_block do
                 pid = Worker.running?
                 if (pid)
-                    puts "Worker running (#{pid})"
+                    str = "Worker running (#{pid})"
+                    if Worker.pid_file && ::File.exists?(Worker.pid_file)
+                        str += " since #{::File::Stat.new(Worker.pid_file).mtime}"
+                    end
+                    puts str
                 else
                     puts "Worker not running"
                 end

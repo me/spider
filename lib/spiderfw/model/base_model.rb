@@ -120,7 +120,7 @@ module Spider; module Model
         def self.app
             return @app if @app
             app = self
-            while !app.include?(Spider::App)
+            while app && !app.include?(Spider::App)
                 app = app.parent_module
             end
             @app = app
@@ -1060,6 +1060,10 @@ module Spider; module Model
             return @storage if @storage
             st = self.use_storage
             return st ? get_storage(st) : get_storage
+        end
+
+        def self.storage=(val)
+            @storage = val
         end
         
         # Returns an instancethe storage corresponding to the storage_string if it is given, 
@@ -2153,6 +2157,10 @@ module Spider; module Model
             else
                 yield
             end
+        end
+
+        def saving?
+            !@_saving.nil?
         end
                 
         # Loads the object from the storage

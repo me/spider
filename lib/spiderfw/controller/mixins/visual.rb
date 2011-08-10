@@ -305,10 +305,12 @@ module Spider; module ControllerMixins
             end
             @rendering_error = true
             @scene.__is_error_page = true
-            if Spider.const_defined?(:Messenger) && Spider.conf.get('errors.send_email') && Spider.conf.get('site.tech_admin.email')
-                begin
-                    send_error_email(exc)
-                rescue => exc2
+            unless exc.is_a?(Spider::Controller::NotFound)
+                if Spider.const_defined?(:Messenger) && Spider.conf.get('errors.send_email') && Spider.conf.get('site.tech_admin.email')
+                    begin
+                        send_error_email(exc)
+                    rescue => exc2
+                    end
                 end
             end
             render_error "#{error_page}", :layout => layout

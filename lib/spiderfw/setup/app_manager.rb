@@ -32,20 +32,20 @@ module Spider
             return if apps.empty?
             require 'spiderfw/setup/app_server_client'
             use_git = false
-            unless options[:no_git]
+            if options[:git]
                 begin
                     require 'git'
                     use_git = true
-                rescue => exc
-                    puts exc.message
-                    puts "git gem not available; install git gem for Git support"
+                rescue LoadError => exc
+                    Spider.output exc.message, :ERROR
+                    Spider.output "git gem not available; install git gem for Git support", :ERROR
                 end
             end
             
             existent = []
             apps.each do |app|
                 if File.exist?("apps/#{app}")
-                    puts _("%s already exists, skipping") % app
+                    Spider.output _("%s already exists, skipping") % app
                     existent << app
                 end
             end
@@ -61,12 +61,12 @@ module Spider
             if options[:no_deps]
                 specs = client.get_specs(apps)
             else
-                specs = client.get_deps(apps, :no_optional => options[:no_optional])
+                specs = client.get_deps(apps, :no_optional => !options[:optional])
             end
             deps = specs.map{ |s| s.app_id }
             unless (deps - apps).empty?
-                puts _("The following apps will be installed as a dependency:")
-                puts (deps - apps).inspect
+                Spider.output _("The following apps will be installed as a dependency:")
+                Spider.output((deps - apps).inspect)
             end
             i_options = {
                 :use_git => use_git, 
@@ -90,25 +90,15 @@ module Spider
             require 'spiderfw/setup/app_server_client'
             Spider.init_base
             url = options[:url] || Spider.conf.get('app_server.url')
-            use_git = false
-            unless options[:no_git]
-                begin
-                    require 'git'
-                    use_git = true
-                rescue
-                    puts "git gem not available; install git gem for Git support"
-                end
-            end
             if options[:all]
                 require 'spiderfw/home'
                 home = Spider::Home.new(Dir.pwd)
                 apps = home.list_apps
             end
             if apps.empty?
-                puts _("No app to update")
+                Spider.output _("No app to update")
                 exit
             end
-            require 'spiderfw/setup/app_manager'
             specs = []
             client = Spider::AppServerClient.new(url)
             if options[:no_deps]
@@ -118,18 +108,17 @@ module Spider
             end
             deps = specs.map{ |s| s.app_id }
             unless (deps - apps).empty?
-                puts _("The following apps will be updated as a dependency:")
-                puts (deps - apps).inspect
+                Spider.output _("The following apps will be updated as a dependency:")
+                Spider.output((deps - apps).inspect)
             end
             Spider::AppManager.update(specs, Dir.pwd, {
-                :use_git => use_git, 
+                :use_git => !options[:no_git], 
                 :no_gems => options[:no_gems],
                 :no_optional_gems => options[:no_optional_gems]
             })
         end
 
         def self.install(specs, home_path, options)
-            options[:use_git] = true unless options[:use_git] == false
             options[:home_path] = home_path
             specs = [specs] if specs && !specs.is_a?(Array)
             specs ||= []
@@ -147,12 +136,13 @@ module Spider
         def self.git_install(spec, home_path, options={})
             require 'git'
             if ::File.exist?("apps/#{spec.id}")
-                puts _("%s already installed, skipping") % spec.id
+                Spider.output _("%s already installed, skipping") % spec.id
                 return
             end
             repo = Git.open(home_path)
-            puts _("Fetching %s from %s") % [spec.app_id, spec.git_repo]
-            repo_url = spec.git_repo
+            repo_url = spec.git_repo_rw || spec.git_repo
+            Spider.output _("Fetching %s from %s") % [spec.app_id, repo_url]
+            
             if options[:ssh_user] && repo_url =~ /ssh:\/\/([^@]+@)?(.+)/
                 repo_url = "ssh://#{options[:ssh_user]}@#{$2}"
             end
@@ -172,7 +162,7 @@ module Spider
             client = AppServerClient.new(spec.app_server)
             print _("Fetching %s from server... ") % spec.app_id
             tmp_path = client.fetch_app(spec.app_id)
-            puts _("Fetched.")
+            Spider.output _("Fetched.")
             dest = File.join(home_path, "apps/#{spec.app_id}")
             FileUtils.mkdir_p(dest)
             open tmp_path, Gem.binary_mode do |io|
@@ -189,7 +179,18 @@ module Spider
                     end
                 end
             end
-
+            if File.directory?(File.join(home_path, '.git'))
+                begin
+                    require 'git'
+                rescue LoadError
+                end
+                begin
+                    repo = Git.open(home_path)
+                    repo.add("apps/#{spec.id}")
+                    repo.commit(_("Added app %s") % spec.id)
+                rescue => exc
+                end
+            end
         end
         
         def self.pre_setup(specs, options={})
@@ -197,11 +198,40 @@ module Spider
             require 'rubygems/command.rb'
             require 'rubygems/dependency_installer.rb'
             unless options[:no_gems]
-                unless Spider.gem_available?('bundler')
-                    puts _("Installing bundler gem")
-                    inst = Gem::DependencyInstaller.new
-                    inst.install 'bundler'
+               gems = specs.map{ |s| s.gems_list }
+               gems = gems.flatten.uniq
+               gems.reject!{ |g| Spider.gem_available?(g) }
+               unless gems.empty?
+                   Spider.output _("Installing the following needed gems:")
+                   Spider.output gems.inspect
+                   inst = Gem::DependencyInstaller.new
+                    gems.each do |g|
+                        inst.install g
+                    end
                 end
+                unless options[:no_optional_gems]
+                    gems = specs.map{ |s| s.gems_optional_list }
+                    gems = gems.flatten.uniq
+                    gems.reject!{ |g| Spider.gem_available?(g) }
+                    unless gems.empty?
+                        Spider.output _("Installing the following optional gems:")
+                        Spider.output gems.inspect
+                        inst = Gem::DependencyInstaller.new
+                        gems.each do |g|
+                            begin
+                                inst.install g
+                            rescue => exc
+                                Spider.output _("Unable to install optional gem %s:") % g
+                                Spider.output exc, :ERROR
+                            end
+                        end
+                    end
+               end
+                # unless Spider.gem_available?('bundler')
+                #     puts _("Installing bundler gem")
+                #     inst = Gem::DependencyInstaller.new
+                #     inst.install 'bundler'
+                # end
             end
         end
         
@@ -214,12 +244,27 @@ module Spider
         end
         
         def self.update(specs, home_path, options)
-            options[:use_git] = true unless options[:use_git] == false
             specs = [specs] unless specs.is_a?(Array)
             pre_setup(specs, options)
             pre_update(specs, options)
+            git_available = nil
             specs.each do |spec|
+                use_git = false
                 if spec.git_repo && options[:use_git]
+                    app_path = File.join(home_path, "apps/#{spec.id}")
+                    use_git = true if File.directory?(File.join(app_path, '.git'))
+                end
+                use_git = false if git_available == false
+                if use_git && git_available.nil?
+                    begin
+                        require 'git'
+                        use_git = true
+                    rescue LoadError => exc
+                        Spider.output "git gem not available; install git gem for Git support"
+                        use_git = false
+                    end
+                end
+                if use_git
                     git_update(spec, home_path, options)
                 else
                     pack_update(spec, home_path, options)
@@ -232,7 +277,7 @@ module Spider
             home_repo = Git.open(home_path)
             app_path = File.join(home_path, "apps/#{spec.id}")
             app_repo = Git.open(app_path)
-            puts _("Updating %s from %s") % [spec.app_id, spec.git_repo]
+            Spider.output _("Updating %s from %s") % [spec.app_id, spec.git_repo]
             Dir.chdir(app_path) do
                 app_repo.branch('master').checkout
             end
@@ -241,7 +286,7 @@ module Spider
                 `git --git-dir='#{app_path}/.git' pull origin master`
             end
             if response =~ /Aborting/
-                puts err
+                Spider.output err, :ERROR
                 return
             end
             Dir.chdir(app_path) do
@@ -260,13 +305,26 @@ module Spider
             app_path = File.join(home_path, "apps/#{spec.id}")
             tmp_path = File.join(home_path, 'tmp')
             FileUtils.mkdir_p(tmp_path)
-            tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now}")
-            FileUtils.mv(app_path, tmp_app_path)
+            tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
+            begin
+                FileUtils.mv(app_path, tmp_app_path)
+            rescue Errno::EACCESS
+                if RUBY_PLATFORM =~ /win32|mingw/
+                    Spider.output(
+                        _("Can't update #{spec.id} app: ensure you have no files or folders of this app open"), 
+                        :ERROR
+                    )
+                else
+                    Spider.output exc, :ERROR
+                end
+            end
             begin
                 pack_install(spec, home_path)
-                FileUtils.rmdir(tmp_app_path)
-            rescue
-                puts _("Update of %s failed" % spec.id)
+                FileUtils.rm_rf(tmp_app_path)
+            rescue => exc
+                Spider.output _("Update of %s failed") % spec.id, :ERROR
+                Spider.output exc, :ERROR
+                FileUtils.rm_rf(app_path)
                 FileUtils.mv(tmp_app_path, app_path)
             end
         end

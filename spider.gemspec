@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
   s.authors  = ["Ivan Pirlik"]
   s.files = [
-      'README',
+      'README.rdoc',
       'VERSION',
       'CHANGELOG',
       'Rakefile',
@@ -23,8 +23,8 @@ Gem::Specification.new do |s|
       + Dir.glob('lib/**/*.rb') \
       + Dir.glob('views/**/*')
 #  s.test_files = []
-#  s.rdoc_options = ["--main", "README.txt"]
-#  s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
+#  s.rdoc_options = ["--main", "README.rdoc"]
+#  s.extra_rdoc_files = ["CHANGELOG", "LICENSE", "README.rdoc"]
   s.executables = ['spider']
   s.default_executable = 'spider'
   s.add_dependency("cmdparse", ["> 2.0.0"])

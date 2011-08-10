@@ -311,6 +311,7 @@ module Spider; module Model
         def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
+            return if !element.multiple? && val.saving?
             if element.attributes[:junction]
                 their_element = element.attributes[:junction_their_element]
                 if val.model != element.model # dereferenced junction

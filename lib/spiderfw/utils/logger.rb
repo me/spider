@@ -68,6 +68,10 @@ module Spider
                 return false                
             end
             
+            def log(*args, &proc)
+                send_to_loggers(:add, *args, &proc)
+            end
+            
             def debug(*args, &proc)
                 send_to_loggers(:debug, *args, &proc)
             end
@@ -129,6 +133,10 @@ module Spider
                 send_to_loggers(method, *args, &proc)
             end
 
+        end
+        
+        def log(*args, &proc)
+            Spider::Logger.add(*args, &proc)
         end
         
         def debug(*args, &proc)

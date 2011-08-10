@@ -38,6 +38,7 @@ module Spider
             return false if mutex.locked?
             model = Spider::Messenger.const_get(self.queues[queue][:model])
             lock_file = "#{self.lock_file}_#{queue}"
+            now = DateTime.now
             mutex.synchronize do
                 FileUtils.touch(lock_file)
                 File.open(lock_file, 'r'){ |f| return false unless f.flock File::LOCK_EX | File::LOCK_NB }
@@ -46,7 +47,6 @@ module Spider
                     if tickets
                         list = model.where(:ticket => tickets)
                     else
-                        now = DateTime.now
                         list = model.where{ (sent == nil) & (next_try <= now) }
                     end
                     list.each do |msg|

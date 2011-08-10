@@ -149,7 +149,7 @@ module Spider; module Model
             prev_text_domain = nil
             if @definer_model && @definer_model != Spider::Model::Managed
                 prev_text_domain = FastGettext.text_domain
-                FastGettext.text_domain = @definer_model.app.short_name
+                FastGettext.text_domain = @definer_model.app.short_name if FastGettext.translation_repositories.key?(@definer_model.app.short_name)
             end
             l = self.attributes[:label] ? _(self.attributes[:label]) : Inflector.underscore_to_upcasefirst(@name.to_s)
             if prev_text_domain

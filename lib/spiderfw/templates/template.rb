@@ -936,7 +936,7 @@ module Spider
             if type_or_str.is_a?(Symbol)
                 @type = type_or_str
             else
-                @type = parse(type_or_str.to_s)
+                parse(type_or_str.to_s)
             end
         end
         
