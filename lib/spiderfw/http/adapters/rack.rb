@@ -84,8 +84,8 @@ module Spider; module HTTP
                 controller_response.server_output = RackIO.new(rack_response_hash, controller_response, w)
             else
                 w = StringIO.new
-                controller_response.server_output = w
                 rack_response_hash = {:body => w}
+                controller_response.server_output = RackIO.new(rack_response_hash, controller_response, w)
             end
 
 
