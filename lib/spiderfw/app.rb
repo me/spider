@@ -37,7 +37,7 @@ module Spider
                         @version = Gem::Version.new(@version.to_s) if @version && !@version.is_a?(Gem::Version)
                         spec_path = File.join(@path, "#{@short_name}.appspec")
                         load_spec(spec_path) if File.exists?(spec_path)
-                        @route_url ||= Inflector.underscore(self.short_name)
+                        @route_url ||= Inflector.underscore(self.name)
                         @label ||= @short_name.split('_').each{ |p| p[0] = p[0].chr.upcase }.join(' ')
                         @gettext_parsers ||= []
                         @gettext_dirs ||= ['lib','bin','controllers','models','views','widgets','public']
