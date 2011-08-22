@@ -124,10 +124,19 @@ module Spider
             specs ||= []
             pre_setup(specs, options)
             specs.each do |spec|
-                if spec.git_repo && options[:use_git]
-                    git_install(spec, home_path, options)
+                app_path = File.join(home_path, "apps/#{spec.app_id}")
+                if File.directory?(app_path)
+                    if File.directory?(File.join(app_path, '.git'))
+                        git_update(spec, home_path, options)
+                    else
+                        pack_update(spec, home_path, options)
+                    end
                 else
-                    pack_install(spec, home_path, options)
+                    if spec.git_repo && options[:use_git]
+                        git_install(spec, home_path, options)
+                    else
+                        pack_install(spec, home_path, options)
+                    end
                 end
             end
             post_setup(specs, options)
