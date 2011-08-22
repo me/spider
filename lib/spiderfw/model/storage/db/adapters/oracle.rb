@@ -26,8 +26,8 @@ module Spider; module Model; module Storage; module Db
         def parse_url(url)
             # db:oracle://<username:password>:connect_role@<database>
             # where database is
-            # the net8 connect string or
-            # for Oracle client 10g or later, //hostname_or_ip:port_no/oracle_sid
+            # the net8 connect descriptor (TNS) or
+            # for Oracle client 10g or later, hostname_or_ip:port_no/oracle_sid
             if (url =~ /.+:\/\/(?:(.+):(.+)(?::(.+))?@)?(.+)/)
                 @user = $1
                 @pass = $2
