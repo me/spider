@@ -37,7 +37,7 @@ module Spider
             h = {}
             apps.each do |k, v|
                 h[k] = {}
-                h[k][:version] = v[:spec].version
+                h[k][:version] = v[:spec].version if v[:spec]
                 h[k][:active] = true if active.include?(k)
             end
             h
