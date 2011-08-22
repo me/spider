@@ -197,12 +197,17 @@ module Spider
         end
         
         module ClassMethods
+            attr_accessor :default_route, :default_dispatcher
            
             def add_route(routes, path, dest=nil, options=nil)
                 if ( path.is_a? Hash )
                     path.each {|p,d| add_route(p, d)}
                 else
                     routes << [path, dest, options || {}]
+                    if path.is_a?(String) && dest.respond_to?(:default_dispatcher=)
+                        dest.default_dispatcher = self
+                        dest.default_route = path
+                    end
                 end
             end
             
