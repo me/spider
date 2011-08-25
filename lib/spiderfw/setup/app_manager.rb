@@ -317,7 +317,7 @@ module Spider
             tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
             begin
                 FileUtils.mv(app_path, tmp_app_path)
-            rescue Errno::EACCESS
+            rescue Errno::EACCES
                 if RUBY_PLATFORM =~ /win32|mingw/
                     Spider.output(
                         _("Can't update #{spec.id} app: ensure you have no files or folders of this app open"), 
@@ -326,6 +326,7 @@ module Spider
                 else
                     Spider.output exc, :ERROR
                 end
+                exit
             end
             begin
                 pack_install(spec, home_path)
