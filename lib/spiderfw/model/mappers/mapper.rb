@@ -281,14 +281,14 @@ module Spider; module Model
         
         # Deletes all associations from the given object to the element.
         def delete_element_associations(obj, element, associated=nil)
-            if (element.attributes[:junction])
+            if element.attributes[:junction]
                 condition = {element.attributes[:reverse] => obj.primary_keys}
                 condition[element.attributes[:junction_their_element]] = associated if associated
                 element.mapper.delete(condition)
             else
-                if (element.multiple?)
+                if element.multiple?
                     condition = Condition.and
-                    if (associated)
+                    if associated
                         condition = associated.keys_to_condition
                     else
                         condition[element.reverse] = obj
@@ -298,7 +298,7 @@ module Spider; module Model
                     #     element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
                     #     condition << condition_row
                     # end
-                    if (element.owned?)
+                    if element.owned? || (element.reverse && element.model.elements[element.reverse].primary_key?)
                         element.mapper.delete(condition)
                     else
                         element.mapper.bulk_update({element.reverse => nil}, condition)
