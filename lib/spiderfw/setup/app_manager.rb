@@ -124,10 +124,19 @@ module Spider
             specs ||= []
             pre_setup(specs, options)
             specs.each do |spec|
-                if spec.git_repo && options[:use_git]
-                    git_install(spec, home_path, options)
+                app_path = File.join(home_path, "apps/#{spec.app_id}")
+                if File.directory?(app_path)
+                    if File.directory?(File.join(app_path, '.git'))
+                        git_update(spec, home_path, options)
+                    else
+                        pack_update(spec, home_path, options)
+                    end
                 else
-                    pack_install(spec, home_path, options)
+                    if spec.git_repo && options[:use_git]
+                        git_install(spec, home_path, options)
+                    else
+                        pack_install(spec, home_path, options)
+                    end
                 end
             end
             post_setup(specs, options)
@@ -308,7 +317,7 @@ module Spider
             tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
             begin
                 FileUtils.mv(app_path, tmp_app_path)
-            rescue Errno::EACCESS
+            rescue Errno::EACCES
                 if RUBY_PLATFORM =~ /win32|mingw/
                     Spider.output(
                         _("Can't update #{spec.id} app: ensure you have no files or folders of this app open"), 
@@ -317,6 +326,7 @@ module Spider
                 else
                     Spider.output exc, :ERROR
                 end
+                exit
             end
             begin
                 pack_install(spec, home_path)

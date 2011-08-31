@@ -3,7 +3,7 @@ require 'spiderfw/templates/template_blocks'
 module Spider; module TemplateBlocks
     
     class HTML < Block
-        HTML_NO_CLOSE = ['br', 'img', 'input']
+        HTML_NO_CLOSE = ['br', 'img', 'input', 'meta']
         
         def compile(options={})
             c = ""

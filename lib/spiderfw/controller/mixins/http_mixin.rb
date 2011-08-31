@@ -33,7 +33,7 @@ module Spider; module ControllerMixins
             return url
         end
         
-        # Returns the http path needed to call the current controller & action.
+        # Returns the http path used to call the current controller & action.
         # Reverses any proxy mappings to the Controller#request_path.
         def request_path
             HTTPMixin.reverse_proxy_mapping(super)

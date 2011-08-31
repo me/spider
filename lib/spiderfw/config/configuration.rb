@@ -162,7 +162,7 @@ module Spider
             end
         end
         
-        def options
+        def options_list
             options = []
             def iterate_options(src, prefix, dst)
                 src.each do |key, val|

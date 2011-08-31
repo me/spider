@@ -38,7 +38,8 @@ class Integer
   end
 end
 
-def BigDecimal
+require 'bigdecimal'
+BigDecimal.class_eval do
    def to_json(options = nil) #:nodoc:
        to_f.to_json
    end

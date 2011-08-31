@@ -18,8 +18,9 @@ class ConfigCommand < CmdParse::Command
             Spider.init_base
             search = args.first
             max_len = 0
-            Spider.config.options.each{ |o| max_len = o.length if o.length > max_len }
-            Spider.config.options.sort.each{ |o| 
+            opts = Spider.config.options_list
+            opts.each{ |o| max_len = o.length if o.length > max_len }
+            opts.sort.each{ |o| 
                 next if search && o.index(search) != 0
                 str = o.ljust(max_len + 2)
                 if @info

@@ -1,11 +1,14 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <script sp:each='@assets[:js] |script|' type="text/javascript" src="{ script }"></script>
-        <link sp:each='@assets[:css] |css_file|' rel='stylesheet' href='{ css_file }' />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <tpl:output-meta />
+        <tpl:output-assets type="css" />
     </head>
     <body>
         <div id="content">
             <sp:yield />
         </div>
+        <tpl:output-assets type="js" />
     </body>
 </html>

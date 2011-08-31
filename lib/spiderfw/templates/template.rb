@@ -528,6 +528,7 @@ module Spider
                 root.search('tpl:include').each do |incl|
                     resource = Spider.find_resource(:views, incl.get_attribute('src'), @path, [@owner.class, @definer_class])
                     src = resource.path
+                    raise "Template #{@path} didn't find included '#{incl.get_attribute('src')}'" unless src
                     @dependencies << src
                     incl_el = self.get_el(src)
                     assets = incl_el.children ? incl_el.children_of_type('tpl:asset') : []
@@ -936,7 +937,7 @@ module Spider
             if type_or_str.is_a?(Symbol)
                 @type = type_or_str
             else
-                @type = parse(type_or_str.to_s)
+                parse(type_or_str.to_s)
             end
         end
         

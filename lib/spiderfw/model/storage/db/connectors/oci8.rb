@@ -1,9 +1,5 @@
 require 'oci8'
 
-# The default mapping to BigDecimal doesn't seem to work (as of ruby-oci8 2.0.4), reverting to Float until it's fixed
-OCI8::BindType::Mapping[:number_unknown_prec] = OCI8::BindType::Float
-OCI8::BindType::Mapping[:number_no_prec_setting] = OCI8::BindType::Float
-
 module Spider; module Model; module Storage; module Db; module Connectors
 
     module OCI8

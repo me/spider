@@ -117,12 +117,16 @@ module Spider
                 return res ? res.path : nil
             end
             
-            def url=(url)
-                @url = url
-            end
-            
-            def url
-                @url || ''
+            # Returns the canonical url for this controller
+            def url(action=nil)
+                u = @default_route || ''
+                u += "/#{action}" if action
+                if @default_dispatcher
+                    u = @default_dispatcher.url + '/' + u
+                elsif self.app
+                    u = self.app.url + '/' + u
+                end
+                u
             end
             
             
