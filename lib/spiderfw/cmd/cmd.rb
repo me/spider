@@ -32,11 +32,9 @@ module Spider; module CommandLine
                 }
                 opt.on("--devel", _("Set runmode to devel"), "-d") do
                     $SPIDER_RUNMODE = 'devel'
-                    Spider.runmode = 'devel' if Spider && Spider.respond_to?(:runmode=)
                 end
                 opt.on("--test", _("Set runmode to test")) do
                     $SPIDER_RUNMODE = 'test'
-                    Spider.runmode = 'test' if Spider && Spider.respond_to?(:runmode=)
                 end
                 opt.on("--http-proxy [PROXY]", _("Proxy server to use for http operations (http://user:pass@host:port)")){ |p|
                     ENV['http_proxy'] = p
