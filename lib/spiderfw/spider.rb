@@ -600,7 +600,7 @@ module Spider
                         end
                     end
                     app = path_app
-                elsif owner_class <= Spider::App
+                elsif owner_class <= Spider::App || owner_class == Spider
                     app = owner_class
                 else
                     app = owner_class.app if (owner_class && owner_class.app)
