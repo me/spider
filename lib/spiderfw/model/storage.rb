@@ -13,7 +13,7 @@ module Spider; module Model
             matches = url.match(/^(.+?):\/\/(.+)/)
             adapter = matches[1]
             rest = matches[2]
-            if (adapter =~ /(.+):(.+)/)
+            if adapter =~ /(.+):(.+)/
                 connector = $1
                 adapter = $2
                 url = "#{adapter}://#{rest}"
@@ -37,7 +37,7 @@ module Spider; module Model
                         RUBY_PLATFORM =~ /java/ ? 'jdbc' : 'oci8'
                     end
                 end
-                if (connector)
+                if connector
                     conn_mod_name = case connector
                     when 'odbc'
                         :ODBC
