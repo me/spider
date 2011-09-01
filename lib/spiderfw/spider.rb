@@ -456,7 +456,7 @@ module Spider
             Spider.config.loaded_files.each do |f|
                 editor.load(f)
             end
-            c_apps = Spider.config.get('apps')
+            c_apps = Spider.config.get('apps') || []
             c_apps = (c_apps + apps).uniq
             editor.set('apps', Spider.apps_load_order(c_apps, specs))
             editor.save
