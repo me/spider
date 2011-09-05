@@ -146,10 +146,10 @@ module Spider
             return job.uuid
         end
         
-        def self.cron(time, params, &proc)
+        def self.cron(time, params=nil, &proc)
             raise "The cron method must be used only in worker init scripts" unless @runner
             check_params(params) if params
-            @runner.cron(time, params)
+            @runner.cron(time, params, &proc)
         end
         
         def self.every(time, params=nil, &proc)
