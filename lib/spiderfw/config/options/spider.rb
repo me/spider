@@ -104,12 +104,12 @@ module Spider
     config_option 'http.charset', _("The charset to use for http requests"), :default => 'UTF-8'
     
     config_option 'log.console', _("Level of debug output to console"), 
-        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? :DEBUG : false },
+        :default => Proc.new{ Spider.runmode == 'devel' ? :DEBUG : false },
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false },
         :choices => [false, :DEBUG, :WARN, :INFO, :ERROR]
     config_option 'log.errors', _("Log errors to errors.log file"), :type => Spider::DataTypes::Bool, :default => true
     config_option 'log.level', _("Log level to use for main log file (false for no logging)"),
-        :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? :DEBUG : :INFO },
+        :default => Proc.new{ Spider.runmode == 'devel' ? :DEBUG : :INFO },
         :choices => [false, :DEBUG, :WARN, :INFO, :ERROR],
         :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false }
     config_option 'log.file_name', _("Name of the main log file"), :default => 'site.log'
@@ -159,7 +159,7 @@ module Spider
        
         
     config_option 'errors.send_email', _("Send an e-mail to the technical administrator when errors occur"), :type => Spider::DataTypes::Bool,
-         :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
+         :default => lambda{ Spider.runmode == 'production' ? true : false }
     
     config_option 'devel.trace.extended', _("Use ruby-debug to provide extended traces"), :default => lambda{
         RUBY_VERSION_PARTS[1] == '8'
@@ -168,13 +168,13 @@ module Spider
     config_option 'devel.trace.show_instance_variables', _("Show locals in debug traces"), :default => true
     
     config_option 'javascript.compress', _("Compress JavaScript files"), 
-        :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }, :type => Spider::DataTypes::Bool
+        :default => lambda{ Spider.runmode == 'production' ? true : false }, :type => Spider::DataTypes::Bool
     config_option 'css.compress', _("Combine CSS files"), 
-        :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }, :type => Spider::DataTypes::Bool
+        :default => lambda{ Spider.runmode == 'production' ? true : false }, :type => Spider::DataTypes::Bool
     config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
         :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
     config_option 'assets.use_cdn', _("Use a Content Delivery Network for assets if defined"), :type => Spider::Bool,
-        :default => lambda{ Spider.config.get('runmode') == 'production' ? true : false }
+        :default => lambda{ Spider.runmode == 'production' ? true : false }
     
     config_option 'http_proxy', _("Proxy to use for http clients (http://user:pass@host:port)"), :type => String,
         :do => lambda{ |val| ENV['http_proxy'] = val }
