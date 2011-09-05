@@ -211,6 +211,15 @@ module Spider; module ControllerMixins
                 @http_auth_realm
             end
             
+            
+            def http_url(action=nil)
+                return nil unless Spider.site
+                u = "http://#{Spider.site.domain}"
+                u += ":#{Spider.site.port}" unless Spider.site.port == 80
+                u += self.url(action)
+                u
+            end
+            
         end
         
         class HTTPStatus < RuntimeError
