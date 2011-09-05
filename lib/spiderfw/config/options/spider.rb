@@ -30,7 +30,7 @@ module Spider
         :default => Proc.new{ Spider.config.get('runmode') == 'devel' ? true : false }
     config_option 'webserver.port', _("Port to use for the http server"), :type => Fixnum, :default => 8080
     config_option 'webserver.force_threads', _("Force threading on non-threaded adapters"), :type => Spider::DataTypes::Bool,
-        :default => Proc.new{ RUBY_VERSION_PARTS[1] == '8' && !Object.const_defined?(:PhusionPassenger) ? true : false }
+        :default => Proc.new{ Spider.runmode != 'test' && RUBY_VERSION_PARTS[1] == '8' && !Object.const_defined?(:PhusionPassenger) ? true : false }
     config_option 'webserver.timeout', _("Time allowed for each request (in seconds)"), :type=> Fixnum, :default => nil
     config_option 'webserver.respawn_on_change', _("Restart the webserver when application code changes"), :type => Spider::Bool,
         :default => Proc.new{ RUBY_PLATFORM !~ /win32|mingw32/ && Spider.config.get('runmode') == 'devel' ? true : false }
