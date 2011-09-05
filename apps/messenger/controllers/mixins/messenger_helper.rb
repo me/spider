@@ -25,6 +25,7 @@ module Spider; module Messenger
             @messenger_sent ||= {}
             @messenger_sent[:email] ||= []
             @messenger_sent[:email] << msg.ticket
+            msg.ticket
         end
         
         def self.send_email(klass, template, scene, from, to, headers={}, attachments=[], params={})
@@ -73,6 +74,13 @@ module Spider; module Messenger
             mail_headers, mail_body = mail.to_s.split("\r\n\r\n", 2)
             mail_headers += "\r\n"
             Messenger.email(from, to, mail_headers, mail_body, params)
+        end
+        
+        def sent_email(ticket)
+            return unless ticket
+            @messenger_sent ||= {}
+            @messenger_sent[:email] ||= []
+            @messenger_sent[:email] << ticket
         end
         
         def after(action='', *params)
