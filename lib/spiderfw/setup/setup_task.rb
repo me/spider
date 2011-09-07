@@ -1,3 +1,5 @@
+require 'spiderfw/model/migrations'
+
 module Spider
     
     class SetupTask
@@ -44,8 +46,10 @@ module Spider
         end
         
         def do_up
-            intance_eval(&@up)
-            sync_schema unless @no_sync || @sync_done
+            Spider::Model::Managed.no_set_dates = true
+            instance_eval(&@up)
+            #sync_schema unless @no_sync || @sync_done
+            Spider::Model::Managed.no_set_dates = false
         end
         
         def do_down

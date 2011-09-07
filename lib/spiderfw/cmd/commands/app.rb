@@ -129,7 +129,28 @@ class AppCommand < CmdParse::Command
                 :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
             }
             options[:url] = @server_url if @server_url
-            Spider::AppManager.install_apps(args, options)
+            if @git && !Spider::AppManager.git_available?
+                puts _("git gem not available; install git gem for Git support")
+                exit
+            end
+            apps = args
+            installed = []
+            apps.each do |app|
+                installed << app if Spider::AppManager.installed?(app)
+            end
+            unless installed.empty?
+                puts _("%s already installed") % installed.join(', ')
+            end
+            specs = Spider::AppManager.resolve(apps, options)
+            iapps = specs[:install].map{ |spec| spec.app_id }
+            deps = iapps - apps
+            unless deps.empty?
+                puts _("The following apps will be installed as a dependency: %s") % deps.join(', ')
+            end
+            unless specs[:update].empty?
+                puts _("The following apps will be updated as a dependency: %s") % specs[:update].map{ |s| s.app_id }.join(', ')
+            end
+            Spider::AppManager.new.install(specs, options)
         end
         self.add_command(install)
         
@@ -148,7 +169,7 @@ class AppCommand < CmdParse::Command
         update.options = CmdParse::OptionParserWrapper.new do |opt|
             opt.on("--all", _("Update all apps"), "-a"){ |a| @all = true }
             opt.on("--no-git", _("Don't use git for updating apps"), "-g"){ |r| @no_git = true }
-            opt.on("--no-dependencies", _("Don't install other apps this one depends on"), "-d"){ |d| 
+            opt.on("--no-dependencies", _("Don't install/update other apps this one depends on"), "-d"){ |d| 
                 @no_deps = true 
             }
             opt.on("--no-gems", _("Don't install ruby gems this app depends on"), "-g"){ |g| @no_gems = true }
@@ -156,6 +177,8 @@ class AppCommand < CmdParse::Command
             opt.on("--no-optional-gems", _("Don't install optional gem dependencies"), "-G"){ |g| 
                 @no_optional_gems = true
             }
+            opt.on("--no-activate", _("Don't activate installed apps, if any")){ |s| @no_activate = true }
+            opt.on("--refresh", _("Update apps even if the version has not changed"), "-r"){ |r| @refresh = true }
         end
         update.set_execution_block do |args|
             unless File.exist?('init.rb') && File.directory?('apps')
@@ -165,12 +188,55 @@ class AppCommand < CmdParse::Command
             require 'spiderfw/setup/app_manager'
             options = {
                 :no_git => @no_git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
-                :no_gems => @no_gems, :no_optional_gems => @no_optional_gems
+                :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
             }
             options[:url] = @server_url if @server_url
-            Spider::AppManager.update_apps(args, options)
+            apps = args
+            options[:refresh] = apps if @refresh
+            apps.each do |app|
+                unless Spider::AppManager.installed?(app)
+                    puts _("App %s is not installed") % app
+                    exit
+                end
+            end
+            specs = Spider::AppManager.resolve(apps, options)
+            unless specs[:install].empty?
+                puts _("The following apps will be installed as a dependency: %s") % specs[:install].map{ |s| s.app_id }.join(', ')
+            end
+            uapps = specs[:update].map{ |spec| spec.app_id }
+            udeps = uapps - apps
+            unless udeps.empty?
+                puts _("The following apps will be updated as a dependency: %s") % udeps.join(', ')
+            end
+            noupdate = apps - uapps
+            unless noupdate.empty?
+                puts _("Already up-to-date: %s") % noupdate.join(', ')
+            end
+            Spider::AppManager.new.install(specs, options)
         end
         self.add_command(update)
+        
+        setup = CmdParse::Command.new( 'setup', false )
+        setup.short_desc = _("Setup an app")
+        setup.options = CmdParse::OptionParserWrapper.new do |opt|
+            opt.on("--from [VERSION]", _("Assume a specific version is installed"), "-f"){ |from|
+                @from = Gem::Version.new(from)
+            }
+            opt.on("--to [VERSION]", _("Setup to a specific version"), "-t"){ |to|
+                @to = Gem::Version.new(to)
+            }
+            opt.on("--version [VERSION]", _("Only run the setup script for the given version"), "-v"){ |v|
+                @version = Gem::Version.new(v)
+            }
+            opt.on("--all", _("Setup all active apps")){ |all|
+                @all = true
+            }
+        end
+        
+        setup.set_execution_block do |args|
+            require 'spiderfw/setup/app_manager'
+            Spider::AppManager.new.setup(name)
+        end
         
     end
 end
