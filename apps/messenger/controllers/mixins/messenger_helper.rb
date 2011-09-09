@@ -22,9 +22,13 @@ module Spider; module Messenger
             klass ||= self.class.app if self.class.respond_to?(:app)
             klass ||= Spider.home
             msg = Spider::Messenger::MessengerHelper.send_email(klass, template, scene, from, to, headers, attachments, params)
-            @messenger_sent ||= {}
-            @messenger_sent[:email] ||= []
-            @messenger_sent[:email] << msg.ticket
+            sent_email(msg.ticket)
+            msg.ticket
+        end
+
+        def send_sms(to, text, params={})
+            msg = Spider::Messenger.sms(to, text, params)
+            sent_sms(msg.ticket)
             msg.ticket
         end
         
@@ -77,16 +81,29 @@ module Spider; module Messenger
         end
         
         def sent_email(ticket)
+            sent_message(ticket, :email)
+        end
+
+        def sent_sms(ticket)
+            sent_message(ticket, :sms)
+        end
+
+        def sent_message(ticket, type)
             return unless ticket
+            type = type.to_sym
+            @messenger_sent = Spider::Request.current[:messenger_sent]
             @messenger_sent ||= {}
-            @messenger_sent[:email] ||= []
-            @messenger_sent[:email] << ticket
+            @messenger_sent[type] ||= []
+            @messenger_sent[type] << ticket
+            Spider::Request.current[:messenger_sent] = @messenger_sent
         end
         
         def after(action='', *params)
+            @messenger_sent = Spider::Request.current[:messenger_sent]
             return super unless Spider.conf.get('messenger.send_immediate') && @messenger_sent
-            Spider::Messenger.process_queue(:email, @messenger_sent[:email]) if @messenger_sent[:email]
-            Spider::Messenger.process_queue(:sms, @messenger_sent[:sms]) if @messenger_sent[:sms]
+            @messenger_sent.each do |type, msgs|
+                Spider::Messenger.process_queue(type, msgs)
+            end
         end
         
     end
