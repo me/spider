@@ -52,7 +52,7 @@ module Spider; module Test
         rescue
         end
         Spider.apps.each do |name, mod|
-            mod.before_test if mod.respond_to?(:after_test)
+            mod.after_test if mod.respond_to?(:after_test)
         end
     end
     
