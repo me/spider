@@ -125,7 +125,7 @@ class AppCommand < CmdParse::Command
             end
             require 'spiderfw/setup/app_manager'
             options = {
-                :git => @git, :all => @all, :no_deps => @no_deps, :optional => @optional, 
+                :use_git => @git, :all => @all, :no_deps => @no_deps, :optional => @optional, 
                 :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
             }
             options[:url] = @server_url if @server_url

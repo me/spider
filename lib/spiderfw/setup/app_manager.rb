@@ -21,8 +21,12 @@ module Spider
             end
         end
         
-        def self.tmp_path
+        def self.tmp_path(home_path)
             tmp_path = File.join(home_path, 'tmp', 'app_update')
+        end
+
+        def tmp_path
+            self.class.tmp_path(@home_path)
         end
         
         def self.resolve(apps, options={})
@@ -62,9 +66,11 @@ module Spider
             manager.install(specs)
             return specs
         end
+
         
         def install(specs, options)
             options[:home_path] ||= Dir.pwd
+            @home_path = options[:home_path]
             all_specs = specs[:install] + specs[:update]
 
             pre_run(all_specs, options)
@@ -90,10 +96,16 @@ module Spider
         end
 
         def do_install(spec, options)
-            home_path = options[:home_path]
-            app_path = File.join(home_path, "apps/#{spec.app_id}")
+            app_path = File.join(@home_path, "apps/#{spec.app_id}")
             raise "App #{spec.app_id} is already installed" if File.exists?(app_path)
+            use_git = false
             if spec.git_repo && options[:use_git]
+                use_git = true
+            end
+            if use_git && !self.class.git_available?
+                Spider.output _("Can't install app #{spec.id} via git, since git gem is not available") % spec.app_id, :ERROR
+            end
+            if use_git
                 git_install(spec, options)
             else
                 pack_install(spec, options)
@@ -103,12 +115,11 @@ module Spider
         
         def do_update(spec, options)
             use_git = false
-            home_path = options[:home_path]
-            if spec.git_repo && options[:use_git]
-                app_path = File.join(home_path, "apps/#{spec.app_id}")
+            if spec.git_repo && !options[:no_git]
+                app_path = File.join(@home_path, "apps/#{spec.app_id}")
                 use_git = true if File.directory?(File.join(app_path, '.git'))
             end
-            if use_git && !git_available?
+            if use_git && !self.class.git_available?
                 Spider.output _("Can't update app #{spec.id} via git, since git gem is not available") % spec.app_id, :ERROR
             end
             if use_git
@@ -166,11 +177,11 @@ module Spider
         end
         
         def pre_update(specs, options={})
-            tmp_path = File.join(self.class.tmp_path, "update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
+            tmp_path = File.join(self.tmp_path, "update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
             @backup_path = tmp_path
             FileUtils.mkdir_p(tmp_path)
             specs.each do |spec|
-                app_path = File.join(home_path, 'apps', spec.id)
+                app_path = File.join(@home_path, 'apps', spec.id)
                 FileUtils.cp_r(app_path, tmp_path)
             end
         end
@@ -199,13 +210,15 @@ module Spider
         def rollback_update
             Dir.new(@backup_path).each do |app|
                 next if app[0].chr == '.'
-                installed = File.join(home_path, apps, app)
+                installed = File.join(@home_path, 'apps', app)
                 FileUtils.rm_rf(installed) if File.exists?(installed)
                 FileUtils.mv(File.join(@backup_path, app), installed)
             end
-            @done_tasks.each do |app, tasks|
-                tasks.reverse.each do |task|
-                    task.down
+            if @done_tasks
+                @done_tasks.each do |app, tasks|
+                    tasks.reverse.each do |task|
+                        task.down
+                    end
                 end
             end
         end
@@ -217,8 +230,7 @@ module Spider
                  Spider.output _("%s already installed, skipping") % spec.id
                  return
              end
-             home_path = options[:home_path]
-             repo = Git.open(home_path)
+             repo = Git.open(@home_path)
              repo_url = spec.git_repo_rw || spec.git_repo
              Spider.output _("Fetching %s from %s") % [spec.app_id, repo_url]
 
@@ -227,7 +239,7 @@ module Spider
              end
 
              ENV['GIT_WORK_TREE'] = nil
-             Dir.chdir(home_path) do
+             Dir.chdir(@home_path) do
                  `git submodule add #{repo_url} apps/#{spec.id}`
                  `git submodule init`
                  `git submodule update`
@@ -242,8 +254,7 @@ module Spider
              print _("Fetching %s from server... ") % spec.app_id
              tmp_path = client.fetch_app(spec.app_id)
              Spider.output _("Fetched.")
-             home_path = options[:home_path]
-             dest = File.join(home_path, "apps/#{spec.app_id}")
+             dest = File.join(@home_path, "apps/#{spec.app_id}")
              FileUtils.mkdir_p(dest)
              open tmp_path, Gem.binary_mode do |io|
                  Gem::Package::TarReader.new(io) do |reader|
@@ -259,7 +270,7 @@ module Spider
                      end
                  end
              end
-             if File.directory?(File.join(home_path, '.git'))
+             if File.directory?(File.join(@home_path, '.git'))
                  begin
                      require 'git'
                  rescue LoadError
@@ -273,10 +284,10 @@ module Spider
              end
          end
         
-        def git_update(spec, home_path, options={})
+        def git_update(spec, options={})
             require 'git'
-            home_repo = Git.open(home_path)
-            app_path = File.join(home_path, "apps", spec.id)
+            home_repo = Git.open(@home_path)
+            app_path = File.join(@home_path, "apps", spec.id)
             app_repo = Git.open(app_path)
             Spider.output _("Updating %s from %s") % [spec.app_id, spec.git_repo]
             Dir.chdir(app_path) do
@@ -296,16 +307,19 @@ module Spider
             end
             
             home_repo.add("apps/#{spec.id}")
-            home_repo.commit(_("Updated app %s") % spec.id) 
+            begin
+                home_repo.commit(_("Updated app %s") % spec.id) 
+            rescue => exc
+                raise unless exc.message =~ /no changes added to commit/
+            end
         end
         
         def pack_update(spec, options={})
             require 'fileutils'
             require 'date'
             require 'time'
-            home_path = options[:home_path]
-            app_path = File.join(home_path, "apps/#{spec.id}")
-            tmp_path = self.class.tmp_path
+            app_path = File.join(@home_path, "apps/#{spec.id}")
+            tmp_path = self.tmp_path
             FileUtils.mkdir_p(tmp_path)
             tmp_app_path = File.join(tmp_path, "#{spec.id}-update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
             begin
@@ -358,9 +372,13 @@ module Spider
                 if from || to
                     tasks.reject!{ |t|
                         v = Gem::Version.new(File.basename(t, '.rb'))
-                        true if from && v < from
-                        true if to && v > to
-                        false
+                        if from && v < from
+                            true
+                        elsif to && v > to
+                            true
+                        else
+                            false
+                        end
                     }
                 end
             end
