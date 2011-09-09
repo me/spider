@@ -372,6 +372,7 @@ module Spider
                 t.app = app
                 begin
                     done_tasks << t
+                    t.do_sync
                     t.do_up
                 rescue => exc
                     done_tasks.reverse.each{ |dt| dt.do_down } # FIXME: rescue and log errors in down
