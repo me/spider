@@ -231,11 +231,21 @@ class AppCommand < CmdParse::Command
             opt.on("--all", _("Setup all active apps")){ |all|
                 @all = true
             }
+            opt.on("--no-cleanup", _("Don't cleanup"), "-C"){ |no_cleanup| @no_cleanup = true }
         end
         
         setup.set_execution_block do |args|
             require 'spiderfw/setup/app_manager'
-            Spider::AppManager.new.setup(name)
+            tasks = Spider::AppManager.new.setup(name)
+            unless @no_cleanup
+                tasks.each do |t|
+                    begin
+                        t.do_cleanup
+                    rescue => exc
+                        Spider.logger.error(exc)
+                    end
+                end
+            end
         end
         
     end

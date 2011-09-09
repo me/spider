@@ -196,9 +196,10 @@ module Spider
                 @done_tasks[spec.app_id] = setup(spec.app_id, prev_v, spec.version)
             end
             @done_tasks.each do |app, tasks|
+                next unless tasks
                 tasks.each do |task|
                     begin
-                        task.cleanup
+                        task.do_cleanup
                     rescue => exc
                         Spider.logger.error("Cleanup failed for #{app}:")
                         Spider.logger.error(exc)
@@ -216,6 +217,7 @@ module Spider
             end
             if @done_tasks
                 @done_tasks.each do |app, tasks|
+                    next unless tasks
                     tasks.reverse.each do |task|
                         task.down
                     end
@@ -295,11 +297,12 @@ module Spider
             end
             response = err = nil
             Dir.chdir(app_path) do
-                `git --git-dir='#{app_path}/.git' pull origin master`
+                response = `git --git-dir='#{app_path}/.git' pull origin master`
             end
+            require 'ruby-debug'
             if response =~ /Aborting/
                 Spider.output err, :ERROR
-                return
+                raise "Unable to update"
             end
             Dir.chdir(app_path) do
                 app_repo.reset('HEAD', :hard => true)
@@ -359,7 +362,7 @@ module Spider
             end
             current = from || app.installed_version
             new_version = to || app.version
-            next unless File.exist?(path)
+            return unless File.exist?(path)
             tasks = []
             if version
                 tasks = ["#{@version}.rb"]

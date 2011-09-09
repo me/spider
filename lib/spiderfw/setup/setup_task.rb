@@ -70,7 +70,7 @@ module Spider
                 :no_foreign_key_constraints => true
             }
             @sync_models.each do |m|
-                m.mapper.sync_schema(options)
+                m.mapper.sync_schema(false, options)
             end
         end
         
