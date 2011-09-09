@@ -414,9 +414,8 @@ module Spider; module Forms
             @errors[element_name] ||= []
             if @inputs[element_name]
                 @inputs[element_name].add_error(message) 
-            else
-                @errors[element_name] << message
             end
+            @errors[element_name] << message
         end
         
         def is_new?
