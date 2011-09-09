@@ -4,7 +4,7 @@ module Spider
     
     class SetupTask
         attr_reader :path, :version
-        attr_accessor :up, :down, :app
+        attr_accessor :up, :down, :cleanup, :app
         
         class <<self
             def tasks
@@ -22,6 +22,7 @@ module Spider
                 obj = self.new(path)
                 obj.up = Setup.up
                 obj.down = Setup.down
+                obj.cleanup = Setup.cleanup
                 #obj = @last_class.new(path)
 #                Kernel.send(:remove_const, @last_class.name)
                 #@last_class = nil
@@ -53,7 +54,13 @@ module Spider
         end
         
         def do_down
+            Spider::Model::Managed.no_set_dates = true
             instance_eval(&@down)
+            Spider::Model::Managed.no_set_dates = false
+        end
+
+        def do_cleanup
+            instance_eval(&@cleanup)
         end
         
         def no_sync_schema
@@ -93,6 +100,10 @@ module Spider
     end
     
     module Setup
+
+        def self.task(&proc)
+            self.instance_eval(&proc)
+        end
         
         
         def self.up(&proc)
@@ -103,6 +114,11 @@ module Spider
         def self.down(&proc)
             @down = proc if proc
             @down
+        end
+
+        def self.cleanup(&proc)
+            @cleanup = proc if proc
+            @cleanup
         end
         
     end

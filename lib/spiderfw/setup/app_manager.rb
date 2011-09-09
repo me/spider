@@ -184,6 +184,16 @@ module Spider
                 prev_v = prev_spec.version if prev_spec
                 @done_tasks[spec.app_id] = setup(spec.app_id, prev_v, spec.version)
             end
+            @done_tasks.each do |app, tasks|
+                tasks.each do |task|
+                    begin
+                        task.cleanup
+                    rescue => exc
+                        Spider.logger.error("Cleanup failed for #{app}:")
+                        Spider.logger.error(exc)
+                    end
+                end
+            end
         end
         
         def rollback_update
