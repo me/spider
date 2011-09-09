@@ -6,8 +6,8 @@ module Spider
         
         def self.queues
             {
-                :email => { :label => _("Email"), :model => :Email }
-                # :sms => { :label => _("SMS"), :model => :SMS }
+                :email => { :label => _("Email"), :model => :Email },
+                :sms => { :label => _("SMS"), :model => :SMS }
             }
         end
         
