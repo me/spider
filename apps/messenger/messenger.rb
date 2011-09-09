@@ -117,6 +117,23 @@ module Spider
             msg.save
             return msg
         end
+
+
+        def self.after_test
+            self.backends.each do |queue, mods|
+                mods.each do |mod|
+                    mod.after_test if mod.respond_to?(:after_test)
+                end
+            end
+        end
+
+        def self.before_test
+            self.backends.each do |queue, mods|
+                mods.each do |mod|
+                    mod.after_test if mod.respond_to?(:after_test)
+                end
+            end
+        end
         
         
     end
