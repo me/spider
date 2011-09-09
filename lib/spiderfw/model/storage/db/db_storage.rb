@@ -328,7 +328,7 @@ module Spider; module Model; module Storage; module Db
                     sql_condition_value(v[0], v[1], v[2])
                 end
             end
-            return mapped.select{ |p| p != nil}.join(' '+condition[:conj]+' '), bind_vars
+            return mapped.select{ |p| p != nil}.join(' '+(condition[:conj] || 'and')+' '), bind_vars
         end
         
         # Returns the SQL for a condition comparison.
