@@ -9,7 +9,11 @@ module Spider; module Migrations
         end
 
         def run
-            field = @options[:field_name] || @model.mapper.schema.field(@element)
+            field = @options[:field_name]
+            if !field
+                schema_field = @model.mapper.schema.field(@element)
+                field = schema_field.name
+            end
             field ||= @model.mapper.storage.column_name(@element)
             desc = @model.mapper.storage.describe_table(@model.mapper.schema.table)
             if desc[:columns][field]
