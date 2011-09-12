@@ -57,15 +57,16 @@ module Spider
         
         def do_down
             Spider::Model::Managed.no_set_dates = true
-            instance_eval(&@down)
+            instance_eval(&@down) if @down
             Spider::Model::Managed.no_set_dates = false
         end
 
         def do_cleanup
-            instance_eval(&@cleanup)
+            instance_eval(&@cleanup) if @cleanup
         end
 
         def do_sync
+            return unless @sync_models
             options = {
                 :no_foreign_key_constraints => true
             }
