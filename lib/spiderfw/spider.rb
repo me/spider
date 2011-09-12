@@ -811,9 +811,14 @@ module Spider
                 mod.test_teardown if mod.respond_to?(:test_teardown)
             end
         end
+
+        def interative?
+            !!$SPIDER_INTERACTIVE
+        end
         
         def output(str, level=:INFO)
-            if @logger_started
+            use_log = !Spider.interactive? && @logger_started
+            if use_log
                 @logger.log(level, str)
             else
                 str = "#{level}: #{str}" if level == :ERROR

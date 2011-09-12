@@ -25,6 +25,7 @@ class SetupCommand < CmdParse::Command
         end
 
         set_execution_block do |apps|
+            $SPIDER_INTERACTIVE = true
             require 'spiderfw/spider'
             Spider.init_base
             apps = Spider.apps.keys if @all

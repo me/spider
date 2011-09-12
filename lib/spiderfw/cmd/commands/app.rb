@@ -119,6 +119,7 @@ class AppCommand < CmdParse::Command
             opt.on("--no-activate", _("Don't activate installed apps")){ |s| @no_activate = true }
         end
         install.set_execution_block do |args|
+            $SPIDER_INTERACTIVE = true
             unless File.exist?('init.rb') && File.directory?('apps')
                 puts _("Please execute this command from the home folder")
                 exit
@@ -157,6 +158,7 @@ class AppCommand < CmdParse::Command
         activate = CmdParse::Command.new('activate', false )
         activate.short_desc = _("Activate an app")
         activate.set_execution_block do |args|
+            $SPIDER_INTERACTIVE = true
             apps = args
             require 'spiderfw/spider'
             apps = Spider.get_app_deps(apps)
@@ -181,6 +183,7 @@ class AppCommand < CmdParse::Command
             opt.on("--refresh", _("Update apps even if the version has not changed"), "-r"){ |r| @refresh = true }
         end
         update.set_execution_block do |args|
+            $SPIDER_INTERACTIVE = true
             unless File.exist?('init.rb') && File.directory?('apps')
                 puts _("Please execute this command from the home folder")
                 exit
@@ -235,6 +238,7 @@ class AppCommand < CmdParse::Command
         end
         
         setup.set_execution_block do |args|
+            $SPIDER_INTERACTIVE = true
             require 'spiderfw/setup/app_manager'
             tasks = Spider::AppManager.new.setup(name)
             unless @no_cleanup
