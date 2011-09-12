@@ -812,7 +812,7 @@ module Spider
             end
         end
 
-        def interative?
+        def interactive?
             !!$SPIDER_INTERACTIVE
         end
         
