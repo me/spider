@@ -377,7 +377,7 @@ module Spider
                 if from || to
                     tasks.reject!{ |t|
                         v = Gem::Version.new(File.basename(t, '.rb'))
-                        if from && v < from
+                        if from && v <= from
                             true
                         elsif to && v > to
                             true
