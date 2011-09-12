@@ -49,6 +49,6 @@ module Spider; module I18n
 
     end
     
-    GetText::RGetText.add_parser(JavascriptParser)
+    ::GetText::RGetText.add_parser(JavascriptParser)
 
 end; end
