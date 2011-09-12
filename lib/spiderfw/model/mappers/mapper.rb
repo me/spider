@@ -1175,6 +1175,7 @@ module Spider; module Model
                 obj.define_schema &@schema_define_proc if @schema_define_proc
                 obj.with_schema &@schema_proc if @schema_proc
                 obj.no_map(*@no_map_elements.keys) if @no_map_elements
+                @model_proc.call(obj.model) if @model_proc
             end
             
             def no_map(*els)
@@ -1189,6 +1190,10 @@ module Spider; module Model
         
             def with_schema(&proc)
                 @schema_proc = proc
+            end
+
+            def with_model(&proc)
+                @model_proc = proc
             end
         
         end
