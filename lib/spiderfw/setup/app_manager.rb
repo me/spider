@@ -195,7 +195,7 @@ module Spider
                 prev_v = prev_spec.version if prev_spec
                 @done_tasks[spec.app_id] = setup(spec.app_id, prev_v, spec.version)
             end
-            Spider.output "Doing cleanup..."
+            Spider.output _("Doing cleanup...")
             @done_tasks.each do |app, tasks|
                 next unless tasks
                 tasks.each do |task|
@@ -207,7 +207,7 @@ module Spider
                     end
                 end
             end
-            Spider.output "Post-update done"
+            Spider.output _("Post-update done")
         end
         
         def rollback_update
@@ -390,14 +390,14 @@ module Spider
             done_tasks = []
             
             tasks.each do |task|
-                Spider.output "Running setup task #{path+'/'+task}..."
+                Spider.output _("Running setup task #{path+'/'+task}...")
                 t = Spider::SetupTask.load("#{path}/#{task}")
                 t.app = app
                 begin
                     done_tasks << t
                     t.do_sync
                     t.do_up
-                    Spider.output "Setup task done"
+                    Spider.output _("Setup task done")
                 rescue => exc
                     Spider.output exc, :ERROR
                     done_tasks.reverse.each{ |dt| dt.do_down } # FIXME: rescue and log errors in down
