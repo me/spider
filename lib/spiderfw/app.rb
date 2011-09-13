@@ -58,7 +58,7 @@ module Spider
                         if u = Spider.conf.get("#{@dotted_name}.http_url") 
                             if action
                                 u += '/' if u[-1].chr != '/'
-                                u += action
+                                u += action.to_s
                             end
                             return u 
                         end
