@@ -245,6 +245,11 @@ module Spider
             @main_process_shutdown_blocks << block
         end
         
+
+        def restart!
+            FileUtils.touch(@paths[:restart_file])
+        end
+
         def current
             Spider::Request.current
         end
@@ -313,7 +318,7 @@ module Spider
         def setup_paths(root)
             @paths[:root] = root
             @paths[:apps] = File.join(root, 'apps')
-            @paths[:core_apps] = File.join($SPIDER_PATH, 'apps')
+            @paths[:core_apps] = $SPIDER_PATHS[:core_apps]
             @paths[:config] = File.join(root, 'config')
             @paths[:layouts] = File.join(root, 'layouts')
             @paths[:var] = File.join(root, 'var')
@@ -326,11 +331,17 @@ module Spider
                 @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
             end
         end
+
+        def app_paths
+            paths = [$SPIDER_PATHS[:core_apps]]
+            paths.unshift(@paths[:apps]) if @paths[:apps]
+            paths
+        end
         
         # Finds an app by name, looking in paths[:apps] and paths[:core_apps]. Returns the found path.
         def find_app(name)
             path = nil
-            [@paths[:apps], @paths[:core_apps]].each do |base|
+            app_paths.each do |base|
                 test = File.join(base, name)
                 if File.exist?(File.join(test, '_init.rb'))
                     path = test
@@ -341,7 +352,7 @@ module Spider
         end
         
         def find_apps(name)
-            [@paths[:apps], @paths[:core_apps]].each do |base|
+            app_paths.each do |base|
                 test = File.join(base, name)
                 if File.exist?(test)
                     return find_apps_in_folder(test)
@@ -359,7 +370,7 @@ module Spider
         def load_app_at_path(path)
             return if @loaded_apps[path]
             relative_path = path
-            if path.index(Spider.paths[:root])
+            if Spider.paths[:root] && path.index(Spider.paths[:root])
                 home = Pathname.new(Spider.paths[:root])
                 pname = Pathname.new(path)
                 relative_path = pname.relative_path_from(home).to_s
@@ -387,7 +398,8 @@ module Spider
         end
         
         def find_all_apps(paths=nil)
-            paths ||= [@paths[:core_apps], @paths[:apps]]
+            paths ||= self.app_paths
+
             app_paths = []
             Find.find(*paths) do |path|
                 if (File.basename(path) == '_init.rb')
@@ -777,16 +789,14 @@ module Spider
         end
         
         def locale
-            unless Thread.current[:current_languages] # Locale sets this
-                c_l = Spider.conf.get('locale')
-                return c_l if c_l
-            end
             begin
                 @current_locale = Locale.current[0]
             rescue
                 # There are problems with subsequent requests on Windows, 
                 # so use cached locale if Locale.current fails
-                @current_locale || Locale::Tag.parse('en')
+                l = @current_locale
+                l ||= Locale::Tag.parse(Spider.conf.get('locale')) if Spider.conf.get('locale')
+                l ||= Locale::Tag.parse('en')
             end
         end
         

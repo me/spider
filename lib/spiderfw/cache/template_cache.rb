@@ -136,6 +136,10 @@ module Spider
             end
             lock_file.flock(File::LOCK_UN)
         end
+
+        def clear!
+            FileUtils.rm_rf(Dir.glob(File.join(@path, '*')))
+        end
         
         
         

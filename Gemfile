@@ -16,13 +16,14 @@ gem "bundler"
 
 # Optional gems
 
+gem 'gettext', '>= 2.1.0', :group => :devel
 gem 'fssm', :group => :devel
 gem "json", :platforms => [:mri_18, :mri_19]
 gem "mongrel"
 gem "ripl", :platforms => [:ruby, :mingw]
 gem "ripl-irb", :platforms => [:ruby, :mingw]
 gem "ripl-multi_line", :platforms => [:ruby, :mingw]
-gem "cldr"
+gem "cldr", '>= 0.1.6'
 gem "ruby-debug", :group => :devel, :platforms => [:mri_18]
 gem "ruby-debug19", :group => :devel, :platforms => [:mri_19], :require => 'ruby-debug'
 gem "ruby-prof", :group => :devel

@@ -30,5 +30,4 @@ require 'apps/master/controllers/scout_controller'
 require 'apps/master/lib/site_type'
 require 'apps/master/plugins/site_types/spider/spider'
 
-Spider.home.controller.route 'clients', Spider::Master::ScoutController
 
