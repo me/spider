@@ -65,7 +65,7 @@ module Spider
                     end
                 else
                     unless pub_dest
-                        pub_dest = File.join(Spider::HomeController.pub_path, COMPILED_FOLDER)
+                        pub_dest = self.class.compiled_folder_path
                         FileUtils.mkdir_p(pub_dest)
                     end
                     if comp = ass[:compressed_path] # Already compressed assets
@@ -178,6 +178,10 @@ module Spider
         end
         
         COMPILED_FOLDER = '_c'
+
+        def self.compiled_folder_path
+             File.join(Spider::HomeController.pub_path, COMPILED_FOLDER)
+        end
         
         def asset_gettext_messages_file(path)
             dir = File.dirname(path)
@@ -209,7 +213,7 @@ module Spider
         def compress_javascript(cpr)
             require 'yui/compressor'
 
-            pub_dest = Spider::HomeController.pub_path+'/'+COMPILED_FOLDER
+            pub_dest = self.class.compiled_folder_path
             name = cpr[:name]
             
             already_compressed = Dir.glob(pub_dest+'/'+name+'.*.js')
@@ -256,7 +260,7 @@ module Spider
         def compress_css(cpr)
             require 'yui/compressor'
             
-            pub_dest = Spider::HomeController.pub_path+'/'+COMPILED_FOLDER
+            pub_dest = self.class.compiled_folder_path
             name = cpr[:name]
             
             already_compressed = Dir.glob(pub_dest+'/'+name+'.*.css')
@@ -363,6 +367,10 @@ module Spider
                 f << cjs
             end
             return compiled_name
+        end
+
+        def self.clear_compiled_folder!
+            FileUtils.rm_rf(Dir.glob(File.join(self.compiled_folder_path, '*')))
         end
         
     end
