@@ -102,7 +102,8 @@ module Spider; module HTTP
                 rescue => exc
                     Spider.logger.debug("Error:")
                     Spider.logger.debug(exc)
-                    controller.ensure() if controller
+                    controller.ensure if controller
+                    controller = nil
                 ensure
                     if (Spider.conf.get('webserver.force_threads'))
                         controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
@@ -121,6 +122,10 @@ module Spider; module HTTP
                     end
                     controller_done = true
                     Spider.request_finished
+                end
+                if controller
+                    controller.after(path)
+                    controller.ensure
                 end
             end
             
