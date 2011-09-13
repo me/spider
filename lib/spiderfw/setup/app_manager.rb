@@ -62,8 +62,8 @@ module Spider
         
         def self.get_apps(apps, options={})
             specs = resolve(apps, options)
-            manager = self.new(options)
-            manager.install(specs)
+            manager = self.new
+            manager.install(specs, options)
             return specs
         end
 
