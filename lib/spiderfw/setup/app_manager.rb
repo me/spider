@@ -93,6 +93,7 @@ module Spider
                 all_specs.each{ |s| specs_hash[s.app_id] = s }
                 Spider.activate_apps(specs[:install].map{ |s| s.app_id }, specs_hash)
             end
+            Spider.output _("Install done.")
         end
 
         def do_install(spec, options)
@@ -187,6 +188,7 @@ module Spider
         end
         
         def post_update(specs, options)
+            return if specs.empty?
             require 'spiderfw/home'
             Spider.init_base
             @done_tasks = {}
@@ -206,6 +208,15 @@ module Spider
                         Spider.logger.error(exc)
                     end
                 end
+            end
+            if options[:clear_cache]
+                Spider.output _("Clearing cache...")
+                Spider::Template.cache.clear!
+                Spider::Layout.clear_compiled_folder!
+            end
+            if options[:restart]
+                Spider.output _("Restarting server...")
+                Spider.restart!
             end
             Spider.output _("Post-update done")
         end

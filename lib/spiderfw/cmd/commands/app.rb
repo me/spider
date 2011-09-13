@@ -181,6 +181,8 @@ class AppCommand < CmdParse::Command
             }
             opt.on("--no-activate", _("Don't activate installed apps, if any")){ |s| @no_activate = true }
             opt.on("--refresh", _("Update apps even if the version has not changed"), "-r"){ |r| @refresh = true }
+            opt.on("--no-clear-cache", _("Don't clear cache"), "-C"){ |c| @no_clear_cache = true }
+            opt.on("--no-restart", _("Don't restart the server after the udpate"), "-R"){ |r| @no_restart = true }
         end
         update.set_execution_block do |args|
             $SPIDER_INTERACTIVE = true
@@ -191,7 +193,8 @@ class AppCommand < CmdParse::Command
             require 'spiderfw/setup/app_manager'
             options = {
                 :no_git => @no_git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
-                :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
+                :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate,
+                :clear_cache => !@no_clear_cache, :restart => !@no_restart
             }
             options[:url] = @server_url if @server_url
             apps = args
