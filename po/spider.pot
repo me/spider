@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider 0.6.16\n"
-"POT-Creation-Date: 2011-09-13 14:24+0200\n"
+"POT-Creation-Date: 2011-09-13 16:18+0200\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,7 +121,7 @@ msgstr ""
 msgid "Don't activate installed apps"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:124 lib/spiderfw/cmd/commands/app.rb:188
+#: lib/spiderfw/cmd/commands/app.rb:124 lib/spiderfw/cmd/commands/app.rb:190
 msgid "Please execute this command from the home folder"
 msgstr ""
 
@@ -133,11 +133,11 @@ msgstr ""
 msgid "%s already installed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:149 lib/spiderfw/cmd/commands/app.rb:207
+#: lib/spiderfw/cmd/commands/app.rb:149 lib/spiderfw/cmd/commands/app.rb:210
 msgid "The following apps will be installed as a dependency: %s"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:152 lib/spiderfw/cmd/commands/app.rb:212
+#: lib/spiderfw/cmd/commands/app.rb:152 lib/spiderfw/cmd/commands/app.rb:215
 msgid "The following apps will be updated as a dependency: %s"
 msgstr ""
 
@@ -173,35 +173,43 @@ msgstr ""
 msgid "Update apps even if the version has not changed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:201
+#: lib/spiderfw/cmd/commands/app.rb:184
+msgid "Don't clear cache"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/app.rb:185
+msgid "Don't restart the server after the udpate"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/app.rb:204
 msgid "App %s is not installed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:216
+#: lib/spiderfw/cmd/commands/app.rb:219
 msgid "Already up-to-date: %s"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:223
+#: lib/spiderfw/cmd/commands/app.rb:226
 msgid "Setup an app"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:225 lib/spiderfw/cmd/commands/setup.rb:12
+#: lib/spiderfw/cmd/commands/app.rb:228 lib/spiderfw/cmd/commands/setup.rb:12
 msgid "Assume a specific version is installed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:228 lib/spiderfw/cmd/commands/setup.rb:15
+#: lib/spiderfw/cmd/commands/app.rb:231 lib/spiderfw/cmd/commands/setup.rb:15
 msgid "Setup to a specific version"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:231 lib/spiderfw/cmd/commands/setup.rb:18
+#: lib/spiderfw/cmd/commands/app.rb:234 lib/spiderfw/cmd/commands/setup.rb:18
 msgid "Only run the setup script for the given version"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:234 lib/spiderfw/cmd/commands/setup.rb:21
+#: lib/spiderfw/cmd/commands/app.rb:237 lib/spiderfw/cmd/commands/setup.rb:21
 msgid "Setup all active apps"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:237 lib/spiderfw/cmd/commands/setup.rb:24
+#: lib/spiderfw/cmd/commands/app.rb:240 lib/spiderfw/cmd/commands/setup.rb:24
 msgid "Don't cleanup"
 msgstr ""
 
@@ -914,59 +922,71 @@ msgstr ""
 msgid "Another item with the same %s is already present"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:141
+#: lib/spiderfw/setup/app_manager.rb:96
+msgid "Install done."
+msgstr ""
+
+#: lib/spiderfw/setup/app_manager.rb:142
 msgid "Installing the following needed gems:"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:153
+#: lib/spiderfw/setup/app_manager.rb:154
 msgid "Installing the following optional gems:"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:160
+#: lib/spiderfw/setup/app_manager.rb:161
 msgid "Unable to install optional gem %s:"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:198
+#: lib/spiderfw/setup/app_manager.rb:200
 msgid "Doing cleanup..."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:210
+#: lib/spiderfw/setup/app_manager.rb:213
+msgid "Clearing cache..."
+msgstr ""
+
+#: lib/spiderfw/setup/app_manager.rb:217
+msgid "Restarting server..."
+msgstr ""
+
+#: lib/spiderfw/setup/app_manager.rb:220
 msgid "Post-update done"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:234
+#: lib/spiderfw/setup/app_manager.rb:244
 msgid "%s already installed, skipping"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:239
+#: lib/spiderfw/setup/app_manager.rb:249
 msgid "Fetching %s from %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:252 lib/spiderfw/setup/app_manager.rb:285
+#: lib/spiderfw/setup/app_manager.rb:262 lib/spiderfw/setup/app_manager.rb:295
 msgid "Added app %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:258
+#: lib/spiderfw/setup/app_manager.rb:268
 msgid "Fetching %s from server... "
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:260
+#: lib/spiderfw/setup/app_manager.rb:270
 msgid "Fetched."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:296
+#: lib/spiderfw/setup/app_manager.rb:306
 msgid "Updating %s from %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:316
+#: lib/spiderfw/setup/app_manager.rb:326
 msgid "Updated app %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:347
+#: lib/spiderfw/setup/app_manager.rb:357
 msgid "Update of %s failed"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:400
+#: lib/spiderfw/setup/app_manager.rb:410
 msgid "Setup task done"
 msgstr ""
 
@@ -1078,7 +1098,7 @@ msgstr ""
 msgid "Database %s does not exist."
 msgstr ""
 
-#: lib/spiderfw/spider.rb:780
+#: lib/spiderfw/spider.rb:785
 msgid ""
 "Unable to start debugger. Ensure ruby-debug is installed (or set debugger."
 "start to false)."
