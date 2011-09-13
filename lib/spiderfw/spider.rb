@@ -245,6 +245,11 @@ module Spider
             @main_process_shutdown_blocks << block
         end
         
+
+        def restart!
+            FileUtils.touch(@paths[:restart_file])
+        end
+
         def current
             Spider::Request.current
         end
