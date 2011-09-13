@@ -167,10 +167,10 @@ module Spider
                     end
                     
                     def relative_path
-                        if (@path.index(Spider.paths[:apps]) == 0)
+                        if Spider.paths[:apps] && @path.index(Spider.paths[:apps]) == 0
                             return @path[Spider.paths[:apps].length+1..-1]
                         else
-                            return @path[Spider.paths[:core_apps].length+1..-1]
+                            return @path[$SPIDER_PATHS[:core_apps].length+1..-1]
                         end
                     end
                     
