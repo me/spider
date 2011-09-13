@@ -4,16 +4,19 @@ require 'pathname'
 
 def check_app_path(full, partial)
     p = Pathname.new(full)
-    rel = p.relative_path_from(Pathname.new(Spider.paths[:core_apps]))
+    rel = p.relative_path_from(Pathname.new($SPIDER_PATHS[:core_apps]))
+    return true if partial == "spider" && !rel.to_s.blank?
     return true if rel.to_s == partial
-    rel = p.relative_path_from(Pathname.new(Spider.paths[:apps]))
-    return true if rel.to_s == partial
+    if Spider.paths[:apps]
+        rel = p.relative_path_from(Pathname.new(Spider.paths[:apps]))
+        return true if rel.to_s == partial
+    end
     return false
 end
 
 desc "Update pot/po files. To update a single app, call rake updatepo[app_relative_path], where app_relative_path is the path relative to the apps folder (or 'spider')."
 task :updatepo, [:app] do |t, args|
-    require 'spiderfw'
+    require 'spiderfw/spider'
     require 'spiderfw/i18n/shtml_parser'
     require 'spiderfw/i18n/javascript_parser'
     require 'gettext/tools'
@@ -40,7 +43,7 @@ desc "Create mo-files. To create for a single app, call rake makemo[app_relative
 task :makemo, [:app] do |t, args|
     require 'gettext/tools'
     GetText.create_mofiles(:verbose => true) if !args[:app] || args[:app] == 'spider'
-    require 'spiderfw'
+    require 'spiderfw/spider'
     apps = Spider.find_all_apps
     apps.each do |path|
         next if args[:app] && !check_app_path(path, args[:app])
