@@ -27,7 +27,7 @@ module Spider; module I18n
                 date_format = @cldr.calendar.dateformats[options[:calendar].to_sym][format.to_s].dup
             end
             if (date_format && time_format)
-                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_s]
+                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_sym][format.to_s]
                 format_string = dt_f.sub('{1}', date_format).sub('{0}', time_format)
             else
                 format_string = date_format ? date_format : time_format
@@ -56,7 +56,7 @@ module Spider; module I18n
             if (time_format)
                 am = @cldr.calendar.am[options[:calendar].to_s]
                 pm = @cldr.calendar.pm[options[:calendar].to_s]
-                format_string.gsub!(/%p/, object.hour < 12 ? am : pm) if object.respond_to? :hour
+                format_string.gsub!(/%p/, object.hour < 12 ? 'am' : 'pm') if object.respond_to? :hour
             end
             object.strftime(format_string)
         end
@@ -168,10 +168,11 @@ module Spider; module I18n
             str = ""
 
             def sub_pattern(pattern, items)
-                str = pattern
+                str = pattern.clone
                 items.each_index do |i|
                     str.sub!("{#{i}}", items[i])
                 end
+                str
             end
             if pattern = patterns[enumerable.length.to_s]
                 return sub_pattern(pattern, enumerable)
