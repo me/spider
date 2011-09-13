@@ -3,6 +3,27 @@ require 'fileutils'
 module Spider
     
     module Messenger
+
+        def self.app_init
+            available_backends = {}
+            base = File.join(Spider::Messenger.path, 'backends')
+            Dir.new(base).each do |type|
+                next if type[0].chr == '.'
+                type_dir = File.join(base, type)
+                next unless File.directory?(type_dir)
+                available_backends[type.to_sym] = []
+                Dir.new(type_dir).each do |bcknd|
+                    next if bcknd[0].chr == '.'
+                    name = File.basename(bcknd, '.rb')
+                    available_backends[type.to_sym] << name
+                end
+            end
+            available_backends.each do |type, backends|
+                Spider.config_option("messenger.#{type}.backends")[:params][:choices] = backends
+                Spider.config_option("messenger.#{type}.backend")[:params][:choices] = backends
+            end
+
+        end
         
         def self.queues
             {
