@@ -181,9 +181,11 @@ module Spider
             tmp_path = File.join(self.tmp_path, "update-#{DateTime.now.strftime('%Y%m%d-%H%M')}")
             @backup_path = tmp_path
             FileUtils.mkdir_p(tmp_path)
+            @previous_apps = {}
             specs.each do |spec|
                 app_path = File.join(@home_path, 'apps', spec.id)
                 FileUtils.cp_r(app_path, tmp_path)
+                @previous_apps[spec.app_id] = App::AppSpec.load(File.join(app_path, "#{spec.id}.appspec"))
             end
         end
         
@@ -193,7 +195,7 @@ module Spider
             Spider.init_base
             @done_tasks = {}
             specs.each do |spec|
-                prev_spec = Spider.home.apps[spec.app_id][:spec]
+                prev_spec = @previous_apps[spec.app_id]
                 prev_v = prev_spec.version if prev_spec
                 @done_tasks[spec.app_id] = setup(spec.app_id, prev_v, spec.version)
             end
