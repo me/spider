@@ -20,14 +20,16 @@ module Spider; module I18n
             time_format = nil
             date_format = nil
             format_string = nil
+            calendar = options[:calendar].to_sym
             if (object.respond_to?(:sec) && !options[:no_time])
-                time_format = @cldr.calendar.timeformats[options[:calendar].to_sym][format.to_s].dup
+                time_format = @cldr.calendar.timeformats[calendar][format.to_s].dup
             end
             if (object.is_a?(Date))
-                date_format = @cldr.calendar.dateformats[options[:calendar].to_sym][format.to_s].dup
+                date_format = @cldr.calendar.dateformats[calendar][format.to_s].dup
             end
             if (date_format && time_format)
-                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_sym][format.to_s]
+                fts = @cldr.calendar.datetimeformats[calendar] || @cldr.calendar.datetimeformats[calendar.to_s]
+                dt_f = fts[format.to_s]
                 format_string = dt_f.sub('{1}', date_format).sub('{0}', time_format)
             else
                 format_string = date_format ? date_format : time_format
