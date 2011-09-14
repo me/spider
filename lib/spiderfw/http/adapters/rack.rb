@@ -77,8 +77,9 @@ module Spider; module HTTP
             controller_request.action = path
             controller_request.request_time = DateTime.now
 
+            w = nil
             controller_response = Spider::Response.new
-            if (Spider.conf.get('webserver.force_threads'))
+            if Spider.conf.get('webserver.force_threads')
                 r, w = IO.pipe
                 rack_response_hash = {:body => r}
                 controller_response.server_output = RackIO.new(rack_response_hash, controller_response, w)
@@ -89,6 +90,7 @@ module Spider; module HTTP
             end
 
 
+            controller = nil
             controller_done = false
 
             run_block = lambda do
@@ -97,6 +99,10 @@ module Spider; module HTTP
                     controller.extend(Spider::FirstResponder)
                     controller.before(path)
                     controller.execute(path)
+                    if Spider.conf.get('webserver.force_threads')
+                        w.close 
+                        controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
+                    end
                     controller.after(path)
                     Spider::Logger.debug("Controller done")
                 rescue => exc
@@ -105,7 +111,7 @@ module Spider; module HTTP
                     controller.ensure if controller
                     controller = nil
                 ensure
-                    if (Spider.conf.get('webserver.force_threads'))
+                    if Spider.conf.get('webserver.force_threads')
                         controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     else
                         controller_response.prepare_headers
@@ -123,10 +129,6 @@ module Spider; module HTTP
                     controller_done = true
                     Spider.request_finished
                 end
-                if controller
-                    controller.after(path)
-                    controller.ensure
-                end
             end
             
             if (Spider.conf.get('webserver.force_threads'))
@@ -134,7 +136,6 @@ module Spider; module HTTP
                 while (!controller_done && !controller_response.server_output.headers_sent?)
                     Thread.stop
                 end
-                controllerThread.join
             else
                 run_block.call
             end
