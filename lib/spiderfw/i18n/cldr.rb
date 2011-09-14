@@ -28,8 +28,10 @@ module Spider; module I18n
                 date_format = @cldr.calendar.dateformats[calendar][format.to_s].dup
             end
             if (date_format && time_format)
+                # in CLDR 1.x, datetimeformats is an hash of strings indexed by strings;
+                # in CLDR 2.x, it is a hash of hashes indexed by symbols
                 fts = @cldr.calendar.datetimeformats[calendar] || @cldr.calendar.datetimeformats[calendar.to_s]
-                dt_f = fts[format.to_s]
+                dt_f = fts.is_a?(String) ? fts : fts[format.to_s] 
                 format_string = dt_f.sub('{1}', date_format).sub('{0}', time_format)
             else
                 format_string = date_format ? date_format : time_format
