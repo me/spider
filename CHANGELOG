@@ -1,3 +1,11 @@
+= 0.6.17
+== 13 September, 2011
+* AppManager rewrite, with setup tasks; Migrations
+* Experimental SASS support
+* CLDR 0.1.6; added Spider::I18n.list
+* InlineModels can now be compared with their primary key
+* Various bugfixes and enhancements
+
 = 0.6.16
 == 22 August, 2011
 * Bugfixes

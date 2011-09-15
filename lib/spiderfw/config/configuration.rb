@@ -292,6 +292,7 @@ module Spider
         def to_hash
             h = {}
             self.options.each do |k|
+                k = k.first
                 v = self[k]
                 if v.is_a?(self.class)
                     v = v.to_hash

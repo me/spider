@@ -101,7 +101,7 @@ module Spider; module Servant
         
         def install_apps(apps)
             require 'spiderfw/setup/app_manager'
-            Spider::AppManager.install_or_update(apps)
+            Spider::AppManager.get_apps(apps)
         end
         
     end

@@ -13,24 +13,25 @@ module Spider; module I18n
 
         end
 
-        def localize_date_time(object, format = :default, options={})
+        def localize_date_time(object, format = 'medium', options={})
             options[:calendar] ||= 'gregorian'
-            
-            if (format == :default)
-                format = @cldr.calendar.dateformat_defaults[options[:calendar]]
-            end
-            
+            format = 'medium' if format == :default
+                        
             time_format = nil
             date_format = nil
             format_string = nil
+            calendar = options[:calendar].to_sym
             if (object.respond_to?(:sec) && !options[:no_time])
-                time_format = @cldr.calendar.timeformats[options[:calendar].to_sym][format.to_s].dup
+                time_format = @cldr.calendar.timeformats[calendar][format.to_s].dup
             end
             if (object.is_a?(Date))
-                date_format = @cldr.calendar.dateformats[options[:calendar].to_sym][format.to_s].dup
+                date_format = @cldr.calendar.dateformats[calendar][format.to_s].dup
             end
             if (date_format && time_format)
-                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_s]
+                # in CLDR 1.x, datetimeformats is an hash of strings indexed by strings;
+                # in CLDR 2.x, it is a hash of hashes indexed by symbols
+                fts = @cldr.calendar.datetimeformats[calendar] || @cldr.calendar.datetimeformats[calendar.to_s]
+                dt_f = fts.is_a?(String) ? fts : fts[format.to_s] 
                 format_string = dt_f.sub('{1}', date_format).sub('{0}', time_format)
             else
                 format_string = date_format ? date_format : time_format
@@ -59,22 +60,20 @@ module Spider; module I18n
             if (time_format)
                 am = @cldr.calendar.am[options[:calendar].to_s]
                 pm = @cldr.calendar.pm[options[:calendar].to_s]
-                format_string.gsub!(/%p/, object.hour < 12 ? am : pm) if object.respond_to? :hour
+                format_string.gsub!(/%p/, object.hour < 12 ? 'am' : 'pm') if object.respond_to? :hour
             end
             object.strftime(format_string)
         end
         
         # FIXME: add extended format handling like in localize
-        def parse_dt(string, format = :default, options = {})
+        def parse_dt(string, format = 'medium', options = {})
+            format = 'medium' if format == :default
             options[:calendar] ||= 'gregorian'
             
-            if (format == :default)
-                format = @cldr.calendar.dateformat_defaults[options[:calendar]]
-            end
             time_format = @cldr.calendar.timeformats[options[:calendar].to_sym][format.to_s].dup
             date_format = @cldr.calendar.dateformats[options[:calendar].to_sym][format.to_s].dup
             if (options[:return] == :datetime)
-                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_s]
+                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_s][format.to_s]
                 format_string = dt_f.sub('{1}', date_format).sub('{0}', time_format)
                 klass = DateTime
             elsif (options[:return] == :date)
@@ -165,6 +164,37 @@ module Spider; module I18n
             delimiter = @cldr.number.symbol_group
             separator = @cldr.number.symbol_decimal
             Spider::I18n.do_parse_number(string, delimiter, separator, options)
+        end
+
+        def list(enumerable)
+            return enumerable.join(', ') unless @cldr.core.respond_to?(:list_patterns) # old cldr version
+            patterns = @cldr.core.list_patterns
+            str = ""
+
+            def sub_pattern(pattern, items)
+                str = pattern.clone
+                items.each_index do |i|
+                    str.sub!("{#{i}}", items[i])
+                end
+                str
+            end
+            if pattern = patterns[enumerable.length.to_s]
+                return sub_pattern(pattern, enumerable)
+            end
+            length = enumerable.length
+            str = enumerable.last.to_s
+            (length-2).downto(0) do |i|
+                pattern = nil
+                if i == length -2
+                    pattern = patterns['end']
+                elsif i == 0
+                    pattern = patterns['start']
+                end
+                pattern ||= patterns['middle']
+                str = sub_pattern(pattern, [enumerable[i].to_s, str])
+            end
+            return str
+
         end
         
     end

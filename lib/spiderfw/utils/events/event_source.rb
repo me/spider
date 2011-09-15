@@ -34,10 +34,9 @@ module Spider
             
         end
         
-        def on(event_name, *params)
+        def on(event_name, *params, &proc)
             @event_handlers ||= {}
             @event_handlers[event_name] ||= []
-            debugger unless proc
             @event_handlers[event_name] << proc
         end
         

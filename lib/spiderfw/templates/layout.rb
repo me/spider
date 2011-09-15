@@ -45,6 +45,9 @@ module Spider
                 next if seen[seen_check]
                 seen[seen_check] = true
                 type = ass[:type].to_sym
+                
+                ass = compile_asset(ass)
+                
                 compress_config = case type
                 when :js
                     'javascript.compress'
@@ -62,16 +65,16 @@ module Spider
                     end
                 else
                     unless pub_dest
-                        pub_dest = Spider::HomeController.pub_path+'/'+COMPILED_FOLDER
+                        pub_dest = self.class.compiled_folder_path
                         FileUtils.mkdir_p(pub_dest)
                     end
-                    if comp = ass[:compressed_path]
+                    if comp = ass[:compressed_path] # Already compressed assets
                         name = File.basename(comp)
-                        if ass[:compressed_rel_path]
+                        if ass[:compressed_rel_path] # Keeps the compressed files in a subdir
                             dir = File.dirname(ass[:compressed_rel_path])
-                            if ass[:copy_dir]
+                            if ass[:copy_dir] # Copies the source dir (which may contain resources used by the assets)
                                 start = dir
-                                if ass[:copy_dir].is_a?(Fixnum)
+                                if ass[:copy_dir].is_a?(Fixnum) # How many levels to go up
                                     ass[:copy_dir].downto(0) do |i|
                                         start = File.dirname(start)
                                     end
@@ -96,7 +99,7 @@ module Spider
                         end
                         ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+src
                         assets[type] << ass
-                    else
+                    else # needs compression
                         name = ass[:compress] || cname
                         unless compress_assets[type][name]
                             cpr = {:name => name, :assets => [], :cpr => true}
@@ -175,6 +178,10 @@ module Spider
         end
         
         COMPILED_FOLDER = '_c'
+
+        def self.compiled_folder_path
+             File.join(Spider::HomeController.pub_path, COMPILED_FOLDER)
+        end
         
         def asset_gettext_messages_file(path)
             dir = File.dirname(path)
@@ -182,10 +189,31 @@ module Spider
             File.join(dir, "#{name}.i18n.json")
         end
         
+        def compile_asset(ass)
+            return ass unless ass[:src]
+            if ass[:type] == :css
+                ext = File.extname(ass[:path])
+                if ['.scss', '.sass'].include?(ext)
+                    dir = File.dirname(ass[:path])
+                    base = File.basename(ass[:path], ext)
+                    newname = "#{base}.css"
+                    tmpdestdir = File.join(dir, 'stylesheets')
+                    
+                    dest = File.join(tmpdestdir, newname)
+                    require 'spiderfw/templates/resources/sass'
+                    
+                    Spider::SassCompiler.compile(ass[:path], dest)
+                    ass[:path] = dest
+                    ass[:src] = File.join(File.dirname(ass[:src]), newname)
+                end
+            end
+            return ass
+        end
+        
         def compress_javascript(cpr)
             require 'yui/compressor'
 
-            pub_dest = Spider::HomeController.pub_path+'/'+COMPILED_FOLDER
+            pub_dest = self.class.compiled_folder_path
             name = cpr[:name]
             
             already_compressed = Dir.glob(pub_dest+'/'+name+'.*.js')
@@ -232,7 +260,7 @@ module Spider
         def compress_css(cpr)
             require 'yui/compressor'
             
-            pub_dest = Spider::HomeController.pub_path+'/'+COMPILED_FOLDER
+            pub_dest = self.class.compiled_folder_path
             name = cpr[:name]
             
             already_compressed = Dir.glob(pub_dest+'/'+name+'.*.css')
@@ -339,6 +367,10 @@ module Spider
                 f << cjs
             end
             return compiled_name
+        end
+
+        def self.clear_compiled_folder!
+            FileUtils.rm_rf(Dir.glob(File.join(self.compiled_folder_path, '*')))
         end
         
     end

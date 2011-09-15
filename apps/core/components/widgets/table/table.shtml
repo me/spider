@@ -15,7 +15,7 @@
             <tpl:pass sp:each_index="@rows |row_i|">
                 <tr class="row { (row_i%2==0) ? 'odd' : 'even' }">
                     <td sp:each="@elements |element|">
-                        <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ Spider::HTTP.urlencode(@rows[row_i][@link_id]) }">
+                        <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ Spider::HTTP.urlencode(@data[row_i][@link_id]) }">
                             { @rows[row_i][element] }
                         </a>
                     </td>

@@ -201,7 +201,7 @@ Spider.Widget = Class.extend({
 			w.setLoading();
 			var submitName = $this.attr('name');
 			var submitValue = $this.val();
-			form.ajaxSubmit({
+			var formOptions = {
 				dataType: 'html',
 				semantic: !isForm,
 				beforeSubmit: function(data, form, options){
@@ -216,7 +216,9 @@ Spider.Widget = Class.extend({
 					if (options.onLoad) options.onLoad(form);
 					w.trigger('ajaxifyLoad', form);
 				}
-			});
+			};
+            if (!isForm) formOptions.type = 'POST';
+			form.ajaxSubmit(formOptions);
 		});
 	},
 	

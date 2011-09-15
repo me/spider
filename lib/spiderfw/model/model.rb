@@ -276,7 +276,10 @@ module Spider
             
             
             def to_s
-                @message % @value
+                label = @element.label
+                Spider::GetText.in_domain('spider'){
+                    _(@message) % label
+                }
             end
             
         end

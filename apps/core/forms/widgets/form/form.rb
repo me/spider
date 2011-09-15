@@ -348,7 +348,6 @@ module Spider; module Forms
                     end
 #                    obj.set(element_name, @inputs[element_name].prepare_value(@data[element_name.to_s]))
                 rescue FormatError => exc
-#                    debugger
                     add_error(exc.message, element_name, exc)
                 end
             end
@@ -414,9 +413,8 @@ module Spider; module Forms
             @errors[element_name] ||= []
             if @inputs[element_name]
                 @inputs[element_name].add_error(message) 
-            else
-                @errors[element_name] << message
             end
+            @errors[element_name] << message
         end
         
         def is_new?
@@ -454,7 +452,8 @@ module Spider; module Forms
         
         def self.parse_content(doc)
             overrides = []
-            overrides += doc.search('form:fields').to_a
+            form_fields = doc.search('form:fields').to_a
+            overrides += form_fields
             doc.search('form:fields').remove
             overrides.each{ |o| parse_override(o) }
             runtime, soverrides = super(doc)
@@ -462,12 +461,27 @@ module Spider; module Forms
             overrides.each do |ov|
                 ov['search'] = '.fields' if (ov.name == 'tpl:inline-override')
             end
+            if form_fields.length > 0
+                inputs = []
+                form_fields.each do |ff|
+                    ff.search('sp:run').each do |run|
+                        obj = run.get_attribute('obj')
+                        if obj =~ /@inputs\[:(.+)\]/
+                            inputs << $1
+                        end
+                    end
+                end
+                rtdoc = Hpricot::XML(runtime)
+                if rtdoc.search("sp:attribute[@name=elements]").length < 1
+                    rtdoc.root.innerHTML += "<sp:attribute name=\"elements\" value=\"#{inputs.join(',')}\" />"
+                    runtime = rtdoc.to_s
+                end
+            end
             return [runtime, overrides]
         end
         
         def self.parse_override(el)
-
-            if (el.name == 'form:fields')
+            if el.name == 'form:fields'
                 el.name = 'tpl:override-content'
                 el['search'] = '.fields'
             end

@@ -6,14 +6,19 @@ require 'apps/worker/models/job'
 module Spider
 
     module Worker
-        @pid_file = Spider.paths[:var]+'/run/worker.pid'
-        @script_file = Spider.paths[:config]+'/worker.rb'
-        @scripts_dir = Spider.paths[:config]+'/worker'
-        @mutex = Mutex.new
-        @options = {
-            :fork => Spider.conf.get('worker.fork'),
-            :detach => Spider.conf.get('worker.detach')
-        }
+        @options = {}
+
+        def self.app_init
+            @pid_file = Spider.paths[:var]+'/run/worker.pid'
+            @script_file = Spider.paths[:config]+'/worker.rb'
+            @scripts_dir = Spider.paths[:config]+'/worker'
+            @mutex = Mutex.new
+            @options = {
+                :fork => Spider.conf.get('worker.fork'),
+                :detach => Spider.conf.get('worker.detach')
+            }
+        end
+
         
         def self.pid_file
             @pid_file
@@ -146,10 +151,10 @@ module Spider
             return job.uuid
         end
         
-        def self.cron(time, params, &proc)
+        def self.cron(time, params=nil, &proc)
             raise "The cron method must be used only in worker init scripts" unless @runner
             check_params(params) if params
-            @runner.cron(time, params)
+            @runner.cron(time, params, &proc)
         end
         
         def self.every(time, params=nil, &proc)

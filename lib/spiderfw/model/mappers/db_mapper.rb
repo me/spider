@@ -973,6 +973,11 @@ module Spider; module Model; module Mappers
             return schema
         end
 
+        # Resets the schema, so that it is regenerated on the next call
+        def reset_schema
+            @schema = nil
+        end
+
         def storage_column_type(type, attributes)
             @storage.column_type(type, attributes)
         end
