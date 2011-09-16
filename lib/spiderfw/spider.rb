@@ -248,6 +248,20 @@ module Spider
         def shutdown!
             shutdown(true)
         end
+
+        def add_thread(thr)
+            @running_threads ||= []
+            @threads_mutex ||= Mutex.new
+            @threads_mutex.synchronize do
+                @running_threads << thr
+            end
+        end
+
+        def remove_thread(thr)
+            @threads_mutex.synchronize do
+                @running_threads.delete(thr)
+            end
+        end
         
         def main_process_shutdown
             if startup_done?
