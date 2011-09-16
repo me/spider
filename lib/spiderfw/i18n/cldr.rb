@@ -141,16 +141,19 @@ module Spider; module I18n
         
         def week_start(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            return 1 unless @cldr.calendar.respond_to?(:week_firstdays)
             wdays.index @cldr.calendar.week_firstdays[calendar.to_s]
         end
         
         def weekend_start(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            return 6 unless @cldr.calendar.respond_to?(:week_firstdays)
             wdays.index @cldr.calendar.weekend_starts[calendar.to_s]
         end
         
         def weekend_end(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+            return 1 unless @cldr.calendar.respond_to?(:week_firstdays)
             wdays.index @cldr.calendar.weekend_ends[calendar.to_s]
         end
         
