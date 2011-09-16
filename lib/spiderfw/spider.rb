@@ -8,6 +8,7 @@ require 'spiderfw/autoload'
 require 'spiderfw/requires'
 
 require 'spiderfw/version'
+require 'timeout'
 
 begin
     require 'fssm'
@@ -218,6 +219,23 @@ module Spider
             end
             @shutdown_done = true
             Spider.logger.debug("Shutdown")
+            if @running_threads
+                begin
+                    Timeout.timeout(Spider.conf.get('process.shutdown_timeout')) do
+                        @running_threads.each do |thr|
+                            thr.join if thr.alive?
+                        end
+                    end
+                rescue => exc
+                    Spider.logger.error(exc)
+                    @running_threads.each do |thr|
+                        begin
+                            thr.kill
+                        rescue => exc
+                        end
+                    end
+                end
+            end
             Debugger.post_mortem = false if Object.const_defined?(:Debugger) && Debugger.post_mortem?
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
