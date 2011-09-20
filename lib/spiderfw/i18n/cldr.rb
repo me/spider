@@ -141,17 +141,36 @@ module Spider; module I18n
         
         def week_start(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-            wdays.index @cldr.calendar.week_firstdays[calendar.to_s]
+            day = if @cldr.respond_to?(:supplemental)
+                @cldr.supplemental.week_data["firstDay"]
+            elsif @cldr.calendar.respond_to?(:week_firstdays) # CLDR 1
+                @cldr.calendar.week_firstdays[calendar.to_s]
+            end
+            day ||= 'mon'
+            wdays.index day
+            
         end
         
         def weekend_start(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-            wdays.index @cldr.calendar.weekend_starts[calendar.to_s]
+            day = if @cldr.respond_to?(:supplemental)
+                @cldr.supplemental.week_data["weekendStart"]
+            elsif @cldr.calendar.respond_to?(:weekend_starts) # CLDR 1
+                @cldr.calendar.weekend_starts[calendar.to_s]
+            end
+            day ||= 'sat'
+            wdays.index day
         end
         
         def weekend_end(calendar = self.default_calendar)
             wdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-            wdays.index @cldr.calendar.weekend_ends[calendar.to_s]
+            day = if @cldr.respond_to?(:supplemental)
+                @cldr.supplemental.week_data["weekendEnd"]
+            elsif @cldr.calendar.respond_to?(:weekend_ends) # CLDR 1
+                @cldr.calendar.weekend_ends[calendar.to_s]
+            end
+            day ||= 'sun'
+            wdays.index day
         end
         
         def localize_number(object, precision=nil, options={})

@@ -34,6 +34,7 @@ module Spider
     config_option 'webserver.timeout', _("Time allowed for each request (in seconds)"), :type=> Fixnum, :default => nil
     config_option 'webserver.respawn_on_change', _("Restart the webserver when application code changes"), :type => Spider::Bool,
         :default => Proc.new{ RUBY_PLATFORM !~ /win32|mingw32/ && Spider.config.get('runmode') == 'devel' ? true : false }
+    config_option 'process.shutdown_timeout', _("Number of seconds a process is given to end"), :type => Fixnum, :default => 60
     config_option 'static_content.mode', _("Mode to use for serving static files"), :type => String,
         :choices => [nil, 'x-sendfile', 'x-accel-redirect', 'published'], :default => nil
     config_option 'static_content.auto_publish', _("Automatically publish content to the home's public folder"),

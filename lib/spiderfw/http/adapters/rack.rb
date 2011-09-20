@@ -104,6 +104,7 @@ module Spider; module HTTP
                         controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     end
                     controller.after(path)
+                    controller_done = true
                     Spider::Logger.debug("Controller done")
                 rescue => exc
                     Spider.logger.debug("Error:")
@@ -111,31 +112,46 @@ module Spider; module HTTP
                     controller.ensure if controller
                     controller = nil
                 ensure
-                    if Spider.conf.get('webserver.force_threads')
-                        controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
-                    else
-                        controller_response.prepare_headers
-                        rack_response_hash[:status] = controller_response.status
-                        rack_response_hash[:headers] = {}
-                        controller_response.headers.each do |key, val|
-                            if (val.is_a?(Array))
-                                val.each{ |v| rack_response_hash[:headers][key] = v.to_s }
-                            else
-                                rack_response_hash[:headers][key] = val.to_s
+                    begin
+                        if Spider.conf.get('webserver.force_threads')
+                            controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
+                        else
+                            controller_response.prepare_headers
+                            rack_response_hash[:status] = controller_response.status
+                            rack_response_hash[:headers] = {}
+                            controller_response.headers.each do |key, val|
+                                if (val.is_a?(Array))
+                                    val.each{ |v| rack_response_hash[:headers][key] = v.to_s }
+                                else
+                                    rack_response_hash[:headers][key] = val.to_s
+                                end
                             end
+                            w.rewind
                         end
-                        w.rewind
+                        Spider.request_finished
+                    ensure
+                        if Spider.conf.get('webserver.force_threads')
+                           begin
+                               w.close
+                           rescue
+                           end
+                           Spider.remove_thread(Thread.current)
+                           Thread.exit 
+                        end
                     end
-                    controller_done = true
-                    Spider.request_finished
                 end
             end
             
-            if (Spider.conf.get('webserver.force_threads'))
+            if Spider.conf.get('webserver.force_threads')
                 controllerThread = Thread.start &run_block
-                while (!controller_done && !controller_response.server_output.headers_sent?)
+                t = Time.now
+                while !controller_done && !controller_response.server_output.headers_sent? && (Time.now - t) < 60
                     Thread.stop
                 end
+                if (Time.now - t) >= 60
+                    controllerThread.kill
+                end
+                Spider.add_thread(controllerThread) unless controller_done
             else
                 run_block.call
             end

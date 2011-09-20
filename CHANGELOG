@@ -1,3 +1,11 @@
+= 0.6.18
+== 16 September, 2011
+* Thread management (keeps track of threads to wait for when exiting)
+* Under Phusion Passenger, controller's 'after' is now executed when the response is sent
+* Table widget now accepts a link_id not in the Table's shown elements
+* CLDR fixes
+* Updater fixes
+
 = 0.6.17
 == 13 September, 2011
 * AppManager rewrite, with setup tasks; Migrations

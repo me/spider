@@ -233,8 +233,8 @@ module Spider
             curr = Dir.glob(pub_dest+"/._#{name}.*.js")
             unless curr.empty?
                 curr.each do |f|
-                    name = File.basename(f)
-                    if name =~ /(\d+)\.js$/
+                    currname = File.basename(f)
+                    if currname =~ /(\d+)\.js$/
                         version = $1.to_i if $1.to_i > version
                         File.unlink(f)
                     end
