@@ -494,7 +494,7 @@ module Spider; module Model; module Mappers
             cond[:values] = []
             
 
-            
+            # Returns an hash of elements that need an "inner" join
             def get_join_info(model, condition)
                 join_info = {}
                 condition.each_with_comparison do |k, v, comp|
@@ -503,31 +503,50 @@ module Spider; module Model; module Mappers
                     next unless element
                     next unless model.mapper.mapped?(element)
                     next unless element.model?
-                    join_info[k.to_s] = true if !v.nil? || (comp != '=' && comp != 'like' && comp != 'ilike')
+                    join_info[k.to_s] = if v.nil?
+                        comp == '<>' ? true : false
+                    else
+                        comp == '<>' ? false : true
+                    end
                     if v.is_a?(Spider::Model::Condition)
                         el_join_info = get_join_info(element.model, v) 
+                        has_true = false
+                        has_false = false
                         el_join_info.each do |jk, jv|
                             join_info["#{k}.#{jk}"] = jv
+                            has_true = true if jv
+                            has_false = true unless jv
+                        end
+                        if (v.conjunction == :and && has_true) || (has_true && !has_false)
+                            join_info[k.to_s] = true
+                        elsif (v.conjunction == :or && has_false) || (has_false && !has_true)
+                            join_info[k.to_s] = false
                         end
                     end
                 end
+                sub = {}
                 condition.subconditions.each do |sub_cond|
+                    next if sub_cond.empty?
                     sub_join_info = get_join_info(model, sub_cond)
-                    if condition.conjunction == :or
-                        join_info.each_key do |k|
-                            join_info.delete(k) unless sub_join_info[k]
+                    sub_join_info.each_key do |k|
+                        if condition.conjunction == :or
+                            sub[k] = true if sub_join_info[k] && sub[k] != false
+                            sub[k] = false unless sub_join_info
+                        else
+                            sub[k] = true if sub_join_info[k]
                         end
-                    else
-                        join_info.merge!(sub_join_info)
                     end
                 end
+                join_info.merge!(sub)
                 join_info
             end
+
+            
             
             join_info = options[:join_info]
             join_info ||= get_join_info(@model, condition)
 
-                        
+
             condition.each_with_comparison do |k, v, comp|
                 if k.is_a?(QueryFuncs::Function)
                     field = prepare_queryfunc(k)
@@ -541,7 +560,7 @@ module Spider; module Model; module Mappers
                     el_join_info = {}
                     join_info.each do |jk, jv|
                         if jk.index(k.to_s+'.') == 0
-                            el_join_info[jk[k.to_s.length..-1]] = jv
+                            el_join_info[jk[k.to_s.length+1..-1]] = jv
                         end
                     end
                     if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
@@ -557,7 +576,7 @@ module Spider; module Model; module Mappers
                         end
                         cond[:values] << element_cond
                     else
-                        if (element.storage == model.mapper.storage)
+                        if element.storage == model.mapper.storage
                             join_type = join_info[element.name.to_s] ? :inner : :left
                             sub_join = model.mapper.get_join(element, join_type)
                             # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
@@ -566,6 +585,7 @@ module Spider; module Model; module Mappers
                             had_join = false
                             existent.each do |j|
                                 if sub_join[:to] == j[:to] && sub_join[:keys] == j[:keys] && sub_join[:conditions] == j[:conditions]
+                                    # if any condition allows a left join, then a left join should be used here as well
                                     j[:type] = :left if sub_join[:type] == :left
                                     sub_join = j
                                     had_join = true
@@ -595,7 +615,6 @@ module Spider; module Model; module Mappers
                                 end
                                 cond[:values] << element_cond
                             elsif v
-                                v = element.model.mapper.preprocess_condition(v)                          
                                 sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins, :join_info => el_join_info)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins

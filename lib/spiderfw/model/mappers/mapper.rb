@@ -345,7 +345,7 @@ module Spider; module Model
                         if element.attributes[:junction_id]
                             val.each do |row|
                                 next unless row_id = row.get(element.attributes[:junction_id])
-                                condition.set(:id, '<>', row_id)
+                                condition.set(element.attributes[:junction_id], '<>', row_id)
                             end
                         end
                         element.model.mapper.delete(condition)
@@ -930,25 +930,33 @@ module Spider; module Model
                 condition.conditions_array.each do |k, v, c|
                     next if k.is_a?(Spider::QueryFuncs::Function)
                     next unless element = model.elements[k]
-                    if (element.integrated?)
-                        condition.delete(k)
-                        integrated_from = element.integrated_from
-                        integrated_from_element = element.integrated_from_element
-                        condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
-                    elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil?) # conditions on junction id don't make sense
-                        condition.delete(k)
-                        condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
-                    end
-                    if (element.type < Spider::DataType && !v.is_a?(element.type))
+                    changed_v = false
+                    if element.type < Spider::DataType && !v.is_a?(element.type)
                         condition.delete(k)
                         begin
-                            condition.set(k, c, element.type.from_value(v))
+                            v = element.type.from_value(v)
+                            changed_v = true
                         rescue TypeError => exc
                             raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
                         end
                     elsif element.type == DateTime && v && !v.is_a?(Date) && !v.is_a?(Time)
+                        v = DateTime.parse(v)
+                        changed_v = true
+                    elsif element.model? && v.is_a?(Spider::Model::Condition)
+                        v = element.mapper.preprocess_condition(v)
+                        changed_v = true
+                    end
+                    if element.integrated?
                         condition.delete(k)
-                        condition.set(k, c, DateTime.parse(v))
+                        integrated_from = element.integrated_from
+                        integrated_from_element = element.integrated_from_element
+                        condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
+                    elsif element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil? # conditions on junction id don't make sense
+                        condition.delete(k)
+                        condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
+                    elsif changed_v
+                        condition.delete(k)
+                        condition.set(k, c, v)
                     end
                 end
             end
