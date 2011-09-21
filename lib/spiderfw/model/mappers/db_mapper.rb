@@ -531,9 +531,9 @@ module Spider; module Model; module Mappers
                     sub_join_info.each_key do |k|
                         if condition.conjunction == :or
                             sub[k] = true if sub_join_info[k] && sub[k] != false
-                            sub[k] = false unless sub_join_info
+                            sub[k] = false unless sub_join_info[k]
                         else
-                            sub[k] = true if sub_join_info[k]
+                            sub[k] = !!sub_join_info[k]
                         end
                     end
                 end
