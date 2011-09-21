@@ -600,9 +600,13 @@ module Spider; module Model; module Mappers
                             if v.nil? && comp == '='
                                 el_model_schema = model_schema
                                 element_cond = {:conj => 'AND', :values => []}
-                                    if model.mapper.have_references?(element.name)
+                                if model.mapper.have_references?(element.name)
                                     el_name = element.name
                                     el_model = element.model
+                                elsif element.type.mapper.have_references?(element.attributes[:reverse])
+                                    el_model = element.type
+                                    el_model_schema = el_model.mapper.schema
+                                    el_name = element.attributes[:reverse]
                                 else
                                     el_model = element.type
                                     el_model_schema = element.model.mapper.schema 
