@@ -603,14 +603,14 @@ module Spider; module Model; module Mappers
                                 if model.mapper.have_references?(element.name)
                                     el_name = element.name
                                     el_model = element.model
-                                elsif element.type.mapper.have_references?(element.attributes[:reverse])
-                                    el_model = element.type
-                                    el_model_schema = el_model.mapper.schema
-                                    el_name = element.attributes[:reverse]
-                                else
+                                elsif element.junction?
                                     el_model = element.type
                                     el_model_schema = element.model.mapper.schema 
-                                    el_name = element.attributes[:junction_their_element]
+                                    el_name = element.attributes[:junction_their_element]    
+                                else
+                                    el_model = element.type
+                                    el_model_schema = el_model.mapper.schema
+                                    el_name = element.reverse
                                 end
                                 el_model.primary_keys.each do |k|
                                     field = el_model_schema.qualified_foreign_key_field(el_name, k.name)
