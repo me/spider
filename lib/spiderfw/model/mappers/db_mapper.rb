@@ -494,7 +494,13 @@ module Spider; module Model; module Mappers
             cond[:values] = []
             
 
-            # Returns an hash of elements that need an "inner" join
+            # Returns an hash with true for elements that need an inner join
+            # Note: subsequent joins of a left join  have to be left joins, 
+            # otherwise the first join will behave as an inner.
+            # Maybe they should be marked and later made behave like an inner with an
+            # appropriate (A.key is null or B.key is not null) condition.
+            # Not sure if this is needed, since first level conditions should filter out
+            # any unwanted results.
             def get_join_info(model, condition)
                 join_info = {}
                 condition.each_with_comparison do |k, v, comp|
@@ -524,27 +530,34 @@ module Spider; module Model; module Mappers
                         end
                     end
                 end
-                sub = {}
+                res = {}
+                keys = join_info.keys
+                sub_join_infos = [join_info]
                 condition.subconditions.each do |sub_cond|
                     next if sub_cond.empty?
                     sub_join_info = get_join_info(model, sub_cond)
-                    sub_join_info.each_key do |k|
+                    keys += sub_join_info.keys
+                    sub_join_infos << sub_join_info
+                end
+                keys.uniq!
+                sub_join_infos.each do |sub_join_info|
+                    keys.each do |k|
                         if condition.conjunction == :or
-                            sub[k] = true if sub_join_info[k] && sub[k] != false
-                            sub[k] = false unless sub_join_info[k]
+                            res[k] = true if sub_join_info[k] && res[k] != false
+                            res[k] = false unless sub_join_info[k]
                         else
-                            sub[k] = !!sub_join_info[k]
+                            res[k] = true if sub_join_info[k]
                         end
                     end
                 end
-                join_info.merge!(sub)
-                join_info
+                res
             end
 
             
             
             join_info = options[:join_info]
             join_info ||= get_join_info(@model, condition)
+
 
 
             condition.each_with_comparison do |k, v, comp|
