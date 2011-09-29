@@ -442,7 +442,8 @@ module Spider; module Model
             preprocess_condition(condition)
             cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
             assocs = association_elements.select do |el|
-                !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
+                !el.junction? && # done later from @model.referenced_by_junctions
+                (!storage.supports?(:delete_cascade) || !schema.cascade?(el.name)) # TODO: implement
             end
             curr = @model.where(condition) unless curr
             before_delete(curr)
