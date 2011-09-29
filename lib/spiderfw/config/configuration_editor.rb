@@ -113,7 +113,7 @@ module Spider
                             end
                             add_next = nil
                         end
-                        if line =~ /(\s*)(\w[^:]+):\s*(.+)?$/
+                        if line =~ /^(\s*)(\w[^:]+):\s*(.+)?$/
                             indent = $1
                             key = $2
                             value = $3
@@ -174,6 +174,8 @@ module Spider
                                 curr_val = ""
                             end
                             curr = data
+                            res << line
+                        elsif line =~ /^\s*#/
                             res << line
                         else # value line
                             curr_val << line

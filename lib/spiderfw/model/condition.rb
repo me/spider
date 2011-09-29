@@ -34,7 +34,7 @@ module Spider; module Model
             return c
         end
         
-        @comparison_operators = %w{= > < >= <= <> != like}
+        @comparison_operators = %w{= > < >= <= <> like}
         @comparison_operators_regexp = @comparison_operators.inject('') do |str, op|
             str += '|' unless str.empty? 
             str += Regexp.quote(op)
@@ -173,11 +173,11 @@ module Spider; module Model
                 value = value.to_a
             end
             if value.is_a?(Array) && comparison != 'between'
-                or_cond = self.class.or
+                multi_cond = comparison == '<>' ? self.class.and : self.class.or
                 value.uniq.each do |v|
-                    or_cond.set(field, comparison, v)
+                    multi_cond.set(field, comparison, v)
                 end
-                @subconditions << or_cond
+                @subconditions << multi_cond
                 return self
             end
             parts = []
@@ -454,7 +454,7 @@ module Spider; module Model
                         :== => '=',
                         :not => '<>'
                     }
-                    if (replace[op])
+                    if replace[op]
                         op = replace[op]
                     end
                     op = op.to_s

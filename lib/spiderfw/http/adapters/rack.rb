@@ -55,7 +55,11 @@ module Spider; module HTTP
         
         def set_body_io(io)
             return super if headers_sent?
-            @response.body = io
+            begin
+                @response[:body].close
+            rescue => exc
+            end
+            @response[:body] = io
             send_headers
         end
 
