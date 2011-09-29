@@ -315,7 +315,9 @@ module Spider; module Forms
         end
         
         def load
-            instantiate_obj if (@pk)
+            obj = instantiate_obj if (@pk)
+            trigger(:after_load, obj)
+            obj
         end
         
         def save(action=nil)
