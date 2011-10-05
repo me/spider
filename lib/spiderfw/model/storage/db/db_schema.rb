@@ -97,6 +97,7 @@ module Spider; module Model; module Storage; module Db
         
         # Sets the column name for an element.
         def set_column(element_name, field)
+            field = {:name => field} if field.is_a?(String)
             field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             had_column = @columns[element_name]
             @columns[element_name] = field
@@ -105,6 +106,7 @@ module Spider; module Model; module Storage; module Db
         
         # Sets a foreign key to the primary key of an element.
         def set_foreign_key(element_name, element_key, field)
+            field = {:name => field} if field.is_a?(String)
             if field.is_a?(Hash)
                 field[:attributes] ||= {}
                 field[:attributes][:expression] ||= field[:expression]

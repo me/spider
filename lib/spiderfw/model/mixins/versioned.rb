@@ -112,6 +112,9 @@ module Spider; module Model
                           vmod.elements[el.name].attributes.delete(:condition)
                       end
                       if el.multiple? && !el.attributes[:junction] && !is_version_content
+                          # Note: this creates a junction
+                          # When the object is deleted, the junction will be deleted too since the object
+                          # is not versioned
                           elh[:attributes].delete(:reverse)
                           elh[:attributes].delete(:add_reverse)
                           elh[:attributes].delete(:add_multiple_reverse)
