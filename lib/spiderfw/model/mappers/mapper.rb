@@ -956,7 +956,9 @@ module Spider; module Model
                         condition[integrated_from.name] = integrated_from.model.mapper.preprocess_condition(sub) 
                     elsif element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil? # conditions on junction id don't make sense
                         condition.delete(k)
-                        condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
+                        sub = condition.get_deep_obj
+                        sub.set(element.attributes[:junction_their_element], c, v)
+                        condition[k] = element.model.mapper.preprocess_condition(sub)
                     elsif changed_v
                         condition.delete(k)
                         condition.set(k, c, v)
