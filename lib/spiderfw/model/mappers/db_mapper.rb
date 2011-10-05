@@ -581,7 +581,7 @@ module Spider; module Model; module Mappers
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => []}
                         v.each_with_comparison do |el_k, el_v, el_comp|
-                            field = model_schema.qualified_foreign_key_field(element.name, el_k)
+                            field = model_schema.foreign_key_field(element.name, el_k)
                             el_comp ||= '='
                             op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
@@ -626,7 +626,7 @@ module Spider; module Model; module Mappers
                                     el_name = element.reverse
                                 end
                                 el_model.primary_keys.each do |k|
-                                    field = el_model_schema.qualified_foreign_key_field(el_name, k.name)
+                                    field = el_model_schema.foreign_key_field(el_name, k.name)
                                     field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
                                 end
@@ -644,7 +644,8 @@ module Spider; module Model; module Mappers
                         end
                     end
                 elsif(model_schema.field(element.name))
-                    field = model_schema.qualified_field(element.name, options[:table])
+                    field = model_schema.field(element.name)
+                    field = FieldInAliasedTable(field, options[:table]) if options[:table]
                     op = comp ? comp : '='
                     if (v.is_a?(Spider::QueryFuncs::Expression))
                         v_joins = prepare_expression(v)

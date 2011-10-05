@@ -241,6 +241,25 @@ module Spider; module Model; module Storage; module Db
         end
         
     end
+
+    class FieldInAliasedTable < Field
+
+        def initialize(field, table_alias)
+            @table = field.table
+            @name = field.name
+            @type = field.type
+            @table_alias = table_alias
+        end
+
+        def to_s
+            "#{@table_alias}.#{@name}"
+        end
+
+        def inspect
+            "#<#{self.class.name}:#{self.object_id} @name=\"#{@name}\", @table=#<Spider::Model::Storage::Db::Table:#{@table.object_id} #{@table.name} AS #{@table_alias}> >"
+        end
+
+    end
     
     class FieldExpression < Field
         attr_reader :expression

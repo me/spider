@@ -333,6 +333,7 @@ module Spider; module Model; module Storage; module Db
         
         # Returns the SQL for a condition comparison.
         def sql_condition_value(key, comp, value, bound_vars=true)
+            key = key.expression if key.is_a?(FieldExpression)
             if (comp.to_s.downcase == 'ilike')
                 comp = 'like'
                 key = "UPPER(#{key})"
