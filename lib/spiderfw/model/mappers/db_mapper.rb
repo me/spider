@@ -558,13 +558,32 @@ module Spider; module Model; module Mappers
             join_info = options[:join_info]
             join_info ||= get_join_info(@model, condition)
 
+            def has_aggregates?(condition, in_or=false)
+                condition.each_with_comparison do |k, v, comp|
+                    return true if k.is_a?(QueryFuncs::Function) && k.has_aggregates?
+                end
+                in_or = true if condition.conjunction == :or
+                condition.subconditions.each do |sub_cond|
+                    return true if in_or && has_aggregates?(sub_cond, in_or)
+                end
+                return false
+            end
 
+            is_having = options[:is_having]
+            is_having = has_aggregates?(condition) if is_having.nil?
+
+            cond[:group_by_fields] ||= [] if is_having
 
             condition.each_with_comparison do |k, v, comp|
                 if k.is_a?(QueryFuncs::Function)
                     field = prepare_queryfunc(k)
                     cond[:values] << [field, comp, v]
                     joins += field.joins
+                    if is_having
+                        cond[:group_by_fields] += k.inner_elements.map{ |el_name, owner_func| 
+                            owner_func.mapper_fields[el_name.to_s]
+                        }
+                    end
                     next
                 end
                 element = model.elements[k.to_sym]
@@ -579,13 +598,14 @@ module Spider; module Model; module Mappers
                     if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
                         !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
-                        element_cond = {:conj => 'AND', :values => []}
+                        element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
                         v.each_with_comparison do |el_k, el_v, el_comp|
                             field = model_schema.foreign_key_field(element.name, el_k)
                             el_comp ||= '='
                             op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
+                            cond[:group_by_fields] << field if is_having
                         end
                         cond[:values] << element_cond
                     else
@@ -612,7 +632,7 @@ module Spider; module Model; module Mappers
                             
                             if v.nil? && comp == '='
                                 el_model_schema = model_schema
-                                element_cond = {:conj => 'AND', :values => []}
+                                element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
                                 if model.mapper.have_references?(element.name)
                                     el_name = element.name
                                     el_model = element.model
@@ -629,10 +649,13 @@ module Spider; module Model; module Mappers
                                     field = el_model_schema.foreign_key_field(el_name, k.name)
                                     field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
+                                    element_cond[:is_having] = is_having
+                                    cond[:group_by_fields] << field if is_having
                                 end
                                 cond[:values] << element_cond
                             elsif v
-                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins, :join_info => el_join_info)
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], 
+                                    :joins => joins, :join_info => el_join_info, :is_having => is_having || nil)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins
                                 cond[:values] << sub_condition
@@ -654,13 +677,16 @@ module Spider; module Model; module Mappers
                     else
                         cond[:values] << [field, op, map_condition_value(model.elements[k.to_sym].type, v)]
                     end
+                    cond[:group_by_fields] << field if is_having
                 end
-                
+
             end
+            cond[:is_having] = is_having
+
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub, :joins => joins, :join_info => join_info)
+                sub_res = self.prepare_condition(sub, :joins => joins, :join_info => join_info, :is_having => is_having || nil)
                 cond[:values] << sub_res[0]
                 joins = sub_res[1]
                 remaining_condition += sub_res[2]
@@ -784,9 +810,11 @@ module Spider; module Model; module Mappers
                 el_joins, el_model, el = get_deep_join(el_name)
                 joins += el_joins
                 owner_func.mapper_fields ||= {}
-                owner_func.mapper_fields[el.name] = el_model.mapper.schema.field(el.name)
+                owner_func.mapper_fields[el_name.to_s] = el_model.mapper.schema.field(el.name)
             end
-            return FieldFunction.new(storage.function(func), schema.table, joins)
+            f = FieldFunction.new(storage.function(func), schema.table, joins)
+            f.aggregate = true if func.has_aggregates?
+            return f
         end
         
         # Takes a Spider::QueryFuncs::Expression, and associates the fields to the corresponding elements

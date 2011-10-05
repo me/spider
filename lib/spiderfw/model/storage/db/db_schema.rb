@@ -283,6 +283,14 @@ module Spider; module Model; module Storage; module Db
             @table = table
             @joins = joins
         end
+
+        def aggregate=(val)
+            @aggregate = val
+        end
+
+        def aggregate?
+            !!@aggregate
+        end
         
         def to_s
             @expression

@@ -140,11 +140,28 @@ module Spider; module Model; module Storage; module Db
              end
              keys = sql_keys(query)
              tables_sql, tables_values = sql_tables(query)
+
              sql = "SELECT #{keys} FROM #{tables_sql} "
              bind_vars += tables_values
+
              where, vals = sql_condition(query)
              bind_vars += vals
              sql += "WHERE #{where} " if where && !where.empty?
+
+             having, having_vals = sql_condition(query, true)
+             unless having.blank?
+                unless (query[:limit] || query[:query_type] == :count) && !query[:joins].empty?
+
+                    group_fields = (
+                        query[:keys].select{ |k| !k.is_a?(FieldExpression)
+                    } + collect_having_fields(query[:condition])).flatten.uniq
+                    group_keys = sql_keys(group_fields)
+                    sql += "GROUP BY #{group_keys} "
+                    sql += "HAVING #{having} "
+                end
+                bind_vars += having_vals
+             end
+
              order = sql_order(query, query[:order_replacements])
              if (query[:limit] || query[:query_type] == :count)
                  limit = nil
@@ -158,9 +175,16 @@ module Spider; module Model; module Storage; module Db
                  end
                  if (!query[:joins].empty?)
                      data_tables_sql = query[:order_on_different_table] ? tables_sql : query[:tables].join(', ')
-                     pk_sql = query[:primary_keys].reject{ |pk| pk.is_a?(Db::FieldExpression) }.join(', ')
+                     pks = query[:primary_keys].reject{ |pk| pk.is_a?(Db::FieldExpression) }
+                     pk_sql = pks.join(', ')
                      distinct_sql = "SELECT DISTINCT #{pk_sql} FROM #{tables_sql}"
-                     distinct_sql += " WHERE #{where}" if where && !where.empty?
+                     distinct_sql += " WHERE #{where}" unless where.blank?
+                     unless having.blank?
+
+                        group_keys = sql_keys((pks + collect_having_fields(query[:condition])).flatten.uniq)
+                        distinct_sql += " GROUP BY #{group_keys} "
+                        distinct_sql += " HAVING #{having}"
+                     end
                      data_sql = "SELECT #{keys} FROM #{data_tables_sql} WHERE (#{pk_sql}) IN (#{distinct_sql})"
                      data_sql += " order by #{order}" unless order.blank?
                  else
