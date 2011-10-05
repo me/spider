@@ -100,9 +100,9 @@ module Spider; module Model; module Storage; module Db; module Connectors
                 bind_vars.each_index do |i|
                     var = bind_vars[i]
                     if (var.is_a?(Oracle::OracleNilValue))
-                        cursor.bind_param(i+1, nil, var.type, 0)
+                        cursor.bind_param(":#{i+1}", nil, var.type, 0)
                     else
-                        cursor.bind_param(i+1, var)
+                        cursor.bind_param(":#{i+1}", var)
                     end
                 end
                 res = cursor.exec
