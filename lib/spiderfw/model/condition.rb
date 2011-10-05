@@ -250,15 +250,15 @@ module Spider; module Model
                 cnt += 1
                 comparison = @comparisons[key] || '='
                 cond = "#{comparison} #{value.inspect}"
-                str += "#{key} #{cond}"
+                str += "#{key.inspect} #{cond}"
             end
-            str = '(' + str + ')' if str.length > 0
             #str += ' [raw:'+raw.inspect+']' unless raw.empty?
             first = true
             if @subconditions.length > 0
                 str += ' '+@conjunction.to_s+' ' if str.length > 0
-                str += @subconditions.map{ |sub| sub.inspect }.join(' '+@conjunction.to_s+' ')
+                str += @subconditions.map{ |sub| sub.inspect }.reject{ |sub| sub.empty? }.join(' '+@conjunction.to_s+' ')
             end
+            str = "(#{str})" if cnt + @subconditions.length > 1
             return str
         end
         
