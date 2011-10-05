@@ -1,3 +1,10 @@
+= 0.6.20
+== 05 October, 2011
+* Added support for aggregate functions in DB conditions
+* Added after_load event to Form widget to allow manipulation of the loaded object
+* Fixed error Table Widget when paginate attribute is set to false
+* Improved DB join generation
+
 = 0.6.19
 == 21 September, 2011
 * Fixes: DbMapper join logic, configuration editor, js files compilation, Rack set_body_io (used by SOAP)
