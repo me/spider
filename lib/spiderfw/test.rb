@@ -62,8 +62,9 @@ module Spider; module Test
     
     def self.load_fixtures(app, truncate=false)
         path = File.join(app.path, 'test', 'fixtures')
+        loaded = []
         Dir.glob(File.join(path, '*.yml')).each do |yml|
-            Spider::Model.load_fixtures(yml, truncate)
+            loaded += Spider::Model.load_fixtures(yml, truncate)
         end
     end
     
