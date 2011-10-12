@@ -957,6 +957,11 @@ module Spider; module Model
         def self.elements
             @elements
         end
+
+        # An array of non-integrated elements
+        def self.own_elements
+            elements_array.reject{ |el| el.integrated? }
+        end
         
         # An array of the model's Elements.
         def self.elements_array
