@@ -943,8 +943,10 @@ module Spider; module Model
                         v = DateTime.parse(v)
                         changed_v = true
                     elsif element.model? && v.is_a?(Spider::Model::Condition)
-                        v = element.mapper.preprocess_condition(v)
-                        changed_v = true
+                        unless v.select{ |key, value| !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?
+                            v = element.mapper.preprocess_condition(v)
+                            changed_v = true
+                        end
                     end
                     if element.integrated?
                         condition.delete(k)
@@ -963,6 +965,7 @@ module Spider; module Model
                         condition.set(k, c, v)
                     end
                 end
+                condition
             end
             
             basic_preprocess(condition)
