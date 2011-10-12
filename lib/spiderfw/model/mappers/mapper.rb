@@ -932,8 +932,7 @@ module Spider; module Model
                     next if k.is_a?(Spider::QueryFuncs::Function)
                     next unless element = model.elements[k]
                     changed_v = false
-                    if element.type < Spider::DataType && !v.is_a?(element.type)
-                        condition.delete(k)
+                    if element.type < Spider::DataType && !v.is_a?(element.type) && element.type.force_wrap?
                         begin
                             v = element.type.from_value(v)
                             changed_v = true
