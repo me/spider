@@ -30,6 +30,7 @@ gem "ruby-prof", :group => :devel
 gem "rspec", :group => :test
 gem "cucumber", '~> 0.10.0', :group => :test
 gem "capybara", :group => :test
+gem "culerity", :group => :test
 gem "yui-compressor", :group => :production
 
 if RUBY_PLATFORM =~ /darwin/
@@ -42,5 +43,5 @@ end
 # Install specific gems
 
 
-gem "mysql", :groups => [:db, :mysql]
-gem "ruby-oci8", :groups => [:db, :oci8]
+gem "mysql", :group => :mysql
+gem "ruby-oci8", :group => :oci8
