@@ -230,6 +230,7 @@ module Spider
             end
              # Ruby 1.9: steps are not needed with ordered hashes
             data = [data] unless data.is_a?(Array)
+            loaded = []
             data.each do |step|
                 step.each do |mod_name, mod_data|
                     mod = const_get_full(mod_name)
@@ -248,9 +249,11 @@ module Spider
                         end
                         obj = mod.new(h)
                         obj.insert
+                        loaded << obj
                     end
                 end
             end
+            loaded
         end
         
         # Generic Model error.
