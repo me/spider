@@ -1,5 +1,6 @@
 require 'gettext/tools'
 require 'spiderfw/templates/blocks/text'
+require 'json'
 
 module Spider; module I18n
 
