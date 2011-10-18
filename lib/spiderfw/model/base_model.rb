@@ -1256,8 +1256,8 @@ module Spider; module Model
             self.load(values) || self.create(values)
         end
         
-        def self.get(values)
-            return self.new(values) unless Spider::Model.identity_mapper
+        def self.get(values, static=false)
+            return static ? self.static(values) : self.new(values) unless Spider::Model.identity_mapper
             values = [values] unless values.is_a?(Hash) || values.is_a?(Array)
             if values.is_a?(Array)
                 vals = {}
@@ -1267,10 +1267,15 @@ module Spider; module Model
                 values = vals
             end
             curr = Spider::Model.identity_mapper.get(self, values)
+            curr.autoload = false if static
             return curr if curr
-            obj = self.new(values)
+            obj = static ? self.static(values) : self.new(values)
             Spider::Model.identity_mapper.put(obj)
             obj
+        end
+
+        def self.get_static(values)
+            self.get(values, true)
         end
         
         def set_values(values)
