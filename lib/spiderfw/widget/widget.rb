@@ -249,27 +249,12 @@ module Spider
             super
             @is_target = false
             @widgets = {}
-            @attributes = WidgetAttributes.new(self)
+            Spider::GetText.in_domain(self.class.app.short_name){
+                @attributes = WidgetAttributes.new(self)
+            }
             @id_path = []
             @widget_attributes = {}
-            locale = @request.locale.language
-            # include_js = [
-            #     '/js/jquery/jquery-1.4.2.js', '/js/inheritance.js', '/js/spider.js', '/js/jquery/plugins/jquery.query-2.1.6.js',
-            #     '/js/jquery/plugins/jquery.form.js',
-            #     '/js/plugins/plugin.js'
-            # ]
-            # # include_js << [
-            # #     '/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.js',
-            # #     #'/js/jquery/jquery-ui/development-bundle/ui/jquery-ui-1.7.2.custom.min.js',
-            # #     "/js/jquery/jquery-ui/development-bundle/ui/i18n/ui.datepicker-#{locale}.js"
-            # # ]
-            # include_css = [
-            #     '/css/spider.css', '/js/jquery/jquery-ui/css/smoothness/jquery-ui-1.7.2.custom.css', 
-            # ]
             @assets = []
-            # include_js.each{ |js| @assets << {:type => :js, :src => Spider::Components.pub_url+js, :path => Spider::Components.pub_path+js}}
-            # include_css.each{ |css| @assets << {:type => :css, :src => Spider::Components.pub_url+css, :path => Spider::Components.pub_path+css}}
-            # 
             @use_template ||= self.class.default_template
             @css_classes = []
             @widgets_runtime_content = {}
@@ -317,13 +302,15 @@ module Spider
         end
         
         def widget_before(action='')
-            #Spider.logger.debug("Widget #{self} widget_before(#{action})")
-            widget_init(action)
-            return unless active?
-            #Spider.logger.debug("Preparing widget #{self}")
-            prepare_scene(@scene)
-            prepare
-            @before_done = true
+            Spider::GetText.in_domain(self.class.app.short_name){
+                widget_init(action)
+                if active?
+                    prepare_scene(@scene)
+                    prepare
+                    @before_done = true
+                end
+            }
+
         end
         
         
@@ -425,7 +412,7 @@ module Spider
         
         # Instantiates this widget's own subwidgets.
         def load_widgets(template=@template)
-            if (self.class.scene_attributes)
+            if self.class.scene_attributes
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end
@@ -472,7 +459,7 @@ module Spider
         
         def run(action='')
             @widgets.each do |wname, w|
-                w.run if w.run?
+                w.do_run if w.run?
             end
             if (@parent)
                 @parent.after_widget(@id.to_sym)
@@ -489,33 +476,43 @@ module Spider
         end
         
         def index
-            run
+            do_run
             render
         end
         
+        def do_run
+            Spider::GetText.in_domain(self.class.app.short_name){
+                run
+            }
+        end
+        
         def render
-            prepare_scene(@scene)
-            set_scene_vars(@scene)
-            @template.render(@scene) unless @is_target_ancestor && !@is_target
+            Spider::GetText.in_domain(self.class.app.short_name){
+                prepare_scene(@scene)
+                set_scene_vars(@scene)
+                @template.render(@scene) unless @is_target_ancestor && !@is_target 
+            }
         end
         
         def execute(action='', *params)
             Spider.logger.debug("Widget #{self} executing #{action}")
-            widget_execute = @request.params['_we']
-            if (@is_target)
-                if (widget_execute)
-                    super(widget_execute, *params)
+            Spider::GetText.in_domain(self.class.app.short_name){
+                widget_execute = @request.params['_we']
+                if (@is_target)
+                    if (widget_execute)
+                        super(widget_execute, *params)
+                    else
+                        do_run
+                        render
+                    end
+                elsif (@_widget)
+                    @_widget.set_action(widget_execute)
+                    @_widget.before(@_widget_rest, *params)
+                    @_widget.execute(@_widget_rest, *params)
                 else
-                    run
-                    render
+                    super
                 end
-            elsif (@_widget)
-                @_widget.set_action(widget_execute)
-                @_widget.before(@_widget_rest, *params)
-                @_widget.execute(@_widget_rest, *params)
-            else
-                super
-            end
+            }
         end
                         
         def try_rescue(exc)
@@ -751,7 +748,7 @@ module Spider
         end
         
         def set_scene_vars(scene)
-            if (self.class.scene_attributes) # Repeat for new instance variables
+            if self.class.scene_attributes # Repeat for new instance variables
                 self.class.scene_attributes.each do |name|
                     @scene[name] = instance_variable_get("@#{name}")
                 end

@@ -1,3 +1,71 @@
+= 0.6.20
+== 05 October, 2011
+* Added support for aggregate functions in DB conditions
+* Added after_load event to Form widget to allow manipulation of the loaded object
+* Fixed error Table Widget when paginate attribute is set to false
+* Improved DB join generation
+
+= 0.6.19
+== 21 September, 2011
+* Fixes: DbMapper join logic, configuration editor, js files compilation, Rack set_body_io (used by SOAP)
+
+= 0.6.18
+== 16 September, 2011
+* Thread management (keeps track of threads to wait for when exiting)
+* Under Phusion Passenger, controller's 'after' is now executed when the response is sent
+* Table widget now accepts a link_id not in the Table's shown elements
+* CLDR fixes
+* Updater fixes
+
+= 0.6.17
+== 13 September, 2011
+* AppManager rewrite, with setup tasks; Migrations
+* Experimental SASS support
+* CLDR 0.1.6; added Spider::I18n.list
+* InlineModels can now be compared with their primary key
+* Various bugfixes and enhancements
+
+= 0.6.16
+== 22 August, 2011
+* Bugfixes
+
+= 0.6.15
+== 9 August, 2011
+* Various fixes and enhancements
+
+= 0.6.14
+== 4 August, 2011
+* Installer and Windows fixes
+
+= 0.6.13
+== 3 August, 2011
+* Fixed bug in configuration editor
+
+= 0.6.12
+== 3 August, 2011
+* Minor fixes
+
+= 0.6.11
+== 2 August, 2011
+* Fixed app create command
+
+= 0.6.10
+== 2 August, 2011
+* Bugfixes
+
+= 0.6.9
+== 28 July, 2011
+* App installer now uses Git gem instead of Grit for better Windows compatibility
+* Switched from GetText to FastGettext; text domains are now used for each app
+
+= 0.6.8
+== 26 July, 2011
+* Windows fix (no HUP trapping)
+
+= 0.6.7
+== 26 July, 2011
+* Process management and app setup enhancements
+
 = 0.6.6
 == 19 July, 2011
 * Fix: use SEE_OTHER as default redirect code to avoid FF 5 caching

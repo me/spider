@@ -45,13 +45,14 @@ module Spider; module Auth
                     user = klass.restore(@request)
                     if user
                         @request.security[:users] << user
-                        if (params[:authentication])
+                        if params[:authentication]
                             user = nil unless user.authenticated?(params[:authentication])
                         elsif (params[:check])
                             begin
                                 c = params[:check].call(user)
                                 user = nil unless c == true
                                 raise Unauthorized.new(c, requested_class) if c.is_a?(String)
+                                break
                             rescue => exc
                                 user = nil
                                 unauthorized_exception = exc
@@ -62,7 +63,9 @@ module Spider; module Auth
                     end
                 end
                 unless user
-                    raise (unauthorized_exception ? unauthorized_exception : Unauthorized).new(_("Please login first"), requested_class)
+                    msg = Spider::GetText.in_domain('spider_auth'){ _("Please login first") }
+                    kl = unauthorized_exception ? unauthorized_exception : Unauthorized
+                    raise kl.new(msg, requested_class)
                 end
                 @request.user = user
             end

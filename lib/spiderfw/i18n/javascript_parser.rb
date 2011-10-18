@@ -1,5 +1,6 @@
 require 'gettext/tools'
 require 'spiderfw/templates/blocks/text'
+require 'json'
 
 module Spider; module I18n
 
@@ -49,6 +50,6 @@ module Spider; module I18n
 
     end
     
-    GetText::RGetText.add_parser(JavascriptParser)
+    ::GetText::RGetText.add_parser(JavascriptParser)
 
 end; end

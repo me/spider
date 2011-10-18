@@ -34,21 +34,22 @@ module Spider
             create(source_path, dest_path)
             
             begin
-                require 'grit'
+                require 'git'
 
                 cwd = Dir.getwd
                 Dir.chdir(dest_path)
                 begin
-                    repo = Grit::Repo.init(dest_path)
-                    repo.add('apps', 'config', 'init.rb', 'public')
+                    repo = Git.init(dest_path)
+                    repo.add(['apps', 'config', 'init.rb', 'public'])
                     repo.add('.gitignore')
-                    repo.commit_index(_("Created repository"))
+                    repo.commit(_("Created repository"))
                 rescue => exc
-                    puts "Unable to init Git repo, please init manually"
+                    Spider.output exc.message, :ERROR
+                    Spider.output "Unable to init Git repo, please init manually", :ERROR
                 end
                 Dir.chdir(cwd)
             rescue LoadError
-                puts "Grit not installed, cannot init repo"
+                Spider.output _("git gem not installed, cannot init repo"), :NOTICE
             end
         end
         

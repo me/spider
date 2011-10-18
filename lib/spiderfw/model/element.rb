@@ -7,6 +7,7 @@ module Spider; module Model
     class Element
         attr_reader :name
         attr_accessor :attributes
+        attr_accessor :definer_model
 
         def initialize(name, type, attributes={})
             @name = name
@@ -145,7 +146,16 @@ module Spider; module Model
         
         # Label. Will use the :label attribute, or return the name split by '_' with each word capitalized.
         def label
-            return self.attributes[:label] ? _(self.attributes[:label]) : Inflector.underscore_to_upcasefirst(@name.to_s)
+            prev_text_domain = nil
+            if @definer_model && @definer_model != Spider::Model::Managed
+                prev_text_domain = FastGettext.text_domain
+                FastGettext.text_domain = @definer_model.app.short_name if FastGettext.translation_repositories.key?(@definer_model.app.short_name)
+            end
+            l = self.attributes[:label] ? _(self.attributes[:label]) : Inflector.underscore_to_upcasefirst(@name.to_s)
+            if prev_text_domain
+                FastGettext.text_domain = prev_text_domain
+            end
+            l
         end
         
         def to_s

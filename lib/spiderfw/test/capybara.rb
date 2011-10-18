@@ -5,3 +5,4 @@ require 'culerity'
 
 Capybara.app = Spider::HTTP::RackApplication.new
 Capybara.default_host = 'localhost'
+Capybara.app_host = 'http://localhost'

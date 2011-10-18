@@ -1,6 +1,10 @@
 module Spider
    
    module Master
+      
+       def self.app_init
+          Spider.home.controller.route 'clients', Spider::Master::ScoutController
+       end
        
        def self.scout_plugins
            path = Spider.conf.get('master.scout_plugins_path')

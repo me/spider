@@ -1,9 +1,19 @@
 require 'uuidtools'
+require 'apps/servant/lib/client'
+require 'apps/servant/lib/commands_processor'
 
 module Spider
 
     module Servant
+
+        def self.command_processor
+            @command_processor ||= Spider::Servant::CommandsProcessor
+        end
         
+        def self.command_processor=(klass)
+            @command_processor = klass
+        end
+
         def self.install_id
             uuid_file = File.join(Spider.paths[:var], 'install_id')
             return File.read(uuid_file) if File.exists?(uuid_file)
@@ -27,7 +37,7 @@ module Spider
             h = {}
             apps.each do |k, v|
                 h[k] = {}
-                h[k][:version] = v[:spec].version
+                h[k][:version] = v[:spec].version if v[:spec]
                 h[k][:active] = true if active.include?(k)
             end
             h

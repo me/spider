@@ -165,7 +165,7 @@ module Spider; module Model; module Storage; module Db
                 if (func_el.is_a?(Spider::QueryFuncs::Function))
                     function(func_el)
                 else
-                    func.mapper_fields[func_el]
+                    func.mapper_fields[func_el.to_s]
                 end
             }
             case func.func_name
@@ -183,6 +183,8 @@ module Spider; module Model; module Storage; module Db
                 return "(#{fields[0]} - #{fields[1]})"
             when :rownum
                 return "ROWNUM()"
+            when :sum, :avg, :count, :first, :last, :max, :min
+                return "#{func.func_name.to_s.upcase}(#{fields[0]})"
             end
             raise NotImplementedError, "#{self.class} does not support function #{func.func_name}"
         end
@@ -249,6 +251,16 @@ module Spider; module Model; module Storage; module Db
             where, vals = sql_condition(query)
             bind_vars += vals
             sql += "WHERE #{where} " if where && !where.empty?
+            having, having_vals = sql_condition(query, true)
+            unless having.blank?
+                group_fields = (
+                    query[:keys].select{ |k| !k.is_a?(FieldExpression)
+                } + collect_having_fields(query[:condition])).flatten.uniq
+                group_keys = sql_keys(group_fields)
+                sql += "GROUP BY #{group_keys} "
+                sql += "HAVING #{having} "
+                bind_vars += having_vals
+            end
             order = sql_order(query)
             sql += "ORDER BY #{order} " if order && !order.empty?
             limit = sql_limit(query)
@@ -262,6 +274,7 @@ module Spider; module Model; module Storage; module Db
         
         # Returns the SQL for select keys.
         def sql_keys(query)
+            query = {:keys => query} unless query.is_a?(Hash)
             query[:keys].join(',')
         end
         
@@ -300,39 +313,45 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns SQL and bound variables for a condition.
-        def sql_condition(query)
+        def sql_condition(query, having=false)
             condition = query[:condition]
             return ['', []] unless (condition && condition[:values])
             bind_vars = []
-            condition[:values].reject!{ |v| v.is_a?(Hash) && v[:values].empty? }
-            mapped = condition[:values].map do |v|
-                if (v.is_a? Hash) # subconditions
+            condition[:values].reject!{ |v| (v.is_a?(Hash) && v[:values].empty?)}
+            vals = condition[:values]
+
+            return nil if !having && condition[:is_having]
+            mapped = vals.map do |v|
+                if v.is_a? Hash # subconditions
                     # FIXME: optimize removing recursion
-                    
-                    sql, vals = sql_condition({:condition => v})
+                    sql, vals = sql_condition({:condition => v}, having)
+                    next unless sql
                     bind_vars += vals
                     sql = nil if sql.empty?
                     sql = "(#{sql})" if sql && v[:values].length > 1
                     sql
-                elsif (v[2].is_a? Spider::QueryFuncs::Expression)
-                    sql_condition_value(v[0], v[1], v[2].to_s, false)
-                else
-                    v[1] = 'between' if (v[2].is_a?(Range))
-                    v[2].upcase! if (v[1].to_s.downcase == 'ilike')
-                    if (v[1].to_s.downcase == 'between')
-                        bind_vars << v[2].first
-                        bind_vars << v[2].last
+                elsif !having || condition[:is_having]
+                    if v[2].is_a? Spider::QueryFuncs::Expression
+                        sql_condition_value(v[0], v[1], v[2].to_s, false)
                     else
-                        bind_vars << v[2] unless v[2].nil?
+                        v[1] = 'between' if (v[2].is_a?(Range))
+                        v[2].upcase! if (v[1].to_s.downcase == 'ilike')
+                        if (v[1].to_s.downcase == 'between')
+                            bind_vars << v[2].first
+                            bind_vars << v[2].last
+                        else
+                            bind_vars << v[2] unless v[2].nil?
+                        end
+                        sql_condition_value(v[0], v[1], v[2])
                     end
-                    sql_condition_value(v[0], v[1], v[2])
                 end
             end
-            return mapped.select{ |p| p != nil}.join(' '+condition[:conj]+' '), bind_vars
+            return mapped.reject{ |p| p.nil? }.join(' '+(condition[:conj] || 'and')+' '), bind_vars
         end
         
         # Returns the SQL for a condition comparison.
         def sql_condition_value(key, comp, value, bound_vars=true)
+            key = key.expression if key.is_a?(FieldExpression)
             if (comp.to_s.downcase == 'ilike')
                 comp = 'like'
                 key = "UPPER(#{key})"
@@ -708,6 +727,12 @@ module Spider; module Model; module Storage; module Db
                 values += condition_values
             end
             return sql, values
+        end
+
+        def collect_having_fields(condition)
+            c = condition
+            c.is_a?(Hash) ? 
+                ((c[:group_by_fields] || []) + (c[:values] || []).map{ |v| collect_having_fields(v) }) : []
         end
         
         ##############################################################

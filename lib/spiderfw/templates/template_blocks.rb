@@ -28,7 +28,9 @@ module Spider
             elsif el.name == 'tpl:output'
                 block = :Output
             elsif el.name == 'tpl:output-assets'
-                block = :LayoutAssets    
+                block = :LayoutAssets
+            elsif el.name == 'tpl:output-meta'
+                block = :LayoutMeta
             elsif el.name == 'sp:render'
                 block = :Render
             elsif el.name == 'sp:run'
@@ -139,7 +141,7 @@ module Spider
                     when :plain
                         res += escape_text(val)
                     when :escaped_expr
-                        res += "{ #{val} }"
+                        res += "{ #{escape_text(val)} }"
                     when :expr
                         res += "'+("+vars_to_scene(val)+").to_s+'"
                     when :gettext
@@ -212,6 +214,7 @@ require 'spiderfw/templates/blocks/debugger'
 require 'spiderfw/templates/blocks/parent_context'
 require 'spiderfw/templates/blocks/output'
 require 'spiderfw/templates/blocks/layout_assets'
+require 'spiderfw/templates/blocks/layout_meta'
 require 'spiderfw/templates/blocks/lambda'
 require 'spiderfw/templates/blocks/recurse'
 

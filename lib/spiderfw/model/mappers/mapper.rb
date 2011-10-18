@@ -281,14 +281,14 @@ module Spider; module Model
         
         # Deletes all associations from the given object to the element.
         def delete_element_associations(obj, element, associated=nil)
-            if (element.attributes[:junction])
+            if element.attributes[:junction]
                 condition = {element.attributes[:reverse] => obj.primary_keys}
                 condition[element.attributes[:junction_their_element]] = associated if associated
                 element.mapper.delete(condition)
             else
-                if (element.multiple?)
+                if element.multiple?
                     condition = Condition.and
-                    if (associated)
+                    if associated
                         condition = associated.keys_to_condition
                     else
                         condition[element.reverse] = obj
@@ -298,7 +298,7 @@ module Spider; module Model
                     #     element.model.primary_keys.each{ |el| condition_row.set(el.name, '<>', child.get(el))}
                     #     condition << condition_row
                     # end
-                    if (element.owned?)
+                    if element.owned? || (element.reverse && element.model.elements[element.reverse].primary_key?)
                         element.mapper.delete(condition)
                     else
                         element.mapper.bulk_update({element.reverse => nil}, condition)
@@ -311,6 +311,7 @@ module Spider; module Model
         def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
+            return if !element.multiple? && val.saving?
             if element.attributes[:junction]
                 their_element = element.attributes[:junction_their_element]
                 if val.model != element.model # dereferenced junction
@@ -344,7 +345,7 @@ module Spider; module Model
                         if element.attributes[:junction_id]
                             val.each do |row|
                                 next unless row_id = row.get(element.attributes[:junction_id])
-                                condition.set(:id, '<>', row_id)
+                                condition.set(element.attributes[:junction_id], '<>', row_id)
                             end
                         end
                         element.model.mapper.delete(condition)
@@ -441,7 +442,8 @@ module Spider; module Model
             preprocess_condition(condition)
             cascade = @model.elements_array.select{ |el| !el.integrated? && el.attributes[:delete_cascade] }
             assocs = association_elements.select do |el|
-                !storage.supports?(:delete_cascade) || !schema.cascade?(el.name) # TODO: implement
+                !el.junction? && # done later from @model.referenced_by_junctions
+                (!storage.supports?(:delete_cascade) || !schema.cascade?(el.name)) # TODO: implement
             end
             curr = @model.where(condition) unless curr
             before_delete(curr)
@@ -929,27 +931,41 @@ module Spider; module Model
                 condition.conditions_array.each do |k, v, c|
                     next if k.is_a?(Spider::QueryFuncs::Function)
                     next unless element = model.elements[k]
-                    if (element.integrated?)
-                        condition.delete(k)
-                        integrated_from = element.integrated_from
-                        integrated_from_element = element.integrated_from_element
-                        condition.set("#{integrated_from.name}.#{integrated_from_element}", c, v)
-                    elsif (element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil?) # conditions on junction id don't make sense
-                        condition.delete(k)
-                        condition.set("#{k}.#{element.attributes[:junction_their_element]}", c, v)
-                    end
-                    if (element.type < Spider::DataType && !v.is_a?(element.type))
-                        condition.delete(k)
+                    changed_v = false
+                    if element.type < Spider::DataType && !v.is_a?(element.type) && element.type.force_wrap?
                         begin
-                            condition.set(k, c, element.type.from_value(v))
+                            v = element.type.from_value(v)
+                            changed_v = true
                         rescue TypeError => exc
                             raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
                         end
                     elsif element.type == DateTime && v && !v.is_a?(Date) && !v.is_a?(Time)
+                        v = DateTime.parse(v)
+                        changed_v = true
+                    elsif element.model? && v.is_a?(Spider::Model::Condition)
+                        unless v.select{ |key, value| !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?
+                            v = element.mapper.preprocess_condition(v)
+                            changed_v = true
+                        end
+                    end
+                    if element.integrated?
                         condition.delete(k)
-                        condition.set(k, c, DateTime.parse(v))
+                        integrated_from = element.integrated_from
+                        integrated_from_element = element.integrated_from_element
+                        sub = condition.get_deep_obj
+                        sub.set(integrated_from_element, c, v)
+                        condition[integrated_from.name] = integrated_from.model.mapper.preprocess_condition(sub) 
+                    elsif element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil? # conditions on junction id don't make sense
+                        condition.delete(k)
+                        sub = condition.get_deep_obj
+                        sub.set(element.attributes[:junction_their_element], c, v)
+                        condition[k] = element.model.mapper.preprocess_condition(sub)
+                    elsif changed_v
+                        condition.delete(k)
+                        condition.set(k, c, v)
                     end
                 end
+                condition
             end
             
             basic_preprocess(condition)
@@ -1174,6 +1190,7 @@ module Spider; module Model
                 obj.define_schema &@schema_define_proc if @schema_define_proc
                 obj.with_schema &@schema_proc if @schema_proc
                 obj.no_map(*@no_map_elements.keys) if @no_map_elements
+                @model_proc.call(obj.model) if @model_proc
             end
             
             def no_map(*els)
@@ -1188,6 +1205,10 @@ module Spider; module Model
         
             def with_schema(&proc)
                 @schema_proc = proc
+            end
+
+            def with_model(&proc)
+                @model_proc = proc
             end
         
         end

@@ -1,3 +1,4 @@
+require 'spiderfw/spider'
 require 'spiderfw/create'
 
 class CreateCommand < CmdParse::Command
@@ -24,7 +25,7 @@ class CreateCommand < CmdParse::Command
             @path ||= Dir.pwd+'/apps'
             names.each do |name|
                 Spider::Create.app(name, @path, @module_name)
-                puts "Created app #{name} at #{@path}/#{name}" if ($verbose)
+                Spider.output "Created app #{name} at #{@path}/#{name}" if ($verbose)
             end
         end
         self.add_command(app, false)

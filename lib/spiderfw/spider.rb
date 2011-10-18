@@ -8,6 +8,7 @@ require 'spiderfw/autoload'
 require 'spiderfw/requires'
 
 require 'spiderfw/version'
+require 'timeout'
 
 begin
     require 'fssm'
@@ -78,16 +79,27 @@ module Spider
                 @home.instance_eval(File.read(init_file), init_file)
             end
             
+            init_apps
+            @init_done=true
+        end
+        
+        def init_apps
+            @apps.each do |name, mod|
+                repos = []
+                if File.directory?(File.join(mod.path, 'po'))
+                    repos <<  FastGettext::TranslationRepository.build(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
+                end
+                if File.file?(File.join(Spider.paths[:root], 'po', "#{mod.short_name}.pot"))
+                    repos << FastGettext::TranslationRepository.build(mod.short_name, 
+                        :path => File.join(Spider.paths[:root], 'data', 'locale'))
+                end
+                unless repos.empty?
+                    FastGettext.add_text_domain(mod.short_name, :type => :chain, :chain => repos)
+                end
+            end
             @apps.each do |name, mod|
                 mod.app_init if mod.respond_to?(:app_init)
             end
-            GetText::LocalePath.memoize_clear # since new paths have been added to GetText
-            @apps.each do |name, mod|
-                if File.directory?(File.join(mod.path, 'po'))
-                    GetText.bindtextdomain(mod.short_name)
-                end
-            end
-            @init_done=true
         end
         
         def init_done?
@@ -95,6 +107,9 @@ module Spider
         end
         
         def init_base(force=false)
+            l = Spider.locale.to_s
+            l = $1 if l =~ /(\w\w)_+/
+            FastGettext.locale = l
             return if @init_base_done && !force
             
             @apps_to_load = []
@@ -115,6 +130,7 @@ module Spider
             load_configuration File.join(@root, 'config')
             Locale.default = Spider.conf.get('i18n.default_locale')
             setup_env
+            @logger = Spider::Logger
             @init_base_done = true
         end
         
@@ -175,13 +191,13 @@ module Spider
                 @fssm_thread = Thread.new do
                     monitor.run
                 end
-                Spider.logger.debug("Monitoring restart.txt")
+                Spider.output("Monitoring restart.txt")
             else
-                Spider.logger.debug("FSSM not installed, unable to monitor restart.txt")
+                Spider.output("FSSM not installed, unable to monitor restart.txt")
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }
-            trap('HUP'){ Spider.respawn! }
+            trap('HUP'){ Spider.respawn! } unless RUBY_PLATFORM =~ /win32|mingw32/
             
             if @main_process_startup_blocks
                 @main_process_startup_blocks.each{ |block| block.call }
@@ -211,6 +227,23 @@ module Spider
             end
             @shutdown_done = true
             Spider.logger.debug("Shutdown")
+            if @running_threads
+                begin
+                    Timeout.timeout(Spider.conf.get('process.shutdown_timeout')) do
+                        @running_threads.each do |thr|
+                            thr.join if thr.alive?
+                        end
+                    end
+                rescue => exc
+                    Spider.logger.error(exc)
+                    @running_threads.each do |thr|
+                        begin
+                            thr.kill
+                        rescue => exc
+                        end
+                    end
+                end
+            end
             Debugger.post_mortem = false if Object.const_defined?(:Debugger) && Debugger.post_mortem?
             @apps.each do |name, mod|
                 mod.app_shutdown if mod.respond_to?(:app_shutdown)
@@ -222,6 +255,20 @@ module Spider
         
         def shutdown!
             shutdown(true)
+        end
+
+        def add_thread(thr)
+            @running_threads ||= []
+            @threads_mutex ||= Mutex.new
+            @threads_mutex.synchronize do
+                @running_threads << thr
+            end
+        end
+
+        def remove_thread(thr)
+            @threads_mutex.synchronize do
+                @running_threads.delete(thr)
+            end
         end
         
         def main_process_shutdown
@@ -238,6 +285,11 @@ module Spider
             @main_process_shutdown_blocks << block
         end
         
+
+        def restart!
+            FileUtils.touch(@paths[:restart_file])
+        end
+
         def current
             Spider::Request.current
         end
@@ -270,8 +322,7 @@ module Spider
         
         # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers(force=false)
-            return if @logger && !force
-            @logger ||= Spider::Logger
+            return if @logger_started && !force
             @logger.close_all
             @logger.open(STDERR, Spider.conf.get('log.console')) if Spider.conf.get('log.console')
             begin
@@ -296,6 +347,7 @@ module Spider
             end
             $LOG = @logger
             Object.const_set(:LOGGER, @logger)
+            @logger_started = true
         end
         
         def start_loggers!
@@ -306,7 +358,7 @@ module Spider
         def setup_paths(root)
             @paths[:root] = root
             @paths[:apps] = File.join(root, 'apps')
-            @paths[:core_apps] = File.join($SPIDER_PATH, 'apps')
+            @paths[:core_apps] = $SPIDER_PATHS[:core_apps]
             @paths[:config] = File.join(root, 'config')
             @paths[:layouts] = File.join(root, 'layouts')
             @paths[:var] = File.join(root, 'var')
@@ -314,15 +366,22 @@ module Spider
             @paths[:tmp] = File.join(root, 'tmp')
             @paths[:data] = File.join(root, 'data')
             @paths[:log] = File.join(@paths[:var], 'log')
+            @paths[:restart_file] = File.join(@paths[:tmp], 'restart.txt')
             @paths.each do |k, path|
                 @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
             end
+        end
+
+        def app_paths
+            paths = [$SPIDER_PATHS[:core_apps]]
+            paths.unshift(@paths[:apps]) if @paths[:apps]
+            paths
         end
         
         # Finds an app by name, looking in paths[:apps] and paths[:core_apps]. Returns the found path.
         def find_app(name)
             path = nil
-            [@paths[:apps], @paths[:core_apps]].each do |base|
+            app_paths.each do |base|
                 test = File.join(base, name)
                 if File.exist?(File.join(test, '_init.rb'))
                     path = test
@@ -333,7 +392,7 @@ module Spider
         end
         
         def find_apps(name)
-            [@paths[:apps], @paths[:core_apps]].each do |base|
+            app_paths.each do |base|
                 test = File.join(base, name)
                 if File.exist?(test)
                     return find_apps_in_folder(test)
@@ -351,7 +410,7 @@ module Spider
         def load_app_at_path(path)
             return if @loaded_apps[path]
             relative_path = path
-            if path.index(Spider.paths[:root])
+            if Spider.paths[:root] && path.index(Spider.paths[:root])
                 home = Pathname.new(Spider.paths[:root])
                 pname = Pathname.new(path)
                 relative_path = pname.relative_path_from(home).to_s
@@ -360,7 +419,6 @@ module Spider
             last_name = File.basename(path)
             app_files = ['_init.rb', last_name+'.rb', 'cmd.rb']
             app_files.each{ |f| require File.join(relative_path, f) if File.exist?(File.join(path, f)) }
-            GetText::LocalePath.add_default_rule(File.join(path, "data/locale/%{lang}/LC_MESSAGES/%{name}.mo"))
         end
         
         
@@ -380,7 +438,8 @@ module Spider
         end
         
         def find_all_apps(paths=nil)
-            paths ||= [@paths[:core_apps], @paths[:apps]]
+            paths ||= self.app_paths
+
             app_paths = []
             Find.find(*paths) do |path|
                 if (File.basename(path) == '_init.rb')
@@ -422,6 +481,20 @@ module Spider
             return false
         end
         
+        def get_app_deps(apps, options={})
+            new_apps = apps.clone
+            specs = {}
+            init_base
+            while !new_apps.empty? && curr = new_apps.pop
+                raise "Could not find app #{curr}" unless Spider.home.apps[curr]
+                spec = Spider.home.apps[curr][:spec]
+                specs[curr] = spec
+                new_apps += spec.depends.reject{ |app| specs[app] }
+                new_apps += spec.depends_optional.reject{ |app| specs[app] } if options[:optional]
+            end
+            specs.keys
+        end
+        
         def activate_apps(apps, specs=nil)
             require 'spiderfw/config/configuration_editor'
             init_base
@@ -435,7 +508,7 @@ module Spider
             Spider.config.loaded_files.each do |f|
                 editor.load(f)
             end
-            c_apps = Spider.config.get('apps')
+            c_apps = Spider.config.get('apps') || []
             c_apps = (c_apps + apps).uniq
             editor.set('apps', Spider.apps_load_order(c_apps, specs))
             editor.save
@@ -448,7 +521,7 @@ module Spider
             apps.each do |a|
                 sort.add(specs[a] ? specs[a] : a)
             end
-            sort.tsort
+            sort.tsort.reject{ |a| a.nil? }
         end
         
         def load_configuration(path)
@@ -464,13 +537,9 @@ module Spider
                     begin
                         @configuration.load_yaml(File.join(path, f))
                     rescue ConfigurationException => exc
-                        if (exc.type == :yaml)
+                        if exc.type == :yaml
                             err = "Configuration file #{path+f} is not valid YAML"
-                            if @logger
-                                @logger.error(err)
-                            else
-                                puts err
-                            end
+                            Spider.output(err, :ERROR)
                         else
                             raise
                         end
@@ -542,7 +611,7 @@ module Spider
                 extensions.each do |ext|
                     full = path
                     full += '.'+ext if ext
-                    return full if (File.exist?(full))
+                    return full if File.file?(full)
                 end
                 return nil
             end
@@ -566,7 +635,7 @@ module Spider
                 elsif (cur_path)
                     if (path[0..1] == './')
                         return Resource.new(first_found(extensions, File.dirname(cur_path)+path[1..-1]), owner_class)
-                    elsif (path[0..1] == '../')
+                    elsif (path[0..2] == '../')
                         return Resource.new(first_found(extensions, File.dirname(File.dirname(cur_path))+path[2..-1]), owner_class)
                     end
                 end
@@ -583,12 +652,12 @@ module Spider
                         end
                     end
                     app = path_app
-                elsif owner_class <= Spider::App
+                elsif owner_class <= Spider::App || owner_class == Spider
                     app = owner_class
                 else
                     app = owner_class.app if (owner_class && owner_class.app)
                 end
-                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.exist?(cur_path+'/'+path) # !app
+                return Resource.new(cur_path+'/'+path, owner_class) if cur_path && File.file?(cur_path+'/'+path) # !app
                 raise "Can't find owner app for resource #{path}" unless app
                 search_locations = resource_search_locations(resource_type, app)
                 search_paths.each do |p|
@@ -754,17 +823,21 @@ module Spider
                 end
             rescue LoadError, RuntimeError => exc
                 msg = _('Unable to start debugger. Ensure ruby-debug is installed (or set debugger.start to false).')
-                if Spider.logger
-                    Spider.logger.warn(exc.message)
-                    Spider.logger.warn(msg) 
-                else
-                    puts msg
-                end
+                Spider.output(exc.message)
+                Spider.output(msg)
             end
         end
         
         def locale
-            Locale.current[0]
+            begin
+                @current_locale = Locale.current[0]
+            rescue
+                # There are problems with subsequent requests on Windows, 
+                # so use cached locale if Locale.current fails
+                l = @current_locale
+                l ||= Locale::Tag.parse(Spider.conf.get('locale')) if Spider.conf.get('locale')
+                l ||= Locale::Tag.parse('en')
+            end
         end
         
         def i18n(l = self.locale)
@@ -786,6 +859,20 @@ module Spider
         def _test_teardown
             @apps.each do |name, mod|
                 mod.test_teardown if mod.respond_to?(:test_teardown)
+            end
+        end
+
+        def interactive?
+            !!$SPIDER_INTERACTIVE
+        end
+        
+        def output(str, level=:INFO)
+            use_log = !Spider.interactive? && @logger_started
+            if use_log
+                @logger.log(level, str)
+            else
+                str = "#{level}: #{str}" if level == :ERROR
+                puts str
             end
         end
         

@@ -3,7 +3,7 @@ require 'spiderfw/templates/template_blocks'
 module Spider; module TemplateBlocks
     
     class HTML < Block
-        HTML_NO_CLOSE = ['br', 'img', 'input']
+        HTML_NO_CLOSE = ['br', 'img', 'input', 'meta']
         
         def compile(options={})
             c = ""
@@ -30,7 +30,9 @@ module Spider; module TemplateBlocks
                 if @el.has_attribute?('id')
                     cl += ' ' unless cl.empty?
                     cl += "id-#{@el.get_attribute('id')}"
+                    our_id = @el.get_attribute('id')
                     @el.remove_attribute('id')
+                    @el.set_attribute('id', "{ @widget[:full_id] }-#{our_id}")
                 end
                 if (options[:root])
                     cl += " widget"

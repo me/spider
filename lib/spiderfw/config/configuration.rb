@@ -68,7 +68,7 @@ module Spider
         end
         
         def translate_key(key)
-            if (!@options[key])
+            if (!@options[key] && key != 'locale')
                 locale = Spider.locale
                 locale = $1 if locale =~ /^([^@\.]+)[@\.].+/
                 a = @@lang_aliases[locale][key] if @@lang_aliases[locale]
@@ -162,7 +162,7 @@ module Spider
             end
         end
         
-        def options
+        def options_list
             options = []
             def iterate_options(src, prefix, dst)
                 src.each do |key, val|
@@ -292,6 +292,7 @@ module Spider
         def to_hash
             h = {}
             self.options.each do |k|
+                k = k.first
                 v = self[k]
                 if v.is_a?(self.class)
                     v = v.to_hash
@@ -305,8 +306,12 @@ module Spider
         
         def get_editor
             require 'spiderfw/config/configuration_editor'
+            require 'pathname'
             editor = ConfigurationEditor.new
+            config_path = Pathname.new(Spider.paths[:config]).realpath.to_s
             @loaded_files.each do |f|
+                f = Pathname.new(f).realpath.to_s
+                next unless f.index(config_path) == 0
                 editor.load(f)
             end
             editor

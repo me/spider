@@ -78,6 +78,22 @@ module Spider; module QueryFuncs
             return els
         end
 
+        def aggregate?
+            false
+        end
+
+        def has_aggregates?
+            return true if aggregate?
+            elements.each do |el|
+                return true if el.is_a?(Function) && el.has_aggregates?
+            end
+            return false
+        end
+
+        def inspect
+            "#{self.func_name.to_s.upcase}(#{elements.map{ |el| el.inspect }.join(', ')})"
+        end
+
     end
 
     class ZeroArityFunction < Function
@@ -133,6 +149,11 @@ module Spider; module QueryFuncs
     end
 
     class Subtract < BinaryFunction
+
+        def inspect
+            "#{@el1.inspect} - #{@el2.inspect}"
+        end
+
     end
     
     class Concat < NAryFunction
@@ -147,6 +168,36 @@ module Spider; module QueryFuncs
             @length = length
         end
         
+    end
+
+    class AggregateFunction < UnaryFunction
+
+        def aggregate?
+            true
+        end
+
+    end
+
+
+    class Avg < AggregateFunction
+    end
+
+    class Count < AggregateFunction
+    end
+
+    class First < AggregateFunction
+    end
+
+    class Last < AggregateFunction
+    end
+
+    class Max < AggregateFunction
+    end
+
+    class Min < AggregateFunction
+    end
+
+    class Sum < AggregateFunction
     end
 
 

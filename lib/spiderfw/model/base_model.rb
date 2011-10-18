@@ -99,7 +99,11 @@ module Spider; module Model
             @subclasses ||= []
             @subclasses << subclass
             each_element do |el|
-                subclass.add_element(el.clone) unless el.attributes[:local_pk]
+                unless el.attributes[:local_pk]
+                    cl_el = el.clone
+                    cl_el.definer_model = el.definer_model
+                    subclass.add_element(cl_el) 
+                end
             end
             subclass.instance_variable_set("@mapper_modules", @mapper_modules.clone) if @mapper_modules
             subclass.instance_variable_set("@extended_models", @extended_models.clone) if @extended_models
@@ -116,7 +120,7 @@ module Spider; module Model
         def self.app
             return @app if @app
             app = self
-            while (!app.include?(Spider::App))
+            while app && !app.include?(Spider::App)
                 app = app.parent_module
             end
             @app = app
@@ -527,6 +531,7 @@ module Spider; module Model
         def self.add_element(el)
             @elements ||= {}
             @elements[el.name] = el
+            el.definer_model ||= self
             @elements_order ||= []
             if (el.attributes[:element_position])
                 @elements_order.insert(el.attributes[:element_position], el.name)
@@ -880,13 +885,29 @@ module Spider; module Model
         def self.label(sing=nil, plur=nil)
             @label = sing if sing
             @label_plural = plur if plur
-            _(@label || self.name || '')
+            unless sing
+                Spider::GetText.in_domain(self.app.short_name){
+                    _(@label || self.name || '')
+                }
+            end
         end
         
         # Sets/retrieves the plural form for the label
         def self.label_plural(val=nil)
             @label_plural = val if (val)
-            _(@label_plural || self.name || '')
+            unless val
+                Spider::GetText.in_domain(self.app.short_name){
+                    _(@label_plural || self.name || '')
+                }
+            end
+        end
+        
+        def self.label_
+            @label
+        end
+        
+        def self.label_plural_
+            @label_plural
         end
         
         def self.auto_primary_keys?
@@ -935,6 +956,11 @@ module Spider; module Model
         # An Hash of Elements, indexed by name.
         def self.elements
             @elements
+        end
+
+        # An array of non-integrated elements
+        def self.own_elements
+            elements_array.reject{ |el| el.integrated? }
         end
         
         # An array of the model's Elements.
@@ -1039,6 +1065,10 @@ module Spider; module Model
             return @storage if @storage
             st = self.use_storage
             return st ? get_storage(st) : get_storage
+        end
+
+        def self.storage=(val)
+            @storage = val
         end
         
         # Returns an instancethe storage corresponding to the storage_string if it is given, 
@@ -1226,8 +1256,8 @@ module Spider; module Model
             self.load(values) || self.create(values)
         end
         
-        def self.get(values)
-            return self.new(values) unless Spider::Model.identity_mapper
+        def self.get(values, static=false)
+            return static ? self.static(values) : self.new(values) unless Spider::Model.identity_mapper
             values = [values] unless values.is_a?(Hash) || values.is_a?(Array)
             if values.is_a?(Array)
                 vals = {}
@@ -1237,10 +1267,15 @@ module Spider; module Model
                 values = vals
             end
             curr = Spider::Model.identity_mapper.get(self, values)
+            curr.autoload = false if static
             return curr if curr
-            obj = self.new(values)
+            obj = static ? self.static(values) : self.new(values)
             Spider::Model.identity_mapper.put(obj)
             obj
+        end
+
+        def self.get_static(values)
+            self.get(values, true)
         end
         
         def set_values(values)
@@ -1567,7 +1602,7 @@ module Spider; module Model
             element = self.class.elements[name]
             element.type.check(val) if (element.type.respond_to?(:check))
             if (checks = element.attributes[:check])
-                checks = {(_("'%s' is not in the correct format") % element.label) => checks} unless checks.is_a?(Hash)
+                checks = {("'%s' is not in the correct format") => checks} unless checks.is_a?(Hash)
                 checks.each do |msg, check|
                     test = case check
                     when Regexp
@@ -2132,6 +2167,10 @@ module Spider; module Model
             else
                 yield
             end
+        end
+
+        def saving?
+            !@_saving.nil?
         end
                 
         # Loads the object from the storage

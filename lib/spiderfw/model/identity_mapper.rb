@@ -48,6 +48,7 @@ module Spider; module Model
                 has_pks = true if v
                 pks[k.name] = model.prepare_value(k, v)
             end
+            orig_pks = pks.clone
             normalize_pks(model, pks)
             unless has_pks
                 raise IdentityMapperException, "Can't get #{model} from IdentityMapper without all primary keys, #{values.inspect} given"
@@ -59,7 +60,7 @@ module Spider; module Model
                 obj = current
             else
 #                Spider.logger.debug("GETTING NEW #{model} FROM #{pks.inspect}")
-                obj = model.new(pks)
+                obj = model.new(orig_pks)
                 #@objects[model][pks] = obj
             end
             # obj = (@objects[model][pks] ||= model.new(pks))
@@ -152,6 +153,7 @@ module Spider; module Model
             model_pks.each do |k|
                 if keys[k] && keys[k].is_a?(BaseModel)
                     keys[k] = keys[k].class.primary_keys.length > 1 ? keys[k].primary_keys : keys[k].primary_keys[0]
+                    keys[k] = keys[k].first if model.elements[k].type.primary_keys.length && keys[k].is_a?(Array)
                 end
             end
             keys.keys.each do |k|

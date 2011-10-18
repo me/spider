@@ -44,7 +44,6 @@ module Spider; module Components
                     crud.table_widget = @custom_widgets[model][:table] if @custom_widgets[model][:table]
                     crud.form_widget = @custom_widgets[model][:form] if @custom_widgets[model][:form]
                 end
-                
                 @widgets[:switcher].add(model.label_plural, crud, _('Manage Data'))
             end
             if (@request.respond_to?(:user) && @request.user)

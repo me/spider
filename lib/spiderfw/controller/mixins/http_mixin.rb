@@ -33,7 +33,7 @@ module Spider; module ControllerMixins
             return url
         end
         
-        # Returns the http path needed to call the current controller & action.
+        # Returns the http path used to call the current controller & action.
         # Reverses any proxy mappings to the Controller#request_path.
         def request_path
             HTTPMixin.reverse_proxy_mapping(super)
@@ -89,8 +89,12 @@ module Spider; module ControllerMixins
             super
         end
         
-        def base_url()
+        def self.base_url
             HTTPMixin.reverse_proxy_mapping("")
+        end
+        
+        def base_url
+            HTTPMixin.base_url
         end
 
         def prepare_scene(scene)
@@ -101,7 +105,6 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
-            self.done = true
             if (exc.is_a?(Spider::Controller::NotFound))
                 @response.status = Spider::HTTP::NOT_FOUND
             elsif (exc.is_a?(Spider::Controller::BadRequest))
@@ -206,6 +209,15 @@ module Spider; module ControllerMixins
             def http_auth_realm(val=nil)
                 @http_auth_realm = val if val
                 @http_auth_realm
+            end
+            
+            
+            def http_url(action=nil)
+                return nil unless Spider.site
+                u = "http://#{Spider.site.domain}"
+                u += ":#{Spider.site.port}" unless Spider.site.port == 80
+                u += HTTPMixin.reverse_proxy_mapping(self.url(action))
+                u
             end
             
         end

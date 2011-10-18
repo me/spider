@@ -20,6 +20,17 @@
             <h2>_(Installation "%s") % [@installation]</h2>
             <a href="?edit" class="manage edit">_(Edit)</a>
         </div>
+        <div class="details">
+            <div id="last-check-in">
+                _(Last check-in): { @installation.last_check.lformat(:short) }
+                <tpl:pass sp:if="@installation.interval">
+                    _(Next check-in): { (@installation.last_check + @installation.interval).lformat(:short) }
+                </tpl:pass>
+            </div>
+            <div id="host-info">
+                IP: { @installation.ip_address } ({ @installation.hostname })
+            </div>
+        </div>
         <core:tabs id="tabs">
             <tab label="_(Apps)" id="apps">
                 <div class="apps">
@@ -41,6 +52,22 @@
                 <div class="logs">
                     <h4>_(Logs)</h4>
                     <core:table id="logs_table" queryset="@logs" sort="time,desc" />
+                </div>
+            </tab>
+            <tab label="_(Commands)" id="commands">
+                <div class="commands">
+                    <h4>_(Commands)</h4><a href="#" class="manage add">_(Add command)</a>
+                    <div id="add_command">
+                        <form>
+                            <select name="command">
+                                <option></option>
+                                <option sp:each="@available_commands |k, v|" value="{ k }">{ v }</option>
+                            </select>
+                            <input type="text" name="arguments">
+                            <input type="submit" name="add_command" value="_(Ok)">
+                        </form>
+                    </div>
+                    <core:list id="commands_list" queryset="@commands" delete="true" />
                 </div>
             </tab>
         </core:tabs>

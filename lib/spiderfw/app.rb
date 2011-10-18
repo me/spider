@@ -58,7 +58,7 @@ module Spider
                         if u = Spider.conf.get("#{@dotted_name}.http_url") 
                             if action
                                 u += '/' if u[-1].chr != '/'
-                                u += action
+                                u += action.to_s
                             end
                             return u 
                         end
@@ -167,10 +167,10 @@ module Spider
                     end
                     
                     def relative_path
-                        if (@path.index(Spider.paths[:apps]) == 0)
+                        if Spider.paths[:apps] && @path.index(Spider.paths[:apps]) == 0
                             return @path[Spider.paths[:apps].length+1..-1]
                         else
-                            return @path[Spider.paths[:core_apps].length+1..-1]
+                            return @path[$SPIDER_PATHS[:core_apps].length+1..-1]
                         end
                     end
                     
@@ -333,12 +333,18 @@ END_OF_EVAL
                 end
                 spec
             end
-            
-            def load_after(*vals)
-                @load_after = vals unless vals.empty?
-                unless @load_after
-                    return self.depends + self.depends_optional
-                end
+
+            def get_runtime_dependencies
+                return self.load_after if @load_after
+                return self.depends + self.depends_optional
+            end
+
+            def gems_list
+                self.gems.map{ |g| g.is_a?(Array) ? g.first : g }
+            end
+
+            def gems_optional_list
+                self.gems_optional.map{ |g| g.is_a?(Array) ? g.first : g }
             end
 
         end
@@ -365,7 +371,7 @@ END_OF_EVAL
             
             def tsort_each_child(node, &block)
                 return unless node.is_a?(AppSpec)
-                node.load_after.map{ |a| @apps_hash[a] }.each(&block)
+                node.get_runtime_dependencies.map{ |a| @apps_hash[a] }.each(&block)
             end
             
             def tsort

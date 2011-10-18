@@ -18,9 +18,11 @@ module Spider; module Model
                 self.data = val if (val)
                 d = @data
                 if self.translate?
-                    @data.each do |k, v|
-                        d[k] = _(v)
-                    end
+                    Spider::GetText.in_domain(self.app.short_name){
+                        @data.each do |k, v|
+                            d[k] = _(v)
+                        end
+                    }
                 end
                 d
             end
@@ -47,7 +49,19 @@ module Spider; module Model
             return self.class.mapper
         end
         
-        
+        def ==(val)
+            return super unless self.class.primary_keys.length == 1
+            pk = self.class.primary_keys.first
+            if pk.type == String || pk.type == Symbol
+                if val.is_a?(String) || val.is_a?(Symbol)
+                    return val.to_s == self.get(pk).to_s
+                end
+            elsif val.is_a?(pk.type)
+                return val == self.get(pk)
+            end
+            return super
+            
+        end
         
     end
     

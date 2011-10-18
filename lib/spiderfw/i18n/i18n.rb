@@ -125,6 +125,15 @@ module Spider
                 end
 
             end
+
+            def list(enumerable, locale=Spider.locale)
+                return enumerable.first.to_s if enumerable.length < 2
+                p = provider(locale)
+                unless p && p.respond_to?(:list)
+                    return enumerable.join(', ')
+                end
+                return p.list(enumerable)
+            end
             
             # from Rails
             def distance_of_time_in_words(from_time, to_time = 0, include_seconds = false)

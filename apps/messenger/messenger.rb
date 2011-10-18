@@ -3,11 +3,32 @@ require 'fileutils'
 module Spider
     
     module Messenger
+
+        def self.app_init
+            available_backends = {}
+            base = File.join(Spider::Messenger.path, 'backends')
+            Dir.new(base).each do |type|
+                next if type[0].chr == '.'
+                type_dir = File.join(base, type)
+                next unless File.directory?(type_dir)
+                available_backends[type.to_sym] = []
+                Dir.new(type_dir).each do |bcknd|
+                    next if bcknd[0].chr == '.'
+                    name = File.basename(bcknd, '.rb')
+                    available_backends[type.to_sym] << name
+                end
+            end
+            available_backends.each do |type, backends|
+                Spider.config_option("messenger.#{type}.backends")[:params][:choices] = backends
+                Spider.config_option("messenger.#{type}.backend")[:params][:choices] = backends
+            end
+
+        end
         
         def self.queues
             {
-                :email => { :label => _("Email"), :model => :Email }
-                # :sms => { :label => _("SMS"), :model => :SMS }
+                :email => { :label => _("Email"), :model => :Email },
+                :sms => { :label => _("SMS"), :model => :SMS }
             }
         end
         
@@ -38,6 +59,7 @@ module Spider
             return false if mutex.locked?
             model = Spider::Messenger.const_get(self.queues[queue][:model])
             lock_file = "#{self.lock_file}_#{queue}"
+            now = DateTime.now
             mutex.synchronize do
                 FileUtils.touch(lock_file)
                 File.open(lock_file, 'r'){ |f| return false unless f.flock File::LOCK_EX | File::LOCK_NB }
@@ -46,7 +68,6 @@ module Spider
                     if tickets
                         list = model.where(:ticket => tickets)
                     else
-                        now = DateTime.now
                         list = model.where{ (sent == nil) & (next_try <= now) }
                     end
                     list.each do |msg|
@@ -116,6 +137,23 @@ module Spider
             msg.next_try = params[:send_from] || DateTime.now
             msg.save
             return msg
+        end
+
+
+        def self.after_test
+            self.backends.each do |queue, mods|
+                mods.each do |mod|
+                    mod.after_test if mod.respond_to?(:after_test)
+                end
+            end
+        end
+
+        def self.before_test
+            self.backends.each do |queue, mods|
+                mods.each do |mod|
+                    mod.after_test if mod.respond_to?(:after_test)
+                end
+            end
         end
         
         

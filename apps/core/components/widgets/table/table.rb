@@ -95,7 +95,7 @@ module Spider; module Components
             end
             @rows = prepare_queryset(@queryset ? @queryset : @model.list)
             @rows.condition.and(self.condition) if self.condition && !self.condition.empty?
-            if (@attributes[:paginate])
+            if @attributes[:paginate]
                 @rows.limit = @attributes[:row_limit]
                 @rows.offset = @offset
                 @scene.page = @page
@@ -111,8 +111,10 @@ module Spider; module Components
             @scene.rows = prepare_rows(@rows)
             @scene.data = @rows
             @scene.has_more = @rows.has_more?
-            @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
-            @scene.paginate_last = [@scene.paginate_first + 9, @scene.pages].min
+            if @attributes[:paginate]
+                @scene.pages = (@rows.total_rows.to_f / @attributes[:row_limit]).ceil
+                @scene.paginate_last = [@scene.paginate_first + 9, @scene.pages].min
+            end
             @scene.columns = @elements.size
             super
         end

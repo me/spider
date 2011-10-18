@@ -201,7 +201,7 @@ Spider.Widget = Class.extend({
 			w.setLoading();
 			var submitName = $this.attr('name');
 			var submitValue = $this.val();
-			form.ajaxSubmit({
+			var formOptions = {
 				dataType: 'html',
 				semantic: !isForm,
 				beforeSubmit: function(data, form, options){
@@ -216,7 +216,9 @@ Spider.Widget = Class.extend({
 					if (options.onLoad) options.onLoad(form);
 					w.trigger('ajaxifyLoad', form);
 				}
-			});
+			};
+            if (!isForm) formOptions.type = 'POST';
+			form.ajaxSubmit(formOptions);
 		});
 	},
 	
@@ -492,9 +494,16 @@ Spider.defineWidget = function(name, parent, w){
 Spider.Controller = Class.extend({
     
     init: function(){
-		var loc = ''+document.location;
-		var slashPos = loc.lastIndexOf('/');
-		url = loc.substr(0, slashPos);
+        var loc = $('link[rel=index]').attr('href');
+        if (loc){
+            if (loc.substr(loc.length - 5) == 'index') loc = loc.substr(0, loc.length - 5);
+            url = loc;
+        }
+        else{
+            var loc = ''+document.location;
+    		var slashPos = loc.lastIndexOf('/');
+    		url = loc.substr(0, slashPos);
+        }
 		this.setUrl(url);
         this.currentAction = loc.substr(slashPos+1);
         
@@ -508,6 +517,11 @@ Spider.Controller = Class.extend({
     
 	remote: function(method, params, callback, options){
 		var args = Array.prototype.slice.call(arguments); 
+		if ($.isFunction(params)){
+		    options = callback;
+		    callback = params;
+		    params = null;
+		}
 		if (!callback) callback = function(){};
 		var url = this.url+'/'+method+'.json';
 		var defaults = {
@@ -763,4 +777,12 @@ if(!window.console) {
     this.log = function(str) {};
     this.dir = function(str) {};
   };
+}
+
+function basename(path){
+    return path.replace(/\\/g, '/').replace(/.*\//, '');
+}
+
+function dirname(path){
+    return path.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
 }

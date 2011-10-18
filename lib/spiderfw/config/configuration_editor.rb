@@ -113,7 +113,7 @@ module Spider
                             end
                             add_next = nil
                         end
-                        if line =~ /(\s*)(\w[^:]+):\s*(.+)?$/
+                        if line =~ /^(\s*)(\w[^:]+):\s*(.+)?$/
                             indent = $1
                             key = $2
                             value = $3
@@ -151,7 +151,9 @@ module Spider
                             if value
                                 if curr
                                     res << indent
-                                    curr.instance_eval("def to_yaml_style; :inline; end")
+                                    if curr.is_a?(Hash) || curr.is_a?(Array)
+                                        curr.instance_eval("def to_yaml_style; :inline; end")
+                                    end
                                     res << {key => curr}.to_yaml.split("\n")[1..-1].join("\n") + "\n"
                                 else
                                     res << line
@@ -173,6 +175,8 @@ module Spider
                             end
                             curr = data
                             res << line
+                        elsif line =~ /^\s*#/
+                            res << line
                         else # value line
                             curr_val << line
                         end
@@ -189,9 +193,10 @@ module Spider
                     end
                     
                     res.close
-                    FileUtils.mv(file, "#{file}.bak")
-                    FileUtils.mv(tmp_file, file)
                 end
+                bak_file = File.join(dirname, ".#{basename}.previous")
+                FileUtils.mv(file, bak_file)
+                FileUtils.mv(tmp_file, file)
             end
         end
         

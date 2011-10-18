@@ -494,7 +494,13 @@ module Spider; module Model; module Mappers
             cond[:values] = []
             
 
-            
+            # Returns an hash with true for elements that need an inner join
+            # Note: subsequent joins of a left join  have to be left joins, 
+            # otherwise the first join will behave as an inner.
+            # Maybe they should be marked and later made behave like an inner with an
+            # appropriate (A.key is null or B.key is not null) condition.
+            # Not sure if this is needed, since first level conditions should filter out
+            # any unwanted results.
             def get_join_info(model, condition)
                 join_info = {}
                 condition.each_with_comparison do |k, v, comp|
@@ -503,36 +509,81 @@ module Spider; module Model; module Mappers
                     next unless element
                     next unless model.mapper.mapped?(element)
                     next unless element.model?
-                    join_info[k.to_s] = true if !v.nil? || (comp != '=' && comp != 'like' && comp != 'ilike')
+                    join_info[k.to_s] = if v.nil?
+                        comp == '<>' ? true : false
+                    else
+                        comp == '<>' ? false : true
+                    end
                     if v.is_a?(Spider::Model::Condition)
                         el_join_info = get_join_info(element.model, v) 
+                        has_true = false
+                        has_false = false
                         el_join_info.each do |jk, jv|
                             join_info["#{k}.#{jk}"] = jv
+                            has_true = true if jv
+                            has_false = true unless jv
+                        end
+                        if (v.conjunction == :and && has_true) || (has_true && !has_false)
+                            join_info[k.to_s] = true
+                        elsif (v.conjunction == :or && has_false) || (has_false && !has_true)
+                            join_info[k.to_s] = false
                         end
                     end
                 end
+                res = {}
+                keys = join_info.keys
+                sub_join_infos = [join_info]
                 condition.subconditions.each do |sub_cond|
+                    next if sub_cond.empty?
                     sub_join_info = get_join_info(model, sub_cond)
-                    if condition.conjunction == :or
-                        join_info.each_key do |k|
-                            join_info.delete(k) unless sub_join_info[k]
+                    keys += sub_join_info.keys
+                    sub_join_infos << sub_join_info
+                end
+                keys.uniq!
+                sub_join_infos.each do |sub_join_info|
+                    keys.each do |k|
+                        if condition.conjunction == :or
+                            res[k] = true if sub_join_info[k] && res[k] != false
+                            res[k] = false unless sub_join_info[k]
+                        else
+                            res[k] = true if sub_join_info[k]
                         end
-                    else
-                        join_info.merge!(sub_join_info)
                     end
                 end
-                join_info
+                res
             end
+
+            
             
             join_info = options[:join_info]
             join_info ||= get_join_info(@model, condition)
 
-                        
+            def has_aggregates?(condition, in_or=false)
+                condition.each_with_comparison do |k, v, comp|
+                    return true if k.is_a?(QueryFuncs::Function) && k.has_aggregates?
+                end
+                in_or = true if condition.conjunction == :or
+                condition.subconditions.each do |sub_cond|
+                    return true if in_or && has_aggregates?(sub_cond, in_or)
+                end
+                return false
+            end
+
+            is_having = options[:is_having]
+            is_having = has_aggregates?(condition) if is_having.nil?
+
+            cond[:group_by_fields] ||= [] if is_having
+
             condition.each_with_comparison do |k, v, comp|
                 if k.is_a?(QueryFuncs::Function)
                     field = prepare_queryfunc(k)
                     cond[:values] << [field, comp, v]
                     joins += field.joins
+                    if is_having
+                        cond[:group_by_fields] += k.inner_elements.map{ |el_name, owner_func| 
+                            owner_func.mapper_fields[el_name.to_s]
+                        }
+                    end
                     next
                 end
                 element = model.elements[k.to_sym]
@@ -541,23 +592,24 @@ module Spider; module Model; module Mappers
                     el_join_info = {}
                     join_info.each do |jk, jv|
                         if jk.index(k.to_s+'.') == 0
-                            el_join_info[jk[k.to_s.length..-1]] = jv
+                            el_join_info[jk[k.to_s.length+1..-1]] = jv
                         end
                     end
                     if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
                         !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?)
                         # 1/n <-> 1 with only primary keys
-                        element_cond = {:conj => 'AND', :values => []}
+                        element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
                         v.each_with_comparison do |el_k, el_v, el_comp|
-                            field = model_schema.qualified_foreign_key_field(element.name, el_k)
+                            field = model_schema.foreign_key_field(element.name, el_k)
                             el_comp ||= '='
                             op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
                             element_cond[:values] << field_cond
+                            cond[:group_by_fields] << field if is_having
                         end
                         cond[:values] << element_cond
                     else
-                        if (element.storage == model.mapper.storage)
+                        if element.storage == model.mapper.storage
                             join_type = join_info[element.name.to_s] ? :inner : :left
                             sub_join = model.mapper.get_join(element, join_type)
                             # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
@@ -566,6 +618,7 @@ module Spider; module Model; module Mappers
                             had_join = false
                             existent.each do |j|
                                 if sub_join[:to] == j[:to] && sub_join[:keys] == j[:keys] && sub_join[:conditions] == j[:conditions]
+                                    # if any condition allows a left join, then a left join should be used here as well
                                     j[:type] = :left if sub_join[:type] == :left
                                     sub_join = j
                                     had_join = true
@@ -579,24 +632,30 @@ module Spider; module Model; module Mappers
                             
                             if v.nil? && comp == '='
                                 el_model_schema = model_schema
-                                element_cond = {:conj => 'AND', :values => []}
-                                    if model.mapper.have_references?(element.name)
+                                element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
+                                if model.mapper.have_references?(element.name)
                                     el_name = element.name
                                     el_model = element.model
-                                else
+                                elsif element.junction?
                                     el_model = element.type
                                     el_model_schema = element.model.mapper.schema 
-                                    el_name = element.attributes[:junction_their_element]
+                                    el_name = element.attributes[:junction_their_element]    
+                                else
+                                    el_model = element.type
+                                    el_model_schema = el_model.mapper.schema
+                                    el_name = element.reverse
                                 end
                                 el_model.primary_keys.each do |k|
-                                    field = el_model_schema.qualified_foreign_key_field(el_name, k.name)
+                                    field = el_model_schema.foreign_key_field(el_name, k.name)
                                     field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
+                                    element_cond[:is_having] = is_having
+                                    cond[:group_by_fields] << field if is_having
                                 end
                                 cond[:values] << element_cond
                             elsif v
-                                v = element.model.mapper.preprocess_condition(v)                          
-                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], :joins => joins, :join_info => el_join_info)
+                                sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], 
+                                    :joins => joins, :join_info => el_join_info, :is_having => is_having || nil)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
                                 joins = sub_joins
                                 cond[:values] << sub_condition
@@ -608,7 +667,8 @@ module Spider; module Model; module Mappers
                         end
                     end
                 elsif(model_schema.field(element.name))
-                    field = model_schema.qualified_field(element.name, options[:table])
+                    field = model_schema.field(element.name)
+                    field = FieldInAliasedTable(field, options[:table]) if options[:table]
                     op = comp ? comp : '='
                     if (v.is_a?(Spider::QueryFuncs::Expression))
                         v_joins = prepare_expression(v)
@@ -617,13 +677,16 @@ module Spider; module Model; module Mappers
                     else
                         cond[:values] << [field, op, map_condition_value(model.elements[k.to_sym].type, v)]
                     end
+                    cond[:group_by_fields] << field if is_having
                 end
-                
+
             end
+            cond[:is_having] = is_having
+
             sub_sqls = []
             sub_bind_values = []
             condition.subconditions.each do |sub|
-                sub_res = self.prepare_condition(sub, :joins => joins, :join_info => join_info)
+                sub_res = self.prepare_condition(sub, :joins => joins, :join_info => join_info, :is_having => is_having || nil)
                 cond[:values] << sub_res[0]
                 joins = sub_res[1]
                 remaining_condition += sub_res[2]
@@ -747,9 +810,11 @@ module Spider; module Model; module Mappers
                 el_joins, el_model, el = get_deep_join(el_name)
                 joins += el_joins
                 owner_func.mapper_fields ||= {}
-                owner_func.mapper_fields[el.name] = el_model.mapper.schema.field(el.name)
+                owner_func.mapper_fields[el_name.to_s] = el_model.mapper.schema.field(el.name)
             end
-            return FieldFunction.new(storage.function(func), schema.table, joins)
+            f = FieldFunction.new(storage.function(func), schema.table, joins)
+            f.aggregate = true if func.has_aggregates?
+            return f
         end
         
         # Takes a Spider::QueryFuncs::Expression, and associates the fields to the corresponding elements
@@ -973,6 +1038,11 @@ module Spider; module Model; module Mappers
             return schema
         end
 
+        # Resets the schema, so that it is regenerated on the next call
+        def reset_schema
+            @schema = nil
+        end
+
         def storage_column_type(type, attributes)
             @storage.column_type(type, attributes)
         end
@@ -994,7 +1064,10 @@ module Spider; module Model; module Mappers
             had_schema = schema ? true : false
             schema ||= DbSchema.new
             n = @model.name.sub('::Models', '')
-            n.sub!(@model.app.name, @model.app.short_prefix) if @model.app.short_prefix
+            app = @model.app
+            app_name = app.name if app
+            short_prefix = app.short_prefix if app
+            n.sub!(app_name, short_prefix) if short_prefix
             schema.table ||= @model.attributes[:db_table] || @storage.table_name(n)
             integrated_pks = []
             @model.each_element do |element|

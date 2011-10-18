@@ -43,7 +43,7 @@ Spider::Template.define_named_asset 'jquery-ui-core', [
     [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.mouse.js', Spider::Components],
     [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.position.js', Spider::Components],
     [:css, 'js/jquery/jquery-ui-1.8.11/css/Aristo/jquery-ui.custom.css', Spider::Components]
-]
+], :depends => ['jquery']
 
 Spider::Template.define_named_asset 'jquery-ui-draggable', [
     [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.draggable.js', Spider::Components]

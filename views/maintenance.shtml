@@ -1,0 +1,6 @@
+<div>
+    <h3 class="error_message">_(Under maintenance)</h3>
+    <div class="error_description">
+		_(The server is currently under maintenance. Please come back shortly).
+	</div>
+</div>

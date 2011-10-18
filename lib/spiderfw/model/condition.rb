@@ -34,7 +34,7 @@ module Spider; module Model
             return c
         end
         
-        @comparison_operators = %w{= > < >= <= <> != like}
+        @comparison_operators = %w{= > < >= <= <> like}
         @comparison_operators_regexp = @comparison_operators.inject('') do |str, op|
             str += '|' unless str.empty? 
             str += Regexp.quote(op)
@@ -173,11 +173,11 @@ module Spider; module Model
                 value = value.to_a
             end
             if value.is_a?(Array) && comparison != 'between'
-                or_cond = self.class.or
+                multi_cond = comparison == '<>' ? self.class.and : self.class.or
                 value.uniq.each do |v|
-                    or_cond.set(field, comparison, v)
+                    multi_cond.set(field, comparison, v)
                 end
-                @subconditions << or_cond
+                @subconditions << multi_cond
                 return self
             end
             parts = []
@@ -250,15 +250,15 @@ module Spider; module Model
                 cnt += 1
                 comparison = @comparisons[key] || '='
                 cond = "#{comparison} #{value.inspect}"
-                str += "#{key} #{cond}"
+                str += "#{key.inspect} #{cond}"
             end
-            str = '(' + str + ')' if str.length > 0
             #str += ' [raw:'+raw.inspect+']' unless raw.empty?
             first = true
             if @subconditions.length > 0
                 str += ' '+@conjunction.to_s+' ' if str.length > 0
-                str += @subconditions.map{ |sub| sub.inspect }.join(' '+@conjunction.to_s+' ')
+                str += @subconditions.map{ |sub| sub.inspect }.reject{ |sub| sub.empty? }.join(' '+@conjunction.to_s+' ')
             end
+            str = "(#{str})" if cnt + @subconditions.length > 1
             return str
         end
         
@@ -454,7 +454,7 @@ module Spider; module Model
                         :== => '=',
                         :not => '<>'
                     }
-                    if (replace[op])
+                    if replace[op]
                         op = replace[op]
                     end
                     op = op.to_s

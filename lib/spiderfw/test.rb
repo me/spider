@@ -1,6 +1,20 @@
+require 'tmpdir'
+require 'fileutils'
 require 'spiderfw/test/page_object'
 
+
 module Spider; module Test
+
+    def self.setup_env
+        @tmpdir = File.join(Dir.tmpdir, 'spider_test')
+        FileUtils.rm_rf(@tmpdir) if File.exists?(@tmpdir)
+        FileUtils.mkdir(@tmpdir)
+        Spider.setup_paths(@tmpdir)
+    end
+
+    def self.teardown_env
+        FileUtils.rm_rf(@tmpdir)
+    end
     
     def self.env
         @env ||= {}
@@ -38,7 +52,7 @@ module Spider; module Test
         rescue
         end
         Spider.apps.each do |name, mod|
-            mod.before_test if mod.respond_to?(:after_test)
+            mod.after_test if mod.respond_to?(:after_test)
         end
     end
     
@@ -48,8 +62,9 @@ module Spider; module Test
     
     def self.load_fixtures(app, truncate=false)
         path = File.join(app.path, 'test', 'fixtures')
+        loaded = []
         Dir.glob(File.join(path, '*.yml')).each do |yml|
-            Spider::Model.load_fixtures(yml, truncate)
+            loaded += Spider::Model.load_fixtures(yml, truncate)
         end
     end
     
@@ -80,10 +95,19 @@ module Spider; module Test
             models = [app_or_model]
         end
         models.each do |m|
-            m.use_storage 'stub://stub'
+            m.use_storage 'stub:stub://stub'
         end
     end
     
     
 end; end
 
+require 'spiderfw/controller/controller'
+require 'spiderfw/config/options/spider'
+begin
+    require 'ruby-debug'
+    Debugger.start
+rescue
+end
+require 'spiderfw/test/extensions/db_storage'
+Spider::Test.setup_env

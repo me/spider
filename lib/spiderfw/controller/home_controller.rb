@@ -1,7 +1,7 @@
 module Spider
 
     class HomeController < Controller
-        include StaticContent
+        include StaticContent, HTTPMixin
         route 'spider/public', Spider.controller, :prepend => 'public/'
         #        route 'spider', Spider.controller
 

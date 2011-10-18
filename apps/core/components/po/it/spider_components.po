@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2011-05-09 17:37+0200\n"
+"POT-Creation-Date: 2011-09-13 14:25+0200\n"
 "PO-Revision-Date: 2010-11-29 12:51+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,19 +20,19 @@ msgstr ""
 msgid "Administration"
 msgstr "Amministrazione"
 
-#: widgets/admin/admin.rb:37
+#: widgets/admin/admin.rb:47
 msgid "Manage Data"
 msgstr "Gestisci i Dati"
 
-#: widgets/admin/admin.rb:42
+#: widgets/admin/admin.rb:52
 msgid "guest"
 msgstr "ospite"
 
-#: widgets/crud/crud.rb:95
+#: widgets/crud/crud.rb:116
 msgid "Cancel"
 msgstr "Annulla"
 
-#: widgets/crud/crud.rb:96
+#: widgets/crud/crud.rb:117
 msgid "Ok"
 msgstr "Ok"
 
@@ -44,11 +44,11 @@ msgstr "Vai"
 msgid "Clear"
 msgstr "Pulisci"
 
-#: widgets/table/table.rb:150 public/js/utils.js:14
+#: widgets/table/table.rb:152 public/js/utils.js:14
 msgid "Yes"
 msgstr "Sì"
 
-#: widgets/table/table.rb:150 public/js/utils.js:19
+#: widgets/table/table.rb:152 public/js/utils.js:19
 msgid "No"
 msgstr "No"
 

@@ -97,6 +97,7 @@ module Spider; module Model; module Storage; module Db
         
         # Sets the column name for an element.
         def set_column(element_name, field)
+            field = {:name => field} if field.is_a?(String)
             field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) if field.is_a?(Hash)
             had_column = @columns[element_name]
             @columns[element_name] = field
@@ -105,6 +106,7 @@ module Spider; module Model; module Storage; module Db
         
         # Sets a foreign key to the primary key of an element.
         def set_foreign_key(element_name, element_key, field)
+            field = {:name => field} if field.is_a?(String)
             if field.is_a?(Hash)
                 field[:attributes] ||= {}
                 field[:attributes][:expression] ||= field[:expression]
@@ -241,6 +243,25 @@ module Spider; module Model; module Storage; module Db
         end
         
     end
+
+    class FieldInAliasedTable < Field
+
+        def initialize(field, table_alias)
+            @table = field.table
+            @name = field.name
+            @type = field.type
+            @table_alias = table_alias
+        end
+
+        def to_s
+            "#{@table_alias}.#{@name}"
+        end
+
+        def inspect
+            "#<#{self.class.name}:#{self.object_id} @name=\"#{@name}\", @table=#<Spider::Model::Storage::Db::Table:#{@table.object_id} #{@table.name} AS #{@table_alias}> >"
+        end
+
+    end
     
     class FieldExpression < Field
         attr_reader :expression
@@ -263,6 +284,14 @@ module Spider; module Model; module Storage; module Db
             @expression = expression
             @table = table
             @joins = joins
+        end
+
+        def aggregate=(val)
+            @aggregate = val
+        end
+
+        def aggregate?
+            !!@aggregate
         end
         
         def to_s
