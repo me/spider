@@ -215,6 +215,10 @@ module Spider
                     return do_dispatch(:execute, action) if d_next.dest != self 
                     arguments = d_next.params
                 end
+                if d_next && d_next.dest == self
+                    @executed_method = d_next.action.to_sym
+                    @executed_method_arguments = []
+                end
                 if (@executed_method)
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
@@ -233,19 +237,23 @@ module Spider
             end
         end
         
-        def before(action='', *arguments)
+        def call_before(action='', *arguments)
             @call_path = action
+            before(action, *arguments)
             catch(:done) do
                 #debug("#{self} before")
-                do_dispatch(:before, action, *arguments)
+                do_dispatch(:call_before, action, *arguments)
             end
         end
                 
+        def before(action='', *arguments)
+        end
 
         
-        def after(action='', *arguments)
+        def call_after(action='', *arguments)
+            after(action, *arguments)
             catch(:done) do
-                do_dispatch(:after, action, *arguments)
+                do_dispatch(:call_after, action, *arguments)
             end
             # begin
             #     run_chain(:after)
@@ -253,6 +261,9 @@ module Spider
             # rescue => exc
             #     try_rescue(exc)
             # end
+        end
+
+        def after(action='', *arguments)
         end
         
         def done?

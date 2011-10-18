@@ -129,7 +129,7 @@ module Spider; module HTTP
                 main_block = lambda do
                     controller = ::Spider::HTTPController.new(controller_request, controller_response)
                     controller.extend(Spider::FirstResponder)
-                    controller.before(path)
+                    controller.call_before(path)
                     MongrelIO.send_headers(controller_response, response) unless Spider.conf.get('http.auto_headers')
                     controller.execute(path)
                     Spider::Logger.debug("Response:")
@@ -157,7 +157,7 @@ module Spider; module HTTP
                 Spider.request_finished
             end
             if controller
-                controller.after(path)
+                controller.call_after(path)
                 controller.ensure
             end
             
