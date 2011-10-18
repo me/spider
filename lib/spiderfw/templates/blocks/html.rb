@@ -30,7 +30,9 @@ module Spider; module TemplateBlocks
                 if @el.has_attribute?('id')
                     cl += ' ' unless cl.empty?
                     cl += "id-#{@el.get_attribute('id')}"
+                    our_id = @el.get_attribute('id')
                     @el.remove_attribute('id')
+                    @el.set_attribute('id', "{ @widget[:full_id] }-#{our_id}")
                 end
                 if (options[:root])
                     cl += " widget"
