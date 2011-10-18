@@ -85,8 +85,16 @@ module Spider
         
         def init_apps
             @apps.each do |name, mod|
+                repos = []
                 if File.directory?(File.join(mod.path, 'po'))
-                    FastGettext.add_text_domain(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
+                    repos <<  FastGettext::TranslationRepository.build(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
+                end
+                if File.file?(File.join(Spider.paths[:root], 'po', "#{mod.short_name}.pot"))
+                    repos << FastGettext::TranslationRepository.build(mod.short_name, 
+                        :path => File.join(Spider.paths[:root], 'data', 'locale'))
+                end
+                unless repos.empty?
+                    FastGettext.add_text_domain(mod.short_name, :type => :chain, :chain => repos)
                 end
             end
             @apps.each do |name, mod|
