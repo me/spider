@@ -193,16 +193,21 @@ module Spider
             return ass unless ass[:src]
             if ass[:type] == :css
                 ext = File.extname(ass[:path])
-                if ['.scss', '.sass'].include?(ext)
+                compile_exts = ['.scss', '.sass', '.less']
+                if compile_exts.include?(ext)
                     dir = File.dirname(ass[:path])
                     base = File.basename(ass[:path], ext)
                     newname = "#{base}.css"
                     tmpdestdir = File.join(dir, 'stylesheets')
-                    
                     dest = File.join(tmpdestdir, newname)
-                    require 'spiderfw/templates/resources/sass'
-                    
-                    Spider::SassCompiler.compile(ass[:path], dest)
+                    compiler = if ['.scss', '.sass'].include?(ext)
+                        require 'spiderfw/templates/resources/sass'
+                        Spider::SassCompiler
+                    elsif ext == '.less'
+                        require 'spiderfw/templates/resources/less'
+                        Spider::LessCompiler
+                    end
+                    compiler.compile(ass[:path], dest)
                     ass[:path] = dest
                     ass[:src] = File.join(File.dirname(ass[:src]), newname)
                 end
