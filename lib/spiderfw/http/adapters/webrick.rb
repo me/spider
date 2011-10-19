@@ -132,9 +132,9 @@ module Spider; module HTTP
                 begin
                     controller = ::Spider::HTTPController.new(controller_request, controller_response)
                     controller.extend(Spider::FirstResponder)
-                    controller.before(path)
+                    controller.call_before(path)
                     controller.execute(path)
-                    controller.after(path)
+                    controller.call_after(path)
                     Spider::Logger.debug("Controller done")
                 rescue => exc
                     Spider.logger.debug("Error:")
