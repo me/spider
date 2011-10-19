@@ -20,6 +20,7 @@ task :updatepo, [:app] do |t, args|
     require 'spiderfw/i18n/shtml_parser'
     require 'spiderfw/i18n/javascript_parser'
     require 'gettext/tools'
+
     if !args[:app] || args[:app] == 'spider'
         Dir.chdir($SPIDER_PATH)
         GetText.update_pofiles("spider", Dir.glob("{lib,bin,views,public}/**/*.{rb,rhtml,shtml,js}"), "Spider #{Spider::VERSION}")
@@ -27,6 +28,7 @@ task :updatepo, [:app] do |t, args|
         if args[:app] == 'home'
             Spider.init
         else
+            Spider.init
             apps = Spider.find_all_apps
             apps.each do |path|
                 next if args[:app] && !check_app_path(path, args[:app])
@@ -65,6 +67,7 @@ task :makemo, [:app] do |t, args|
         GetText.create_mofiles(:verbose => true) 
     else
         require 'spiderfw/spider'
+        Spider.setup_paths(Dir.pwd)
         apps = Spider.find_all_apps
         apps.each do |path|
             next if args[:app] && !check_app_path(path, args[:app])
