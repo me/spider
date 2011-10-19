@@ -51,9 +51,9 @@ controller_response = Spider::Response.new
 controller_response.server_output = CGIIO.new(STDOUT, controller_response)
 begin
     controller = ::Spider::HTTPController.new(controller_request, controller_response)
-    controller.before(path)
+    controller.call_before(path)
     controller.execute(path)
-    controller.after(path)                
+    controller.call_after(path)                
 rescue => exc
     Spider.logger.error(exc)
     controller.ensure()
