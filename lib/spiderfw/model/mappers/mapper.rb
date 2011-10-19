@@ -416,7 +416,10 @@ module Spider; module Model
         
         # Deletes an object, or objects according to a condition.
         # Will not delete with null condition (i.e. all objects) unless force is true
-        def delete(obj_or_condition, force=false)
+        # Options can be:
+        # :keep_single_reverse: don't delete associations that have a single reverse.
+        # Useful when an object will be re-inserted with the same keys.
+        def delete(obj_or_condition, force=false, options={})
             
             def prepare_delete_condition(obj)
                 condition = Condition.and
@@ -459,6 +462,7 @@ module Spider; module Model
                     end
                     vals << obj_vals
                     assocs.each do |el|
+                        next if el.has_single_reverse? && options[:keep_single_reverse]
                         delete_element_associations(curr_obj, el)
                     end
                 end
