@@ -144,6 +144,10 @@ module Spider; module Model
                 sub.all_each_with_comparison{ |k, v, c| yield k, v, c }
             end
         end
+
+        def primary_keys_only?(model)
+            self.select{ |key, value| !model.elements[key] || !model.elements[key].primary_key? }.empty?
+        end
         
         # Returns the result of merging the condition with another one (does not modify the original condition).
         def +(condition)

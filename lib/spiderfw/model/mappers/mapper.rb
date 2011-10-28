@@ -946,7 +946,7 @@ module Spider; module Model
                         v = DateTime.parse(v)
                         changed_v = true
                     elsif element.model? && v.is_a?(Spider::Model::Condition)
-                        unless v.select{ |key, value| !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?
+                        unless v.primary_keys_only?(element.model)
                             v = element.mapper.preprocess_condition(v)
                             changed_v = true
                         end

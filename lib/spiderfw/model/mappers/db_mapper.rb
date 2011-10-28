@@ -595,8 +595,7 @@ module Spider; module Model; module Mappers
                             el_join_info[jk[k.to_s.length+1..-1]] = jv
                         end
                     end
-                    if (v && model.mapper.have_references?(element.name) && v.select{ |key, value| 
-                        !element.model.elements[key] || !element.model.elements[key].primary_key? }.empty?)
+                    if v && model.mapper.have_references?(element.name) && v.primary_keys_only?(element.model)
                         # 1/n <-> 1 with only primary keys
                         element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
                         v.each_with_comparison do |el_k, el_v, el_comp|
