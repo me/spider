@@ -781,20 +781,23 @@ module Spider; module Model; module Mappers
             joins = []
             el = nil
 #            Spider::Logger.debug("GETTING DEEP JOIN TO #{dotted_element} (#{@model})")
+            cnt = 0
             parts.each do |part|
+                cnt += 1
                 el = current_model.elements[part]
                 raise "Can't find element #{part} in model #{current_model}" unless el
-                if (el.integrated?)
+                next if have_references?(el) && cnt == parts.length
+                if el.integrated?
                     joins << current_model.mapper.get_join(el.integrated_from)
                     current_model = el.integrated_from.type
                     el = current_model.elements[el.integrated_from_element]
                 end
-                if (el.model? && can_join?(el))
+                if el.model? && can_join?(el)
                     joins << current_model.mapper.get_join(el)
                     current_model = el.model
                 end
             end
-            while (el.integrated?)
+            while el.integrated? && !have_references?(el)
                 joins << current_model.mapper.get_join(el.integrated_from)
 #                joins << current_model.integrated_from.mapper.get_join(el.integrated_from_element)
                 current_model = el.integrated_from.type
@@ -845,9 +848,8 @@ module Spider; module Model; module Mappers
                     fields << [field, direction]
                 else
                     el_joins, el_model, el = get_deep_join(order_element)
-                    if (el.model?)
-                        # FIXME: integrated elements
-                        if el.model.storage != storage
+                    if el.model?
+                        if el_model.mapper.have_references?(el) || el.model.storage != storage
                             el.model.primary_keys.each do |pk|
                                 fields << [el_model.mapper.schema.foreign_key_field(el.name, pk.name), direction]
                             end
