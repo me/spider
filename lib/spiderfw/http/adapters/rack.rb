@@ -101,13 +101,13 @@ module Spider; module HTTP
                 begin
                     controller = ::Spider::HTTPController.new(controller_request, controller_response)
                     controller.extend(Spider::FirstResponder)
-                    controller.before(path)
+                    controller.call_before(path)
                     controller.execute(path)
                     if Spider.conf.get('webserver.force_threads')
                         w.close 
                         controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     end
-                    controller.after(path)
+                    controller.call_after(path)
                     controller_done = true
                     Spider::Logger.debug("Controller done")
                 rescue => exc
