@@ -957,7 +957,10 @@ module Spider; module Model
                         integrated_from_element = element.integrated_from_element
                         sub = condition.get_deep_obj
                         sub.set(integrated_from_element, c, v)
-                        condition[integrated_from.name] = integrated_from.model.mapper.preprocess_condition(sub) 
+                        unless sub.primary_keys_only?(integrated_from.model)
+                            sub = integrated_from.model.mapper.preprocess_condition(sub) 
+                        end
+                        condition[integrated_from.name] = sub
                     elsif element.junction? && !v.is_a?(BaseModel) && !v.is_a?(Hash) && !v.nil? # conditions on junction id don't make sense
                         condition.delete(k)
                         sub = condition.get_deep_obj
