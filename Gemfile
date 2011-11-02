@@ -19,7 +19,7 @@ gem "bundler"
 gem 'gettext', '>= 2.1.0', :group => :devel
 gem 'fssm', :group => :devel
 gem "json", :platforms => [:mri_18, :mri_19]
-gem "mongrel"
+gem "mongrel", :platforms => [:ruby_18, :mingw_18]
 gem "ripl", :platforms => [:ruby, :mingw]
 gem "ripl-irb", :platforms => [:ruby, :mingw]
 gem "ripl-multi_line", :platforms => [:ruby, :mingw]
