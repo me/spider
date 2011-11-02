@@ -267,7 +267,10 @@ module Spider; module Model; module Storage; module Db
         attr_reader :expression
         
         def initialize(table, name, type, attributes={})
-            super
+            @table = table
+            @name = name.to_s
+            @type = type
+            @attributes = attributes
             @expression = attributes[:expression]
         end
         
