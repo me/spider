@@ -165,7 +165,7 @@ module Spider; module Model
                        cnt += 1
                        break if sub == self
                    end
-                   cnt = nil if cnt = 0
+                   cnt = nil if cnt == 0
                    cnt
                end
 
