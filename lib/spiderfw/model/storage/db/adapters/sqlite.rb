@@ -121,7 +121,7 @@ module Spider; module Model; module Storage; module Db
              return nil unless curr[:last_query]
              q = curr[:last_query]
              unless (q[:offset] || q[:limit])
-                 return curr[:last_result] ? curr[:last_result].length : nil
+                 return curr[:last_result_length] ? curr[:last_result_length] : nil
              end
              q[:offset] = q[:limit] = nil
              q[:keys] = ["COUNT(*) AS N"]

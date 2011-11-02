@@ -67,7 +67,7 @@ module Spider; module Model; module Storage; module Db
              return nil unless curr[:last_executed]
              q = curr[:last_query].clone
              unless (q[:offset] || q[:limit])
-                 return curr[:last_result] ? curr[:last_result].length : nil
+                 return curr[:last_result_length] ? curr[:last_result_length] : nil
              end
              q.delete(:offset); q.delete(:limit)
              q[:query_type] = :count

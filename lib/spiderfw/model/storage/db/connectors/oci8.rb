@@ -125,8 +125,8 @@ module Spider; module Model; module Storage; module Db; module Connectors
                 end
                 if (have_result)
                     unless block_given?
+                        curr[:last_result_length] = result.length
                         result.extend(StorageResult)
-                        curr[:last_result] = result
                         return result
                     end
                 else

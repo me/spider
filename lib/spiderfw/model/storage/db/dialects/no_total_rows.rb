@@ -6,7 +6,7 @@ module Spider; module Model; module Storage; module Db; module Dialects
             return nil unless @last_executed
             q = @last_query.clone
             unless (q[:offset] || q[:limit])
-                return @last_result ? @last_result.length : nil
+                return @last_result_length ? @last_result_length : nil
             end
             q.delete(:offset); q.delete(:limit); q[:order]= []
             q[:query_type] = :count
