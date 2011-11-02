@@ -20,7 +20,6 @@ module Spider; module Model
         def initialize(model, storage)
             @model = model
             @storage = storage
-            @raw_data = {}
             @options = {}
             @no_map_elements = {}
             @sequences = []
@@ -603,7 +602,6 @@ module Spider; module Model
                         next unless obj
                         merged_obj = merge_object(set, obj, query.request)
                         merged[merged_obj.object_id] = true
-                        @raw_data[obj.object_id] = row
                     end
                     query.request.keys.each do |k, v|
                         set.element_loaded(k) if have_references?(k)
