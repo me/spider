@@ -122,9 +122,11 @@ module Spider; module HTTP
                 if Spider.conf.get('webserver.respawn_on_change')
                     Spider.start_loggers
                     begin
-                        begin
+                        gemfile = File.join(Spider.paths[:root], 'Gemfile')
+                        gemfile_lock = File.join(Spider.paths[:root], 'Gemfile.lock')
+                        if File.file?(gemfile) && File.file?(gemfile_lock)
+                            require 'bundler'
                             Bundler.require :default, Spider.runmode.to_sym
-                        rescue
                         end
                         spawner = Spawner.new({'spawn' => start})
                         spawner.run('spawn')

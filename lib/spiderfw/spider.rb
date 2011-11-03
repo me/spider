@@ -73,7 +73,9 @@ module Spider
             end
             init_file = File.join($SPIDER_RUN_PATH, 'init.rb')
             ENV['BUNDLE_GEMFILE'] ||= File.join($SPIDER_RUN_PATH, 'Gemfile')
-            require 'bundler/setup' if File.exists? ENV['BUNDLE_GEMFILE']
+            if File.exists?(ENV['BUNDLE_GEMFILE']) && File.exists?(File.join($SPIDER_RUN_PATH, 'Gemfile.lock'))
+                require 'bundler/setup' 
+            end
             
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
