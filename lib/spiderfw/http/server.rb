@@ -43,7 +43,12 @@ module Spider; module HTTP
             
             start = lambda{
                 $SPIDER_WEB_SERVER = true
-                require 'spiderfw'
+                begin
+                    require 'spiderfw'
+                rescue Exception => exc
+                    Spider.logger.error(exc)
+                    return
+                end
                 require 'spiderfw/controller/http_controller'
                 
                 port ||= Spider.conf.get('webserver.port')
@@ -132,7 +137,11 @@ module Spider; module HTTP
                 unless spawner_started
                     Spider.main_process_startup
                     Spider.startup
-                    start.call 
+                    begin
+                        start.call 
+                    rescue Exception => exc
+                        Spider.logger.error(exc)
+                    end
                 end
             end
         end
