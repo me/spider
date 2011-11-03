@@ -59,11 +59,15 @@ module Spider; module HTTP
                 server = Spider::HTTP.const_get(servers[server_name]).new
                 ssl_server = nil
                 Spider.startup
-                if Spider.conf.get('devel.trace.extended')
-                    require 'ruby-debug'
-                    require 'spiderfw/utils/monkey/debugger'
-                    Debugger.start
-                    Debugger.post_mortem
+                begin
+                    if Spider.conf.get('devel.trace.extended')
+                        require 'ruby-debug'
+                        require 'spiderfw/utils/monkey/debugger'
+                        Debugger.start
+                        Debugger.post_mortem
+                    end
+                rescue Exception => exc
+                    Spider.logger.warn "Unable to start debugger"
                 end
                 
                 thread = Thread.new do
