@@ -1,2 +1,2 @@
-require 'spiderfw/init'
+require 'spiderfw/spider'
 Spider.init
