@@ -79,7 +79,7 @@ module Spider; module HTTP
                     end
                 end
                 do_shutdown = lambda{
-                    Debugger.post_mortem = false
+                    Debugger.post_mortem = false if defined?(Debugger)
                     # debugger
                     server.shutdown
                     ssl_server.shutdown if ssl_server
