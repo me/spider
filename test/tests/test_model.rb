@@ -1,4 +1,4 @@
-require 'spiderfw'
+require 'spiderfw/init'
 require 'test/unit'
 
 class TestModel < Test::Unit::TestCase

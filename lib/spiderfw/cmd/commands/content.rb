@@ -13,7 +13,7 @@ class ContentCommand < CmdParse::Command
         end
         
         publish.set_execution_block do |args|
-            require 'spiderfw'
+            require 'spiderfw/init'
             Spider::StaticContent.publish
         end
         
@@ -22,7 +22,7 @@ class ContentCommand < CmdParse::Command
         compress = CmdParse::Command.new('compress', false)
         compress.short_desc = _("Compress Javascript files")
         compress.set_execution_block do |args|
-            require 'spiderfw'
+            require 'spiderfw/init'
             Spider::ContentUtils.compress(*args)
         end
         

@@ -81,7 +81,7 @@ end
 
 task :test do
     Dir.chdir("test")
-    require 'spiderfw'
+    require 'spiderfw/init'
     require 'test/unit/collector/dir'
     require 'test/unit'
     

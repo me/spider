@@ -35,7 +35,7 @@ class ConsoleCommand < CmdParse::Command
                 Ripl.config[:irb_verbose] = false
                 Ripl::Runner.load_rc(Ripl.config[:riplrc])
                 
-                require 'spiderfw'
+                require 'spiderfw/init'
                 Object.send(:remove_const, :IRB) if Object.const_defined?(:IRB)
                 Ripl.shell.loop
             end

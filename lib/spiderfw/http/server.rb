@@ -44,7 +44,7 @@ module Spider; module HTTP
             start = lambda{
                 $SPIDER_WEB_SERVER = true
                 begin
-                    require 'spiderfw'
+                    require 'spiderfw/init'
                 rescue Exception => exc
                     Spider.logger.error(exc)
                     return
@@ -100,7 +100,7 @@ module Spider; module HTTP
                 ssl_thread.join if ssl_thread
             }
             if options[:daemonize]
-                require 'spiderfw'
+                require 'spiderfw/init'
                 require 'spiderfw/utils/fork'
                 pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                 process_name = (options[:daemonize] == true) ? 'spider-server' : options[:daemonize]
