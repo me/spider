@@ -5,7 +5,7 @@ gemspec :development_group => :devel
 # Optional gems
 
 gem "json", :platforms => [:mri_18, :mri_19]
-gem "mongrel", :platforms => [:ruby_18, :mingw_18]
+gem "mongrel", '>= 1.2.0.pre2'
 gem "ripl", :platforms => [:ruby, :mingw]
 gem "ripl-irb", :platforms => [:ruby, :mingw]
 gem "ripl-multi_line", :platforms => [:ruby, :mingw]
