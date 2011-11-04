@@ -250,7 +250,7 @@ module Spider
             combined = "#{pub_dest}/._#{compiled_name}"
 
             dest = "#{pub_dest}/#{compiled_name}"
-            File.cp(tmp_combined, combined)
+            FileUtils.cp(tmp_combined, combined)
             File.unlink(tmp_combined)
             compressor = ::YUI::JavaScriptCompressor.new("charset" => "UTF-8")
             io = open(combined, 'r')
@@ -363,7 +363,7 @@ module Spider
             combined = "#{pub_dest}/._#{compiled_name}"
                 
             dest = "#{pub_dest}/#{compiled_name}"
-            File.cp(tmp_combined, combined)
+            FileUtils.cp(tmp_combined, combined)
             File.unlink(tmp_combined)
             compressor = ::YUI::CssCompressor.new("charset" => "UTF-8")
             io = open(combined, 'r')
