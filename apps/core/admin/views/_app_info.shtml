@@ -1,0 +1,5 @@
+<sp:template>
+    <div sp:if="@current_app" class="sidebar-app-info">
+        <h2>{ @current_app[:module].full_name }</h2>
+    </div>
+</sp:template>

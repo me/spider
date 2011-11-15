@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+    <tpl:asset type="css" src="sass/bootstrap/bootstrap.scss" />
+    <tpl:asset type="css" src="sass/admin.scss" />
+    <head>
+        <title>Spider - _(Administration)</title>
+        <tpl:output-assets type="css" />
+        <tpl:output-assets type="js" />
+    </head>
+    <body id="spider-admin">
+        <div id="header">
+            <div id="header_top">
+                <div id="main_title">
+                    <h1>_(Administration)</h1>
+                </div>
+                <div id="admin_controls">
+                    <span class="welcome">_(Welcome, %s.) % @username</span>
+                    <a class="logout_link" href="{ @logout_url }" sp:if="!@guest">Logout</a>
+                </div>
+            </div>
+            <div id="app_buttons">
+                <a sp:each="@apps |app|" href="{ app[:url] }" 
+                    class="app { current_app && @current_app[:module] == app[:module] ? 'active' : '' }">
+                    <div>
+                        <img src="{ app[:icon] }" alt="{ app[:description] }">
+                        <span class="name">{ app[:name] }</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <sp:yield />
+    </body>
+</html>
