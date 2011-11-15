@@ -450,6 +450,25 @@ module Spider; module Forms
         def disable(*names)
             @disabled += names
         end
+
+        def breadcrumb
+            bc = []
+            if @obj
+                bc << {:label => @obj.to_s, :url => widget_request_path+'/'+@pk}
+                if @crud
+                    sl = sub_link(@sub_element)
+                    bc << {:label => sl[:label], :url => widget_request_path+'/'+sl[:link] }
+                    if @crud.action == :form
+                        bc += @crud.form.breadcrumb
+                    end
+                end
+            else
+                bc << {:label => _('New'), :url => widget_request_path}
+            end
+            bc
+            
+        end
+
         def sub_link(el)
             {:link => @pk+'/'+el.label.downcase.gsub(/\s+/, '_'), :label => @labels[el.name]}
         end
