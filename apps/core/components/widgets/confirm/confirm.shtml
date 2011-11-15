@@ -1,9 +1,12 @@
 <div class="">
     <form action="{ @request[:path] }" method="POST">
         <input sp:each="@params |name, value|" type="hidden" name="{ name }" value="{ value }" />
-        <tpl:placeholder name="text" />
+        <p>
+            <tpl:placeholder name="text" />
+        </p>
         <div class="actions">
-            <input sp:each="@actions |action|" type="submit" name="{ action[0] }" value="{ action[1] }" />
+            <input sp:each="@actions |action|" type="submit" name="{ action[0] }" value="{ action[1] }" 
+                class="btn { action[2] }" >
         </div>
     </form>
 </div>

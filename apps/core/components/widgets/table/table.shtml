@@ -1,10 +1,9 @@
 <div class="{ @widget[:css_class] }">
-    <tpl:asset type="css" src="css/table.css" />
-	<tpl:asset type="js" src="widgets/table.js" />
-    <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }">
+    <tpl:asset type="js" src="widgets/table.js" />
+    <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }" class="bordered-table zebra-striped">
         <thead>
             <tr class="heading_row">
-                <th sp:each="@elements |element|" class="{ (@sorted[element] ? 'sorted-'+@sorted[element].to_s : '') }">
+                <th sp:each="@elements |element|" class="{ @sortable[element] ? 'sortable' : '' }  { (@sorted[element] ? 'sorted-'+@sorted[element].to_s : '') }">
                     <a sp:tag-if="@sortable[element]" href="{ @request[:path] }?_w{ @widget[:param] }[sort][{ element }]={ @sorted[element] == :asc ? 'desc' : 'asc' }">
                         { @labels[element] }
                     </a>
@@ -13,7 +12,7 @@
         </thead>
         <tbody>
             <tpl:pass sp:each_index="@rows |row_i|">
-                <tr class="row { (row_i%2==0) ? 'odd' : 'even' }">
+                <tr class="{ (row_i%2==0) ? 'odd' : 'even' }">
                     <td sp:each="@elements |element|">
                         <a sp:tag-if="@link_el && element == @link_el" href="{ @link }{ Spider::HTTP.urlencode(@data[row_i][@link_id]) }">
                             { @rows[row_i][element] }
@@ -22,27 +21,47 @@
                 </tr>
             </tpl:pass>
         </tbody>
-        <tfoot>
-            <tr class="paginator" sp:if="@paginate && @pages > 1">
-                <td colspan="{ @columns }" >
-                    <a sp:if="@page > 1" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">Indietro</a>
-                    <sp:pass sp:if="@paginate_first > 1">
-                        <a href="{ @request[:path] }?_w{ @widget[:param] }[page]=1" class="page">1</a> ... 
-                    </sp:pass>
-                    <sp:pass sp:each="(@paginate_first..@paginate_last) |i|" >
-                        <a sp:if="i != @page" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ i }" class="page">
-                            { i }
-                        </a>
-                        <span sp:if="i == @page" class="current">{ i }</span>
-                    </sp:pass>
-                    <sp:pass sp:if="@paginate_last < @pages-1">
-                        ... <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @pages }" class="page">{ @pages }</a> 
-                    </sp:pass>
-                    <a sp:if="@has_more" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">Avanti</a>
-                </td>
-            </tr>
-        </tfoot>
     </table>
+    <div sp:if="@pages > 1" class="pagination">
+        <ul>
+            <li sp:if="@page > 1">
+                <a class="prev" href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page-1 }">&larr; _(Previous)</a>
+            </li>
+            <li sp:if="@page == 1" class="disabled">
+                <a class="prev disabled">&larr; _(Previous)</a>
+            </li>
+            <sp:pass sp:if="@paginate_first > 1">
+                <li>
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }[page]=1" class="page">1</a>
+                </li>
+                <li class="disabled"><a>...</a></li>
+            </sp:pass>
+            <sp:pass sp:each="(@paginate_first..@paginate_last) |i|" >
+                <li sp:if="i != @page">
+                    <a  href="{ @request[:path] }?_w{ @widget[:param] }[page]={ i }" class="page">
+                        { i }
+                    </a>
+                </li>
+                <li class="active" sp:if="i == @page" >
+                    <a class="current">{ i }</span>
+                </li>
+            </sp:pass>
+            <sp:pass sp:if="@paginate_last < @pages-1">
+                <li class="disabled"> 
+                    <a>...</a>
+                </li>
+                <li>
+                    <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @pages }" class="page">{ @pages }</a> 
+                </li>
+            </sp:pass>
+            <li sp:if="@has_more">
+                <a ref="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">_(Next) &rarr;</a>
+            </li>
+            <li sp:if="!@has_more" class="disabled">
+                <a class="next disabled">_(Next) &rarr;</a>
+            </li>
+        </ul>
+    </div>
     <div sp:if="!@rows || @rows.length < 1" class="no_result">
         _(No element)
     </div>

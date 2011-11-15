@@ -1,7 +1,7 @@
 <div class="{ @widget[:css_class] }">
     <tpl:assets widgets="core:crud" />
     <tpl:asset type="css" src="css/admin.css" />
-    <div class="heading">
+    <div class="heading" sp:if="@full_page">
 	    <div class="title">
     	    <h1>{ @title }</h1>
 	    </div>
@@ -10,8 +10,28 @@
 	        <a href="{ @logout_url }" sp:if="!@guest">Logout</a>
 	    </div>
     </div>
-    <div class="current_section">
+    <div class="current_section" sp:if="@full_page">
 	    <span id="label">{ @current }</span>
     </div>
-    <core:switcher id="switcher" use_template="table" />
+    <core:switcher id="switcher">
+        <tpl:override-attr name="class" value="spider-admin-container" />
+        <tpl:append-attr search=".sidebar" name="class" value="spider-admin-sidebar" />
+        <tpl:append-attr search=".content" name="class" value="spider-admin-content" />
+        <tpl:prepend search=".sidebar">
+            <div sp:if="@_parent && @_parent._parent && @_parent._parent.current_app" class="sidebar-app-info">
+                <h2>{ @_parent._parent.current_app[:module].full_name }</h2>
+            </div>
+        </tpl:prepend>
+        <tpl:prepend search=".content">
+            <ul class="breadcrumb">
+                <li sp:each="@_parent._parent.admin_breadcrumb[0..@_parent._parent.admin_breadcrumb.length-2] |bc|">
+                    <a href="{ bc[:url] }">{ bc[:label] }</a> <span class="divider">/</span>
+                </li>
+                <li class="active" sp:if="@_parent._parent.admin_breadcrumb.last">
+                    { @_parent._parent.admin_breadcrumb.last[:label] }
+                </li>
+            </ul>
+            <h3>{ @_parent.current }</h3>
+        </tpl:prepend>
+    </core:switcher>
 </div>

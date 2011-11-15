@@ -12,9 +12,9 @@ module Spider; module Components
              end
         end
         
-        def add_action(name, value)
+        def add_action(name, value, type=nil)
             @actions ||= []
-            @actions << [name, value]
+            @actions << [name, value, type]
         end
         
         def collapse_params(h, first=true)
