@@ -293,6 +293,16 @@ module Spider; module Model; module Storage; module Db
 
              bind_vars += vals if vals
              sql += "WHERE #{where} " if where && !where.empty?
+             having, having_vals = sql_condition(query, true)
+             unless having.blank? && query[:group_by].blank?
+                group_fields = query[:group_by] || (
+                    query[:keys].select{ |k| !k.is_a?(FieldExpression)
+                } + collect_having_fields(query[:condition])).flatten.uniq
+                group_keys = sql_keys(group_fields)
+                sql += "GROUP BY #{group_keys} " 
+                sql += "HAVING #{having} " unless having.blank?
+                bind_vars += having_vals if having_vals
+            end
              order = sql_order(query)
              sql += "ORDER BY #{order} " if order && !order.empty?
              limit = sql_limit(query)

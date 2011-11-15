@@ -331,6 +331,8 @@ module Spider; module Model; module Mappers
                 oj[:as] ||= "ORD#{cnt+=1}" if joins.select{ |j| j[:to] == oj[:to] }.length > 0
             end
             joins += order_joins if order_joins
+            group_by, group_by_joins = prepare_group_by(query)
+            joins += group_by_joins if group_by_joins
             seen_fields = {}
             model_pks = []
             @model.primary_keys.each do |pk|
@@ -427,6 +429,7 @@ module Spider; module Model; module Mappers
                 :condition => condition,
                 :joins => joins,
                 :order => order,
+                :group_by => group_by,
                 :offset => query.offset,
                 :limit => query.limit
             }
@@ -864,6 +867,34 @@ module Spider; module Model; module Mappers
                     end
                     joins += el_joins
                 end
+            end
+            return [fields, joins]
+        end
+
+        def prepare_group_by(query)
+            return nil if !query.group_by_elements
+            joins = []
+            fields = []
+            query.group_by_elements.each do |gb|
+                el_model = @model
+                el_joins, el_model, el = get_deep_join(gb)
+                # FIXME: this is almost identical to prepare_order
+                if el.model?
+                    if el_model.mapper.have_references?(el) || el.model.storage != storage
+                        el.model.primary_keys.each do |pk|
+                            fields << el_model.mapper.schema.foreign_key_field(el.name, pk.name)
+                        end
+                    else
+                        el.model.primary_keys.each do |pk|
+                            fields << el.model.mapper.schema.field(pk.name)
+                        end
+                    end
+                else
+                    raise "Order on unmapped element #{el_model.name}.#{el.name}" unless el_model.mapper.mapped?(el)
+                    field = el_model.mapper.schema.field(el.name)
+                    fields << field
+                end
+                joins += el_joins
             end
             return [fields, joins]
         end
