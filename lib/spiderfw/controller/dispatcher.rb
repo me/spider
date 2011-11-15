@@ -117,11 +117,14 @@ module Spider
         def get_route(path)
             path ||= ''
             r = routes + self.class.routes
+            if nil_route = self.class.nil_route
+                r << [nil, nil_route[0], nil_route[1]]
+            end
             r.each do |route|
                 try, dest, options = route
                 action = nil
                 case try
-                when true
+                when true, nil
                     action = path
                     matched = ''
                 when String
@@ -197,11 +200,13 @@ module Spider
         end
         
         module ClassMethods
-            attr_accessor :default_route, :default_dispatcher
+            attr_accessor :default_route, :default_dispatcher, :nil_route
            
             def add_route(routes, path, dest=nil, options=nil)
-                if ( path.is_a? Hash )
+                if path.is_a?(Hash)
                     path.each {|p,d| add_route(p, d)}
+                elsif path.nil?
+                    @nil_route = [dest, options || {}]
                 else
                     routes << [path, dest, options || {}]
                     if path.is_a?(String) && dest.respond_to?(:default_dispatcher=)
