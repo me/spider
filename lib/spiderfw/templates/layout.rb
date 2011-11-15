@@ -31,12 +31,14 @@ module Spider
         def prepare_assets
             @template_assets = { :css => [], :js => [] }
             assets = {:css => [], :js => []}
+            compress_assets = {:js => {}, :css => {}}
             seen = {}
             js_messages = []
             use_cdn = Spider.conf.get('assets.use_cdn')
             cname = File.basename(@path, '.layout.shtml')
             cname = File.basename(cname, '.shtml')
             cname += "-#{@asset_set}" if @asset_set
+            @cname = cname
 
             all_assets.each do |ass|
                 seen_check = ass[:runtime] || ass[:src]
@@ -46,7 +48,7 @@ module Spider
                 
                 ass = compile_asset(ass)
 
-                res = prepare_asset(ass)
+                res = prepare_asset(ass, compress_assets)
                 assets[:css] += res[:css]
                 assets[:js] += res[:js]
 
@@ -95,12 +97,11 @@ module Spider
             @assets_prepared = true
         end
 
-        def prepare_asset(ass)
+        def prepare_asset(ass, compress_assets={})
             type = ass[:type].to_sym
             assets = {:css => [], :js => []}
-            compress_assets = {:js => {}, :css => {}}
             pub_dest = nil
-
+            use_cdn = Spider.conf.get('assets.use_cdn')
                 
             compress_config = case type
             when :js
@@ -142,19 +143,19 @@ module Spider
                             end
                         else
                             FileUtils.mkdir_p(File.join(pub_dest, dir))
-                            File.cp(comp, File.join(pub_dest, dir)) unless File.exist?(File.join(pub_dest, dir))
+                            FileUtils.cp(comp, File.join(pub_dest, dir)) unless File.exist?(File.join(pub_dest, dir))
                         end
                         src = dir+'/'+name
                     else
                         unless File.exist?(File.join(pub_dest, name))
-                            File.cp(comp, pub_dest)
+                            FileUtils.cp(comp, pub_dest)
                         end
                         src = name
                     end
                     ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+src
                     assets[type] << ass
                 else # needs compression
-                    name = ass[:compress] || cname
+                    name = ass[:compress] || @cname
                     unless compress_assets[type][name]
                         cpr = {:name => name, :assets => [], :cpr => true}
                         assets[type] << cpr
@@ -387,7 +388,7 @@ module Spider
                             mtime = File.mtime(url_src).to_i
                             if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest).to_i
                                 if cachebuster == :soft
-                                    File.cp(url_src, url_dest)
+                                    FileUtils.cp(url_src, url_dest)
                                     new_url += "?cb=#{mtime}"
                                 elsif cachebuster == :hard || cachebuster == :hardcopy
                                     url_dir = File.dirname(url)
@@ -397,13 +398,13 @@ module Spider
                                     cb_file_name = "#{url_basename}-cb#{mtime}#{url_ext}"
                                     new_url = "#{url_dir}/#{cb_file_name}"
                                     if cachebuster == :hard
-                                        File.cp(url_src, url_dest)
+                                        FileUtils.cp(url_src, url_dest)
                                     else
-                                        File.cp(url_src, "#{url_dest_dir}/#{cb_file_name}")
+                                        FileUtils.cp(url_src, "#{url_dest_dir}/#{cb_file_name}")
                                     end
                                 end
                             else
-                                File.cp(url_src, url_dest)
+                                FileUtils.cp(url_src, url_dest)
                             end
                         else
                             Spider.logger.error("CSS referenced file not found: #{url_src}")
