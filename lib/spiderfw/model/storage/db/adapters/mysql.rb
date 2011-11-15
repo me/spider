@@ -290,7 +290,8 @@ module Spider; module Model; module Storage; module Db
              sql += "#{sql_keys(query)} FROM #{tables_sql} "
              bind_vars += tables_values
              where, vals = sql_condition(query)
-             bind_vars += vals
+
+             bind_vars += vals if vals
              sql += "WHERE #{where} " if where && !where.empty?
              order = sql_order(query)
              sql += "ORDER BY #{order} " if order && !order.empty?

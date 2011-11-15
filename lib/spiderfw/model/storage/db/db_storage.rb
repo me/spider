@@ -249,7 +249,7 @@ module Spider; module Model; module Storage; module Db
             sql = "SELECT #{sql_keys(query)} FROM #{tables_sql} "
             bind_vars += tables_values
             where, vals = sql_condition(query)
-            bind_vars += vals
+            bind_vars += vals if vals
             sql += "WHERE #{where} " if where && !where.empty?
             having, having_vals = sql_condition(query, true)
             unless having.blank?
