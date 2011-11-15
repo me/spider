@@ -68,6 +68,7 @@ module Spider
         def do_dispatch(method, action='', *arguments)
             obj, route_action, new_arguments = dispatch(method, action, *arguments)
             return nil unless obj
+            return nil if obj == self && route_action == action # short circuit
             meth_action = route_action.length > 0 ? route_action : obj.class.default_action
             begin
                 if (obj.class.dispatch_methods && obj.class.dispatch_methods[method])
