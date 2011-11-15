@@ -3,15 +3,16 @@ Spider.defineWidget('Spider.Forms.Select', 'Spider.Forms.Input', {
 	autoInit: true,
 	
 	ready: function(){
-		if (this.el.is('select[multiple]')){
-            this.el.attr('title', 'Aggiungi...');
-		    this.el.bsmSelect({
+        var sel = this.el.find('select');
+		if (sel.is('select[multiple]')){
+            sel.attr('title', 'Aggiungi...');
+		    sel.bsmSelect({
                 removeLabel: 'togli',
                 highlightAddedLabel: 'Aggiunto: ',
                 highlightRemovedLabel: 'Tolto: ',
                 addItemTarget: 'bottom'
     		});
-            $('.bsmSelect option:first', this.el.parent()).addClass('bsmSelectTitle')
+            $('.bsmSelect option:first', sel.parent()).addClass('bsmSelectTitle')
                 .attr("selected", false)
 				.attr("disabled", true);
 		} 

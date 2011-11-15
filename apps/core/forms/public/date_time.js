@@ -4,6 +4,7 @@ Spider.defineWidget('Spider.Forms.DateTime', {
 	
 	ready: function(){
 	    var conf = {};
+        this.input = this.el.find('input');
 	    if (this.el.is('.change-month')) conf.changeMonth = true;
 	    if (this.el.is('.change-year')) conf.changeYear = true;
         var classes = this.el.attr('class').split(' ');
@@ -15,9 +16,9 @@ Spider.defineWidget('Spider.Forms.DateTime', {
                 a = 3;
             }
         }
-		if (this.el.is('.date')) this.el.datepicker(conf);
+		if (this.el.is('.date')) this.input.datepicker(conf);
 		else if (this.el.is('.date_time')){
-			var el = this.el;
+			var el = this.input;
 			el.hide();
 			var val = el.val().split(' ');
 			if (!val[1]) val[1] = '';
