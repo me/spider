@@ -643,13 +643,13 @@ module Spider; module Model; module Mappers
                                     el_model_schema = element.model.mapper.schema 
                                     el_name = element.attributes[:junction_their_element]    
                                 else
-                                    el_model = element.type
-                                    el_model_schema = el_model.mapper.schema
+                                    el_model = @model
+                                    el_model_schema = element.type.mapper.schema
                                     el_name = element.reverse
                                 end
                                 el_model.primary_keys.each do |k|
                                     field = el_model_schema.foreign_key_field(el_name, k.name)
-                                    field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
+                                    field_cond = [field, comp,  map_condition_value(el_model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
                                     element_cond[:is_having] = is_having
                                     cond[:group_by_fields] << field if is_having
