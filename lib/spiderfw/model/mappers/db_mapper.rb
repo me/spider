@@ -252,7 +252,11 @@ module Spider; module Model; module Mappers
             end
             model = obj_or_model.is_a?(Class) ? obj_or_model : obj_or_model.model
             data = {}
+            extra_data = {}
             request.keys.each do |element_name|
+                if element_name.is_a?(QueryFuncs::SelectFunction)
+                    extra_data[element_name.as] = result[element_name.as.to_s]
+                end
                 element = @model.elements[element_name]
                 result_value = nil
                 next if !element || element.integrated? || !have_references?(element)
@@ -282,6 +286,9 @@ module Spider; module Model; module Mappers
                 return nil
             end
             data.keys.each{ |el| obj.element_loaded(el) }
+            extra_data.each do |k, v|
+                obj[k] = v
+            end
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
@@ -315,7 +322,9 @@ module Spider; module Model; module Mappers
         # Generates a select hash description based on the query.
         def prepare_select(query) #:nodoc:
             condition, joins = prepare_condition(query.condition)
-            elements = query.request.keys.select{ |k| mapped?(k) }
+            elements = query.request.keys.select{ |k| !k.is_a?(QueryFuncs::SelectFunction) && mapped?(k) }
+            select_functions = query.request.keys.select{ |k| k.is_a?(QueryFuncs::SelectFunction) }
+            
             keys = []
             primary_keys = []
             types = {}
@@ -365,14 +374,10 @@ module Spider; module Model; module Mappers
                         end
                     end
                     sub_request = query.request[element.name]
-                    # if (can_join?(element) && sub_request.is_a?(Request) && 
-                    #     sub_request.select{|k, v| !element.model.elements[k].primary_key?}.length > 0)
-                    #     sub_request = element.mapper.prepare_query_request(sub_request).reject{ |name, req| element.reverse == name }
-                    #     sub_select = element.mapper.prepare_select(Query.new(nil, sub_request))
-                    #     keys += sub_select[:keys]
-                    #     joins << get_join(element)
-                    # end
                 end
+            end
+            select_functions.each do |f|
+                keys << prepare_queryfunc(f)
             end
             if (query.request.polymorphs? || !query.condition.polymorphs.empty?)
                 only_conditions = {:conj => 'or', :values => []} if (query.request.only_polymorphs?)
@@ -819,6 +824,7 @@ module Spider; module Model; module Mappers
                 owner_func.mapper_fields[el_name.to_s] = el_model.mapper.schema.field(el.name)
             end
             f = FieldFunction.new(storage.function(func), schema.table, joins)
+            f.as = func.as if func.is_a?(QueryFuncs::SelectFunction)
             f.aggregate = true if func.has_aggregates?
             return f
         end

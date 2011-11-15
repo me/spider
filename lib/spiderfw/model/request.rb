@@ -33,12 +33,14 @@ module Spider; module Model
         
         # TODO: fix/remove?
         def request(element) # :nodoc:
-            if (element.is_a?(Element))
+            if element.is_a?(Element)
                 self[element.name.to_s] = true
-            else
-                element.to_s.split(',').each do |el|
+            elsif element.is_a?(String)
+                element.split(',').each do |el|
                     self[el.strip] = true
                 end
+            else
+                self[element] = true
             end
         end
     
