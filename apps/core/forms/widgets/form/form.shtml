@@ -38,8 +38,8 @@
 		<div class="sub_links" sp:if="!@sub_links.empty?">
 			<h4>Dati collegati:</h4>
 			<ul>
-				<li sp:each="@sub_links |link, label|">
-					<a href="{ @widget[:request_path] }/{ link }">{ label }</a>
+				<li sp:each="@sub_links |el, l|">
+					<a href="{ @widget[:request_path] }/{ l[:link] }">{ l[:label] }</a>
 				</li>
 			</ul>
 		</div>

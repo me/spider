@@ -250,7 +250,7 @@ module Spider; module Forms
                         widget_type = el.type.attributes[:estimated_size] && el.type.attributes[:estimated_size] > 30 ? 
                             SearchSelect : Select
                     elsif @attributes[:show_related] && @pk && el.multiple?
-                        @sub_links[@pk+'/'+el.label.downcase.gsub(/\s+/, '_')] = @labels[el.name]
+                        @sub_links[el.name] = sub_link(el)
                     end
                 end
                 input = create_input(widget_type, el) if widget_type
@@ -449,6 +449,9 @@ module Spider; module Forms
         
         def disable(*names)
             @disabled += names
+        end
+        def sub_link(el)
+            {:link => @pk+'/'+el.label.downcase.gsub(/\s+/, '_'), :label => @labels[el.name]}
         end
         
         
