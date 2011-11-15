@@ -45,6 +45,15 @@ module Spider
                         
                         find_tags
                     end
+
+                    def full_name
+                        @full_name || self.spec.name
+                    end
+
+                    def description
+                        desc = @description || self.spec.description
+                        desc.blank? ? self.name : desc
+                    end
                     
                     def request_url
                         if u = Spider.conf.get("#{@dotted_name}.url") 
