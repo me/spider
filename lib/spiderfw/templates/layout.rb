@@ -34,88 +34,31 @@ module Spider
             seen = {}
             js_messages = []
             use_cdn = Spider.conf.get('assets.use_cdn')
-            compress_assets = {:js => {}, :css => {}}
             cname = File.basename(@path, '.layout.shtml')
             cname = File.basename(cname, '.shtml')
             cname += "-#{@asset_set}" if @asset_set
-            pub_dest = nil
+
             all_assets.each do |ass|
                 seen_check = ass[:runtime] || ass[:src]
                 next if ass[:src].blank? && !ass[:runtime]
                 next if seen[seen_check]
                 seen[seen_check] = true
-                type = ass[:type].to_sym
                 
                 ass = compile_asset(ass)
-                
-                compress_config = case type
-                when :js
-                    'javascript.compress'
-                when :css
-                    'css.compress'
-                end
-                no_compress = @scene.__is_error_page || !Spider.conf.get(compress_config) || \
-                                ass[:runtime] || ass[:if_ie_lte] || ass[:media] || (use_cdn && ass[:cdn])
-                
-                if no_compress
-                    if ass[:runtime]
-                        assets[type] << {:src => Spider::Template.runtime_assets[ass[:runtime]].call(@request, @response, @scene)}
-                    else
-                        assets[type] << ass
-                    end
-                else
-                    unless pub_dest
-                        pub_dest = self.class.compiled_folder_path
-                        FileUtils.mkdir_p(pub_dest)
-                    end
-                    if comp = ass[:compressed_path] # Already compressed assets
-                        name = File.basename(comp)
-                        if ass[:compressed_rel_path] # Keeps the compressed files in a subdir
-                            dir = File.dirname(ass[:compressed_rel_path])
-                            if ass[:copy_dir] # Copies the source dir (which may contain resources used by the assets)
-                                start = dir
-                                if ass[:copy_dir].is_a?(Fixnum) # How many levels to go up
-                                    ass[:copy_dir].downto(0) do |i|
-                                        start = File.dirname(start)
-                                    end
-                                end
-                                dst_dir = File.join(pub_dest, start)
-                                unless File.dirname(start) == '.' || File.directory?(File.dirname(dst_dir))
-                                    FileUtils.mkdir_p(File.join(pub_dest, File.dirname(dst_dir)))
-                                end
-                                unless File.directory?(dst_dir)
-                                    FileUtils.cp_r(File.join(ass[:app].pub_path, start), dst_dir)
-                                end
-                            else
-                                FileUtils.mkdir_p(File.join(pub_dest, dir))
-                                File.cp(comp, File.join(pub_dest, dir)) unless File.exist?(File.join(pub_dest, dir))
-                            end
-                            src = dir+'/'+name
-                        else
-                            unless File.exist?(File.join(pub_dest, name))
-                                File.cp(comp, pub_dest)
-                            end
-                            src = name
-                        end
-                        ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+src
-                        assets[type] << ass
-                    else # needs compression
-                        name = ass[:compress] || cname
-                        unless compress_assets[type][name]
-                            cpr = {:name => name, :assets => [], :cpr => true}
-                            assets[type] << cpr
-                            compress_assets[type][name] = cpr
-                        end
-                        compress_assets[type][name][:assets] << ass
-                    end
-                end
-                if ass[:gettext] && type == :js
-                    msg_path = asset_gettext_messages_file(ass[:path])
-                    if File.exists?(msg_path)
-                        js_messages += JSON.parse(File.read(msg_path))
-                    else
-                        Spider.logger.warn("Javascript Gettext file #{msg_path} not found")
-                    end
+
+                res = prepare_asset(ass)
+                assets[:css] += res[:css]
+                assets[:js] += res[:js]
+
+            end
+
+
+            if @compile_less == false
+                less = Spider::Template.get_named_asset('less')
+                less.each do |ass|
+                    res = prepare_asset(parse_asset(ass[:type], ass[:src], ass).first)
+                    assets[:css] += res[:css]
+                    assets[:js] += res[:js]
                 end
             end
             assets[:js].each do |ass|
@@ -133,7 +76,7 @@ module Spider
                     @template_assets[:css] << Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+compressed
                 else
                     ass[:src] = ass[:cdn] if ass[:cdn] && use_cdn
-                    is_dyn = ass[:if_ie_lte] || ass[:media]
+                    is_dyn = ass[:if_ie_lte] || ass[:media] || ass[:rel]
                     @template_assets[:css] << (is_dyn ? ass : ass[:src])
                 end
             end
@@ -150,6 +93,85 @@ module Spider
             end
             
             @assets_prepared = true
+        end
+
+        def prepare_asset(ass)
+            type = ass[:type].to_sym
+            assets = {:css => [], :js => []}
+            compress_assets = {:js => {}, :css => {}}
+            pub_dest = nil
+
+                
+            compress_config = case type
+            when :js
+                'javascript.compress'
+            when :css
+                'css.compress'
+            end
+            no_compress = @scene.__is_error_page || !Spider.conf.get(compress_config) || \
+                            ass[:runtime] || ass[:if_ie_lte] || ass[:media] || (use_cdn && ass[:cdn])
+            
+            if no_compress
+                if ass[:runtime]
+                    assets[type] << {:src => Spider::Template.runtime_assets[ass[:runtime]].call(@request, @response, @scene)}
+                else
+                    assets[type] << ass
+                end
+            else
+                unless pub_dest
+                    pub_dest = self.class.compiled_folder_path
+                    FileUtils.mkdir_p(pub_dest)
+                end
+                if comp = ass[:compressed_path] # Already compressed assets
+                    name = File.basename(comp)
+                    if ass[:compressed_rel_path] # Keeps the compressed files in a subdir
+                        dir = File.dirname(ass[:compressed_rel_path])
+                        if ass[:copy_dir] # Copies the source dir (which may contain resources used by the assets)
+                            start = dir
+                            if ass[:copy_dir].is_a?(Fixnum) # How many levels to go up
+                                ass[:copy_dir].downto(0) do |i|
+                                    start = File.dirname(start)
+                                end
+                            end
+                            dst_dir = File.join(pub_dest, start)
+                            unless File.dirname(start) == '.' || File.directory?(File.dirname(dst_dir))
+                                FileUtils.mkdir_p(File.join(pub_dest, File.dirname(dst_dir)))
+                            end
+                            unless File.directory?(dst_dir)
+                                FileUtils.cp_r(File.join(ass[:app].pub_path, start), dst_dir)
+                            end
+                        else
+                            FileUtils.mkdir_p(File.join(pub_dest, dir))
+                            File.cp(comp, File.join(pub_dest, dir)) unless File.exist?(File.join(pub_dest, dir))
+                        end
+                        src = dir+'/'+name
+                    else
+                        unless File.exist?(File.join(pub_dest, name))
+                            File.cp(comp, pub_dest)
+                        end
+                        src = name
+                    end
+                    ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+src
+                    assets[type] << ass
+                else # needs compression
+                    name = ass[:compress] || cname
+                    unless compress_assets[type][name]
+                        cpr = {:name => name, :assets => [], :cpr => true}
+                        assets[type] << cpr
+                        compress_assets[type][name] = cpr
+                    end
+                    compress_assets[type][name][:assets] << ass
+                end
+            end
+            if ass[:gettext] && type == :js
+                msg_path = asset_gettext_messages_file(ass[:path])
+                if File.exists?(msg_path)
+                    js_messages += JSON.parse(File.read(msg_path))
+                else
+                    Spider.logger.warn("Javascript Gettext file #{msg_path} not found")
+                end
+            end
+            assets
         end
         
         @@named_layouts = {}
@@ -190,26 +212,71 @@ module Spider
         end
         
         def compile_asset(ass)
-            return ass unless ass[:src]
+            return ass unless ass[:src] && ass[:path]
             if ass[:type] == :css
                 ext = File.extname(ass[:path])
                 compile_exts = ['.scss', '.sass', '.less']
+
                 if compile_exts.include?(ext)
+                    ass_type = nil
+                    if ext == '.less'
+                        ass_type = :less
+                        if @compile_less.nil?
+                            @compile_less = false
+                            if Spider.conf.get('css.compile_less')
+                                begin
+                                    require 'spiderfw/templates/resources/less'
+                                    @compile_less = true
+                                rescue LoadError
+                                    Spider.logger.error("Unable to compile LESS. Please install less-js gem and a JS backend.")
+                                end
+                            end
+                        end
+                        unless @compile_less
+                            ass[:rel] = 'stylesheet/less'
+                            return ass
+                        end
+                    elsif ['.scss', '.sass'].include?(ext)
+                        ass_type = :sass
+                    end
                     dir = File.dirname(ass[:path])
                     base = File.basename(ass[:path], ext)
                     newname = "#{base}.css"
-                    tmpdestdir = File.join(dir, 'stylesheets')
-                    dest = File.join(tmpdestdir, newname)
-                    compiler = if ['.scss', '.sass'].include?(ext)
-                        require 'spiderfw/templates/resources/sass'
-                        Spider::SassCompiler
-                    elsif ext == '.less'
-                        require 'spiderfw/templates/resources/less'
-                        Spider::LessCompiler
+                    parts = dir.split(File::SEPARATOR)
+                    if type_i = parts.index(ass_type.to_s)
+                        parts[type_i] = File.join(ass[:type].to_s, ass_type.to_s)
+                        destdir = parts.join(File::SEPARATOR) 
+                    else
+                        destdir = dir
                     end
-                    compiler.compile(ass[:path], dest)
+                    FileUtils.mkdir_p(destdir)
+                    dest = File.join(destdir, newname)
+                    if Spider.conf.get('css.compile')
+                        compiler_class = if ass_type == :sass
+                            require 'spiderfw/templates/resources/sass'
+                            Spider::SassCompiler
+                        elsif ass_type == :less
+                            Spider::LessCompiler
+                        end
+                        begin
+                            compiler = compiler_class.new(ass[:app].pub_path)
+                            compiler.compile(ass[:path], dest)
+                        rescue Exception
+                            if ext == '.less'
+                                Spider.logger.error("Unable to compile LESS. Please ensure you have a JS backend
+                                 (see https://github.com/sstephenson/execjs)")
+                            else
+                                raise
+                            end
+                        end
+                    end
                     ass[:path] = dest
-                    ass[:src] = File.join(File.dirname(ass[:src]), newname)
+                    srcdir = File.dirname(ass[:src])
+                    if destdir != dir
+                        srcdir = srcdir.sub(ass_type.to_s, File.join(ass[:type].to_s, ass_type.to_s))
+                    end
+                    ass[:src] = File.join(srcdir, newname)
+                    
                 end
             end
             return ass
@@ -392,7 +459,6 @@ module Spider
         
         def output_assets(type=nil)
             types = type ? [type] : self.assets.keys
-            use_cdn = Spider.conf.get('assets.use_cdn')
             if types.include?(:js)
                 self.assets[:js].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
@@ -412,7 +478,8 @@ module Spider
             if types.include?(:css)
                 self.assets[:css].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
-                    link = "<link rel=\"stylesheet\" type=\"text/css\" href=\"#{ass[:src]}\""
+                    rel = ass[:rel] || 'stylesheet'
+                    link = "<link rel=\"#{rel}\" type=\"text/css\" href=\"#{ass[:src]}\""
                     link += " media=\"#{ass[:media]}\"" if ass[:media]
                     link += ">\n"
                     if ass[:if_ie_lte]
