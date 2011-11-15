@@ -24,6 +24,12 @@ module Spider; module Model
             @polymorphs = {}
             @expandable = true
         end
+
+        def self.strict(val=nil, params={})
+            r = self.new(val, params)
+            r.expandable = false
+            r
+        end
         
         # TODO: fix/remove?
         def request(element) # :nodoc:
