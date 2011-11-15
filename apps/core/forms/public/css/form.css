@@ -28,14 +28,14 @@
 	right: 8px;
 }
 
-.spider.forms.form .row.error label{
+.spider.forms.form .formrow.error label{
 }
 
-.spider.forms.form .row.error input{
+.spider.forms.form .formrow.error input{
     background-color: #FF9999;
 }
 
-.spider.forms.form .row{
+.spider.forms.form .formrow{
     clear: both;
     overflow: hidden;
     margin-top: 5px;
