@@ -141,3 +141,7 @@ Spider::Template.define_named_asset 'jquery-tools-tooltip', [
     [:js, 'js/jquery/jquery-tools-1.2.5/tooltip/tooltip.js', Spider::Components],
     [:js, 'js/jquery/jquery-tools-1.2.5/tooltip/tooltip.dynamic.js', Spider::Components]
 ], :depends => ['jquery']
+
+Spider::Template.define_named_asset 'less', [
+     [:js, 'js/less-1.1.3.min.js', Spider::Components, {:compressed => true}]
+ ]
