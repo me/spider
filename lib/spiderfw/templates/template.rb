@@ -407,6 +407,7 @@ module Spider
             controller = nil
             if res && res.definer
                 controller = res.definer.controller
+                ass[:app] = res.definer
             elsif owner_class < Spider::Controller
                 controller = owner_class
             end
