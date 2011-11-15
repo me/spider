@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Forms 0.1\n"
-"POT-Creation-Date: 2011-09-13 14:25+0200\n"
+"POT-Creation-Date: 2011-11-15 16:13+0100\n"
 "PO-Revision-Date: 2009-06-30 17:03+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,6 +31,10 @@ msgstr ""
 
 #: widgets/form/form.rb:36
 msgid "%s and stay"
+msgstr ""
+
+#: widgets/form/form.rb:466
+msgid "New"
 msgstr ""
 
 #: widgets/inputs/date_time/date_time.rb:25
