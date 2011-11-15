@@ -435,7 +435,7 @@ module Spider
                 ass = processor.process(ass)
             end
             if cpr = attributes[:compressed] 
-                if cpr == "true"
+                if cpr == true || cpr == "true"
                     ass[:compressed_path] = ass[:path]
                     ass[:compressed_rel_path] = ass[:rel_path]
                     ass[:compressed] = base_url + File.basename(ass[:path])
