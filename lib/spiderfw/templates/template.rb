@@ -816,8 +816,10 @@ module Spider
                     elsif override.name == 'tpl:override-attr'
                         f.set_attribute(override.get_attribute("name"), override.get_attribute("value"))
                     elsif override.name == 'tpl:append-attr'
-                        f.set_attribute(override.get_attribute("name"), \
-                        (f.get_attribute(override.get_attribute("name")) || '')+override.get_attribute("value")) 
+                        a = f.get_attribute(override.get_attribute("name")) || ''
+                        a += ' ' unless a.blank?
+                        a += override.get_attribute("value")
+                        f.set_attribute(override.get_attribute("name"), a)
                     elsif override.name == 'tpl:append'
                         f.innerHTML += override.innerHTML
                     elsif override.name == 'tpl:prepend'
