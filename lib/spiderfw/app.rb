@@ -247,6 +247,9 @@ module Spider
                 end
                 alias :#{name}= :#{name}
 END_OF_EVAL
+                if options[:default].is_a?(TrueClass) || options[:default].is_a?(FalseClass)
+                    str += "\nalias :#{name}? :#{name}\n"
+                end
                 class_eval(str)
             end
             
