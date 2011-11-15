@@ -62,16 +62,18 @@ module Spider
             
             def i_attribute(name, params={})
                 params[:instance_attr] = true
+                params[:ruby_name] = name.to_s.gsub('-', '_').to_sym
                 params[:set_var] = true
                 attribute(name, params)
-                attr_reader(name)
+                attr_reader(params[:ruby_name])
             end
             
             def is_attribute(name, params={})
                 params[:instance_attr] = true
+                params[:ruby_name] = name.to_s.gsub('-', '_').to_sym
                 i_attribute(name, params)
-                attr_to_scene(name)
-                attr_reader(name)
+                attr_to_scene(params[:ruby_name])
+                attr_reader(params[:ruby_name])
             end
             
             def s_attribute(name, params={})
@@ -81,14 +83,16 @@ module Spider
             
             def i_attr_accessor(name, params={})
                 params[:instance_attr] = true
+                params[:ruby_name] = name.to_s.gsub('-', '_').to_sym
                 i_attribute(name, params)
-                attr_accessor(name)
+                attr_accessor(params[:ruby_name])
             end
             
             def is_attr_accessor(name, params={})
                 params[:instance_attr] = true
+                params[:ruby_name] = name.to_s.gsub('-', '_').to_sym
                 is_attribute(name, params)
-                attr_accessor(name)
+                attr_accessor(params[:ruby_name])
             end
             
             def attr_to_scene(*names)

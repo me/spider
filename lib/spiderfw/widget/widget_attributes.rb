@@ -33,7 +33,7 @@ module Spider
                 end
             end
             v = params[:process].call(v) if params[:process] && v
-            @widget.instance_variable_set("@#{k}", v) if params[:set_var]
+            @widget.instance_variable_set("@#{params[:ruby_name]}", v) if params[:set_var]
             super(k, v)
         end
         
@@ -42,7 +42,7 @@ module Spider
             params = @attributes[k]
             v = super
             if (!v)
-                return @widget.instance_variable_get("@#{k}") if params[:instance_attr]
+                return @widget.instance_variable_get("@#{params[:ruby_name]}") if params[:instance_attr]
                 return nil
             end
             return v
