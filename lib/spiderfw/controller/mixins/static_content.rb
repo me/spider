@@ -89,11 +89,10 @@ module Spider; module ControllerMixins
                 begin
                   if_modified = Time.httpdate(@request.env['HTTP_IF_MODIFIED_SINCE'])
                 rescue ArgumentError # Passenger with IE6 has this header wrong
-                  if_modified = 0
                 end
                 max_age = nil
                 fresh = true
-                if fresh && mtime <= if_modified
+                if fresh && if_modified && mtime <= if_modified
                     debug("Not modified since #{if_modified}: #{full_path}")
                     #@response.status = Spider::HTTP::NOT_MODIFIED
                     @response.headers.delete("Content-Type")
