@@ -583,9 +583,10 @@ module Spider; module Model; module Mappers
                     cond[:values] << [field, comp, v]
                     joins += field.joins
                     if is_having
-                        cond[:group_by_fields] += k.inner_elements.map{ |el_name, owner_func| 
-                            owner_func.mapper_fields[el_name.to_s]
-                        }
+                        k.inner_elements.each do |el_name, owner_func|
+                            next if owner_func.is_a?(QueryFuncs::AggregateFunction)
+                            cond[:group_by_fields] <<= owner_func.mapper_fields[el_name.to_s]
+                        end
                     end
                     next
                 end
