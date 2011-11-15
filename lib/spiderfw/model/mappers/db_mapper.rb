@@ -185,7 +185,7 @@ module Spider; module Model; module Mappers
             joins += c_joins
             save[:condition] = condition
             save[:joins] = prepare_joins(joins)
-            sql, bind_vars = @storage.sql_update(save)
+            sql, bind_vars = @storage.sql_update(save, true)
             return @storage.execute(sql, *bind_vars)
         end
         

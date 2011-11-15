@@ -448,7 +448,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns SQL and values for an update statement.
-        def sql_update(update)
+        def sql_update(update, allow_all=false)
             curr[:last_query_type] = :update
             values = []
             tables = update[:table].to_s
@@ -462,7 +462,8 @@ module Spider; module Model; module Storage; module Db
             sql += sql_update_values(update)
             where, bind_vars = sql_condition(update)
             values += bind_vars
-            sql += " WHERE #{where}"
+            raise "Update without conditions" if where.blank? && !allow_all
+            sql += " WHERE #{where}" unless where.blank?
             return [sql, values]
         end
         
