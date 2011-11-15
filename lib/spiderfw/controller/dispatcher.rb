@@ -41,7 +41,8 @@ module Spider
                 obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
                 route.obj = obj
                 if (route.options[:do])
-                    obj.instance_exec(*(route.params || []).slice(0, route.options[:do].arity), &route.options[:do])
+                    do_args = [route.matched] + (route.params || [])
+                    obj.instance_exec(*(do_args).slice(0, route.options[:do].arity), &route.options[:do])
                 end
             end
             obj = route.obj            
