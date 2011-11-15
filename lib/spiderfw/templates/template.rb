@@ -854,7 +854,7 @@ module Spider
         end
         
         ExpressionOutputRegexp = /\{?\{\s([^\s].*?)\s\}\}?/
-        GettextRegexp = /_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
+        GettextRegexp = /([snp][snp]?)?_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
         ERBRegexp = /(<%(.+)?%>)/
         SceneVarRegexp = /@(\w[\w\d_]+)/
         
@@ -875,8 +875,8 @@ module Spider
                         yield :expr, $1, scanner.matched
                     end
                 when GettextRegexp
-                    gt = [$1]
-                    gt << $3 if $2 # interpolated vars
+                    gt = {:val => $2, :func => $1}
+                    gt[:vars] = $4 if $3 # interpolated vars
                     yield :gettext, gt, scanner.matched
                 when ERBRegexp
                     yield :erb, $1, scanner.matched

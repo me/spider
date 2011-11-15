@@ -21,13 +21,13 @@ module Spider; module I18n
                     str =~ Spider::TemplateBlocks::GettextRegexp
                     found = false
                     ary.each do |msg|
-                        if (msg[0] == $1)
+                        if (msg[0] == $2)
                             msg << "#{file}:#{cnt}"
                             found = true
                             break
                         end
                     end
-                    ary << [$1, "#{file}:#{cnt}"] unless found
+                    ary << [$2, "#{file}:#{cnt}"] unless found
                 end
             end
             f.close
