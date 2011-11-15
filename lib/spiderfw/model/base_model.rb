@@ -1174,8 +1174,8 @@ module Spider; module Model
                 qs.autoload = true
                 qs.where(&proc)
             else
-                condition = Condition.and(params[0])
-                request = Request.new(params[1])
+                condition = params[0].is_a?(Condition) ? params[0] : Condition.and(params[0])
+                request = params[1].is_a?(Request) ? params[1] : Request.new(params[1])
                 query = Query.new(condition, request)
                 qs = QuerySet.new(self, query)
             end
