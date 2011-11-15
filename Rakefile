@@ -5,7 +5,6 @@ require 'pathname'
 def check_app_path(full, partial)
     p = Pathname.new(full)
     rel = p.relative_path_from(Pathname.new($SPIDER_PATHS[:core_apps]))
-    return true if partial == "spider" && !rel.to_s.blank?
     return true if rel.to_s == partial
     if Spider.paths[:apps]
         rel = p.relative_path_from(Pathname.new(Spider.paths[:apps]))
