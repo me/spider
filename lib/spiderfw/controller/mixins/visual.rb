@@ -250,7 +250,10 @@ module Spider; module ControllerMixins
         end
         
         def try_rescue(exc)
-            exc.uuid = UUIDTools::UUID.random_create.to_s if exc.respond_to?(:uuid=)
+            if exc.respond_to?(:uuid=)
+                return super if exc.uuid # Error page already outputted
+                exc.uuid = UUIDTools::UUID.random_create.to_s 
+            end
             format = self.class.output_format(:error) || :html
             unless exc.is_a?(Spider::Controller::Maintenance) || exc.is_a?(Spider::Controller::NotFound)
                 return super unless @executed_format == :html
