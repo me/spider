@@ -1,5 +1,5 @@
 <div>
-    _(Queues):
+    <h3>_(Queues)</h3>
     <ul>
         <li sp:each="@queues |name|">
             <a href="{ @controller[:request_path] }/{ name }">{ @queue_info[name][:label] }</a>:

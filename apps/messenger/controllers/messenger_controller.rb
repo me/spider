@@ -1,6 +1,8 @@
 module Spider; module Messenger
 
     class MessengerController < Spider::PageController
+        include StaticContent
+        
         layout [:spider_admin, 'messenger.layout']
         
         Messenger.queues.keys.each do |queue|
