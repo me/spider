@@ -558,6 +558,7 @@ module Spider; module ControllerMixins
                     path = Spider::Layout.named_layouts[path]
                 end
                 resource = Spider::Template.find_resource(path+'.layout', layout_path, self)
+                raise "Layout #{path} not found" unless resource && resource.path
                 layout = Spider::Layout.new(resource.path)
                 layout.definer_class = resource.definer
                 layout.asset_set = params[:assets] if params[:assets]
