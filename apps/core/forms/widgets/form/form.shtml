@@ -1,6 +1,5 @@
 <div class="{ @widget[:css_class] }">
     <tpl:assets widgets="forms:datetime,forms:file,forms:select,forms:search-select,forms:textarea" />
-	<tpl:asset type="css" src="css/form.css" />
 	<tpl:asset type="js" src="form.js" />
 	<div sp:if="@error" class='errors'>
 		<ul>
