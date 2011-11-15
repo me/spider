@@ -804,7 +804,11 @@ module Spider
                     elsif override.name == 'tpl:override' || override.name == 'tpl:content'
                         overridden = f.to_html
                         parent = f.parent
-                        f.swap(override.innerHTML)
+                        if f == el
+                            f.innerHTML = override.innerHTML
+                        else
+                            f.swap(override.innerHTML)
+                        end
                         parent.search('tpl:overridden').each do |o| 
                             ovr = overridden
                             if o_search = o.get_attribute('search')
