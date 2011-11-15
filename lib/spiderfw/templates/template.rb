@@ -664,6 +664,11 @@ module Spider
         # - exec
         # - eval the template's compiled run code.
         def render(scene=nil)
+            prev_domain = nil
+            if @definer_class
+                td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+                prev_domain = Spider::GetText.set_domain(td)
+            end
             scene ||= @scene
             load unless loaded?
             init(scene) unless init_done?
@@ -694,6 +699,7 @@ module Spider
                     @content[yielded].render if @content[yielded]
                 end
             end
+            Spider::GetText.restore_domain(prev_domain) if prev_domain
             # end
         end
         

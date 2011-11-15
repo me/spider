@@ -210,13 +210,12 @@ module Spider; module ControllerMixins
             end
             init_widgets(template, layout)
             return template if done?
-            Spider::GetText.in_domain(self.class.app.short_name){
-                if layout
-                    layout.render(scene)
-                else
-                    template.render(scene)
-                end
-            }
+        
+            if layout
+                layout.render(scene)
+            else
+                template.render(scene)
+            end
             return template
         end
         
