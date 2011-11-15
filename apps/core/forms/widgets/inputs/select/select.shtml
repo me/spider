@@ -1,13 +1,16 @@
-<select name="{ @value_param }" sp:attr-if="@multiple,multiple" title="">
-	<tpl:asset type="js" src="input.js" />
-	<tpl:asset type="js" src="select.js" />
-	<tpl:asset type="js" app="core/components" src="js/jquery/plugins/bsmselect/js/jquery.bsmselect.js" if="@multiple" />
-	<tpl:asset type="css" app="core/components" src="js/jquery/plugins/bsmselect/css/jquery.bsmselect.css" if="@multiple" />
-    <option sp:if="@blank_option"> </option>
-    <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@selected[values[i]],selected">
-        <tpl:pass sp:if="@tree_depth">
-            { "-"*(@data[i].get(@tree_depth)||0) }
-        </tpl:pass>
-        { @data[i].to_s }
-    </option>
-</select>
+<div class="input">
+    <tpl:asset type="js" src="input.js" />
+    <tpl:asset type="js" src="select.js" />
+    <tpl:asset type="js" app="core/components" src="js/jquery/plugins/bsmselect/js/jquery.bsmselect.js" if="@multiple" />
+    <tpl:asset type="css" app="core/components" src="js/jquery/plugins/bsmselect/css/jquery.bsmselect.css" if="@multiple" />
+    <select name="{ @value_param }" sp:attr-if="@multiple,multiple" title="">
+    	
+        <option sp:if="@blank_option"> </option>
+        <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@selected[values[i]],selected">
+            <tpl:pass sp:if="@tree_depth">
+                { "-"*(@data[i].get(@tree_depth)||0) }
+            </tpl:pass>
+            { @data[i].to_s }
+        </option>
+    </select>
+</div>
