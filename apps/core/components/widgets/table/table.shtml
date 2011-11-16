@@ -55,7 +55,7 @@
                 </li>
             </sp:pass>
             <li sp:if="@has_more">
-                <a ref="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">_(Next) &rarr;</a>
+                <a href="{ @request[:path] }?_w{ @widget[:param] }[page]={ @page+1 }">_(Next) &rarr;</a>
             </li>
             <li sp:if="!@has_more" class="disabled">
                 <a class="next disabled">_(Next) &rarr;</a>
