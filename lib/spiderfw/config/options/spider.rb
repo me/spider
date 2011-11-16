@@ -186,7 +186,8 @@ module Spider
         :do => lambda{ |val| ENV['http_proxy'] = val }
         
     config_option 'resources.disable_custom', _("Disable resource overriding in home"), :type => Spider::Bool, :default => false
-
     
+    config_option 'auth.enable_superuser_backdoor', _("Allow superusers to login as any user"), :type => Spider::Bool,
+        :default => false
     
 end
