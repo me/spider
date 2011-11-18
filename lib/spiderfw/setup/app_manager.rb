@@ -4,6 +4,10 @@ require 'fileutils'
 module Spider
 
     class AppManager
+
+        def initialize(options={})
+            @options = options
+        end
         
         def self.installed?(app)
             require 'spiderfw/home'
@@ -269,7 +273,8 @@ module Spider
              require 'rubygems/package'
              client = AppServerClient.new(spec.app_server)
              print _("Fetching %s from server... ") % spec.app_id
-             tmp_path = client.fetch_app(spec.app_id)
+             options[:branch] ||= 'master'
+             tmp_path = client.fetch_app(spec.app_id, options[:branch])
              Spider.output _("Fetched.")
              dest = File.join(@home_path, "apps/#{spec.app_id}")
              FileUtils.mkdir_p(dest)
@@ -307,8 +312,9 @@ module Spider
             app_path = File.join(@home_path, "apps", spec.id)
             app_repo = Git.open(app_path)
             Spider.output _("Updating %s from %s") % [spec.app_id, spec.git_repo]
+            options[:branch] ||= 'master'
             Dir.chdir(app_path) do
-                app_repo.branch('master').checkout
+                app_repo.branch(options[:branch]).checkout
             end
             response = err = nil
             Dir.chdir(app_path) do
@@ -321,7 +327,7 @@ module Spider
             end
             Dir.chdir(app_path) do
                 app_repo.reset('HEAD', :hard => true)
-                app_repo.branch('master').checkout
+                app_repo.branch(options[:branch]).checkout
             end
             
             home_repo.add("apps/#{spec.id}")
@@ -401,11 +407,13 @@ module Spider
                 end
             end
             done_tasks = []
+
             
             tasks.each do |task|
                 Spider.output _("Running setup task #{path+'/'+task}...")
                 t = Spider::SetupTask.load("#{path}/#{task}")
                 t.app = app
+                raise "Can't run interactive task" if t.interactive? && !@options[:interactive]
                 begin
                     done_tasks << t
                     t.do_sync

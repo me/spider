@@ -65,14 +65,50 @@ module Spider
             instance_eval(&@cleanup) if @cleanup
         end
 
-        def do_sync
-            return unless @sync_models
+        def sync_schema(models=nil)
+            models ||= @sync_models
+            return unless models
             options = {
                 :no_foreign_key_constraints => true
             }
-            @sync_models.each do |m|
+            models.each do |m|
                 m.mapper.sync_schema(false, options)
             end
+        end
+
+        def confirm(msg, default=nil)
+            yes = _("yes")
+            no = _("no")
+            y = yes[0].chr
+            n = no[0].chr
+            if default == true
+                y = y.upcase
+            elsif default == false
+                n = n.upcase
+            end
+
+            good = false
+
+            while !good
+                print "#{msg} #{y}/#{n}]: "
+                res = $stdin.gets.strip
+                
+                good = true
+                if res == yes || res == y
+                    res = true
+                elsif res == no || res == n
+                    res = false
+                elsif res.blank? && !default.nil?
+                    res = default
+                else
+                    good = false
+                end
+
+            end
+
+            return res
+
+
         end
         
         # def no_sync_schema
@@ -144,6 +180,14 @@ module Spider
         def self.cleanup(&proc)
             @cleanup = proc if proc
             @cleanup
+        end
+
+        def self.interactive!
+            @interactive = true
+        end
+
+        def self.interactive?
+            !!@interactive
         end
         
     end

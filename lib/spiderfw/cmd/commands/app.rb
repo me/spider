@@ -117,6 +117,7 @@ class AppCommand < CmdParse::Command
             }
             opt.on("--ssh-user [USERNAME]", _("SSH user")){ |s| @ssh_user = s }
             opt.on("--no-activate", _("Don't activate installed apps")){ |s| @no_activate = true }
+            opt.on("--branch", _("Install app from specific branch"), "-b"){ |b| @branch = b }
         end
         install.set_execution_block do |args|
             $SPIDER_INTERACTIVE = true
@@ -130,6 +131,7 @@ class AppCommand < CmdParse::Command
                 :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
             }
             options[:url] = @server_url if @server_url
+            options[:branch] = @branch if @branch
             if @git && !Spider::AppManager.git_available?
                 puts _("git gem not available; install git gem for Git support")
                 exit
@@ -151,7 +153,7 @@ class AppCommand < CmdParse::Command
             unless specs[:update].empty?
                 puts _("The following apps will be updated as a dependency: %s") % specs[:update].map{ |s| s.app_id }.join(', ')
             end
-            Spider::AppManager.new.install(specs, options)
+            Spider::AppManager.new(:interactive => true).install(specs, options)
         end
         self.add_command(install)
         
@@ -183,6 +185,7 @@ class AppCommand < CmdParse::Command
             opt.on("--refresh", _("Update apps even if the version has not changed"), "-r"){ |r| @refresh = true }
             opt.on("--no-clear-cache", _("Don't clear cache"), "-C"){ |c| @no_clear_cache = true }
             opt.on("--no-restart", _("Don't restart the server after the udpate"), "-R"){ |r| @no_restart = true }
+            opt.on("--branch", _("Install app from specific branch"), "-b"){ |b| @branch = b }
         end
         update.set_execution_block do |args|
             $SPIDER_INTERACTIVE = true
@@ -197,6 +200,7 @@ class AppCommand < CmdParse::Command
                 :clear_cache => !@no_clear_cache, :restart => !@no_restart
             }
             options[:url] = @server_url if @server_url
+            options[:branch] = @branch if @branch
             apps = args
             options[:refresh] = apps if @refresh
             apps.each do |app|
@@ -243,7 +247,7 @@ class AppCommand < CmdParse::Command
         setup.set_execution_block do |args|
             $SPIDER_INTERACTIVE = true
             require 'spiderfw/setup/app_manager'
-            tasks = Spider::AppManager.new.setup(name)
+            tasks = Spider::AppManager.new(:interactive => true).setup(name)
             unless @no_cleanup
                 tasks.each do |t|
                     begin

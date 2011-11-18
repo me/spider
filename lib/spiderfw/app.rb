@@ -288,6 +288,9 @@ END_OF_EVAL
             array_attribute :gems_optional
             attribute :version
             attribute :app_server
+            attribute :auto_update, :default => true
+
+            attr_accessor :branch
             
             def id(val=nil)
                 self.app_id(val)
@@ -327,6 +330,7 @@ END_OF_EVAL
                 @@attributes.each do |a|
                     h[a] = send(a)
                 end
+                h[:branch] = @branch unless @branch.blank?
                 h
             end
             
