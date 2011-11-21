@@ -145,9 +145,9 @@ module Spider
                     when :expr
                         res += "'+("+vars_to_scene(val)+").to_s+'"
                     when :gettext
-                        res += "'\n$out << _('#{escape_text(val[0])}')"
-                        if val[1]
-                            res += " #{vars_to_scene(val[1])}" 
+                        res += "'\n$out << _('#{escape_text(val[:val])}')"
+                        if val[:vars]
+                            res += " #{vars_to_scene(val[:vars])}" 
                         end
                         res += "\n$out << '"
                     end
