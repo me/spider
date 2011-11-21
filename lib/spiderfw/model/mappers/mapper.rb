@@ -605,7 +605,7 @@ module Spider; module Model
                     end
                     query.request.keys.each do |k, v|
                          # k may be a SelectFunction
-                        set.element_loaded(k) if k.respond_to?(:have_references?) && have_references?(k)
+                        set.element_loaded(k) if !k.is_a?(QueryFuncs::SelectFunction) && have_references?(k)
                     end
                     set.each_current do |obj|
                         next if merged[obj.object_id]
