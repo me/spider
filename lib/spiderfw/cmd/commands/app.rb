@@ -117,7 +117,7 @@ class AppCommand < CmdParse::Command
             }
             opt.on("--ssh-user [USERNAME]", _("SSH user")){ |s| @ssh_user = s }
             opt.on("--no-activate", _("Don't activate installed apps")){ |s| @no_activate = true }
-            opt.on("--branch", _("Install app from specific branch"), "-b"){ |b| @branch = b }
+            opt.on("--branch [BRANCH]", _("Install app from specific branch"), "-b"){ |b| @branch = b }
         end
         install.set_execution_block do |args|
             $SPIDER_INTERACTIVE = true
@@ -185,7 +185,7 @@ class AppCommand < CmdParse::Command
             opt.on("--refresh", _("Update apps even if the version has not changed"), "-r"){ |r| @refresh = true }
             opt.on("--no-clear-cache", _("Don't clear cache"), "-C"){ |c| @no_clear_cache = true }
             opt.on("--no-restart", _("Don't restart the server after the udpate"), "-R"){ |r| @no_restart = true }
-            opt.on("--branch", _("Install app from specific branch"), "-b"){ |b| @branch = b }
+            opt.on("--branch [BRANCH]", _("Install app from specific branch"), "-b"){ |b| @branch = b }
         end
         update.set_execution_block do |args|
             $SPIDER_INTERACTIVE = true
