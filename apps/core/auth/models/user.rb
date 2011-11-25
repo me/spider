@@ -14,6 +14,10 @@ module Spider; module Auth
         def can?(*args)
             false
         end
+
+        def superuser?
+            false
+        end
         
     end
     

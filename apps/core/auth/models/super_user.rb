@@ -4,6 +4,12 @@ module Spider; module Auth
         extend_model superclass, :add_polymorphic => true
         label _('Superuser'), _('Superusers')
         include LoginAuthenticator
+
+
+        def superuser?
+            true
+        end
+
     end
     
 end; end
