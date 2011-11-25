@@ -13,7 +13,7 @@ module Spider; module Auth
             @request.extend(RequestMethods)
             super
             return if action.index(Spider::Auth.route_url) == 0
-            return if respond_to?(:serving_static?) && serving_static?
+            return if respond_to?(:serving_static?) && serving_static?(action)
             self.class.auth_require_users.each do |req|
                 klasses, params = req
                 klasses = [klasses] unless klasses.is_a?(Array)
