@@ -48,7 +48,7 @@ module Spider
                 
                 ass = compile_asset(ass)
 
-                res = prepare_asset(ass, compress_assets)
+                res = prepare_asset(ass, compress_assets, js_messages)
                 assets[:css] += res[:css]
                 assets[:js] += res[:js]
 
@@ -97,7 +97,7 @@ module Spider
             @assets_prepared = true
         end
 
-        def prepare_asset(ass, compress_assets={})
+        def prepare_asset(ass, compress_assets={}, js_messages=[])
             type = ass[:type].to_sym
             assets = {:css => [], :js => []}
             pub_dest = nil
