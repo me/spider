@@ -16,6 +16,8 @@ module Spider
     
 end
 
+require 'apps/core/admin/admin'
+
 require 'apps/core/admin/controllers/admin_controller'
 require 'apps/core/admin/controllers/app_admin_controller'
 require 'apps/core/admin/widgets/admin_menu/admin_menu'
