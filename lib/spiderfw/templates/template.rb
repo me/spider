@@ -362,7 +362,7 @@ module Spider
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
-            compiled.assets = @assets + assets
+            compiled.assets = (@assets + assets).uniq
             return compiled
         end
         
