@@ -17,6 +17,14 @@ module Spider
                 @scene.current_app = Spider::Admin.apps[app_name]
             }
         end
+
+        def self.allowed_users
+            users = [Spider::Auth::SuperUser]
+            @apps.each do |name, app|
+                users += app[:options][:users] if app[:options][:users]
+            end
+            users.uniq
+        end
         
         
     end
