@@ -6,7 +6,7 @@
     	    <h1>{ @title }</h1>
 	    </div>
 	    <div class="tools">
-	        Benvenuto, { @username }.
+	        Benvenuto, { @username }. -
 	        <a href="{ @logout_url }" sp:if="!@guest">Logout</a>
 	    </div>
     </div>
@@ -18,12 +18,13 @@
         <tpl:append-attr search=".sidebar" name="class" value="spider-admin-sidebar" />
         <tpl:append-attr search=".content" name="class" value="spider-admin-content" />
         <tpl:prepend search=".sidebar">
-            <div sp:if="@_parent && @_parent._parent && @_parent._parent.current_app" class="sidebar-app-info">
+            <div sp:if="@_parent && @_parent._parent && @_parent._parent.current_app && @_parent._parent.apps.length > 1" 
+                class="sidebar-app-info">
                 <h2>{ @_parent._parent.current_app[:module].full_name }</h2>
             </div>
         </tpl:prepend>
         <tpl:prepend search=".content">
-            <ul class="breadcrumb">
+            <ul class="breadcrumb" sp:if="@_parent._parent.admin_breadcrumb">
                 <li sp:each="@_parent._parent.admin_breadcrumb[0..@_parent._parent.admin_breadcrumb.length-2] |bc|">
                     <a href="{ bc[:url] }">{ bc[:label] }</a> <span class="divider">/</span>
                 </li>
@@ -31,7 +32,6 @@
                     { @_parent._parent.admin_breadcrumb.last[:label] }
                 </li>
             </ul>
-            <h3>{ @_parent.current }</h3>
         </tpl:prepend>
     </core:switcher>
 </div>
