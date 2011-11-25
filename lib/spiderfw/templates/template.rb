@@ -481,6 +481,10 @@ module Spider
             @overrides += orig_overrides
             if root.name == 'tpl:extend'
                 orig_overrides = @overrides
+                our_domain = nil
+                if @definer_class
+                    our_domain = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+                end
                 @overrides = []
                 ext_src = root.get_attribute('src')
                 ext_app = root.get_attribute('app')
@@ -511,6 +515,9 @@ module Spider
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
+                if ext_app.short_name != our_domain
+                    root.set_attribute('tpl:text-domain', ext_app.short_name)
+                end
                 root.children_of_type('tpl:asset').each do |ass|
                     ass_src = ass.get_attribute('src')
                     if ass_src && ass_src[0].chr != '/'

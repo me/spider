@@ -45,6 +45,8 @@ module Spider
                 block = :ParentContext
             elsif el.name == 'sp:recurse'
                 block = :Recurse
+            elsif !skip_attributes && el.has_attribute?('tpl:text-domain')
+                block = :TextDomain    
             elsif Spider::Template.registered?(el.name)
                 klass = Spider::Template.get_registered_class(el.name)
                 if klass < ::Spider::Widget
@@ -217,5 +219,6 @@ require 'spiderfw/templates/blocks/layout_assets'
 require 'spiderfw/templates/blocks/layout_meta'
 require 'spiderfw/templates/blocks/lambda'
 require 'spiderfw/templates/blocks/recurse'
+require 'spiderfw/templates/blocks/text_domain'
 
 
