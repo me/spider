@@ -12,7 +12,6 @@ module Spider; module AppServer
             @scene.apps = AppServer.apps
         end
 
-        __.text
         def list_json(names=nil)
             if names
                 apps = names.split('+')
@@ -24,12 +23,13 @@ module Spider; module AppServer
 
         __.action
         def pack(name=nil)
+            branch = @request.params['branch'] || 'master'
             app = AppServer.apps_by_id[name]
             raise NotFound.new("App #{name}") unless app
             tmp = Tempfile.new("spider-app-archive")
             if app.is_a?(GitApp)
                 repo = app.repo
-                repo.archive_to_file('master', nil, tmp.path, nil, 'cat') 
+                repo.archive_to_file(branch, nil, tmp.path, nil, 'cat') 
             else
                 # TODO
             end
@@ -39,6 +39,7 @@ module Spider; module AppServer
         
         __.json
         def deps(names)
+            AppServer.apps
             names = names.split('+')
             new_apps = names
             specs = {}

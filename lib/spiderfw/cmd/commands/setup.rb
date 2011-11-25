@@ -42,7 +42,7 @@ class SetupCommand < CmdParse::Command
             tasks = []
             apps.each do |name|
                 require 'spiderfw/setup/app_manager'
-                tasks += Spider::AppManager.new.setup(name)
+                tasks += Spider::AppManager.new(:interactive => true).setup(name)
             end
             unless @no_cleanup
                 tasks.each do |t|
