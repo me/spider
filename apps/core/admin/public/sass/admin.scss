@@ -9,7 +9,7 @@ $base_color: #417690;
 $sidebar_color: #DFDFDF;
 
 #header{
-    height: 130px;
+    padding-bottom: 10px;
     background: image-url("css/header_bg.png") repeat-x scroll center top;
     background-color: $base_color;
     position: relative;
@@ -17,6 +17,11 @@ $sidebar_color: #DFDFDF;
 
     #header_top{
         @include clearfix;
+    }
+
+    h1{
+        font-size: 27px;
+        color: #444444;
     }
 
     #main_title{
@@ -37,6 +42,10 @@ $sidebar_color: #DFDFDF;
         
         a{
             @include link-colors(white);
+        }
+
+        .welcome{
+            margin-right: 6px;
         }
 
         .logout_link{
@@ -126,6 +135,14 @@ $sidebar_color: #DFDFDF;
         left: 20px;
         width: 220px;
         padding: 20px 10px;
+
+        li.active a{
+            text-decoration: underline;
+        }
+
+        li{
+            margin-bottom: 1px;
+        }
     }
 
     > .spider-admin-content {
