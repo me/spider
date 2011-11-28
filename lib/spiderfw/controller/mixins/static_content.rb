@@ -11,7 +11,6 @@ module Spider; module ControllerMixins
         def self.included(klass)
             super
             klass.route('public/', :serve_static, :do => lambda{ @serving_static = true })
-            klass.route('w/', :serve_widget_static, :do => lambda{ @serving_static = true })
             if (klass < Visual)
                 klass.no_layout('public')
                 klass.no_layout('serve_static')
@@ -58,14 +57,6 @@ module Spider; module ControllerMixins
                 return redirect(url)
             end
             full_path = pub_path+'/'+path
-            output_static(full_path)
-        end
-        
-        def serve_widget_static(path)
-            path = sanitize_path(path)
-            parts = path.split('/public/', 2)
-            raise Spider::Controller::NotFound.new(path) unless parts[1]
-            full_path = self.class.app.widgets_path+'/'+parts[0]+'/public/'+parts[1]
             output_static(full_path)
         end
         
