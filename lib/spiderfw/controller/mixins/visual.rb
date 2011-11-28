@@ -43,6 +43,16 @@ module Spider; module ControllerMixins
             if Spider.runmode != 'devel' && File.exists?(File.join(Spider.paths[:tmp], 'maintenance.txt'))
                 raise Spider::Controller::Maintenance
             end
+            n_route = dispatch_next(action)
+            obj = n_route.obj if n_route
+            if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?(n_route.path))
+                set_layout = @layout || @dispatcher_layout
+                if set_layout
+                    set_layout = [set_layout] unless set_layout.is_a?(Array)
+                    set_layout.map{ |l| self.class.load_layout(l) }
+                    obj.dispatcher_layout = set_layout
+                end
+            end
             super
         end
         
@@ -235,18 +245,6 @@ module Spider; module ControllerMixins
         
         
         
-        def dispatched_object(route)
-            obj = super
-            if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?(route.path))
-                set_layout = @layout || @dispatcher_layout
-                if set_layout
-                    set_layout = [set_layout] unless set_layout.is_a?(Array)
-                    set_layout.map{ |l| self.class.load_layout(l) }
-                    obj.dispatcher_layout = set_layout
-                end
-            end
-            return obj
-        end
         
         def try_rescue(exc)
             if exc.respond_to?(:uuid=)
