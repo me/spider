@@ -36,15 +36,6 @@ module Spider
         def dispatch(method, action='', *arguments)
             return nil unless can_dispatch?(method, action)
             route = @dispatch_next[action]
-            if (!route.obj)
-                obj = dispatched_object(route)
-                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
-                route.obj = obj
-                if (route.options[:do])
-                    do_args = [route.matched] + (route.params || [])
-                    obj.instance_exec(*(do_args).slice(0, route.options[:do].arity), &route.options[:do])
-                end
-            end
             obj = route.obj            
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
@@ -112,7 +103,21 @@ module Spider
         # Returns the (possibly cached) route for path.
         def dispatch_next(path)
             @dispatch_next ||= {}
-            @dispatch_next[path] ||= get_route(path)
+            @dispatch_next[path] ||= dispatcher_get_route(path)
+        end
+
+        def dispatcher_get_route(path)
+            route = get_route(path)
+            return route if !route || route.obj
+            obj = dispatched_object(route)
+            obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
+            route.obj = obj
+            if route.options[:do]
+                do_args = [route.matched] + (route.params || [])
+                obj.instance_exec(*(do_args).slice(0, route.options[:do].arity), &route.options[:do])
+            end
+            route.obj = obj
+            route
         end
         
         # Looks in defined routes, and returns the first matching Route for path.
@@ -174,6 +179,7 @@ module Spider
                     end
                     params ||= []
                     action.sub!(/^\/+/, '') # no leading slash
+
                     return Route.new(:path => path, :dest => dest, :action => action, :matched => matched,
                                      :params => params, :options => options)
                 end
