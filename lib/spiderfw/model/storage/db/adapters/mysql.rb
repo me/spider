@@ -315,12 +315,28 @@ module Spider; module Model; module Storage; module Db
              sql += " AUTO_INCREMENT" if attributes[:autoincrement]
              return sql
          end
+
+         def sql_add_field(table_name, name, type, attributes)
+             sqls = super
+             sqls[0] += ", ADD PRIMARY KEY(#{name})" if attributes[:primary_key]
+             sqls
+         end
+
+         def sql_alter_field(table_name, name, type, attributes)
+             sqls = super
+             sqls[0] += ", ADD PRIMARY KEY(#{name})" if attributes[:primary_key]
+             sqls
+         end
          
          def sql_create_table(create)
              sqls = super
              sqls[0] += " ENGINE=#{@configuration['default_engine']}" if @configuration['default_engine']
              sqls
          end
+
+         def sql_create_primary_key(table_name, fields)
+            nil # done in add field or alter field
+        end
          
          def function(func)
              return super unless func.func_name == :concat
