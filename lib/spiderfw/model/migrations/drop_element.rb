@@ -12,7 +12,7 @@ module Spider; module Migrations
             field = @options[:field_name]
             if !field
                 schema_field = @model.mapper.schema.field(@element)
-                field = schema_field.name
+                field = schema_field.name if schema_field
             end
             field ||= @model.mapper.storage.column_name(@element)
             desc = @model.mapper.storage.describe_table(@model.mapper.schema.table)
