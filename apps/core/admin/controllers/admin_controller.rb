@@ -40,7 +40,8 @@ module Spider; module Admin
             super
             
             return if serving_static?(action)
-            @scene.username = @request.user.username if @request.user
+            return unless @request.user
+            @scene.username = @request.user.username
             @scene.apps = []
             Admin.apps.each do |short_name, app|
                 unless @request.user.superuser?
