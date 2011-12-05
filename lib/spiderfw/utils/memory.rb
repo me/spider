@@ -1,6 +1,10 @@
-begin
-  require 'win32ole'
-rescue LoadError
+require 'rbconfig'
+
+if RbConfig::CONFIG['host_os'] =~ /mswin|mingw/
+    begin
+      require 'win32ole'
+    rescue LoadError
+    end
 end
 
 module Spider
