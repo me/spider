@@ -683,7 +683,7 @@ module Spider; module Model; module Mappers
                     end
                 elsif(model_schema.field(element.name))
                     field = model_schema.field(element.name)
-                    field = FieldInAliasedTable(field, options[:table]) if options[:table]
+                    field = FieldInAliasedTable.new(field, options[:table]) if options[:table]
                     op = comp ? comp : '='
                     if (v.is_a?(Spider::QueryFuncs::Expression))
                         v_joins = prepare_expression(v)
