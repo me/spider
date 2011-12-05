@@ -529,8 +529,10 @@ module Spider; module Model; module Storage; module Db
                 sqls += sql_alter_field(table_name, field[:name], field[:type], field[:attributes])
             end
             if (alter_attributes[:primary_keys] && !alter_attributes[:primary_keys].empty?)
-                sqls << sql_drop_primary_key(table_name) if (current[:primary_keys] && !current[:primary_keys].empty? && current[:primary_keys] != alter_attributes[:primary_keys])
-                sqls << sql_create_primary_key(table_name, alter_attributes[:primary_keys])
+                sqls.unshift sql_drop_primary_key(table_name) if (current[:primary_keys] && !current[:primary_keys].empty? && current[:primary_keys] != alter_attributes[:primary_keys])
+                # unshift avoids problems with a field being created with primary key before the drop
+                sql_pk = sql_create_primary_key(table_name, alter_attributes[:primary_keys])
+                sqls << sql_pk if sql_pk
             end
             if (alter_attributes[:foreign_key_constraints])
                 cur_fkc = current && current[:foreign_key_constraints] ? current[:foreign_key_constraints] : []
