@@ -21,14 +21,43 @@ module Spider; module Model
             res = element.model.find(q)
             return [] unless res
             right_stack = []
+            parents = []
+            first = nil
             res.each do |obj|
-                if (right_stack.length > 0)
-                    right_stack.pop while (right_stack[right_stack.length-1] && right_stack[right_stack.length-1] < obj.get(right_el))
+                first ||= obj
+                if right_stack.length > 0
+                    while right_stack.length > 0 && right_stack.last < obj.get(right_el)
+                        right_stack.pop
+                        p, sub = parents.pop
+                        p.set_loaded_value(element.name, sub)
+                        parents.last[1] << p if parents.last
+                    end
                     obj.set(element.attributes[:tree_depth], right_stack.length)
                 end
                 right_stack << obj.get(right_el)
+                parents << [obj, QuerySet.static(self.class)]
             end
+            
+            while pair = parents.pop
+                p, sub = pair
+                p.set_loaded_value(element.name, sub)
+                parents.last[1] << p if parents.last
+            end
+            
             return res
+        end
+
+        def before_save
+            self.class.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
+                if element_modified?(el)
+                    cnt = 1
+                    self.get(el).each do |obj|
+                        obj.set(el.attributes[:tree_position], cnt)
+                        cnt += 1
+                    end
+                end
+            end
+            super
         end
         
         module ClassMethods
@@ -189,27 +218,30 @@ module Spider; module Model
 
             def before_save(obj, mode)
                 @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
-                    unless obj.element_modified?(el.attributes[:reverse]) || obj.element_modified?(el.attributes[:tree_position])
+                    unless mode == :insert || obj.element_modified?(el.attributes[:reverse]) || obj.element_modified?(el.attributes[:tree_position])
                         next 
                     end
-                    if mode == :update
-                        tree_remove(el, obj)
-                    end
-                    parent = obj.get(el.attributes[:reverse])
-                    if parent
-                        sub = parent.get(el.name)
-                        if obj.element_modified?(el.attributes[:tree_position]) && sub.length > 0
-                            pos = obj.get(el.attributes[:tree_position]) 
-                            if pos == 1
-                                tree_insert_node_first(el, obj, parent)
+                    # already set by parent
+                    unless obj.element_modified?(el.attributes[:tree_left])
+                        if mode == :update
+                            tree_remove(el, obj)
+                        end
+                        parent = obj.get(el.attributes[:reverse])
+                        if parent
+                            sub = parent.get(el.name)
+                            if obj.element_modified?(el.attributes[:tree_position]) && sub.length > 0
+                                pos = obj.get(el.attributes[:tree_position]) 
+                                if pos == 1
+                                    tree_insert_node_first(el, obj, parent)
+                                else
+                                    tree_insert_node_right(el, obj, sub[pos-2])
+                                end
                             else
-                                tree_insert_node_right(el, obj, sub[pos-2])
+                                tree_insert_node_under(el, obj, parent)
                             end
                         else
-                            tree_insert_node_under(el, obj, parent)
+                            tree_insert_node(el, obj)
                         end
-                    else
-                        tree_insert_node(el, obj)
                     end
                 end
                 super
@@ -268,7 +300,7 @@ module Spider; module Model
                 left_el = tree_el.attributes[:tree_left]; right_el = tree_el.attributes[:tree_right]
                 cur = left+1
                 obj.get(tree_el).each do |child|
-                    cur = tree_assign_values(tree_el, child, cur)
+                    cur = tree_assign_values(tree_el, child, cur) + 1
                 end
                 obj.set(left_el, left)
                 obj.set(right_el, cur)
@@ -292,7 +324,7 @@ module Spider; module Model
             
             def tree_insert_node_right(tree_el, obj, sibling)
                 obj.set(tree_el.attributes[:reverse], sibling.get(tree_el.attributes[:reverse]))
-                tree_insert_node(tree_el, obj, sibling.get(tree_el.attributes[:tree_right]))
+                tree_insert_node(tree_el, obj, sibling.get(tree_el.attributes[:tree_right])+1)
             end
             
             def tree_remove(tree_el, obj)
@@ -336,6 +368,20 @@ module Spider; module Model
                 bulk_update({:right_el => QueryFuncs::Expression.new(":#{right_el} - 2")}, condition)
                 condition = Condition.new.set(left_el, '>', right)
                 bulk_update({:left_el => QueryFuncs::Expression.new(":#{left_el} - 2")}, condition)
+            end
+
+            # Ensure that in Unit of Work parents are saved before children
+            def get_dependencies(task)
+                deps = super
+                if task.action == :save
+                    @model.elements_array.select{ |el| el.attributes[:association] == :tree }.each do |el|
+                        if task.object.element_modified?(el.attributes[:reverse])
+                            parent = task.object.get(el.attributes[:reverse])
+                            deps << [task, MapperTask.new(parent, :save)] if parent
+                        end
+                    end
+                end
+                deps
             end
             
             
