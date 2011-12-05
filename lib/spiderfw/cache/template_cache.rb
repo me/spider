@@ -25,7 +25,7 @@ module Spider
         
         def fresh?(path)
             full_path = get_location(path)
-            if Spider.config.get('template.cache.disable')
+            if Spider.config.get('template.cache.disable') && !defined?(:FSSM)
                 Spider::Request.current[:compiled_templates] ||= {}
                 return true if Spider::Request.current[:compiled_templates][full_path]
                 #debug("Cache disabled, recreating #{full_path}")
@@ -118,7 +118,7 @@ module Spider
                     f.puts(val)
                 end
             end
-            if Spider.config.get('template.cache.disable')
+            if Spider.config.get('template.cache.disable') && !defined?(:FSSM)
                 Spider::Request.current[:compiled_templates] ||= {}
                 Spider::Request.current[:compiled_templates][path] = true
             end

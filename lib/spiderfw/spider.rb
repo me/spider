@@ -183,7 +183,7 @@ module Spider
         end
         
         def main_process_startup
-            if Object.const_defined?(:FSSM)
+            if defined?(FSSM)
                 monitor = FSSM::Monitor.new
 
                 monitor.path(Spider.paths[:tmp], 'restart.txt') do
@@ -192,10 +192,25 @@ module Spider
 
                 end
 
+                if Spider.conf.get('template.cache.disable')
+                    monitor.path(Spider.paths[:root]) do
+                        glob '**/*.shtml'
+                        create { |base, relative| FileUtils.rm_rf(File.join(Spider.paths[:var], 'cache', 'templates')) }
+                        update { |base, relative| FileUtils.rm_rf(File.join(Spider.paths[:var], 'cache', 'templates')) }                                    
+                    end
+                    monitor.path($SPIDER_PATH) do
+                        glob '**/*.shtml'
+                        create { |base, relative| FileUtils.rm_rf(File.join(Spider.paths[:var], 'cache', 'templates')) }
+                        update { |base, relative| FileUtils.rm_rf(File.join(Spider.paths[:var], 'cache', 'templates')) }                                    
+                    end
+                    FileUtils.rm_rf(File.join(Spider.paths[:var], 'cache', 'templates'))
+                end
+
                 @fssm_thread = Thread.new do
                     monitor.run
                 end
                 Spider.output("Monitoring restart.txt")
+
             else
                 Spider.output("FSSM not installed, unable to monitor restart.txt")
             end

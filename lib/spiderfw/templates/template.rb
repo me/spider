@@ -46,7 +46,7 @@ module Spider
             
             # Returns the class TemplateCache instance
             def cache
-                @@cache ||= TemplateCache.new(Spider.paths[:var]+'/cache/templates')
+                @@cache ||= TemplateCache.new(File.join(Spider.paths[:var], 'cache', 'templates'))
             end
             
             # Sets allowed blocks
@@ -478,13 +478,14 @@ module Spider
             overrides.each{ |o| o.set_attribute('class', 'to_delete') }
             root.search('.to_delete').remove
             add_overrides overrides
+            our_domain = nil
+            if @definer_class
+                our_domain = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+            end
             @overrides += orig_overrides
             if root.name == 'tpl:extend'
                 orig_overrides = @overrides
-                our_domain = nil
-                if @definer_class
-                    our_domain = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
-                end
+
                 @overrides = []
                 ext_src = root.get_attribute('src')
                 ext_app = root.get_attribute('app')
@@ -555,6 +556,10 @@ module Spider
                         end
                     end
                     incl_el.search('.to_delete').remove
+                    td = resource.definer.respond_to?(:app) ? resource.definer.app.short_name : 'spider'
+                    if td != our_domain
+                        incl_el.set_attribute('tpl:text-domain', td)
+                    end
                     incl.swap(incl_el.to_html)
                 end
                 
