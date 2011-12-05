@@ -18,7 +18,8 @@ module Spider
         end
 
         def self.drop_table!(model, options={})
-            Spider::Migrations::DropTable.new(model, element, options={})
+            Spider::Migrations::DropTable.new(model, options={})
+        end
 
         def self.previous_model(model, previous=nil)
             model.send(:include, PreviousModel)
