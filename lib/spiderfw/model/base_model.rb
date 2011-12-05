@@ -1852,6 +1852,7 @@ module Spider; module Model
                 @_modified_elements[key] = true
                 el = self.class.elements[key.to_sym]
                 next unless el
+                next if el.attributes[:unmapped]
                 if el.integrated? && sub = self.get(el.integrated_from)
                     sub.set_modified(el.integrated_from_element)
                 end
