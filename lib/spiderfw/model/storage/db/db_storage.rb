@@ -22,6 +22,7 @@ module Spider; module Model; module Storage; module Db
             :sequences => true,
             :transactions => true
         }
+        @fixed_length_types = ['TIME', 'DATE', 'DATETIME']
 
         class << self
             # An Array of keywords that can not be used in schema names.
@@ -30,6 +31,8 @@ module Spider; module Model; module Storage; module Db
             attr_reader :type_synonyms
             # Type conversions which do not lose data. See also #safe_schema_conversion?
             attr_reader :safe_conversions
+            # Types for which we can safely ignore length in conversions
+            attr_reader :fixed_length_types
 
 
             def storage_type
@@ -40,6 +43,7 @@ module Spider; module Model; module Storage; module Db
                 subclass.instance_variable_set("@reserved_keywords", @reserved_keywords)
                 subclass.instance_variable_set("@type_synonyms", @type_synonyms)
                 subclass.instance_variable_set("@safe_conversions", @safe_conversions)
+                subclass.instance_variable_set("@fixed_length_types", @fixed_length_types)
                 super
             end
 
@@ -631,9 +635,11 @@ module Spider; module Model; module Storage; module Db
                 (self.class.type_synonyms && self.class.type_synonyms[current[:type]] && self.class.type_synonyms[current[:type]].include?(field[:type]))
             try_method = :"schema_field_#{field[:type].downcase}_equal?"
             return send(try_method, current, field) if (respond_to?(try_method))
-            current[:length] ||= 0; attributes[:length] ||= 0; current[:precision] ||= 0; attributes[:precision] ||= 0
-            return false unless current[:length] == attributes[:length]
-            return false unless current[:precision] == attributes[:precision]
+            unless self.class.fixed_length_types.include?(field[:type])
+                current[:length] ||= 0; attributes[:length] ||= 0; current[:precision] ||= 0; attributes[:precision] ||= 0
+                return false unless current[:length] == attributes[:length]
+                return false unless current[:precision] == attributes[:precision]
+            end
             return true
         end
 
@@ -641,7 +647,7 @@ module Spider; module Model; module Storage; module Db
         # Checks if the conversion from a current DB field to a schema field is safe, i.e. can 
         # be done without loss of data.
         def safe_schema_conversion?(current, field)
-            attributes = field[:attributes]
+            attributes = field[:attributes].clone
             safe = self.class.safe_conversions
             if (current[:type] != field[:type])
                 if safe[current[:type]] && safe[current[:type]].include?(field[:type])
@@ -650,9 +656,11 @@ module Spider; module Model; module Storage; module Db
                     return false
                 end
             end
-            return true if ((!current[:length] || current[:length] == 0) \
+            cur = current
+            return true if self.class.fixed_length_types.include?(current[:type])
+            return true if ((!cur[:length] || cur[:length] == 0) \
                             || (attributes[:length] && current[:length] <= attributes[:length])) && \
-                           ((!current[:precision] || current[:precision] == 0) \
+                           ((!cur[:precision] || cur[:precision] == 0) \
                            || (attributes[:precision] && current[:precision] <= attributes[:precision]))
             return false
         end
