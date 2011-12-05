@@ -625,32 +625,15 @@ module Spider; module Model; module Mappers
                         cond[:values] << element_cond
                     else
                         if element.storage == model.mapper.storage
-                            join_type = join_info[element.name.to_s] ? :inner : :left
-                            sub_join = model.mapper.get_join(element, join_type)
-                            # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
-                            existent = joins.select{ |j| j[:to] == sub_join[:to] }
-                            j_cnt = nil
-                            had_join = false
-                            existent.each do |j|
-                                if sub_join[:to] == j[:to] && sub_join[:keys] == j[:keys] && sub_join[:conditions] == j[:conditions]
-                                    # if any condition allows a left join, then a left join should be used here as well
-                                    j[:type] = :left if sub_join[:type] == :left
-                                    sub_join = j
-                                    had_join = true
-                                    break
-                                else
-                                    j_cnt ||= 0; j_cnt += 1
-                                end
-                            end
-                            sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
-                            joins << sub_join unless had_join
                             
+                            needs_join = true
                             if v.nil? && comp == '='
                                 el_model_schema = model_schema
                                 element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
                                 if model.mapper.have_references?(element.name)
                                     el_name = element.name
                                     el_model = element.model
+                                    needs_join = false
                                 elsif element.junction?
                                     el_model = element.type
                                     el_model_schema = element.model.mapper.schema 
@@ -668,7 +651,29 @@ module Spider; module Model; module Mappers
                                     cond[:group_by_fields] << field if is_having
                                 end
                                 cond[:values] << element_cond
-                            elsif v
+                            end
+                            if needs_join
+                                join_type = join_info[element.name.to_s] ? :inner : :left
+                                sub_join = model.mapper.get_join(element, join_type)
+                                # FIXME! cleanup, and apply the check to joins acquired in other places, too (maybe pass the current joins to get_join)
+                                existent = joins.select{ |j| j[:to] == sub_join[:to] }
+                                j_cnt = nil
+                                had_join = false
+                                existent.each do |j|
+                                    if sub_join[:to] == j[:to] && sub_join[:keys] == j[:keys] && sub_join[:conditions] == j[:conditions]
+                                        # if any condition allows a left join, then a left join should be used here as well
+                                        j[:type] = :left if sub_join[:type] == :left
+                                        sub_join = j
+                                        had_join = true
+                                        break
+                                    else
+                                        j_cnt ||= 0; j_cnt += 1
+                                    end
+                                end
+                                sub_join[:as] = "#{sub_join[:to]}#{j_cnt}" if j_cnt
+                                joins << sub_join unless had_join
+                            end
+                            if v
                                 sub_condition, sub_joins = element.mapper.prepare_condition(v, :table => sub_join[:as], 
                                     :joins => joins, :join_info => el_join_info, :is_having => is_having || nil)
                                 sub_condition[:table] = sub_join[:as] if sub_join[:as]
