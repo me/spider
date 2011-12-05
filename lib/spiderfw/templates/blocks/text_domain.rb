@@ -10,6 +10,7 @@ module Spider; module TemplateBlocks
             c = "Spider::GetText.in_domain('#{td}') do\n"
             @el.remove_attribute('tpl:text-domain')
             content = Spider::TemplateBlocks.parse_element(@el, @allowed_blocks, @template).compile(options)
+            init += content.init_code
             content.run_code.each_line do |line|
                 c += '  '+line
             end
