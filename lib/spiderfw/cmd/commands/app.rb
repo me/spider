@@ -222,7 +222,7 @@ class AppCommand < CmdParse::Command
             unless noupdate.empty?
                 puts _("Already up-to-date: %s") % noupdate.join(', ')
             end
-            Spider::AppManager.new.install(specs, options)
+            Spider::AppManager.new(:interactive => true).install(specs, options)
         end
         self.add_command(update)
         
