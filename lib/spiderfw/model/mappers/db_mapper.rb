@@ -90,42 +90,45 @@ module Spider; module Model; module Mappers
                 @model.each_element do |element|
                     next if !mapped?(element) || element.integrated?
                     next if save_mode == :update && !obj.element_modified?(element)
-                    if (save_mode == :insert)
+                    if save_mode == :insert
                         if element.attributes[:autoincrement] && !schema.attributes(element.name)[:autoincrement]
                             obj.set(element.name, @storage.sequence_next(schema.sequence(element.name)))
                         end
                     end
-                    if (!element.multiple?)
-                        next if (save_mode == :update && element.primary_key?)
-                        next if (element.model? && !schema.has_foreign_fields?(element.name))
-                        element_val = obj.get(element)
-                        # next if (element.model? && (!(element_val = obj.get(element)) || !))
-                        next if (element.integrated?)
-                        element_val = nil if element.model? && element_val.is_a?(BaseModel) && !element_val.primary_keys_set?
-                        if (element.model?)
-                            element.model.primary_keys.each do |key|
-                                # FIXME! only works with one primary key
-                                if (key.model?)
-                                    key_type = key.model.primary_keys[0].type
-                                    key_value = element_val ? element_val.get(key.name).get(key.model.primary_keys[0]) : nil
-                                else
-                                    key_type = key.model? ? key.model.primary_keys[0].type : key.type
-                                    key_value = element_val ? element_val.get(key.name) : nil
-                                end
-                                store_key = schema.foreign_key_field(element.name, key.name)
-                                next if store_key.is_a?(FieldExpression)
-                                values[store_key] = map_save_value(key_type, key_value, save_mode)
-                            end
-                        else
-                            store_key = schema.field(element.name)
-                            values[store_key] = map_save_value(element.type, element_val, save_mode)
-                        end
-                    end
+                    next if element.multiple?
+                    next if save_mode == :update && element.primary_key?
+                    next if element.model? && !schema.has_foreign_fields?(element.name)
+
+                    element_val = obj.get(element)
+                    prepare_save_value(element, element_val, save_mode, values)
                 end
             end
             return {
                 :values => values
             }
+        end
+
+        def prepare_save_value(element, element_val, save_mode, values={})
+            element_val = nil if element.model? && element_val.is_a?(BaseModel) && !element_val.primary_keys_set?
+            if element.model?
+                element.model.primary_keys.each do |key|
+                    # FIXME! only works with one primary key
+                    if (key.model?)
+                        key_type = key.model.primary_keys[0].type
+                        key_value = element_val ? element_val.get(key.name).get(key.model.primary_keys[0]) : nil
+                    else
+                        key_type = key.model? ? key.model.primary_keys[0].type : key.type
+                        key_value = element_val ? element_val.get(key.name) : nil
+                    end
+                    store_key = schema.foreign_key_field(element.name, key.name)
+                    next if store_key.is_a?(FieldExpression)
+                    values[store_key] = map_save_value(key_type, key_value, save_mode)
+                end
+            else
+                store_key = schema.field(element.name)
+                values[store_key] = map_save_value(element.type, element_val, save_mode)
+            end
+            values
         end
         
         # Insert preprocessing
@@ -152,27 +155,29 @@ module Spider; module Model; module Mappers
         end
         
         # Updates according to a condition, storing the values, which must passed as a Hash.
+        # Condition may be nil.
         def bulk_update(values, condition)
             db_values = {}
             joins = []
             integrated = {}
-            condition = preprocess_condition(condition)
+            condition = preprocess_condition(condition) if condition
             values.each do |key, val|
                 element = @model.elements[key]
-                if (element.integrated?)
+                if element.integrated?
                     integrated[element.integrated_from] ||= {}
                     integrated[element.integrated_from][key] = val
                     next
                 end
                 next if !mapped?(element)
-                next if element.model? && val != nil
-                store_key = schema.field(element.name)
-                next unless store_key
-                if (val.is_a?(Spider::QueryFuncs::Expression))
+                next if element.multiple?
+                next if element.model? && !schema.has_foreign_fields?(element.name)
+                if val.is_a?(Spider::QueryFuncs::Expression)
                     joins += prepare_expression(val)
+                    store_key = schema.field(element.name)
+                    next unless store_key
                     db_values[store_key] = val
                 else
-                    db_values[store_key] = map_save_value(element.type, val, :update)
+                    prepare_save_value(element, val, :update, db_values)
                 end
             end
             integrated.each do |i_el, i_values|
@@ -181,9 +186,11 @@ module Spider; module Model; module Mappers
             end
             return if db_values.empty?
             save = {:table => schema.table, :values => db_values}
-            condition, c_joins = prepare_condition(condition)
-            joins += c_joins
-            save[:condition] = condition
+            if condition
+                condition, c_joins = prepare_condition(condition)
+                joins += c_joins
+                save[:condition] = condition
+            end
             save[:joins] = prepare_joins(joins)
             sql, bind_vars = @storage.sql_update(save, true)
             return @storage.execute(sql, *bind_vars)
