@@ -41,7 +41,7 @@ module Spider
                     s = s.superclass
 
                 end
-                raise "Unable to determine widget file" unless caller[cnt] =~ /(.+):(\d+)$/
+                raise "Unable to determine widget file" unless caller[cnt] =~ /(.+):(\d+)(: in .+)?$/
                 file = $1
                 subclass.instance_variable_set("@widget_path", File.dirname(file))
             end
