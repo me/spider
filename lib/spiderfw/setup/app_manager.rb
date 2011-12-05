@@ -218,6 +218,13 @@ module Spider
                     end
                 end
             end
+            if @options[:interactive]
+                puts "\n\n"
+                @done_tasks.each do |app, tasks|
+                    next unless tasks
+                    task.print_release_notes 
+                end
+            end
             if options[:clear_cache]
                 Spider.output _("Clearing cache...")
                 Spider::Template.cache.clear!
@@ -335,7 +342,7 @@ module Spider
                 else 
                     app_repo.checkout("origin/#{options[:branch]}", :new_branch => options[:branch])
                 end
-                app_repo.merge(options[:branch])
+                app_repo.merge("origin/#{options[:branch]}")
             end
             # response = err = nil
             # Dir.chdir(app_path) do
@@ -412,7 +419,7 @@ module Spider
             if version
                 tasks = ["#{@version}.rb"]
             else
-                tasks = Dir.entries(path).reject{ |p| p[0].chr == '.'}.sort{ |a, b| 
+                tasks = Dir.entries(path).reject{ |p| !File.file?(File.join(path, p)) || p[0].chr == '.'}.sort{ |a, b| 
                     va = Gem::Version.new(File.basename(a, '.rb'))
                     vb = Gem::Version.new(File.basename(b, '.rb'))
                     va <=> vb
@@ -435,7 +442,7 @@ module Spider
             
             tasks.each do |task|
                 Spider.output _("Running setup task #{path+'/'+task}...")
-                t = Spider::SetupTask.load("#{path}/#{task}.rb")
+                t = Spider::SetupTask.load("#{path}/#{task}")
                 t.app = app
                 raise "Can't run interactive task" if t.interactive? && !@options[:interactive]
                 begin
@@ -445,7 +452,14 @@ module Spider
                     Spider.output _("Setup task done")
                 rescue => exc
                     Spider.output exc, :ERROR
-                    done_tasks.reverse.each{ |dt| dt.do_down } # FIXME: rescue and log errors in down
+                    done_tasks.reverse.each do |dt| 
+                        begin
+                            dt.do_down 
+                        rescue => exc
+                            Spider.output("Unable to do down on #{dt}!", :ERROR)
+                            Spider.output(exc, :ERROR)
+                        end
+                    end
                     raise
                 end
             end
