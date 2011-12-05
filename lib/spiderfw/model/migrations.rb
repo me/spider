@@ -4,6 +4,7 @@ require 'spiderfw/model/migrations/irreversible_migration'
 require 'spiderfw/model/migrations/replace'
 require 'spiderfw/model/migrations/drop_element'
 require 'spiderfw/model/migrations/drop_table'
+require 'spiderfw/model/migrations/rename_element'
 
 module Spider
     
@@ -19,6 +20,10 @@ module Spider
 
         def self.drop_table!(model, options={})
             Spider::Migrations::DropTable.new(model, options={})
+        end
+
+        def self.rename_element(model, element, new_element, options={})
+            RenameElement.new(model, element, new_element, options={})
         end
 
         def self.previous_model(model, previous=nil)
