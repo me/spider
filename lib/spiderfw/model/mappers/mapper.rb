@@ -1055,7 +1055,10 @@ module Spider; module Model
             obj.class.elements_array.each do |el|
                 next unless obj.element_has_value?(el)
                 next unless el.model?
-                children << obj.get(el)
+                next unless obj.element_modified?(el)
+                val = obj.get(el)
+                next unless val.modified?
+                children << val
             end
             children
         end
