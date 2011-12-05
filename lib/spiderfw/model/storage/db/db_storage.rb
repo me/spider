@@ -574,6 +574,12 @@ module Spider; module Model; module Storage; module Db
             sqls = sql_drop_field(table_name, field_name)
             sqls.each{ |sql| execute(sql) }
         end
+
+        def change_field(table_name, field_name, new_field_name, type, attributes)
+            sqls = sql_change_field(table_name, field_name, new_field_name, type, attributes)
+            sqls.each{ |sql| execute(sql) }
+
+        end
         
         # Drops a table from the DB.
         def drop_table(table_name)
@@ -628,6 +634,10 @@ module Spider; module Model; module Storage; module Db
         # Returns an array of SQL statements needed to drop a table.
         def sql_drop_table(table_name)
             ["DROP TABLE #{table_name}"]
+        end
+
+        def sql_change_field(table_name, field, new_field, type, attributes)
+            ["ALTER TABLE #{table_name} CHANGE #{field} #{sql_table_field(new_field, type, attributes)}"]
         end
         
         # Checks if a DB field is equal to a schema field.
