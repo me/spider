@@ -7,6 +7,7 @@ module Spider
     # and will pass log messages to each of its child.
     
     module Logger
+        @@levels = [:DEBUG, :WARN, :INFO, :ERROR]
         
         class << self
             
@@ -55,6 +56,7 @@ module Spider
             def send_to_loggers(action, *args, &proc)
                 return if $SAFE > 1
                 return unless @loggers
+                return if thread_level && !check_thread_level(action)
                 @loggers.each do |dest, logger| 
                     begin
                         logger.send(action, *args, &proc) 
@@ -132,6 +134,24 @@ module Spider
             def method_missing(method, *args, &proc)
                 send_to_loggers(method, *args, &proc)
             end
+
+            def set_thread_level(level)
+                prev = Thread.current[:spider_logger_level]
+                Thread.current[:spider_logger_level] = @@levels.index(level)
+                return prev
+            end
+
+            def thread_level
+                Thread.current[:spider_logger_level]
+            end
+
+            def check_thread_level(action)
+                tl = thread_level
+                return unless tl
+                action_i = @@levels.index(action.to_s.upcase.to_sym)
+                return action_i > tl
+            end
+
 
         end
         
