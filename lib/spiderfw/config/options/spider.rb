@@ -120,6 +120,13 @@ module Spider
     config_option 'log.keep', _("Maximum number of rotated log files to keep"), :type => Fixnum, :default => 10
     config_option 'log.gzip', _("Whether to compress rotated log files"), :type => Spider::DataTypes::Bool, :default => true
     config_option 'log.apache_commons', _("Under JRuby, Use Apache Commons Logging if available"), :default => true
+    config_option 'log.static_extensions', 
+        _('Log level for static files'),
+        :process => lambda{ |opt| opt && opt != 'false' ? opt.to_s.upcase.to_sym : false },
+        :default => :ERROR,
+        :choices => [false, :DEBUG, :WARN, :INFO, :ERROR]
+    config_option 'log.non_static_extensions_list', _('Allow logging for some file extensions'), 
+        :type => Array, :default => []
     
 
 

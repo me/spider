@@ -99,6 +99,16 @@ module Spider
                 @request.format = $2.to_sym
             end
 #            Spider.reload_sources if Spider.conf.get('webserver.reload_sources')
+            static_level = Spider.conf.get('log.static_extensions')
+            if @request.format && @request.get? && static_level != true
+                allowed = Spider.conf.get('log.non_static_extensions_list')
+                unless allowed.include?(@request.format.to_s)
+                    Spider.logger.info("GET #{@request.path}")
+                    @logger_static_prev = Spider.logger.set_thread_level(static_level)
+                end
+            end
+            Spider::Logger.debug("REQUEST:")
+            Spider::Logger.debug(@request.env)
             Spider.logger.info("Request: #{@request.http_method} #{@request.http_host} #{@request.path}")
             super(action, *arguments)
         end
@@ -116,6 +126,7 @@ module Spider
             action = $1 if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
             @request.session.persist if @request.session && @request.session.respond_to?(:persist)
             super(action, *arguments)
+            @Spider.logger.set_thread_level(@logger_static_prev) if @logger_static_prev
         end
         
         def ensure(action='', *arguments)

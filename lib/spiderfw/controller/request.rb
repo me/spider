@@ -21,8 +21,6 @@ module Spider
         
         
         def initialize(env)
-            Spider::Logger.debug("REQUEST:")
-            Spider::Logger.debug(env)
             @env = env
             @locale = Spider.locale
             @misc = {}
