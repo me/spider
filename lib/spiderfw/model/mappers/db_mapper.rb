@@ -1098,16 +1098,20 @@ module Spider; module Model; module Mappers
             end
         end
 
-        # Autogenerates schema. Returns a DbSchema.
-        def generate_schema(schema=nil)
-            had_schema = schema ? true : false
-            schema ||= DbSchema.new
+        def schema_table_name
             n = @model.name.sub('::Models', '')
             app = @model.app
             app_name = app.name if app
             short_prefix = app.short_prefix if app
             n.sub!(app_name, short_prefix) if short_prefix
-            schema.table ||= @model.attributes[:db_table] || @storage.table_name(n)
+            @storage.table_name(n)
+        end
+
+        # Autogenerates schema. Returns a DbSchema.
+        def generate_schema(schema=nil)
+            had_schema = schema ? true : false
+            schema ||= DbSchema.new
+            schema.table ||= @model.attributes[:db_table] || schema_table_name
             integrated_pks = []
             @model.each_element do |element|
                 if element.integrated?
