@@ -194,7 +194,7 @@ module Spider
 
                 end
 
-                if Spider.conf.get('template.cache.disable')
+                if Spider.conf.get('template.cache.use_fssm')
                     monitor.path(Spider.paths[:root]) do
                         glob '**/*.shtml'
                         create { |base, relative| FileUtils.rm_rf(File.join(Spider.paths[:var], 'cache', 'templates')) }
@@ -215,6 +215,9 @@ module Spider
 
             else
                 Spider.output("FSSM not installed, unable to monitor restart.txt")
+                if Spider.conf.get('template.cache.use_fssm')
+                    raise "Unable to use FSSM for monitoring templates; use template.cache.disable instead"
+                end
             end
             trap('TERM'){ Spider.main_process_shutdown; exit }
             trap('INT'){ Spider.main_process_shutdown; exit }

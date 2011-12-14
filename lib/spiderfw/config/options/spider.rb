@@ -44,6 +44,8 @@ module Spider
     
     # Templates
     config_option 'template.cache.disable', _("Refresh template cache every time"), :default => false, :type => Spider::DataTypes::Bool
+    config_option 'template.cache.use_fssm', _("Use FSSM to clear templates cache when a file changes"), :default => false,
+        :type => Spider::Bool
     config_option 'template.cache.reload_on_restart', _("Refresh template cache when server restarts"), :default => true,
         :type => Spider::DataTypes::Bool
     config_option 'template.cache.no_check', _("Never recompile templates"), :default => true, :type => Spider::DataTypes::Bool
