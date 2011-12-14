@@ -7,7 +7,7 @@ module Spider; module Forms
     
     class FileInput < Input
         tag 'file'
-        is_attr_accessor :save_path, :type => String, :default => lambda{ Spider.paths[:data]+'/uploaded_files' }
+        is_attr_accessor :save_path, :type => String, :default => lambda{ Spider.paths[:var]+'/data/uploaded_files' }
         
         def needs_multipart?
             true
@@ -15,7 +15,9 @@ module Spider; module Forms
         
         def prepare
             raise "No save path defined" unless @save_path
-            raise "Save path #{@save_path} is not a directory" unless File.directory?(@save_path)
+            raise "Save path #{@save_path} is not a directory" unless File.directory?(File.dirname(@save_path))
+            FileUtils.mkdir_p(@save_path) unless File.directory?(@save_path)
+
             super
         end
         

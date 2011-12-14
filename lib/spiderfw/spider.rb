@@ -152,6 +152,7 @@ module Spider
             FileUtils.mkdir_p(Spider.paths[:tmp])
             FileUtils.mkdir_p(Spider.paths[:var])
             FileUtils.mkdir_p(File.join(Spider.paths[:var], 'memory'))
+            FileUtils.mkdir_p(File.join(Spider.paths[:var], 'data'))
             
         end
 
