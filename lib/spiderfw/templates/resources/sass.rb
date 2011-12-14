@@ -42,6 +42,7 @@ module Spider
                 src_dir = File.dirname(src)
                 src_dir = src_dir
                 # dest_dir = File.dirname(dest)
+
                 options = {
                     :project_path => @base_path,
                     :css_dir => 'css', 
@@ -53,8 +54,9 @@ module Spider
                     :javascripts_dir => 'js',
                     :relative_assets => true,
                     :line_comments => Spider.runmode == 'devel' ? true : false,
-                    :cache_location => File.join(work_dir, '.sass_cache'),
-                    :sass => Compass.sass_engine_options,
+                    :sass => Compass.sass_engine_options.merge({
+                        :cache_location => File.join(work_dir, '.sass_cache')
+                    }),
                     :css_filename => dest
                 }
                 config = Compass::Configuration::Data.new(:spider, options)
