@@ -161,7 +161,7 @@ module Spider
             
             def parse_content_xml(xml)
                 return ["", []] if !xml || xml.strip.empty?
-                return parse_content(Hpricot(xml))
+                return parse_content(Hpricot("<sp:widget-content>#{xml}</sp:widget-content>"))
             end
             
             # Parses widget content at compile time.

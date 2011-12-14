@@ -37,7 +37,6 @@ module Spider; module TemplateBlocks
             @el.each_child do |ch|
                 html += ch.to_html
             end
-            html = "<sp:widget-content>#{html}</sp:widget-content>" unless html.empty?
             runtime_content, overrides = klass.parse_content_xml(html)
 
             template = nil
