@@ -10,5 +10,5 @@
     <div class="initial_html" style="display:none">{ @initial_html }</div>
     <div class="css" style="display:none">{ @css }</div>
     <div class="options" style="display:none">{ @options }</div>
-    <textarea name="{ @name }" rows="{ @rows }" cols="{ @cols }">{ @value }</textarea>
+    <textarea name="{ @name }" id="input" rows="{ @rows }" cols="{ @cols }">{ @value }</textarea>
 </div>

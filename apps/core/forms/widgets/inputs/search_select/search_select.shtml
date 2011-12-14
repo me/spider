@@ -7,13 +7,13 @@
     </div>
     <div sp:if="@next_step == :text" class="add_box">
         <span sp:if="@multiple" class="add_text">Aggiungi:</span>
-        <input type="text" name="{ @name }[text]" value="" size="{ @size }" />
+        <input type="text" name="{ @name }[text]" id="input" value="" size="{ @size }" />
 		<input sp:if="!@multiple" class="clear-hidden" type="hidden" name="_w{ @widget[:param] }[clear]" value="">
     </div>
     <div sp:if="@next_step == :select" class="notice">
         Per favore, affina la ricerca:
     </div>
-    <select name="{ @value_param }" sp:if="@next_step == :select">
+    <select name="{ @value_param }" id="input" sp:if="@next_step == :select">
         <option sp:if="@blank_option"> </option>
         <option sp:each_index="@data |i|" value="{ @search_values[i] }" sp:attr-if="@selected[@search_values[i]],selected">
             { @data[i].to_s }

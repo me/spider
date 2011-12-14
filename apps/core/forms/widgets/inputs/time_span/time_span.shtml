@@ -1,5 +1,5 @@
 <div class="input">
-    <input type="text" name="{ @name }[val]" value="{ @formatted_value }" size="8" >
+    <input type="text" name="{ @name }[val]" id="input" value="{ @formatted_value }" size="8" >
     <select name="{ @name }[unit]">
         <option value="sec" sp:attr-if="(@unit == 'sec'),selected">_(Seconds)</option>
         <option value="min" sp:attr-if="(@unit == 'min'),selected">_(Minutes)</option>
