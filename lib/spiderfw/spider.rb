@@ -1,6 +1,7 @@
 require 'spiderfw/env'
 
 require 'rubygems'
+require 'backports'
 require 'find'
 require 'fileutils'
 require 'pathname'

@@ -48,7 +48,7 @@ module Spider
             File.new(full_path).flock(File::LOCK_SH)
             # TODO: maybe insert here an (optional) tamper check 
             # that looks if the cache mtime is later then the saved time
-            Marshal.load(IO.read(check_file)).each do |check, time|
+            Marshal.load(IO.binread(check_file)).each do |check, time|
                 #debug("Template file #{check} changed, refreshing cache")
                 return false if File.mtime(check) > time
             end
@@ -72,7 +72,7 @@ module Spider
             compiled.cache_path = path
             init_code = IO.read(path+'/init.rb')
             run_code = IO.read(path+'/run.rb')
-            compiled.assets = Marshal.load(IO.read(path+'/assets'))
+            compiled.assets = Marshal.load(IO.binread(File.join(path, 'assets')))
             block = Spider::TemplateBlocks::CompiledBlock.new(init_code, run_code)
             compiled.block = block
             Dir.new(path).each do |entry|
@@ -103,7 +103,7 @@ module Spider
             File.open(path+'/run.rb', 'w') do |file|
                 file.puts(compiled.block.run_code)
             end
-            File.open(path+'/assets', 'w') do |file|
+            File.open(File.join(path, 'assets'), 'wb') do |file|
                 file.puts(Marshal.dump(compiled.assets))
             end
             compiled.subtemplates.each do |id, sub|
@@ -131,7 +131,7 @@ module Spider
             lock_file.flock(File::LOCK_EX)
             write_compiled_template(compiled_template, full_path)
             modified = compiled_template.collect_mtimes
-            File.open(full_path+'/check', 'w') do |file|
+            File.open(File.join(full_path, 'check'), 'wb') do |file|
                 file.puts(Marshal.dump(modified))
             end
             lock_file.flock(File::LOCK_UN)
