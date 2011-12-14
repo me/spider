@@ -335,7 +335,7 @@ END_OF_EVAL
             end
 
             def get_runtime_dependencies
-                return self.load_after if @load_after
+                return self.load_after unless @load_after.blank?
                 return self.depends + self.depends_optional
             end
 
