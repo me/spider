@@ -646,6 +646,7 @@ module Spider; module Model; module Mappers
                                 end
                                 el_model.primary_keys.each do |k|
                                     field = el_model_schema.foreign_key_field(el_name, k.name)
+                                    next if field.is_a?(FixedExpression)
                                     field_cond = [field, comp,  map_condition_value(el_model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
                                     element_cond[:is_having] = is_having
