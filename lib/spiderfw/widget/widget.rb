@@ -740,6 +740,7 @@ module Spider
             scene.widget[:target_only] = attributes[:"sp:target-only"]
             scene.widget[:is_target] = @is_target
             scene.widget[:is_running] = run?
+            scene.widget[:id] = @id
             if (@parent && @parent.respond_to?(:scene) && @parent.scene)
                 scene._parent = @parent.scene
             end
