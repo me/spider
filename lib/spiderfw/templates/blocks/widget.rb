@@ -72,6 +72,7 @@ module Spider; module TemplateBlocks
             html.gsub!("'", "\\\\'")
             
             init_params = self.class.attributes_to_init_params(@el.attributes.to_hash)
+            runtime_content.gsub!("'", "\\\\'") if runtime_content
             
             init += "add_widget('#{id}', #{klass}.new(@request, @response), {#{init_params.join(', ')}}, '#{runtime_content}', #{t_param})\n"
             c = "yield :\"#{id}\"\n"
