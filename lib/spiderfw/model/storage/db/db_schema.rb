@@ -110,9 +110,14 @@ module Spider; module Model; module Storage; module Db
             if field.is_a?(Hash)
                 field[:attributes] ||= {}
                 field[:attributes][:expression] ||= field[:expression]
-                if field[:attributes][:expression]
+                field[:attributes][:fixed] ||= field[:fixed]
+                if field[:attributes][:expression] || field[:attributes][:fixed]
                     field[:name] = "#{@table}_#{element_name}_#{element_key}".upcase
-                    field = FieldExpression.new(@table, field[:name], field[:type], field[:attributes] || {})
+                    if field[:attributes][:fixed]
+                        field = FixedExpression.new(@table, field[:name], field[:type], field[:attributes][:fixed], field[:attributes])
+                    else
+                        field = FieldExpression.new(@table, field[:name], field[:type], field[:attributes] || {})
+                    end
                 else
                     field = Field.new(@table, field[:name], field[:type], field[:attributes] || {}) 
                 end
@@ -279,6 +284,13 @@ module Spider; module Model; module Storage; module Db
             "#{@expression} AS #{@name}"
         end
         
+    end
+
+    class FixedExpression < FieldExpression
+        def initialize(table, name, type, fixed_value, attributes={})
+            attributes[:expression] = fixed_value
+            super(table, name, type, attributes)
+        end
     end
     
     class FieldFunction

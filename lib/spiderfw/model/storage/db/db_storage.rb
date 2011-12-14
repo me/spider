@@ -279,7 +279,7 @@ module Spider; module Model; module Storage; module Db
         # Returns the SQL for select keys.
         def sql_keys(query)
             query = {:keys => query} unless query.is_a?(Hash)
-            query[:keys].join(',')
+            query[:keys].join(', ')
         end
         
         # Returns an array containing the 'FROM' part of an SQL query (including joins),
@@ -431,8 +431,9 @@ module Spider; module Model; module Storage; module Db
             return query[:order].map{|o| 
                 repl = replacements[o[0].to_s]
                 ofield = repl ? repl : o[0]
+                ofield = ofield.name if ofield.is_a?(FieldExpression)
                 "#{ofield} #{o[1]}"
-            }.join(' ,')
+            }.join(', ')
         end
         
         # Returns the LIMIT and OFFSET SQL.

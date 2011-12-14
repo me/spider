@@ -118,24 +118,24 @@ module Spider; module Model; module Storage; module Db
                  query[:order] << [query[:keys][0], 'desc'] if query[:order].length < 1
                  query[:order].each do |o|
                      field, direction = o
-                     # i = query[:keys].index(field)
-                     #   unless i
-                     #       query[:keys].push(field)
-                     #       i = query[:keys].length < 1
-                     #   end
-                     transformed = "O#{replace_cnt += 1}"
-                     query[:order_replacements][field.to_s] = transformed
+                     
                      if field.is_a?(Spider::Model::Storage::Db::Field) && !query[:tables].include?(field.table)
                          query[:order_on_different_table] = true 
                      end
                      if field.is_a?(FieldFunction)
                          query[:order_on_different_table] = true if field.joins.length > 0
                      end
-                     if (field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB')
+                     if field.is_a?(Spider::Model::Storage::Db::Field) && field.type == 'CLOB'
                          field = "CAST(#{field} as varchar2(100))"
                      end
+                     field_expr = field.is_a?(FieldExpression) ? field.expression : field.to_s
                      
-                     query[:keys] << Db::FieldExpression.new(field.table, transformed, field.type, :expression => "#{field}")
+                     unless query[:keys].include?(field) || field.is_a?(FieldExpression)
+                        transformed = "O#{replace_cnt += 1}"
+                        query[:order_replacements][field.to_s] = transformed
+
+                        query[:keys] << Db::FieldExpression.new(field.table, transformed, field.type, :expression => field_expr)
+                    end
                  end
              end
              keys = sql_keys(query)
