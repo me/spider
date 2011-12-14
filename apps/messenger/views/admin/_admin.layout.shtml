@@ -1,0 +1,26 @@
+<div class="spider-admin-container">
+    <div class="spider-admin-sidebar">
+         <tpl:include src="/core/admin/_app_info" />
+         <ul>
+            <li>
+                <a href="{ Spider::Messenger::AdminController.url }">_(Queues)</a>
+                <ul>
+                    <li sp:each="@queues |queue|">
+                        <a href="{ Spider::Messenger::AdminController.url(queue) }">{ @queue_info[queue][:label] }</a>
+                    </li>
+                </ul>
+            </li>
+         </ul>
+    </div>
+    <div class="spider-admin-content">
+        <ul class="breadcrumb">
+            <li sp:each="@admin_breadcrumb[0..@admin_breadcrumb.length-2] |bc|">
+                <a href="{ bc[:url] }">{ bc[:label] }</a> <span class="divider">/</span>
+            </li>
+            <li class="active" sp:if="@admin_breadcrumb.last">
+                { @admin_breadcrumb.last[:label] }
+            </li>
+        </ul>
+        <sp:yield />
+    </div>
+</div>

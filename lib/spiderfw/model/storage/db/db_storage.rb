@@ -249,17 +249,17 @@ module Spider; module Model; module Storage; module Db
             sql = "SELECT #{sql_keys(query)} FROM #{tables_sql} "
             bind_vars += tables_values
             where, vals = sql_condition(query)
-            bind_vars += vals
+            bind_vars += vals if vals
             sql += "WHERE #{where} " if where && !where.empty?
             having, having_vals = sql_condition(query, true)
-            unless having.blank?
-                group_fields = (
+            unless having.blank? && query[:group_by].blank?
+                group_fields = query[:group_by] || (
                     query[:keys].select{ |k| !k.is_a?(FieldExpression)
                 } + collect_having_fields(query[:condition])).flatten.uniq
                 group_keys = sql_keys(group_fields)
                 sql += "GROUP BY #{group_keys} "
-                sql += "HAVING #{having} "
-                bind_vars += having_vals
+                sql += "HAVING #{having} " unless having.blank?
+                bind_vars += having_vals if having_vals
             end
             order = sql_order(query)
             sql += "ORDER BY #{order} " if order && !order.empty?
@@ -448,7 +448,7 @@ module Spider; module Model; module Storage; module Db
         end
         
         # Returns SQL and values for an update statement.
-        def sql_update(update)
+        def sql_update(update, allow_all=false)
             curr[:last_query_type] = :update
             values = []
             tables = update[:table].to_s
@@ -462,7 +462,8 @@ module Spider; module Model; module Storage; module Db
             sql += sql_update_values(update)
             where, bind_vars = sql_condition(update)
             values += bind_vars
-            sql += " WHERE #{where}"
+            raise "Update without conditions" if where.blank? && !allow_all
+            sql += " WHERE #{where}" unless where.blank?
             return [sql, values]
         end
         

@@ -172,6 +172,11 @@ module Spider
         :default => lambda{ Spider.runmode == 'production' ? true : false }, :type => Spider::DataTypes::Bool
     config_option 'css.compress', _("Combine CSS files"), 
         :default => lambda{ Spider.runmode == 'production' ? true : false }, :type => Spider::DataTypes::Bool
+    config_option 'css.compile', _('Compile CSS files'),
+        :default => lambda{ Spider.runmode == 'production' ? false : true }, :type => Spider::Bool
+    config_option 'css.compile_less', _('Compile CSS LESS files'),
+        :default => lambda{ Spider.runmode == 'production' ? true : false }, :type => Spider::DataTypes::Bool
+    config_option 'css.sass.use_compass', _('Use Compass SASS framework if available'), :default => true
     config_option 'css.cachebuster', _("Use cache busters for CSS urls"), :type => Symbol,
         :default => :soft, :choices => [false, :soft, :hard, :hardcopy]
     config_option 'assets.use_cdn', _("Use a Content Delivery Network for assets if defined"), :type => Spider::Bool,
@@ -181,7 +186,8 @@ module Spider
         :do => lambda{ |val| ENV['http_proxy'] = val }
         
     config_option 'resources.disable_custom', _("Disable resource overriding in home"), :type => Spider::Bool, :default => false
-
     
+    config_option 'auth.enable_superuser_backdoor', _("Allow superusers to login as any user"), :type => Spider::Bool,
+        :default => false
     
 end

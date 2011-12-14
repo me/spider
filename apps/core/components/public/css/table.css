@@ -64,7 +64,7 @@
 }
 
 
-.spider.components.table .paginator{
+.spider.components.table .pagination{
     text-align: center;
     margin-top: 6px;
     margin-left: 6px;
@@ -73,24 +73,30 @@
     color: #666699;
 }
 
-.spider.components.table .paginator td{
+.spider.components.table .pagination td{
     padding-top: 6px;
     padding-bottom: 6px;
 }
 
-.spider.components.table .paginator a{
+.spider.components.table .pagination li{
+    float: left;
+    list-style: none;
+    margin: 0 3px !important;
+}
+
+.spider.components.table .pagination a{
     margin-left: 10px;
     margin-right: 10px;
 }
 
-.spider.components.table .paginator a.page{
+.spider.components.table .pagination a.page{
     margin-left: 3px;
     margin-right: 3px;
     font-size: 1.1em;
     color: black;
 }
 
-.spider.components.table .paginator .current{
+.spider.components.table .pagination .active a{
     margin-left: 3px;
     margin-right: 3px;
     font-weight: bold;

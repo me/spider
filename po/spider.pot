@@ -6,8 +6,8 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Spider 0.6.16\n"
-"POT-Creation-Date: 2011-09-13 16:18+0200\n"
+"Project-Id-Version: Spider 0.6.21\n"
+"POT-Creation-Date: 2011-11-15 16:08+0100\n"
 "PO-Revision-Date: 2008-11-20 22:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -101,7 +101,7 @@ msgstr ""
 msgid "Don't install other apps this one depends on"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:113 lib/spiderfw/cmd/commands/app.rb:177
+#: lib/spiderfw/cmd/commands/app.rb:113 lib/spiderfw/cmd/commands/app.rb:179
 msgid "Don't install ruby gems this app depends on"
 msgstr ""
 
@@ -109,7 +109,7 @@ msgstr ""
 msgid "Install optional app dependencies"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:115 lib/spiderfw/cmd/commands/app.rb:179
+#: lib/spiderfw/cmd/commands/app.rb:115 lib/spiderfw/cmd/commands/app.rb:181
 msgid "Don't install optional gem dependencies"
 msgstr ""
 
@@ -121,95 +121,99 @@ msgstr ""
 msgid "Don't activate installed apps"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:124 lib/spiderfw/cmd/commands/app.rb:190
+#: lib/spiderfw/cmd/commands/app.rb:120 lib/spiderfw/cmd/commands/app.rb:188
+msgid "Install app from specific branch"
+msgstr ""
+
+#: lib/spiderfw/cmd/commands/app.rb:125 lib/spiderfw/cmd/commands/app.rb:193
 msgid "Please execute this command from the home folder"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:134
+#: lib/spiderfw/cmd/commands/app.rb:136
 msgid "git gem not available; install git gem for Git support"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:143
+#: lib/spiderfw/cmd/commands/app.rb:145
 msgid "%s already installed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:149 lib/spiderfw/cmd/commands/app.rb:210
+#: lib/spiderfw/cmd/commands/app.rb:151 lib/spiderfw/cmd/commands/app.rb:214
 msgid "The following apps will be installed as a dependency: %s"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:152 lib/spiderfw/cmd/commands/app.rb:215
+#: lib/spiderfw/cmd/commands/app.rb:154 lib/spiderfw/cmd/commands/app.rb:219
 msgid "The following apps will be updated as a dependency: %s"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:159
+#: lib/spiderfw/cmd/commands/app.rb:161
 msgid "Activate an app"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:170
+#: lib/spiderfw/cmd/commands/app.rb:172
 msgid "Update an app"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:172
+#: lib/spiderfw/cmd/commands/app.rb:174
 msgid "Update all apps"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:173
+#: lib/spiderfw/cmd/commands/app.rb:175
 msgid "Don't use git for updating apps"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:174
+#: lib/spiderfw/cmd/commands/app.rb:176
 msgid "Don't install/update other apps this one depends on"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:178
+#: lib/spiderfw/cmd/commands/app.rb:180
 msgid "Don't install optional app dependencies"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:182
+#: lib/spiderfw/cmd/commands/app.rb:184
 msgid "Don't activate installed apps, if any"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:183
+#: lib/spiderfw/cmd/commands/app.rb:185
 msgid "Update apps even if the version has not changed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:184
+#: lib/spiderfw/cmd/commands/app.rb:186
 msgid "Don't clear cache"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:185
+#: lib/spiderfw/cmd/commands/app.rb:187
 msgid "Don't restart the server after the udpate"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:204
+#: lib/spiderfw/cmd/commands/app.rb:208
 msgid "App %s is not installed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:219
+#: lib/spiderfw/cmd/commands/app.rb:223
 msgid "Already up-to-date: %s"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:226
+#: lib/spiderfw/cmd/commands/app.rb:230
 msgid "Setup an app"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:228 lib/spiderfw/cmd/commands/setup.rb:12
+#: lib/spiderfw/cmd/commands/app.rb:232 lib/spiderfw/cmd/commands/setup.rb:12
 msgid "Assume a specific version is installed"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:231 lib/spiderfw/cmd/commands/setup.rb:15
+#: lib/spiderfw/cmd/commands/app.rb:235 lib/spiderfw/cmd/commands/setup.rb:15
 msgid "Setup to a specific version"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:234 lib/spiderfw/cmd/commands/setup.rb:18
+#: lib/spiderfw/cmd/commands/app.rb:238 lib/spiderfw/cmd/commands/setup.rb:18
 msgid "Only run the setup script for the given version"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:237 lib/spiderfw/cmd/commands/setup.rb:21
+#: lib/spiderfw/cmd/commands/app.rb:241 lib/spiderfw/cmd/commands/setup.rb:21
 msgid "Setup all active apps"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/app.rb:240 lib/spiderfw/cmd/commands/setup.rb:24
+#: lib/spiderfw/cmd/commands/app.rb:244 lib/spiderfw/cmd/commands/setup.rb:24
 msgid "Don't cleanup"
 msgstr ""
 
@@ -362,11 +366,12 @@ msgid "Continue? yes/NO: "
 msgstr ""
 
 #: lib/spiderfw/cmd/commands/model.rb:72 lib/spiderfw/cmd/commands/model.rb:74
+#: lib/spiderfw/setup/setup_task.rb:80
 #: lib/spiderfw/setup/spider_setup_wizard.rb:46
 msgid "yes"
 msgstr ""
 
-#: lib/spiderfw/cmd/commands/model.rb:73
+#: lib/spiderfw/cmd/commands/model.rb:73 lib/spiderfw/setup/setup_task.rb:81
 #: lib/spiderfw/setup/spider_setup_wizard.rb:47
 msgid "no"
 msgstr ""
@@ -488,320 +493,336 @@ msgid "Restart the webserver when application code changes"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:37
-msgid "Mode to use for serving static files"
+msgid "Respawn on changes to the framework"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:39
-msgid "Automatically publish content to the home's public folder"
+msgid "Number of seconds a process is given to end"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:40
+msgid "Mode to use for serving static files"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:42
-msgid "The text editor installed on the client"
+msgid "Automatically publish content to the home's public folder"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:45
-msgid "Refresh template cache every time"
-msgstr ""
-
-#: lib/spiderfw/config/options/spider.rb:46
-msgid "Refresh template cache when server restarts"
+msgid "The text editor installed on the client"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:48
-msgid "Never recompile templates"
+msgid "Refresh template cache every time"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:49
-msgid "Check on every request if templates are changed"
+msgid "Refresh template cache when server restarts"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:51
+msgid "Never recompile templates"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:52
+msgid "Check on every request if templates are changed"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:54
 msgid "Default doctype to use for templates"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:59
+#: lib/spiderfw/config/options/spider.rb:62
 msgid "How many connections to open to a storage"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:60
+#: lib/spiderfw/config/options/spider.rb:63
 msgid "Timout in seconds to obtain a connection"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:61
+#: lib/spiderfw/config/options/spider.rb:64
 msgid "How many times to retry acquiring a connection"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:62
+#: lib/spiderfw/config/options/spider.rb:65
 msgid "Use one connection for all threads; use this only when testing!"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:65
+#: lib/spiderfw/config/options/spider.rb:68
 msgid "Replace bound variables in debug sql"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:68
+#: lib/spiderfw/config/options/spider.rb:71
 msgid "The engine to use when creating tables"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:71
+#: lib/spiderfw/config/options/spider.rb:74
 msgid "A list of named storages"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:72
+#: lib/spiderfw/config/options/spider.rb:75
 msgid "Connection url to the storage"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:73
+#: lib/spiderfw/config/options/spider.rb:76
 msgid "Encoding the DB uses"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:74
+#: lib/spiderfw/config/options/spider.rb:77
 msgid "Whether to enable transactions on the db"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:75
+#: lib/spiderfw/config/options/spider.rb:78
 msgid "Use given document storage for versioning if available"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:77
+#: lib/spiderfw/config/options/spider.rb:80
 msgid "Start the debugger"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:79
+#: lib/spiderfw/config/options/spider.rb:82
 msgid "Enable on-request profiling"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:80
+#: lib/spiderfw/config/options/spider.rb:83
 msgid "Respond to requests sequentially"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:82
+#: lib/spiderfw/config/options/spider.rb:85
 msgid "The locale to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:85
+#: lib/spiderfw/config/options/spider.rb:88
 msgid "Path where rails-style locales are found"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:86
+#: lib/spiderfw/config/options/spider.rb:89
 msgid "Fallback locale"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:88
+#: lib/spiderfw/config/options/spider.rb:91
 msgid "Sleep time for the periodic runner"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:90
+#: lib/spiderfw/config/options/spider.rb:93
 msgid "Where to store the session"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:91
+#: lib/spiderfw/config/options/spider.rb:94
 msgid "Lifetime in seconds of the sessions"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:92
+#: lib/spiderfw/config/options/spider.rb:95
 msgid "Number of seconds to wait before session purge check"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:93
+#: lib/spiderfw/config/options/spider.rb:96
 msgid "The folder where to store file sessions"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:95
+#: lib/spiderfw/config/options/spider.rb:98
 msgid "Which shared store to use"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:97
+#: lib/spiderfw/config/options/spider.rb:100
 msgid "Life in seconds of HTTP Digest Authentication nonces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:99
+#: lib/spiderfw/config/options/spider.rb:102
 msgid "Automatically send headers on first output"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:101
+#: lib/spiderfw/config/options/spider.rb:104
 msgid "Redirect standard output to the browser"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:102
+#: lib/spiderfw/config/options/spider.rb:105
 msgid ""
 "If the request is proxyied, the urls used to reach spider, with the "
 "corresponding paths called by the proxy"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:104
+#: lib/spiderfw/config/options/spider.rb:107
 msgid "The charset to use for http requests"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:106
+#: lib/spiderfw/config/options/spider.rb:109
 msgid "Level of debug output to console"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:110
+#: lib/spiderfw/config/options/spider.rb:113
 msgid "Log errors to errors.log file"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:111
+#: lib/spiderfw/config/options/spider.rb:114
 msgid "Log level to use for main log file (false for no logging)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:115
+#: lib/spiderfw/config/options/spider.rb:118
 msgid "Name of the main log file"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:116
+#: lib/spiderfw/config/options/spider.rb:119
 msgid ""
 "Number of old log files to keep, OR frequency of rotation (daily, weekly or "
 "monthly)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:117
+#: lib/spiderfw/config/options/spider.rb:120
 msgid "Maximum logfile size (only applies when log.rotate.age is a number)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:118
+#: lib/spiderfw/config/options/spider.rb:121
 msgid "Log memory usage"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:119
+#: lib/spiderfw/config/options/spider.rb:122
 msgid "Maximum number of rotated log files to keep"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:120
+#: lib/spiderfw/config/options/spider.rb:123
 msgid "Whether to compress rotated log files"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:121
+#: lib/spiderfw/config/options/spider.rb:124
 msgid "Under JRuby, Use Apache Commons Logging if available"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:125
+#: lib/spiderfw/config/options/spider.rb:128
 msgid "A list of organizations"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:126
+#: lib/spiderfw/config/options/spider.rb:129
 msgid "Descriptive name of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:127
+#: lib/spiderfw/config/options/spider.rb:130
 msgid "Country code of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:128
+#: lib/spiderfw/config/options/spider.rb:131
 msgid "State of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:129
+#: lib/spiderfw/config/options/spider.rb:132
 msgid "Name of the city"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:130
+#: lib/spiderfw/config/options/spider.rb:133
 msgid "Common name (e.g. domain) of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:131
+#: lib/spiderfw/config/options/spider.rb:134
 msgid "Main e-mail address of the organization"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:132
+#: lib/spiderfw/config/options/spider.rb:135
 msgid "Email address used as 'From' for automatic e-mails"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:134
+#: lib/spiderfw/config/options/spider.rb:137
 msgid "Organizational Unit (e.g. department)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:135
+#: lib/spiderfw/config/options/spider.rb:138
 msgid "Path to the public key (defaults to config/certs/org_name/public.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:137
+#: lib/spiderfw/config/options/spider.rb:140
 msgid "Path to the certificate (defaults to config/certs/org_name/cert.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:139
+#: lib/spiderfw/config/options/spider.rb:142
 msgid ""
 "Path to the private key (defaults to config/certs/org_name/private/key.pem)"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:151
+#: lib/spiderfw/config/options/spider.rb:154
 msgid "Name of the site administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:152
+#: lib/spiderfw/config/options/spider.rb:155
 msgid "Email of the site administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:153
+#: lib/spiderfw/config/options/spider.rb:156
 msgid "Email of the site technical administrator"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:155
+#: lib/spiderfw/config/options/spider.rb:158
 msgid "Main domain name used to access the site"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:156
+#: lib/spiderfw/config/options/spider.rb:159
 msgid "Main port used to access the site"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:157
+#: lib/spiderfw/config/options/spider.rb:160
 msgid "Whether this site can be accessed using SSL"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:158
+#: lib/spiderfw/config/options/spider.rb:161
 msgid "Port used to access the site via SSL"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:161
+#: lib/spiderfw/config/options/spider.rb:164
 msgid "Send an e-mail to the technical administrator when errors occur"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:164
+#: lib/spiderfw/config/options/spider.rb:167
 msgid "Use ruby-debug to provide extended traces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:167
-#: lib/spiderfw/config/options/spider.rb:168
+#: lib/spiderfw/config/options/spider.rb:170
+#: lib/spiderfw/config/options/spider.rb:171
 msgid "Show locals in debug traces"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:170
+#: lib/spiderfw/config/options/spider.rb:173
 msgid "Compress JavaScript files"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:172
+#: lib/spiderfw/config/options/spider.rb:175
 msgid "Combine CSS files"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:174
-msgid "Use cache busters for CSS urls"
-msgstr ""
-
-#: lib/spiderfw/config/options/spider.rb:176
-msgid "Use a Content Delivery Network for assets if defined"
+#: lib/spiderfw/config/options/spider.rb:177
+msgid "Compile CSS LESS files"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:179
-msgid "Proxy to use for http clients (http://user:pass@host:port)"
+msgid "Use Compass SASS framework if available"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:180
+msgid "Use cache busters for CSS urls"
 msgstr ""
 
 #: lib/spiderfw/config/options/spider.rb:182
+msgid "Use a Content Delivery Network for assets if defined"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:185
+msgid "Proxy to use for http clients (http://user:pass@host:port)"
+msgstr ""
+
+#: lib/spiderfw/config/options/spider.rb:188
 msgid "Disable resource overriding in home"
 msgstr ""
 
-#: lib/spiderfw/config/options/spider.rb:184
+#: lib/spiderfw/config/options/spider.rb:190
 msgid "Fetch window to use when migrating models"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:268
+#: lib/spiderfw/controller/mixins/visual.rb:271
 msgid "Page not found"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:275
+#: lib/spiderfw/controller/mixins/visual.rb:278
 msgid "An error occurred"
 msgstr ""
 
-#: lib/spiderfw/controller/mixins/visual.rb:324
+#: lib/spiderfw/controller/mixins/visual.rb:327
 msgid "Site error"
 msgstr ""
 
@@ -813,11 +834,11 @@ msgstr ""
 msgid "git gem not installed, cannot init repo"
 msgstr ""
 
-#: lib/spiderfw/http/server.rb:52
+#: lib/spiderfw/http/server.rb:57
 msgid "Using webserver %s"
 msgstr ""
 
-#: lib/spiderfw/http/server.rb:53
+#: lib/spiderfw/http/server.rb:58
 msgid "Listening on port %s"
 msgstr ""
 
@@ -874,7 +895,7 @@ msgstr ""
 msgid "over %d years"
 msgstr ""
 
-#: lib/spiderfw/model/base_model.rb:1534
+#: lib/spiderfw/model/base_model.rb:1544
 msgid "'%s' is not a valid date"
 msgstr ""
 
@@ -914,79 +935,79 @@ msgstr ""
 msgid "Modified"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:1159
+#: lib/spiderfw/model/mappers/mapper.rb:1179
 msgid "Element %s is required"
 msgstr ""
 
-#: lib/spiderfw/model/mappers/mapper.rb:1163
+#: lib/spiderfw/model/mappers/mapper.rb:1183
 msgid "Another item with the same %s is already present"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:96
+#: lib/spiderfw/setup/app_manager.rb:100
 msgid "Install done."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:142
+#: lib/spiderfw/setup/app_manager.rb:146
 msgid "Installing the following needed gems:"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:154
+#: lib/spiderfw/setup/app_manager.rb:158
 msgid "Installing the following optional gems:"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:161
+#: lib/spiderfw/setup/app_manager.rb:165
 msgid "Unable to install optional gem %s:"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:200
+#: lib/spiderfw/setup/app_manager.rb:206
 msgid "Doing cleanup..."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:213
+#: lib/spiderfw/setup/app_manager.rb:219
 msgid "Clearing cache..."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:217
+#: lib/spiderfw/setup/app_manager.rb:224
 msgid "Restarting server..."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:220
+#: lib/spiderfw/setup/app_manager.rb:227
 msgid "Post-update done"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:244
+#: lib/spiderfw/setup/app_manager.rb:251
 msgid "%s already installed, skipping"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:249
+#: lib/spiderfw/setup/app_manager.rb:256
 msgid "Fetching %s from %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:262 lib/spiderfw/setup/app_manager.rb:295
+#: lib/spiderfw/setup/app_manager.rb:269 lib/spiderfw/setup/app_manager.rb:303
 msgid "Added app %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:268
+#: lib/spiderfw/setup/app_manager.rb:275
 msgid "Fetching %s from server... "
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:270
+#: lib/spiderfw/setup/app_manager.rb:278
 msgid "Fetched."
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:306
+#: lib/spiderfw/setup/app_manager.rb:314
 msgid "Updating %s from %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:326
+#: lib/spiderfw/setup/app_manager.rb:335
 msgid "Updated app %s"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:357
+#: lib/spiderfw/setup/app_manager.rb:366
 msgid "Update of %s failed"
 msgstr ""
 
-#: lib/spiderfw/setup/app_manager.rb:410
+#: lib/spiderfw/setup/app_manager.rb:421
 msgid "Setup task done"
 msgstr ""
 
@@ -1098,7 +1119,7 @@ msgstr ""
 msgid "Database %s does not exist."
 msgstr ""
 
-#: lib/spiderfw/spider.rb:785
+#: lib/spiderfw/spider.rb:830
 msgid ""
 "Unable to start debugger. Ensure ruby-debug is installed (or set debugger."
 "start to false)."

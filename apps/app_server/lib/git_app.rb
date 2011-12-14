@@ -4,15 +4,24 @@ module Spider; module AppServer
     
     class GitApp < App
         attr_reader :repo
+        attr_reader :branches
         
         def initialize(path)
             super
             repo = Grit::Repo.new(path)
             spec = nil
-            repo.tree.blobs.each do |blob|
+            repo_branches = repo.heads.map{ |h| h.name }
+            @branches = repo_branches
+            read_spec
+            @repo = repo
+        end
+
+        def read_spec(branch='master')
+            @repo.tree(branch).blobs.each do |blob|
                 next unless blob.basename =~ /\.appspec$/
                 spec = blob.data
                 @spec = Spider::App::AppSpec.eval(spec)
+                @spec.branch = branch
                 if repo_base = Spider.conf.get('app_server.git_repo_base')
                     unless @spec.git_repo
                         @spec.git_repo(repo_base+'/'+@spec.id)
@@ -26,7 +35,7 @@ module Spider; module AppServer
                 @last_modified = repo.commits.first.authored_date # FIXME
                 break
             end
-            @repo = repo
+            @spec
         end
         
         def package

@@ -29,7 +29,7 @@ module Spider; module Messenger
         end
         
         def self.failed_messages
-            self.where{ (q.sent == nil) & (q.next_try .not nil) }
+            self.where{ (q.sent == nil) & (q.next_try == nil) }
         end
         
         def self.queue(val=nil)

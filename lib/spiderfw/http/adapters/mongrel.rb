@@ -24,7 +24,7 @@ module Spider; module HTTP
         
         
         def shutdown_server
-            @server.stop
+            @server.stop if @server
         end
         
         

@@ -283,6 +283,7 @@ module Spider; module Model; module Storage; module Db
     
     class FieldFunction
         attr_reader :expression, :table, :joins
+        attr_accessor :as
         def initialize(expression, table, joins)
             @expression = expression
             @table = table
@@ -298,7 +299,11 @@ module Spider; module Model; module Storage; module Db
         end
         
         def to_s
-            @expression
+            if @as
+                "#{@expression} AS #{@as}"
+            else
+                @expression
+            end
         end
     end
     

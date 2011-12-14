@@ -77,7 +77,7 @@ module Spider
                         res = true
                     elsif res == no || res == n
                         res = false
-                    elsif options[:default]
+                    elsif res.blank? && options[:default]
                         res = options[:default]
                     else
                         good = false

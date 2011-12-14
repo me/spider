@@ -3,7 +3,7 @@ require 'strscan'
 
 module Spider; module TemplateBlocks
     ExpressionOutputRegexp = /\{?\{\s([^\s].*?)\s\}\}?/
-    GettextRegexp = /_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
+    GettextRegexp = /([snp][snp]?)?_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
     ERBRegexp = /(<%(.+)?%>)/
     
     class Text < Block
@@ -21,9 +21,9 @@ module Spider; module TemplateBlocks
                 when :expr
                     c += "$out << #{vars_to_scene(val)}\n"
                 when :gettext
-                    c += "$out << _('#{escape_text(val[0])}')"
-                    if val[1]
-                        c += " % [#{vars_to_scene(val[1])}]" 
+                    c += "$out << #{val[:func]}_('#{escape_text(val[:val])}')"
+                    if val[:vars]
+                        c += " % [#{vars_to_scene(val[:vars])}]" 
                     end
                     c += "\n"
                 when :erb

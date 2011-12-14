@@ -1,0 +1,33 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Spider::Admin 0.1\n"
+"POT-Creation-Date: 2011-11-15 16:11+0100\n"
+"PO-Revision-Date: 2011-11-15 16:11+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: controllers/admin_controller.rb:15
+msgid "Home"
+msgstr ""
+
+#: views/admin.layout.shtml:6 views/admin.layout.shtml:14
+msgid "Administration"
+msgstr ""
+
+#: views/admin.layout.shtml:17
+msgid "Welcome, %s."
+msgstr ""
+
+#: widgets/admin_menu/admin_menu.rb:10
+msgid "Applications"
+msgstr ""

@@ -1,4 +1,4 @@
-require 'spiderfw'
+require 'spiderfw/init'
 require 'apps/drb_server/lib/model_server'
 
 unless ARGV.length == 2

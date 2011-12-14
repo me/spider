@@ -1,2 +1,5 @@
-<textarea name="{ @name }" rows="{ @rows }" cols="{ @cols }"><tpl:asset type="js" src="input.js" /><tpl:asset type="js" src="text_area.js" />
-<tpl:asset type="js" app="core/components" src="js/jquery/plugins/autogrow/jquery.autogrow.js" />{ @value }</textarea>
+<div class="input">
+    <tpl:asset type="js" src="input.js" /><tpl:asset type="js" src="text_area.js" />
+    <tpl:asset type="js" app="core/components" src="js/jquery/plugins/autogrow/jquery.autogrow.js" />
+    <textarea name="{ @name }" rows="{ @rows }" cols="{ @cols }">{ @value }</textarea>
+</div>

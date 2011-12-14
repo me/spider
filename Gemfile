@@ -1,23 +1,9 @@
 source "http://rubygems.org"
 
-# Default gems
-
-gem "cmdparse", "> 2.0.0"
-gem "fast_gettext", ">= 0.5.13"
-gem "hpricot", "> 0.8"
-gem "json_pure", "> 1.1"
-gem "uuidtools", "> 2.1"
-gem "rufus-scheduler", "> 1.0"
-gem "mime-types", "> 1.0"
-gem "locale", "> 2.0"
-gem "builder", "> 2.1"
-gem "macaddr", ">= 1.0.0"
-gem "bundler"
+gemspec :development_group => :devel
 
 # Optional gems
 
-gem 'gettext', '>= 2.1.0', :group => :devel
-gem 'fssm', :group => :devel
 gem "json", :platforms => [:mri_18, :mri_19]
 gem "mongrel", '>= 1.2.0.pre2'
 gem "ripl", :platforms => [:ruby, :mingw]
@@ -42,6 +28,5 @@ end
 
 # Install specific gems
 
-
-gem "mysql", :group => :mysql
-gem "ruby-oci8", :group => :oci8
+# gem "mysql", :group => :mysql
+# gem "ruby-oci8", :group => :oci8

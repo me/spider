@@ -10,8 +10,8 @@ module Spider; module ControllerMixins
         
         def self.included(klass)
             super
-            klass.route('public/', :serve_static, :do => lambda{ @serving_static = true })
-            klass.route('w/', :serve_widget_static, :do => lambda{ @serving_static = true })
+            @static_content_route ||= 'public/'
+            klass.route(@static_content_route, :serve_static, :do => lambda{ @serving_static = true })
             if (klass < Visual)
                 klass.no_layout('public')
                 klass.no_layout('serve_static')
@@ -61,14 +61,6 @@ module Spider; module ControllerMixins
             output_static(full_path)
         end
         
-        def serve_widget_static(path)
-            path = sanitize_path(path)
-            parts = path.split('/public/', 2)
-            raise Spider::Controller::NotFound.new(path) unless parts[1]
-            full_path = self.class.app.widgets_path+'/'+parts[0]+'/public/'+parts[1]
-            output_static(full_path)
-        end
-        
         def output_static(full_path, file_name=nil)
             file_name ||= File.basename(full_path)
             @request.misc[:is_static] = true
@@ -89,11 +81,10 @@ module Spider; module ControllerMixins
                 begin
                   if_modified = Time.httpdate(@request.env['HTTP_IF_MODIFIED_SINCE'])
                 rescue ArgumentError # Passenger with IE6 has this header wrong
-                  if_modified = 0
                 end
                 max_age = nil
                 fresh = true
-                if fresh && mtime <= if_modified
+                if fresh && if_modified && mtime <= if_modified
                     debug("Not modified since #{if_modified}: #{full_path}")
                     #@response.status = Spider::HTTP::NOT_MODIFIED
                     @response.headers.delete("Content-Type")

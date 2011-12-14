@@ -5,7 +5,7 @@ module Spider; module Components
         
         attr_to_scene :current
         is_attribute :default
-        attr_reader :current, :current_label
+        attr_reader :current, :current_label, :links
         
         default_template 'default'
         
@@ -61,8 +61,7 @@ module Spider; module Components
             
             @sections.each do |section, labels|
                 labels.each do |label|
-                    menu_link = @link_mode == :path ? widget_request_path+'/'+@links[label] : "#{widget_request_path}?_wa[#{full_id}]=#{@links[label]}"
-                    @widgets[:menu].add(label, menu_link, section)
+                    @widgets[:menu].add(label, self.link(label), section)
                 end
             end
             @widgets[:menu].current = @current_label
@@ -84,6 +83,10 @@ module Spider; module Components
             res = @widgets[:menu].assets
             res += @current.assets if @current
             return res
+        end
+
+        def link(label)
+            @link_mode == :path ? widget_request_path+'/'+@links[label] : "#{widget_request_path}?_wa[#{full_id}]=#{@links[label]}"
         end
         
         def self.label_to_link(label)

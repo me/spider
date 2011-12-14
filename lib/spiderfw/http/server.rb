@@ -43,7 +43,12 @@ module Spider; module HTTP
             
             start = lambda{
                 $SPIDER_WEB_SERVER = true
-                require 'spiderfw'
+                begin
+                    require 'spiderfw/init'
+                rescue Exception => exc
+                    Spider.logger.error(exc)
+                    return
+                end
                 require 'spiderfw/controller/http_controller'
                 
                 port ||= Spider.conf.get('webserver.port')
@@ -54,11 +59,15 @@ module Spider; module HTTP
                 server = Spider::HTTP.const_get(servers[server_name]).new
                 ssl_server = nil
                 Spider.startup
-                if Spider.conf.get('devel.trace.extended')
-                    require 'ruby-debug'
-                    require 'spiderfw/utils/monkey/debugger'
-                    Debugger.start
-                    Debugger.post_mortem
+                begin
+                    if Spider.conf.get('devel.trace.extended')
+                        require 'ruby-debug'
+                        require 'spiderfw/utils/monkey/debugger'
+                        Debugger.start
+                        Debugger.post_mortem
+                    end
+                rescue Exception => exc
+                    Spider.logger.warn "Unable to start debugger"
                 end
                 
                 thread = Thread.new do
@@ -79,7 +88,7 @@ module Spider; module HTTP
                     end
                 end
                 do_shutdown = lambda{
-                    Debugger.post_mortem = false
+                    Debugger.post_mortem = false if defined?(Debugger)
                     # debugger
                     server.shutdown
                     ssl_server.shutdown if ssl_server
@@ -95,7 +104,7 @@ module Spider; module HTTP
                 ssl_thread.join if ssl_thread
             }
             if options[:daemonize]
-                require 'spiderfw'
+                require 'spiderfw/init'
                 require 'spiderfw/utils/fork'
                 pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                 process_name = (options[:daemonize] == true) ? 'spider-server' : options[:daemonize]
@@ -117,9 +126,11 @@ module Spider; module HTTP
                 if Spider.conf.get('webserver.respawn_on_change')
                     Spider.start_loggers
                     begin
-                        begin
+                        gemfile = File.join(Spider.paths[:root], 'Gemfile')
+                        gemfile_lock = File.join(Spider.paths[:root], 'Gemfile.lock')
+                        if File.file?(gemfile) && File.file?(gemfile_lock)
+                            require 'bundler'
                             Bundler.require :default, Spider.runmode.to_sym
-                        rescue
                         end
                         spawner = Spawner.new({'spawn' => start})
                         spawner.run('spawn')
@@ -132,7 +143,11 @@ module Spider; module HTTP
                 unless spawner_started
                     Spider.main_process_startup
                     Spider.startup
-                    start.call 
+                    begin
+                        start.call 
+                    rescue Exception => exc
+                        Spider.logger.error(exc)
+                    end
                 end
             end
         end

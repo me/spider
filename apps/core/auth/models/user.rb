@@ -9,6 +9,15 @@ module Spider; module Auth
         def user_attributes(dest=nil)
             {}
         end
+
+        # This can be overrided in subclasses, possibly with RBACProvider
+        def can?(*args)
+            false
+        end
+
+        def superuser?
+            false
+        end
         
     end
     

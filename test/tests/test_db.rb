@@ -1,5 +1,5 @@
 $SPIDER_RUN_PATH=File.dirname(__FILE__)+'/..'
-require 'spiderfw'
+require 'spiderfw/init'
 require 'spiderfw/utils/test_case'
 
 

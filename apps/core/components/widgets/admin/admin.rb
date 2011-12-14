@@ -20,6 +20,7 @@ module Spider; module Components
         i_attribute :models, :process => lambda{ |models| models.split(/,[\s\n]*/).map{|m| const_get_full(m) } }
         is_attr_accessor :title, :default => lambda{ _("Administration") }
         is_attr_accessor :logout_url, :default => Spider::Auth.request_url+'/login/logout'
+        is_attr_accessor :"full-page", :type => Spider::Bool, :default => false
         attr_accessor :custom_widgets
         
         def init
@@ -57,6 +58,15 @@ module Spider; module Components
         
         def run
             @scene.current = @widgets[:switcher].current_label
+            if @scene._parent.admin_breadcrumb
+                @scene.breadcrumb = @scene._parent.admin_breadcrumb
+                bc = []
+                bc << {:label => @scene.current, :url => @widgets[:switcher].link(@scene.current)}
+                if @widgets[:switcher].current.action == :form
+                    bc += @widgets[:switcher].current.form.breadcrumb
+                end
+                @scene.breadcrumb.concat(bc)
+            end
             super
         end
         

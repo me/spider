@@ -9,10 +9,19 @@ module Spider; module Components
         attribute :table_elements
         i_attr_accessor :table_widget
         i_attr_accessor :form_widget
+        is_attribute :allow_create, :type => Spider::Bool, :default => true
         attr_accessor :fixed
 
         def route_widget
             [@action, @_action]
+        end
+
+        def table
+            @widgets[:table]
+        end
+
+        def form
+            @widgets[:form]
         end
         
         def prepare(action='')
@@ -114,7 +123,7 @@ module Spider; module Components
             end
             if @widgets[:ask_delete]
                 @widgets[:ask_delete].add_action('_w'+param_name(self)+'[delete_cancel]', _("Cancel"))
-                @widgets[:ask_delete].add_action('_w'+param_name(self)+'[do_delete]', _('Ok'))
+                @widgets[:ask_delete].add_action('_w'+param_name(self)+'[do_delete]', _('Ok'), "danger")
             end
             
             super

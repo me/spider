@@ -1,4 +1,4 @@
-require 'spiderfw'
+require 'spiderfw/init'
 require 'spiderfw/http/adapters/rack'
 PhusionPassenger.on_event(:starting_worker_process) do
     Spider.start_loggers

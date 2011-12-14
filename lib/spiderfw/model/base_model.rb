@@ -1174,8 +1174,8 @@ module Spider; module Model
                 qs.autoload = true
                 qs.where(&proc)
             else
-                condition = Condition.and(params[0])
-                request = Request.new(params[1])
+                condition = params[0].is_a?(Condition) ? params[0] : Condition.and(params[0])
+                request = params[1].is_a?(Request) ? params[1] : Request.new(params[1])
                 query = Query.new(condition, request)
                 qs = QuerySet.new(self, query)
             end
@@ -1872,7 +1872,7 @@ module Spider; module Model
                 val.modified = false if val.is_a?(QuerySet)
             end
             self.class.elements_array.select{ |el| el.attributes[:integrated_model] && self.element_has_value?(el) }.each do |el|
-                self.get(el).reset_modified_elements(elements)
+                self.get(el).reset_modified_elements(*elements)
             end
 
             nil

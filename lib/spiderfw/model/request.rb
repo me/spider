@@ -24,15 +24,23 @@ module Spider; module Model
             @polymorphs = {}
             @expandable = true
         end
+
+        def self.strict(val=nil, params={})
+            r = self.new(val, params)
+            r.expandable = false
+            r
+        end
         
         # TODO: fix/remove?
         def request(element) # :nodoc:
-            if (element.is_a?(Element))
+            if element.is_a?(Element)
                 self[element.name.to_s] = true
-            else
-                element.to_s.split(',').each do |el|
+            elsif element.is_a?(String)
+                element.split(',').each do |el|
                     self[el.strip] = true
                 end
+            else
+                self[element] = true
             end
         end
     

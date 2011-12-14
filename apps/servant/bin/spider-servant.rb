@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require 'rubygems'
-require 'spiderfw'
+require 'spiderfw/init'
 require 'cmdparse'
 require $SPIDER_PATH+'/apps/servant/lib/servant.rb'
 require 'ruby-debug'

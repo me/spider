@@ -208,7 +208,7 @@ module Spider
             # before(action, *arguments)
             # do_dispatch(:before, action, *arguments)
             catch(:done) do
-                if (can_dispatch?(:execute, action))
+                if can_dispatch?(:execute, action)
                     d_next = dispatch_next(action)
                     #run_chain(:execute, action, *arguments)
                     #  shortcut route to self
@@ -242,7 +242,10 @@ module Spider
             before(action, *arguments)
             catch(:done) do
                 #debug("#{self} before")
-                do_dispatch(:call_before, action, *arguments)
+                d_next = dispatch_next(action)
+                unless d_next && d_next.obj == self
+                    do_dispatch(:call_before, action, *arguments)
+                end
             end
         end
                 
@@ -253,7 +256,10 @@ module Spider
         def call_after(action='', *arguments)
             after(action, *arguments)
             catch(:done) do
-                do_dispatch(:call_after, action, *arguments)
+                d_next = dispatch_next(action)
+                unless d_next && d_next.obj == self
+                    do_dispatch(:call_after, action, *arguments)
+                end
             end
             # begin
             #     run_chain(:after)

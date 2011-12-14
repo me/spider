@@ -36,14 +36,6 @@ module Spider
         def dispatch(method, action='', *arguments)
             return nil unless can_dispatch?(method, action)
             route = @dispatch_next[action]
-            if (!route.obj)
-                obj = dispatched_object(route)
-                obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
-                route.obj = obj
-                if (route.options[:do])
-                    obj.instance_exec(*(route.params || []).slice(0, route.options[:do].arity), &route.options[:do])
-                end
-            end
             obj = route.obj            
             new_arguments = arguments
             new_arguments += route.params unless route.options[:remove_params]
@@ -67,6 +59,7 @@ module Spider
         def do_dispatch(method, action='', *arguments)
             obj, route_action, new_arguments = dispatch(method, action, *arguments)
             return nil unless obj
+            return nil if obj == self && route_action == action # short circuit
             meth_action = route_action.length > 0 ? route_action : obj.class.default_action
             begin
                 if (obj.class.dispatch_methods && obj.class.dispatch_methods[method])
@@ -110,18 +103,35 @@ module Spider
         # Returns the (possibly cached) route for path.
         def dispatch_next(path)
             @dispatch_next ||= {}
-            @dispatch_next[path] ||= get_route(path)
+            @dispatch_next[path] ||= dispatcher_get_route(path)
+        end
+
+        def dispatcher_get_route(path)
+            route = get_route(path)
+            return route if !route || route.obj
+            obj = dispatched_object(route)
+            obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
+            route.obj = obj
+            if route.options[:do]
+                do_args = [route.matched] + (route.params || [])
+                obj.instance_exec(*(do_args).slice(0, route.options[:do].arity), &route.options[:do])
+            end
+            route.obj = obj
+            route
         end
         
         # Looks in defined routes, and returns the first matching Route for path.
         def get_route(path)
             path ||= ''
             r = routes + self.class.routes
+            if nil_route = self.class.nil_route
+                r << [nil, nil_route[0], nil_route[1]]
+            end
             r.each do |route|
                 try, dest, options = route
                 action = nil
                 case try
-                when true
+                when true, nil
                     action = path
                     matched = ''
                 when String
@@ -169,6 +179,7 @@ module Spider
                     end
                     params ||= []
                     action.sub!(/^\/+/, '') # no leading slash
+
                     return Route.new(:path => path, :dest => dest, :action => action, :matched => matched,
                                      :params => params, :options => options)
                 end
@@ -197,11 +208,13 @@ module Spider
         end
         
         module ClassMethods
-            attr_accessor :default_route, :default_dispatcher
+            attr_accessor :default_route, :default_dispatcher, :nil_route
            
             def add_route(routes, path, dest=nil, options=nil)
-                if ( path.is_a? Hash )
+                if path.is_a?(Hash)
                     path.each {|p,d| add_route(p, d)}
+                elsif path.nil?
+                    @nil_route = [dest, options || {}]
                 else
                     routes << [path, dest, options || {}]
                     if path.is_a?(String) && dest.respond_to?(:default_dispatcher=)

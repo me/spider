@@ -1,0 +1,28 @@
+<div>
+    <div sp:if="@queue == :email" class="queue">
+        <h4>_(Sent messages) - { @sent.total_rows }</h4>
+        <core:table id='sent' queryset='@sent' row_limit="5" 
+            elements="id,from,to,ticket,sent,subject" sort="sent,desc"/><br>
+        <h4>_(Queued messages) - { @queued.total_rows }</h4>
+        <core:table id='queued' queryset='@queued' row_limit="5" 
+            elements="id,from,to,ticket,last_try,next_try,attempts,backend_response" sort="next_try,desc"/><br>
+        <h4>_(Failed messages)  - { @failed.total_rows }</h4>
+        <core:table id='failed' queryset='@failed' row_limit="5" 
+            elements="id,from,to,ticket,last_try,backend_response" sort="last_try,desc"/><br>
+    </div>
+    <div sp:if="@queue == :sms" class="queue">
+        <h4>_(Sent messages) - { @sent.total_rows }</h4>
+        <core:table id='sent' queryset='@sent' row_limit="5" 
+            elements="id,to,ticket,sent,text" sort="sent,desc"/><br>
+        <h4>_(Queued messages) - { @queued.total_rows }</h4>
+        <core:table id='queued' queryset='@queued' row_limit="5" 
+            elements="id,to,ticket,last_try,next_try,attempts,backend_response" sort="next_try,desc"/><br>
+        <h4>_(Failed messages) - { @failed.total_rows }</h4>
+        <core:table id='failed' queryset='@failed' row_limit="5" 
+            elements="id,to,ticket,last_try,backend_response" sort="last_try,desc"/><br>
+    </div>
+
+</div>
+
+
+

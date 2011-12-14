@@ -23,13 +23,13 @@ module Spider; module Messenger
             klass ||= Spider.home
             msg = Spider::Messenger::MessengerHelper.send_email(klass, template, scene, from, to, headers, attachments, params)
             sent_email(msg.ticket)
-            msg.ticket
+            msg
         end
 
         def send_sms(to, text, params={})
             msg = Spider::Messenger.sms(to, text, params)
             sent_sms(msg.ticket)
-            msg.ticket
+            msg
         end
         
         def self.send_email(klass, template, scene, from, to, headers={}, attachments=[], params={})

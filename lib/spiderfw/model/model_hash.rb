@@ -32,11 +32,15 @@ module Spider; module Model
                 val = n
             end
             key = key.name if key.is_a?(Element)
-            parts = key.to_s.split('.', 2)
-            return super(key.to_sym, val) unless parts[1]
-            parts[0] = parts[0].to_sym
-            self[parts[0]] = get_deep_obj unless self[parts[0]].is_a?(self.class)
-            self[parts[0]][parts[1]] = val
+            if key.is_a?(String)
+                parts = key.split('.', 2)
+                return super(key.to_sym, val) unless parts[1]
+                parts[0] = parts[0].to_sym
+                self[parts[0]] = get_deep_obj unless self[parts[0]].is_a?(self.class)
+                self[parts[0]][parts[1]] = val
+            else
+                super(key, val)
+            end
         end
         
         def [](key)

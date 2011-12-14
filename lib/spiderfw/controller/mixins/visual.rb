@@ -43,6 +43,16 @@ module Spider; module ControllerMixins
             if Spider.runmode != 'devel' && File.exists?(File.join(Spider.paths[:tmp], 'maintenance.txt'))
                 raise Spider::Controller::Maintenance
             end
+            n_route = dispatch_next(action)
+            obj = n_route.obj if n_route
+            if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?(n_route.path))
+                set_layout = @layout || @dispatcher_layout
+                if set_layout
+                    set_layout = [set_layout] unless set_layout.is_a?(Array)
+                    set_layout.map{ |l| self.class.load_layout(l) }
+                    obj.dispatcher_layout = set_layout
+                end
+            end
             super
         end
         
@@ -210,13 +220,12 @@ module Spider; module ControllerMixins
             end
             init_widgets(template, layout)
             return template if done?
-            Spider::GetText.in_domain(self.class.app.short_name){
-                if layout
-                    layout.render(scene)
-                else
-                    template.render(scene)
-                end
-            }
+        
+            if layout
+                layout.render(scene)
+            else
+                template.render(scene)
+            end
             return template
         end
         
@@ -236,21 +245,12 @@ module Spider; module ControllerMixins
         
         
         
-        def dispatched_object(route)
-            obj = super
-            if (obj.is_a?(Visual))
-                set_layout = @layout || @dispatcher_layout
-                if set_layout
-                    set_layout = [set_layout] unless set_layout.is_a?(Array)
-                    set_layout.map{ |l| self.class.load_layout(l) }
-                    obj.dispatcher_layout = set_layout
-                end
-            end
-            return obj
-        end
         
         def try_rescue(exc)
-            exc.uuid = UUIDTools::UUID.random_create.to_s if exc.respond_to?(:uuid=)
+            if exc.respond_to?(:uuid=)
+                return super if exc.uuid # Error page already outputted
+                exc.uuid = UUIDTools::UUID.random_create.to_s 
+            end
             format = self.class.output_format(:error) || :html
             unless exc.is_a?(Spider::Controller::Maintenance) || exc.is_a?(Spider::Controller::NotFound)
                 return super unless @executed_format == :html
@@ -555,6 +555,7 @@ module Spider; module ControllerMixins
                     path = Spider::Layout.named_layouts[path]
                 end
                 resource = Spider::Template.find_resource(path+'.layout', layout_path, self)
+                raise "Layout #{path} not found" unless resource && resource.path
                 layout = Spider::Layout.new(resource.path)
                 layout.definer_class = resource.definer
                 layout.asset_set = params[:assets] if params[:assets]

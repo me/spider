@@ -12,8 +12,8 @@ module Spider
             @url = url
         end
         
-        def specs
-            load_specs unless @specs
+        def specs(branch=nil)
+            load_specs(branch) unless @specs
             @specs
         end
         
@@ -34,29 +34,35 @@ module Spider
         end
         
         def load_specs
-            result = http_get(@url+'/list.json')
+            url = @url+'/list.json'
+            result = http_get(url)
             list = JSON.parse(result)
             @specs = list.map{ |app| Spider::App::AppSpec.parse_hash(app) }
         end
         
         def get_specs(app_ids)
             app_ids = [app_ids] unless app_ids.is_a?(Array)
-            result = http_get(@url+"/list/#{app_ids.join('+')}.json")
+            url = @url+"/list/#{app_ids.join('+')}.json"
+            result = http_get(url)
             JSON.parse(result).map{ |app| Spider::App::AppSpec.parse_hash(app) }
         end
         
         def get_deps(app_ids, options={})
             app_ids = [app_ids] unless app_ids.is_a?(Array)
             url = "#{@url}/deps/#{app_ids.join('+')}.json"
-            url += "?no_optional=true" if options[:no_optional]
+            params = []
+            params << 'no_optional=true' if options[:no_optional]
+            url += '?'+params.join('&') unless params.empty?
             result = http_get(url)
             JSON.parse(result).map{ |app| Spider::App::AppSpec.parse_hash(app) }
         end
         
-        def fetch_app(app_id)
+        def fetch_app(app_id, branch=nil)
             tmp = Tempfile.new("spider-app-archive")
             tmp.binmode
-            res = http_get(@url+"/pack/#{app_id}")
+            url = @url+"/pack/#{app_id}"
+            url += "?branch=#{branch}" if branch
+            res = http_get(url)
             tmp << res
             tmp.flush
             tmp.path

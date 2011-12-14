@@ -362,7 +362,7 @@ module Spider
             end
             compiled.block.init_code = res_init + compiled.block.init_code
             compiled.devel_info["source.xml"] = root.to_html
-            compiled.assets = @assets + assets
+            compiled.assets = (@assets + assets).uniq
             return compiled
         end
         
@@ -407,6 +407,7 @@ module Spider
             controller = nil
             if res && res.definer
                 controller = res.definer.controller
+                ass[:app] = res.definer unless res.definer.is_a?(Spider::Home)
             elsif owner_class < Spider::Controller
                 controller = owner_class
             end
@@ -434,7 +435,7 @@ module Spider
                 ass = processor.process(ass)
             end
             if cpr = attributes[:compressed] 
-                if cpr == "true"
+                if cpr == true || cpr == "true"
                     ass[:compressed_path] = ass[:path]
                     ass[:compressed_rel_path] = ass[:rel_path]
                     ass[:compressed] = base_url + File.basename(ass[:path])
@@ -480,6 +481,10 @@ module Spider
             @overrides += orig_overrides
             if root.name == 'tpl:extend'
                 orig_overrides = @overrides
+                our_domain = nil
+                if @definer_class
+                    our_domain = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+                end
                 @overrides = []
                 ext_src = root.get_attribute('src')
                 ext_app = root.get_attribute('app')
@@ -510,6 +515,9 @@ module Spider
                 @dependencies << ext
                 tpl = Template.new(ext)
                 root = get_el(ext)
+                if ext_app.short_name != our_domain
+                    root.set_attribute('tpl:text-domain', ext_app.short_name)
+                end
                 root.children_of_type('tpl:asset').each do |ass|
                     ass_src = ass.get_attribute('src')
                     if ass_src && ass_src[0].chr != '/'
@@ -663,6 +671,11 @@ module Spider
         # - exec
         # - eval the template's compiled run code.
         def render(scene=nil)
+            prev_domain = nil
+            if @definer_class
+                td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+                prev_domain = Spider::GetText.set_domain(td)
+            end
             scene ||= @scene
             load unless loaded?
             init(scene) unless init_done?
@@ -693,6 +706,7 @@ module Spider
                     @content[yielded].render if @content[yielded]
                 end
             end
+            Spider::GetText.restore_domain(prev_domain) if prev_domain
             # end
         end
         
@@ -803,7 +817,11 @@ module Spider
                     elsif override.name == 'tpl:override' || override.name == 'tpl:content'
                         overridden = f.to_html
                         parent = f.parent
-                        f.swap(override.innerHTML)
+                        if f == el
+                            f.innerHTML = override.innerHTML
+                        else
+                            f.swap(override.innerHTML)
+                        end
                         parent.search('tpl:overridden').each do |o| 
                             ovr = overridden
                             if o_search = o.get_attribute('search')
@@ -815,8 +833,10 @@ module Spider
                     elsif override.name == 'tpl:override-attr'
                         f.set_attribute(override.get_attribute("name"), override.get_attribute("value"))
                     elsif override.name == 'tpl:append-attr'
-                        f.set_attribute(override.get_attribute("name"), \
-                        (f.get_attribute(override.get_attribute("name")) || '')+override.get_attribute("value")) 
+                        a = f.get_attribute(override.get_attribute("name")) || ''
+                        a += ' ' unless a.blank?
+                        a += override.get_attribute("value")
+                        f.set_attribute(override.get_attribute("name"), a)
                     elsif override.name == 'tpl:append'
                         f.innerHTML += override.innerHTML
                     elsif override.name == 'tpl:prepend'
@@ -854,7 +874,7 @@ module Spider
         end
         
         ExpressionOutputRegexp = /\{?\{\s([^\s].*?)\s\}\}?/
-        GettextRegexp = /_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
+        GettextRegexp = /([snp][snp]?)?_\(([^\)]+)?\)(\s%\s([^\s,]+(?:,\s*\S+\s*)?))?/
         ERBRegexp = /(<%(.+)?%>)/
         SceneVarRegexp = /@(\w[\w\d_]+)/
         
@@ -875,8 +895,8 @@ module Spider
                         yield :expr, $1, scanner.matched
                     end
                 when GettextRegexp
-                    gt = [$1]
-                    gt << $3 if $2 # interpolated vars
+                    gt = {:val => $2, :func => $1}
+                    gt[:vars] = $4 if $3 # interpolated vars
                     yield :gettext, gt, scanner.matched
                 when ERBRegexp
                     yield :erb, $1, scanner.matched

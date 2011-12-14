@@ -4,6 +4,10 @@ require 'fileutils'
 module Spider
 
     class AppManager
+
+        def initialize(options={})
+            @options = options
+        end
         
         def self.installed?(app)
             require 'spiderfw/home'
@@ -43,6 +47,9 @@ module Spider
             return res if apps.empty?
             require 'spiderfw/setup/app_server_client'
             client = Spider::AppServerClient.new(url)
+            if options[:branch]
+                apps = apps.map{ |a| "#{a}@#{options[:branch]}"}
+            end
             if options[:no_deps]
                 specs = client.get_specs(apps)
             else
@@ -247,7 +254,10 @@ module Spider
                  Spider.output _("%s already installed, skipping") % spec.id
                  return
              end
-             repo = Git.open(@home_path)
+             repo = nil
+             if ::File.directory?(File.join(@home_path, '.git'))
+                repo = Git.open(@home_path)
+             end
              repo_url = spec.git_repo_rw || spec.git_repo
              Spider.output _("Fetching %s from %s") % [spec.app_id, repo_url]
 
@@ -256,20 +266,27 @@ module Spider
              end
 
              ENV['GIT_WORK_TREE'] = nil
-             Dir.chdir(@home_path) do
-                 `git submodule add #{repo_url} apps/#{spec.id}`
-                 `git submodule init`
-                 `git submodule update`
-             end
-             repo.add(['.gitmodules', "apps/#{spec.id}"])
-             repo.commit(_("Added app %s") % spec.id) 
+             if repo
+                 Dir.chdir(@home_path) do   
+                     `git submodule add #{repo_url} apps/#{spec.id}`
+                     `git submodule init`
+                     `git submodule update`
+                     repo.add(['.gitmodules', "apps/#{spec.id}"])
+                     repo.commit(_("Added app %s") % spec.id) 
+                 end
+            else
+                Dir.chdir(File.join(@home_path, 'apps')) do
+                    Git.clone(repo_url, spec.id) 
+                end
+            end
          end
 
          def pack_install(spec, options={})
              require 'rubygems/package'
              client = AppServerClient.new(spec.app_server)
              print _("Fetching %s from server... ") % spec.app_id
-             tmp_path = client.fetch_app(spec.app_id)
+             options[:branch] ||= 'master'
+             tmp_path = client.fetch_app(spec.app_id, options[:branch])
              Spider.output _("Fetched.")
              dest = File.join(@home_path, "apps/#{spec.app_id}")
              FileUtils.mkdir_p(dest)
@@ -303,32 +320,45 @@ module Spider
         
         def git_update(spec, options={})
             require 'git'
-            home_repo = Git.open(@home_path)
+            home_repo = nil
+            if ::File.directory?(File.join(@home_path, '.git'))
+                home_repo = Git.open(@home_path)
+            end
             app_path = File.join(@home_path, "apps", spec.id)
             app_repo = Git.open(app_path)
             Spider.output _("Updating %s from %s") % [spec.app_id, spec.git_repo]
+            options[:branch] ||= 'master'
             Dir.chdir(app_path) do
-                app_repo.branch('master').checkout
+                app_repo.fetch
+                if app_repo.is_branch?(options[:branch])
+                    app_repo.checkout(options[:branch])
+                else 
+                    app_repo.checkout("origin/#{options[:branch]}", :new_branch => options[:branch])
+                end
+                app_repo.merge(options[:branch])
             end
-            response = err = nil
-            Dir.chdir(app_path) do
-                response = `git --git-dir='#{app_path}/.git' pull origin master`
-            end
-            require 'ruby-debug'
-            if response =~ /Aborting/
-                Spider.output err, :ERROR
-                raise "Unable to update"
-            end
-            Dir.chdir(app_path) do
-                app_repo.reset('HEAD', :hard => true)
-                app_repo.branch('master').checkout
-            end
+            # response = err = nil
+            # Dir.chdir(app_path) do
+            #     response = `git --git-dir='#{app_path}/.git' pull origin #{options[:branch]}`
+            # end
+            #  app_repo.branch(options[:branch]).checkout
+            # require 'ruby-debug'
+            # if response =~ /Aborting/
+            #     Spider.output err, :ERROR
+            #     raise "Unable to update"
+            # end
+            # Dir.chdir(app_path) do
+            #     app_repo.reset('HEAD', :hard => true)
+            #     app_repo.branch(options[:branch]).checkout
+            # end
             
-            home_repo.add("apps/#{spec.id}")
-            begin
-                home_repo.commit(_("Updated app %s") % spec.id) 
-            rescue => exc
-                raise unless exc.message =~ /no changes added to commit/
+            if home_repo
+                home_repo.add("apps/#{spec.id}")
+                begin
+                    home_repo.commit(_("Updated app %s") % spec.id) 
+                rescue => exc
+                    raise unless exc.message =~ /no changes added to commit/
+                end
             end
         end
         
@@ -401,11 +431,13 @@ module Spider
                 end
             end
             done_tasks = []
+
             
             tasks.each do |task|
                 Spider.output _("Running setup task #{path+'/'+task}...")
-                t = Spider::SetupTask.load("#{path}/#{task}")
+                t = Spider::SetupTask.load("#{path}/#{task}.rb")
                 t.app = app
+                raise "Can't run interactive task" if t.interactive? && !@options[:interactive]
                 begin
                     done_tasks << t
                     t.do_sync

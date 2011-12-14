@@ -28,7 +28,7 @@ class ModelCommand < CmdParse::Command
         end
         
         sync_cmd.set_execution_block do |req_models|
-            require 'spiderfw'
+            require 'spiderfw/init'
             require 'spiderfw/model/mappers/db_mapper'
             req_models || []
             unsafe_fields = {}
@@ -98,7 +98,7 @@ class ModelCommand < CmdParse::Command
             }
         end
         dump_cmd.set_execution_block do |req_models|
-            require 'spiderfw'
+            require 'spiderfw/init'
             req_models || []
             req_models.each do |model_or_app|
                 models = []

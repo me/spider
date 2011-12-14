@@ -281,7 +281,7 @@ module Spider; module Model
         
         # Total number of objects that would be returned had the Query no limit.
         def total_rows
-            return @total_rows ? @total_rows : @model.mapper.count(@query.condition)
+            return @total_rows ? @total_rows : (@total_rows = @model.mapper.count(@query.condition))
         end
         
         # Current number of objects fetched.

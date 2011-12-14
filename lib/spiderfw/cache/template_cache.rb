@@ -43,7 +43,7 @@ module Spider
                 return false if (File.mtime(global_reload_file) > File.mtime(check))
             end
             return true unless Spider.conf.get('template.cache.check_files')
-            lock_file = File.new(full_path)
+            lock_file = File.new(File.join(full_path, 'lock'))
             lock_file.flock(File::LOCK_SH)
             File.new(full_path).flock(File::LOCK_SH)
             # TODO: maybe insert here an (optional) tamper check 
@@ -88,7 +88,7 @@ module Spider
         def load_cache(template_path)
             # debug("Using cached #{template_path}")
             full_path = get_location(template_path)
-            lock_file = File.new(full_path)
+            lock_file = File.new(File.join(full_path, 'lock'))
             lock_file.flock(File::LOCK_SH)
             compiled = get_compiled_template(full_path)
             lock_file.flock(File::LOCK_UN)

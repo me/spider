@@ -21,6 +21,7 @@ module Spider; module Model
         attr_reader :request
         attr_reader :page_rows
         attr_reader :page
+        attr_accessor :group_by_elements
         
         # Instantiates a new query, calling Condition#where on the condition.
         def self.where(*params)
@@ -80,6 +81,12 @@ module Spider; module Model
                raise "Order elements must be strings or symbols" unless parts[0].is_a?(String) || parts[0].is_a?(Symbol)
                @order << [parts[0], parts[1]]
            end
+           return self
+       end
+
+       def group_by(*elements)
+           @group_by_elements ||= []
+           @group_by_elements += elements
            return self
        end
        
@@ -160,6 +167,7 @@ module Spider; module Model
            cl.offset = @offset
            cl.limit = @limit
            cl.polymorphs = @polymorphs.clone
+           cl.group_by_elements = @group_by_elements.clone if @group_by_elements
            return cl
        end
        

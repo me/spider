@@ -23,38 +23,35 @@
     background-color: #8EA5B3;
 }
 
-.spider.components.crud .top .add {
-    background: url('img/add.gif') no-repeat 90px 50%;
-    padding-right: 40px;
+.spider.components.crud .add {
+    background: url('img/add.gif') no-repeat 0px 50%;
+    padding-left: 40px;
 }
 .spider.components.crud .top .back {
     background: url('img/back.gif') no-repeat 0px 50%;
     padding-left: 30px;
 }
 
+.spider.components.crud .crud-actions{
+    overflow: hidden;
+    margin: 10px 0 5px 0;
+}
+
 .spider.components.crud .table_search{
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid #d1d8e5;
+    margin-right: 10px;
+    float: left;
+}
+
+.spider.components.crud .add-item{
+    float: left;
+    padding-top: 5px;
+    margin-left: 40px;
 }
 
 
 .crud_table_actions{
     text-align: right;
     padding: 10px 20px 0px 0px;
-}
-
-.crud_table_actions input{
-    cursor: pointer;
-    background-color: #1188c1;
-    border:none;
-    border-top:1px solid #d1d8e5;
-    outline-color: #333;
-    outline-style: solid;
-    outline-width: 1px;
-    padding: 4px;
-    color: white;
-    font-weight:bold;
 }
 
 .wdgt-Spider-Components-Crud  .wdgt-Spider-Components-Confirm ul{

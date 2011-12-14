@@ -1,3 +1,16 @@
+= 0.6.21
+== 03 November, 2011
+* require 'spidefw' no longer runs Spider.init(); use require 'spiderfw/init' instead
+* Support for home Gettext translations
+* Fixed stupid memory leak
+* Avoid some useless queries and joins in DbMapper
+* Enabled home Gemfile
+* Ruby 1.9.3 support
+* Updated test for new Capybara
+* Fixed unescaped text in views variables
+* Added BaseModel#own_elements method to list non-integrated elements
+* Changed Controller before and after calling to avoid problems in subclassed controllers
+
 = 0.6.20
 == 05 October, 2011
 * Added support for aggregate functions in DB conditions

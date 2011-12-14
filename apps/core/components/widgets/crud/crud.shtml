@@ -7,11 +7,6 @@
     <div sp:if="@deleted" class="flash">
         Cancellazione effettuata
     </div>
-    <div sp:if="@action == :form" class="top">
-        <a class="back" href="{ @widget[:request_path] }">
-            Torna all'elenco { @model.label_plural.downcase }
-        </a>
-    </div>
     <core:confirm id="ask_delete" sp:if="@ask_delete">
         <tpl:content name="text">
             Sei sicuro di voler cancellare i seguenti elementi?
@@ -23,38 +18,40 @@
         </tpl:content>
     </core:confirm>
     <sp:pass sp:if="!@ask_delete">
-        <div sp:if="@action == :table" class="top">
-            <a class="add" href="{ @widget[:request_path] }/new">
-                Crea nuovo
-            </a>
-        </div>
-        <div class="table_search" sp:if="@action == :table && @show_table_search">
-            <form action="{ @request[:path] }" method="GET">
-                <input type="text" name="_w{ param_name(@widget) }[table_q]" value="{ @table_q }">
-                <input type="submit" name="submit" value="Trova">
-                <input type="submit" name="_w{ param_name(@widget) }[clear_table_q]" value="Pulisci">
-            </form>
+        <div class="crud-actions">
+            <div class="table_search" sp:if="@action == :table && @show_table_search">
+                <form action="{ @request[:path] }" method="GET">
+                    <input type="text" name="_w{ param_name(@widget) }[table_q]" value="{ @table_q }">
+                    <input type="submit" name="submit" value="Trova">
+                    <input type="submit" name="_w{ param_name(@widget) }[clear_table_q]" value="Pulisci">
+                </form>
+            </div>
+            <div sp:if="@action == :table && @allow_create" class="add-item">
+                <a class="add" href="{ @widget[:request_path] }/new">
+                    Crea nuovo
+                </a>
+            </div>
         </div>
         <sp:run sp:if="@action == :table && @custom_table" obj="@custom_table" />
         <core:table sp:if="@action == :table && !@custom_table" id="table" model="@model">
-            <tpl:override-content search="table .row td">
+            <tpl:override-content search="table tbody tr td">
                 <a href="{ @links_to_form[row_i] }" sp:tag-if="element == @key_element"><tpl:overridden /></a>
             </tpl:override-content>
             <tpl:append search="table .heading_row">
                 <th>Sel.</th>
             </tpl:append>
-            <tpl:override search="table">
+            <tpl:override>
                 <form sp:if="@rows && @rows.length > 0" action="{ @request[:path] }" method="POST">
                     <tpl:overridden />
                     <div class="crud_table_actions">
-                        <input type='submit' name="_w{ param_name(@crud) }[delete]" value="Cancella selezionati">
+                        <input type='submit'  class="btn danger" name="_w{ param_name(@crud) }[delete]" value="Cancella selezionati">
                     </div>
                 </form>
             </tpl:override>
-            <tpl:append search="table .row">
+            <tpl:append search="table tbody tr">
                 <td align="center"><input type='checkbox' name="_w{ param_name(@crud) }[selected][{ @data[row_i][@key_element] }]"></td>
             </tpl:append>
-            <tpl:override-attr search="table .paginator td" name="colspan" value="{ elements.size + 1 }" />
+            <tpl:override-attr search="table tfoot td" name="colspan" value="{ elements.size + 1 }" />
         </core:table>
         <sp:run sp:if="@action == :form && @custom_form" obj="@custom_form" />
         <forms:form sp:if="@action == :form && !@custom_form" id="form" model="@model" show_related="true" show_additional_buttons="true" />

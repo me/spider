@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2011-09-13 14:25+0200\n"
-"PO-Revision-Date: 2010-11-29 12:51+0100\n"
+"POT-Creation-Date: 2011-11-15 16:12+0100\n"
+"PO-Revision-Date: 2011-11-15 16:13+0100\n"
 "Last-Translator: Ivan Pirlik <ivan.pirlik@soluzionipa.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -20,19 +20,19 @@ msgstr ""
 msgid "Administration"
 msgstr "Amministrazione"
 
-#: widgets/admin/admin.rb:47
+#: widgets/admin/admin.rb:48
 msgid "Manage Data"
 msgstr "Gestisci i Dati"
 
-#: widgets/admin/admin.rb:52
+#: widgets/admin/admin.rb:53
 msgid "guest"
 msgstr "ospite"
 
-#: widgets/crud/crud.rb:116
+#: widgets/crud/crud.rb:125
 msgid "Cancel"
 msgstr "Annulla"
 
-#: widgets/crud/crud.rb:117
+#: widgets/crud/crud.rb:126
 msgid "Ok"
 msgstr "Ok"
 
@@ -44,11 +44,13 @@ msgstr "Vai"
 msgid "Clear"
 msgstr "Pulisci"
 
-#: widgets/table/table.rb:152 public/js/utils.js:14
+#: widgets/table/table.rb:154
+#: public/js/utils.js:14
 msgid "Yes"
 msgstr "Sì"
 
-#: widgets/table/table.rb:152 public/js/utils.js:19
+#: widgets/table/table.rb:154
+#: public/js/utils.js:19
 msgid "No"
 msgstr "No"
 
@@ -56,7 +58,8 @@ msgstr "No"
 msgid "Search"
 msgstr "Cerca"
 
-#: widgets/list/list.shtml:17 widgets/table/table.shtml:47
+#: widgets/list/list.shtml:17
+#: widgets/table/table.shtml:66
 msgid "No element"
 msgstr "Nessun elemento"
 
@@ -64,6 +67,17 @@ msgstr "Nessun elemento"
 msgid "Delete"
 msgstr "Elimina"
 
+#: widgets/table/table.shtml:28
+#: widgets/table/table.shtml:31
+msgid "Previous"
+msgstr "Indietro"
+
+#: widgets/table/table.shtml:58
+#: widgets/table/table.shtml:61
+msgid "Next"
+msgstr "Avanti"
+
 #: public/js/utils.js:9
 msgid "Are you sure?"
 msgstr "Sei sicuro?"
+

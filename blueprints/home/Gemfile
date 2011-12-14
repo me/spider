@@ -1,11 +1,23 @@
 source "http://rubygems.org"
 
-gem 'fssm', :group => :devel
+# Place your gems here
 
-gem "mysql", :groups => [:db, :mysql]
+
+# Spider
+
+gem "spiderfw" #, :path => ''
+
+
+# Database gems
+
+# gem "mysql", :group => :mysql
+# gem "ruby-oci8", :group => :oci8
+
+# Optional gems
 
 gem "json", :platforms => [:mri_18, :mri_19]
-gem "mongrel"
+gem "mongrel", :platforms => [:ruby_18, :mingw_18]
+# gem "mongrel", ">= 1.2.0.pre2" # replace previous line with this for Mongrel on 1.9
 gem "ripl", :platforms => [:ruby, :mingw]
 gem "ripl-irb", :platforms => [:ruby, :mingw]
 gem "ripl-multi_line", :platforms => [:ruby, :mingw]
@@ -17,6 +29,7 @@ gem "rspec", :group => :test
 gem "cucumber", '~> 0.10.0', :group => :test
 gem "capybara", :group => :test
 gem "yui-compressor", :group => :production
+gem "fssm", :group => :devel
 
 if RUBY_PLATFORM =~ /darwin/
   gem "rb-fsevent", :group => :devel, :platforms => [:mri]
@@ -24,6 +37,8 @@ end
 if RUBY_PLATFORM =~ /linux/
   gem "rb-inotify", :group => :devel, :platforms => [:mri]
 end
+
+# Include app Gemfiles
 
 Dir.glob("apps/*/Gemfile") do |f|
   self.instance_eval(Bundler.read_file(f), f, 1)

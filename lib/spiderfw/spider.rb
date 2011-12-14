@@ -73,7 +73,9 @@ module Spider
             end
             init_file = File.join($SPIDER_RUN_PATH, 'init.rb')
             ENV['BUNDLE_GEMFILE'] ||= File.join($SPIDER_RUN_PATH, 'Gemfile')
-            require 'bundler/setup' if File.exists? ENV['BUNDLE_GEMFILE']
+            if File.exists?(ENV['BUNDLE_GEMFILE']) && File.exists?(File.join($SPIDER_RUN_PATH, 'Gemfile.lock'))
+                require 'bundler/setup' 
+            end
             
             if File.exist?(init_file)
                 @home.instance_eval(File.read(init_file), init_file)
@@ -108,10 +110,10 @@ module Spider
         end
         
         def init_base(force=false)
+            return if @init_base_done && !force
             l = Spider.locale.to_s
             l = $1 if l =~ /(\w\w)_+/
             FastGettext.locale = l
-            return if @init_base_done && !force
             
             @apps_to_load = []
             @root = $SPIDER_RUN_PATH
@@ -155,6 +157,7 @@ module Spider
 
         # Invoked before a long running service started. Apps may implement the app_startup method, that will be called.
         def startup
+            init
             setup_env
             if Spider.conf.get('template.cache.reload_on_restart')
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
@@ -323,6 +326,7 @@ module Spider
         
         # Closes any open loggers, and opens new ones based on configured settings.
         def start_loggers(force=false)
+            init_base
             return if @logger_started && !force
             @logger.close_all
             @logger.open(STDERR, Spider.conf.get('log.console')) if Spider.conf.get('log.console')

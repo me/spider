@@ -94,6 +94,29 @@ module Spider; module QueryFuncs
             "#{self.func_name.to_s.upcase}(#{elements.map{ |el| el.inspect }.join(', ')})"
         end
 
+        def as(name)
+            SelectFunction.new(self, name)
+        end
+
+    end
+
+    class SelectFunction
+        attr_reader :function, :as
+
+
+        def initialize(function, as)
+            @function = function
+            @as = as
+        end
+
+        def inspect
+            "#{@function.inspect} AS #{@as}"
+        end
+
+        def method_missing(method, *args)
+            @function.send(method, *args)
+        end
+
     end
 
     class ZeroArityFunction < Function

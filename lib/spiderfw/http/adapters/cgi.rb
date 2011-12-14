@@ -1,5 +1,5 @@
 $:.push(ENV['SPIDER_PATH']+'/lib')
-require 'spiderfw'
+require 'spiderfw/init'
 require 'spiderfw/controller/controller_io'
 require 'spiderfw/controller/http_controller'
 require 'spiderfw/http/adapters/cgi_io'

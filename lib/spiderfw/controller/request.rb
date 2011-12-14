@@ -24,7 +24,7 @@ module Spider
             Spider::Logger.debug("REQUEST:")
             Spider::Logger.debug(env)
             @env = env
-            @locale = Locale.current[0]
+            @locale = Spider.locale
             @misc = {}
             @params = {}
             @action = ""

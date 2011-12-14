@@ -45,6 +45,15 @@ module Spider
                         
                         find_tags
                     end
+
+                    def full_name
+                        @full_name || self.spec.name
+                    end
+
+                    def description
+                        desc = @description || self.spec.description
+                        desc.blank? ? self.name : desc
+                    end
                     
                     def request_url
                         if u = Spider.conf.get("#{@dotted_name}.url") 
@@ -247,6 +256,9 @@ module Spider
                 end
                 alias :#{name}= :#{name}
 END_OF_EVAL
+                if options[:default].is_a?(TrueClass) || options[:default].is_a?(FalseClass)
+                    str += "\nalias :#{name}? :#{name}\n"
+                end
                 class_eval(str)
             end
             
@@ -276,6 +288,9 @@ END_OF_EVAL
             array_attribute :gems_optional
             attribute :version
             attribute :app_server
+            attribute :auto_update, :default => true
+
+            attr_accessor :branch
             
             def id(val=nil)
                 self.app_id(val)
@@ -315,6 +330,7 @@ END_OF_EVAL
                 @@attributes.each do |a|
                     h[a] = send(a)
                 end
+                h[:branch] = @branch unless @branch.blank?
                 h
             end
             

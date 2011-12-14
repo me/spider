@@ -185,7 +185,7 @@ module Spider; module Model; module Mappers
             joins += c_joins
             save[:condition] = condition
             save[:joins] = prepare_joins(joins)
-            sql, bind_vars = @storage.sql_update(save)
+            sql, bind_vars = @storage.sql_update(save, true)
             return @storage.execute(sql, *bind_vars)
         end
         
@@ -252,7 +252,11 @@ module Spider; module Model; module Mappers
             end
             model = obj_or_model.is_a?(Class) ? obj_or_model : obj_or_model.model
             data = {}
+            extra_data = {}
             request.keys.each do |element_name|
+                if element_name.is_a?(QueryFuncs::SelectFunction)
+                    extra_data[element_name.as] = result[element_name.as.to_s]
+                end
                 element = @model.elements[element_name]
                 result_value = nil
                 next if !element || element.integrated? || !have_references?(element)
@@ -282,6 +286,9 @@ module Spider; module Model; module Mappers
                 return nil
             end
             data.keys.each{ |el| obj.element_loaded(el) }
+            extra_data.each do |k, v|
+                obj[k] = v
+            end
             if (request.polymorphs)
                 request.polymorphs.each do |model, polym_request|
                     polym_result = {}
@@ -315,7 +322,9 @@ module Spider; module Model; module Mappers
         # Generates a select hash description based on the query.
         def prepare_select(query) #:nodoc:
             condition, joins = prepare_condition(query.condition)
-            elements = query.request.keys.select{ |k| mapped?(k) }
+            elements = query.request.keys.select{ |k| !k.is_a?(QueryFuncs::SelectFunction) && mapped?(k) }
+            select_functions = query.request.keys.select{ |k| k.is_a?(QueryFuncs::SelectFunction) }
+            
             keys = []
             primary_keys = []
             types = {}
@@ -331,6 +340,8 @@ module Spider; module Model; module Mappers
                 oj[:as] ||= "ORD#{cnt+=1}" if joins.select{ |j| j[:to] == oj[:to] }.length > 0
             end
             joins += order_joins if order_joins
+            group_by, group_by_joins = prepare_group_by(query)
+            joins += group_by_joins if group_by_joins
             seen_fields = {}
             model_pks = []
             @model.primary_keys.each do |pk|
@@ -363,14 +374,10 @@ module Spider; module Model; module Mappers
                         end
                     end
                     sub_request = query.request[element.name]
-                    # if (can_join?(element) && sub_request.is_a?(Request) && 
-                    #     sub_request.select{|k, v| !element.model.elements[k].primary_key?}.length > 0)
-                    #     sub_request = element.mapper.prepare_query_request(sub_request).reject{ |name, req| element.reverse == name }
-                    #     sub_select = element.mapper.prepare_select(Query.new(nil, sub_request))
-                    #     keys += sub_select[:keys]
-                    #     joins << get_join(element)
-                    # end
                 end
+            end
+            select_functions.each do |f|
+                keys << prepare_queryfunc(f)
             end
             if (query.request.polymorphs? || !query.condition.polymorphs.empty?)
                 only_conditions = {:conj => 'or', :values => []} if (query.request.only_polymorphs?)
@@ -427,6 +434,7 @@ module Spider; module Model; module Mappers
                 :condition => condition,
                 :joins => joins,
                 :order => order,
+                :group_by => group_by,
                 :offset => query.offset,
                 :limit => query.limit
             }
@@ -580,9 +588,10 @@ module Spider; module Model; module Mappers
                     cond[:values] << [field, comp, v]
                     joins += field.joins
                     if is_having
-                        cond[:group_by_fields] += k.inner_elements.map{ |el_name, owner_func| 
-                            owner_func.mapper_fields[el_name.to_s]
-                        }
+                        k.inner_elements.each do |el_name, owner_func|
+                            next if owner_func.is_a?(QueryFuncs::AggregateFunction)
+                            cond[:group_by_fields] <<= owner_func.mapper_fields[el_name.to_s]
+                        end
                     end
                     next
                 end
@@ -640,13 +649,13 @@ module Spider; module Model; module Mappers
                                     el_model_schema = element.model.mapper.schema 
                                     el_name = element.attributes[:junction_their_element]    
                                 else
-                                    el_model = element.type
-                                    el_model_schema = el_model.mapper.schema
+                                    el_model = @model
+                                    el_model_schema = element.type.mapper.schema
                                     el_name = element.reverse
                                 end
                                 el_model.primary_keys.each do |k|
                                     field = el_model_schema.foreign_key_field(el_name, k.name)
-                                    field_cond = [field, comp,  map_condition_value(element.model.elements[k.name].type, nil)]
+                                    field_cond = [field, comp,  map_condition_value(el_model.elements[k.name].type, nil)]
                                     element_cond[:values] << field_cond
                                     element_cond[:is_having] = is_having
                                     cond[:group_by_fields] << field if is_having
@@ -815,6 +824,7 @@ module Spider; module Model; module Mappers
                 owner_func.mapper_fields[el_name.to_s] = el_model.mapper.schema.field(el.name)
             end
             f = FieldFunction.new(storage.function(func), schema.table, joins)
+            f.as = func.as if func.is_a?(QueryFuncs::SelectFunction)
             f.aggregate = true if func.has_aggregates?
             return f
         end
@@ -864,6 +874,34 @@ module Spider; module Model; module Mappers
                     end
                     joins += el_joins
                 end
+            end
+            return [fields, joins]
+        end
+
+        def prepare_group_by(query)
+            return nil if !query.group_by_elements
+            joins = []
+            fields = []
+            query.group_by_elements.each do |gb|
+                el_model = @model
+                el_joins, el_model, el = get_deep_join(gb)
+                # FIXME: this is almost identical to prepare_order
+                if el.model?
+                    if el_model.mapper.have_references?(el) || el.model.storage != storage
+                        el.model.primary_keys.each do |pk|
+                            fields << el_model.mapper.schema.foreign_key_field(el.name, pk.name)
+                        end
+                    else
+                        el.model.primary_keys.each do |pk|
+                            fields << el.model.mapper.schema.field(pk.name)
+                        end
+                    end
+                else
+                    raise "Order on unmapped element #{el_model.name}.#{el.name}" unless el_model.mapper.mapped?(el)
+                    field = el_model.mapper.schema.field(el.name)
+                    fields << field
+                end
+                joins += el_joins
             end
             return [fields, joins]
         end

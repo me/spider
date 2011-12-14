@@ -30,9 +30,9 @@ module Spider
             @app_routes ||= []
         end
         
-        def self.print_app_routes
-            max_length = app_routes.inject(0){ |m, r| m > r[0].length ? m : r[0].length }
-            app_routes.map{ |r| "#{r[0].ljust(max_length+3)} -> #{r[1]}"}.sort.join("\n")
+        def self.print_app_routes(routes=app_routes)
+            max_length = routes.inject(0){ |m, r| m > r[0].length ? m : r[0].length }
+            routes.map{ |r| "#{r[0].ljust(max_length+3)} -> #{r[1]}"}.sort.join("\n")
         end
 
     end

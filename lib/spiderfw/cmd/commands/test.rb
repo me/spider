@@ -34,7 +34,7 @@ class TestCommand < CmdParse::Command
             require 'test/unit/collector/dir'
             require 'test/unit'
             $SPIDER_RUNMODE = 'test'
-            require 'spiderfw'
+            require 'spiderfw/init'
             test_env = "#{$SPIDER_PATH}/test"
 #            Dir.cwd(test_env)
             $:.push(test_env)

@@ -145,7 +145,7 @@ module Spider; module Model; module Storage; module Db
              bind_vars += tables_values
 
              where, vals = sql_condition(query)
-             bind_vars += vals
+             bind_vars += vals if vals
              sql += "WHERE #{where} " if where && !where.empty?
 
              having, having_vals = sql_condition(query, true)

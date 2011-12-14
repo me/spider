@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Spider::Components 0.1\n"
-"POT-Creation-Date: 2011-09-13 14:25+0200\n"
+"POT-Creation-Date: 2011-11-15 16:12+0100\n"
 "PO-Revision-Date: 2009-06-30 16:58+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,19 +21,19 @@ msgstr ""
 msgid "Administration"
 msgstr ""
 
-#: widgets/admin/admin.rb:47
+#: widgets/admin/admin.rb:48
 msgid "Manage Data"
 msgstr ""
 
-#: widgets/admin/admin.rb:52
+#: widgets/admin/admin.rb:53
 msgid "guest"
 msgstr ""
 
-#: widgets/crud/crud.rb:116
+#: widgets/crud/crud.rb:125
 msgid "Cancel"
 msgstr ""
 
-#: widgets/crud/crud.rb:117
+#: widgets/crud/crud.rb:126
 msgid "Ok"
 msgstr ""
 
@@ -45,11 +45,11 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
-#: widgets/table/table.rb:152 public/js/utils.js:14
+#: widgets/table/table.rb:154 public/js/utils.js:14
 msgid "Yes"
 msgstr ""
 
-#: widgets/table/table.rb:152 public/js/utils.js:19
+#: widgets/table/table.rb:154 public/js/utils.js:19
 msgid "No"
 msgstr ""
 
@@ -57,12 +57,20 @@ msgstr ""
 msgid "Search"
 msgstr ""
 
-#: widgets/list/list.shtml:17 widgets/table/table.shtml:47
+#: widgets/list/list.shtml:17 widgets/table/table.shtml:66
 msgid "No element"
 msgstr ""
 
 #: widgets/list/list.shtml:27
 msgid "Delete"
+msgstr ""
+
+#: widgets/table/table.shtml:28 widgets/table/table.shtml:31
+msgid "Previous"
+msgstr ""
+
+#: widgets/table/table.shtml:58 widgets/table/table.shtml:61
+msgid "Next"
 msgstr ""
 
 #: public/js/utils.js:9
