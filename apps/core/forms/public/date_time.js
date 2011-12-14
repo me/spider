@@ -16,8 +16,8 @@ Spider.defineWidget('Spider.Forms.DateTime', {
                 a = 3;
             }
         }
-		if (this.el.is('.date')) this.input.datepicker(conf);
-		else if (this.el.is('.date_time')){
+		if (this.input.is('.date')) this.input.datepicker(conf);
+		else if (this.input.is('.date_time')){
 			var el = this.input;
 			el.hide();
 			var val = el.val().split(' ');
