@@ -34,18 +34,19 @@ module Spider; module Components
                 @sort_el = params['sort'].keys.first.to_sym 
                 @sort_dir = params['sort'].values.first.to_sym
                 @page = 1
+            elsif session[:sort]
+                @sort_el, @sort_dir = session[:sort]
             elsif @attributes[:sort]
                 el, dir = @attributes[:sort].split(',')
                 @sort_el = el.to_sym
                 @sort_dir = dir ? dir.to_sym : :asc
             end
-            if (@attributes[:paginate])
+            if @attributes[:paginate]
                 @page = params['page'] if params['page']
                 @page ||= 1
                 @page = @page.to_i
                 @offset = ((@page - 1) * @attributes[:row_limit])
             end
-            @sort_el, @sort_dir = session[:sort] if !@sort_el && session[:sort]
             session[:sort] = [@sort_el, @sort_dir] if @sort_el
             @scene.sorted = {}
             @scene.sorted[@sort_el] = @sort_dir if @sort_el
