@@ -20,7 +20,7 @@ module Spider
         
         def get_location(path, &block)
             refresh(path, &block) if (block && !fresh?(path))
-            return @path+'/'+path
+            return File.join(@path, path)
         end
         
         def fresh?(path)
@@ -32,14 +32,12 @@ module Spider
                 return false
             end
             exists = File.exist?(full_path)
-            if (Spider.config.get('template.cache.no_check') && exists)
-                return true
-            end
+            return true if Spider.config.get('template.cache.no_check') && exists
             return false if @invalid[path]
-            global_reload_file = "#{Spider.paths[:tmp]}/templates_reload.txt"
-            check_file = "#{full_path}/check"
+            global_reload_file = File.join(Spider.paths[:tmp], 'templates_reload.txt')
+            check_file = File.join(full_path, 'check')
             return false unless File.exist?(check_file)
-            if (File.exist?("#{Spider.paths[:tmp]}/templates_reload.txt"))
+            if File.exist?(global_reload_file)
                 return false if (File.mtime(global_reload_file) > File.mtime(check))
             end
             return true unless Spider.conf.get('template.cache.check_files')
@@ -70,14 +68,14 @@ module Spider
         def get_compiled_template(path)
             compiled = Spider::CompiledTemplate.new
             compiled.cache_path = path
-            init_code = IO.read(path+'/init.rb')
-            run_code = IO.read(path+'/run.rb')
+            init_code = IO.read(File.join(path, 'init.rb'))
+            run_code = IO.read(File.join(path, 'run.rb'))
             compiled.assets = Marshal.load(IO.binread(File.join(path, 'assets')))
             block = Spider::TemplateBlocks::CompiledBlock.new(init_code, run_code)
             compiled.block = block
             Dir.new(path).each do |entry|
                 next if entry[0].chr == '.'
-                sub_path = "#{path}/#{entry}"
+                sub_path = File.join(path, entry)
                 next if entry == '__info'
                 next unless File.directory?(sub_path)
                 compiled.subtemplates[entry] = get_compiled_template(sub_path)
@@ -97,23 +95,24 @@ module Spider
         
         def write_compiled_template(compiled, path)
             compiled.cache_path = path
-            File.open(path+'/init.rb', 'w') do |file|
+            File.open(File.join(path, 'init.rb'), 'w') do |file|
                 file.puts(compiled.block.init_code)
             end
-            File.open(path+'/run.rb', 'w') do |file|
+            File.open(File.join(path, 'run.rb'), 'w') do |file|
                 file.puts(compiled.block.run_code)
             end
             File.open(File.join(path, 'assets'), 'wb') do |file|
                 file.puts(Marshal.dump(compiled.assets))
             end
             compiled.subtemplates.each do |id, sub|
-                sub_path = "#{path}/#{id}"
+                sub_path = File.join(path, id)
                 FileUtils.mkpath(sub_path)
                 write_compiled_template(sub, sub_path)
             end
             compiled.devel_info.each do |name, val|
-                FileUtils.mkpath("#{path}/__info")
-                sub_path = "#{path}/__info/#{name}"
+                sub_path = File.join(path, '__info')
+                FileUtils.mkpath(sub_path)
+                sub_path = File.join(sub_path, name)
                 File.open(sub_path, 'w') do |f|
                     f.puts(val)
                 end
@@ -127,7 +126,7 @@ module Spider
         def write_cache(template_path, compiled_template)
             full_path = get_location(template_path)
             FileUtils.mkpath(full_path)
-            lock_file = File.new(full_path+'/lock', 'w')
+            lock_file = File.new(File.join(full_path, 'lock'), 'w')
             lock_file.flock(File::LOCK_EX)
             write_compiled_template(compiled_template, full_path)
             modified = compiled_template.collect_mtimes
