@@ -1,3 +1,36 @@
+= 0.6.22
+== 14 December, 2011
+* New core admin app
+* Core widgets now include only minimal CSS
+* SASS, Compass and Less support
+* Added dependency on Backports gem
+* Branches support for app server and client
+* Interactive/non-interactive modes in setup
+* Added Model::Request.strict, which creates a Request that is not auto-expanded
+* Added support for aggregates in query Request; added explicit 'group by' option in Query.
+* Much improved Tree model mixin
+* DbMapper#bulk_update now allows nil conditions (whole table update)
+* Static requests are now logged according to log.static_extensions config option (only errors are fully
+  logged by default, otherwise only a GET line is printed)
+* Added fallback routes for Controllers (with 'route nil :destination')
+* :do proc in Route now receives the matched part as an argument (in addition to route arguments)
+* Fixed error messages being printed multiple times
+* Each Controller's before and after methods are now executed only once when there are routes to self
+* Fixes for Windows and JRuby 
+* Migrations now can refer to previous version's models through Migrations::PreviousModel
+* Added RenameElement migration
+* All form inputs are now wrapped in DIVs
+* Fixed error in MySQL when synching schemas that change the primary autoincrement key
+* Added :fixed attribute to DbSchema#set_foreign_key
+* Widget.parse_content_xml is now responsible for wrapping the xml to construct a document
+* FileInput widget now saves to var/data/uploaded_files instead of data/uploaded_files
+* Widget attributes now can have a dash ('-') in their name; the dash is replaced with an
+  underscore in variables
+* Fixed broken app update command
+* An object's children are no longer added to the UnitOfWork if they are unmodified
+* Added template.cache.use_fssm to clear template cache on file change (faster alternative to template.cache.disable)
+* Various other minor fixes and enhancements
+
 = 0.6.21
 == 03 November, 2011
 * require 'spidefw' no longer runs Spider.init(); use require 'spiderfw/init' instead
