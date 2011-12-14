@@ -427,6 +427,7 @@ module Spider; module Model; module Storage; module Db
             return query[:order].map{|o| 
                 repl = replacements[o[0].to_s]
                 ofield = repl ? repl : o[0]
+                ofield = ofield.name if ofield.is_a?(FieldExpression)
                 "#{ofield} #{o[1]}"
             }.join(', ')
         end

@@ -609,6 +609,7 @@ module Spider; module Model; module Mappers
                         element_cond = {:conj => 'AND', :values => [], :is_having => is_having}
                         v.each_with_comparison do |el_k, el_v, el_comp|
                             field = model_schema.foreign_key_field(element.name, el_k)
+                            next if field.is_a?(FixedExpression)
                             el_comp ||= '='
                             op = el_comp
                             field_cond = [field, op,  map_condition_value(element.model.elements[el_k.to_sym].type, el_v)]
@@ -860,7 +861,9 @@ module Spider; module Model; module Mappers
                     if el.model?
                         if el_model.mapper.have_references?(el) || el.model.storage != storage
                             el.model.primary_keys.each do |pk|
-                                fields << [el_model.mapper.schema.foreign_key_field(el.name, pk.name), direction]
+                                field = el_model.mapper.schema.foreign_key_field(el.name, pk.name)
+                                next if field.is_a?(FixedExpression)
+                                fields << [field, direction]
                             end
                         else
                             el.model.primary_keys.each do |pk|
