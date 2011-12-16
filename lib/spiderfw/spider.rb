@@ -643,8 +643,6 @@ module Spider
             
             search_paths ||= []
             owner_classes.each do |owner_class| # FIXME: refactor
-                next if owner_class.is_a?(Spider::Home) # home is already checked for other owner_classes
-                                                        # FIXME: maybe it shouldn't get here?
                 owner_class = nil if owner_class == NilClass
                 resource_config = @resource_types[resource_type]
                 raise "Unknown resource type #{resource_type}" unless resource_config
@@ -677,6 +675,8 @@ module Spider
                         end
                     end
                     app = path_app
+                elsif owner_class.is_a?(Spider::Home)
+                    app = owner_class
                 elsif owner_class <= Spider::App || owner_class == Spider
                     app = owner_class
                 else

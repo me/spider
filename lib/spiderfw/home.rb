@@ -30,6 +30,14 @@ module Spider
             @apps_path ||= File.join(@path, 'apps')
         end
 
+        def pub_path
+            controller.pub_path
+        end
+
+        def pub_url
+            controller.pub_url
+        end
+
         def list_apps
             apps_dir = Pathname.new(self.apps_path)
             paths = Spider.find_all_apps(self.apps_path)

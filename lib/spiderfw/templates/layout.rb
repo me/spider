@@ -45,6 +45,7 @@ module Spider
                 next if ass[:src].blank? && !ass[:runtime]
                 next if seen[seen_check]
                 seen[seen_check] = true
+                ass[:app] = Spider.home if ass[:app] == :home
                 
                 ass = compile_asset(ass)
 

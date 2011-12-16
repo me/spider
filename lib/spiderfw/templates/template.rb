@@ -389,15 +389,17 @@ module Spider
                 return [ass]
             end
             if attributes[:app]
-                owner_class = attributes[:app]
-                owner_class = Spider.apps_by_path[owner_class] unless owner_class.is_a?(Module)
+                asset_owner = attributes[:app]
+                asset_owner = Spider.apps_by_path[asset_owner] unless asset_owner.is_a?(Module)
+            elsif attributes[:home]
+                asset_owner = Spider.home
             else
-                owner_class = (@owner ? @owner.class : @owner_class )
+                asset_owner = (@owner ? @owner.class : @owner_class )
             end
-            ass[:app] = owner_class.app 
+            ass[:app] = asset_owner.app if asset_owner.respond_to?(:app)
             # FIXME! @definer_class is not correct for Spider::HomeController
             raise "Asset type not given for #{src}" unless type
-            search_classes = [owner_class, @definer_class]
+            search_classes = [asset_owner, @definer_class]
             dfnr = @definer_class.superclass if @definer_class && @definer_class.respond_to?(:superclass)
             while dfnr && dfnr < Spider::Widget
                 search_classes << dfnr
@@ -407,7 +409,11 @@ module Spider
             controller = nil
             if res && res.definer
                 controller = res.definer.controller
-                ass[:app] = res.definer unless res.definer.is_a?(Spider::Home)
+                if res.definer.is_a?(Spider::Home)
+                    ass[:app] = :home
+                else
+                    ass[:app] = res.definer
+                end
             elsif owner_class < Spider::Controller
                 controller = owner_class
             end
@@ -505,7 +511,7 @@ module Spider
                 ext_search_paths = nil
                 if ext_owner && ext_owner.respond_to?(:template_paths)
                     ext_search_paths = ext_owner.template_paths
-                end 
+                end
                 ext = self.class.real_path(ext_src, path, ext_owner, ext_search_paths)
                 raise "Extended template #{ext_src} not found (search path #{path}, owner #{ext_owner}, search paths #{ext_search_paths.inspect}" unless ext
                 assets = []
@@ -545,8 +551,12 @@ module Spider
                         ass.set_attribute('class', 'to_delete')
                         ass_src = ass.get_attribute('src')
                         if ass_src && ass_src[0].chr != '/'
+                            if resource.definer.is_a?(Spider::Home)
+                                ass.set_attribute('home', 'true')
+                            else
                             # ass.set_attribute('src', "/#{resource.definer.relative_path}/#{ass_src}")
-                            ass.set_attribute('app', resource.definer.relative_path)
+                                ass.set_attribute('app', resource.definer.relative_path)
+                            end
                         end
                         assets_html += ass.to_html 
                     }
