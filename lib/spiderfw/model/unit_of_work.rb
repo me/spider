@@ -73,7 +73,7 @@ module Spider; module Model
                 obj = task.object
                 if task.action == :save
                     next unless obj.mapper && obj.mapper.class.write?
-                    next if !obj.modified? && obj.primary_keys_set?
+                    next if task.params[:force] != :insert && !obj.modified? && obj.primary_keys_set?
                 end
                 #Spider::Logger.debug("Executing task #{task.inspect}")
                 task.execute()
