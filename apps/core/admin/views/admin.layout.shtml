@@ -3,7 +3,9 @@
     <tpl:asset type="css" src="sass/bootstrap/bootstrap.scss" />
     <tpl:asset type="css" src="sass/admin.scss" />
     <head>
-        <title>_(Administration) - { @current_app[:module].name }</title>
+        <title>_(Administration)
+              <tpl:pass sp:if="@current_app && @current_app[:module]"> - { @current_app[:module].name }</tpl:pass>
+        </title>
         <tpl:output-assets type="css" />
         <tpl:output-assets type="js" />
     </head>
@@ -12,12 +14,13 @@
             <div id="header_top">
                 <div id="main_title">
                     <h1>
-                        _(Administration) - { @current_app[:module].name }
+                        _(Administration) 
+                        <tpl:pass sp:if="@current_app && @current_app[:module]"> - { @current_app[:module].name }</tpl:pass>
                     </h1>
                 </div>
                 <div id="admin_controls">
                     <span class="welcome">_(Welcome, %s.) % @username</span> - 
-                    <a class="logout_link" href="{ Spider::Admin::AdminController.url('login/logout') }" sp:if="!@guest">Logout</a>
+                    <a class="logout_link" href="{ Spider::Admin::AdminController.http_url('login/logout') }" sp:if="!@guest">Logout</a>
                 </div>
             </div>
             <div id="app_buttons" sp:if="@apps.length > 1">

@@ -19,7 +19,7 @@ module Spider; module Admin
         end
         
         def self.logout_redirect
-            AdminController.url('login')
+            AdminController.http_url('login')
         end
     end
     
@@ -58,7 +58,7 @@ module Spider; module Admin
                 }
             end
             @scene.admin_breadcrumb = []
-            @scene.admin_breadcrumb << {:url => self.class.url, :label => _('Home')} if @scene.apps.length > 1
+            @scene.admin_breadcrumb << {:url => self.class.http_url, :label => _('Home')} if @scene.apps.length > 1
 
             # FIXME
             @scene.apps.sort!{ |a,b| a[:priority] <=> b[:priority] }
