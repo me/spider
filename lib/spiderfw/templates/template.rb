@@ -784,9 +784,13 @@ module Spider
         end
 
         def apply_overrides(el)
+            info_els = Hpricot::Elements[*(el.children_of_type('tpl:asset')+
+                el.children_of_type('tpl:assets'))]
+            info_els.remove
             if @overrides
                 @overrides.each{ |o| apply_override(el, o) }
             end
+            el.innerHTML = info_els.to_s + el.innerHTML
             el
         end
         
