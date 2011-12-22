@@ -1,0 +1,4 @@
+<div>
+    <h4>{ @message.to }</h4>
+    <pre>{ @message.text }</pre>
+</div>

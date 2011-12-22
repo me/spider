@@ -1,0 +1,7 @@
+<div>
+    <h4>{ @message.subject }</h4>
+    <pre>{ @message.headers }
+
+{ @message.body }    
+    </pre>
+</div>
