@@ -1,0 +1,8 @@
+<ul class="breadcrumb" sp:if="@admin_breadcrumb">
+    <li sp:each="@admin_breadcrumb[0..@admin_breadcrumb.length-2] |bc|">
+        <a href="{ bc[:url] }">{ bc[:label] }</a> <span class="divider">/</span>
+    </li>
+    <li class="active" sp:if="@admin_breadcrumb.last">
+        { @admin_breadcrumb.last[:label] }
+    </li>
+</ul>
