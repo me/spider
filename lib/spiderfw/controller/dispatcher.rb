@@ -130,10 +130,12 @@ module Spider
             r.each do |route|
                 try, dest, options = route
                 action = nil
+                nil_route = false
                 case try
                 when true, nil
                     action = path
-                    matched = ''
+                    matched = nil
+                    nil_route = true
                 when String
                     test_path = path
                     if (options[:ignore_case])
@@ -181,7 +183,7 @@ module Spider
                     action.sub!(/^\/+/, '') # no leading slash
 
                     return Route.new(:path => path, :dest => dest, :action => action, :matched => matched,
-                                     :params => params, :options => options)
+                                     :nil_route => nil_route, :params => params, :options => options)
                 end
             end
             return nil
@@ -270,7 +272,7 @@ module Spider
         end
         
         class Route
-            attr_accessor :path, :dest, :action, :params, :options, :matched, :obj
+            attr_accessor :path, :dest, :action, :params, :options, :matched, :obj, :nil_route
             
             def initialize(args)
                 @path = args[:path]
@@ -279,6 +281,7 @@ module Spider
                 @params = args[:params] || []
                 @options = args[:options] || {}
                 @matched = args[:matched]
+                @nil_route = args[:nil_route]
                 @obj = nil
             end
             

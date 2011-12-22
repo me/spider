@@ -314,6 +314,16 @@ module Spider
             return scene
         end
 
+        def get_route(*args)
+            route = super
+            return route unless route
+            action = route.path.split('/').first
+            if route.nil_route && !action.blank? && self.respond_to?(action.to_sym)
+                route.action = action
+            end
+            route
+        end
+
         protected
 
         def dispatched_object(route)
