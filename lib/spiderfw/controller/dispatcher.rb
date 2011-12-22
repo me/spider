@@ -167,7 +167,8 @@ module Spider
                         end
                     end
                 end
-                if (action)
+                if action
+                    action = action[1..-1] if action[0] && action[0].chr == '/'
                     if (options[:prepend])
                         action = options[:prepend] + action
                     end
