@@ -152,7 +152,7 @@ body:after {
 }
 
 /* line 122, ../../sass/admin.scss */
-.spider-admin-container {
+#container, .spider-admin-container {
   background: url('../../img/css/side_bg.png?1321971233') repeat-y;
   position: relative;
   min-width: 940px;
@@ -164,7 +164,7 @@ body:after {
   *zoom: 1;
 }
 /* line 132, ../../sass/admin.scss */
-.spider-admin-container > .spider-admin-sidebar {
+#container #sidebar, #container > .spider-admin-sidebar, .spider-admin-container #sidebar, .spider-admin-container > .spider-admin-sidebar {
   position: absolute;
   top: 0;
   left: 20px;
@@ -172,15 +172,15 @@ body:after {
   padding: 20px 10px;
 }
 /* line 139, ../../sass/admin.scss */
-.spider-admin-container > .spider-admin-sidebar li.active a {
+#container #sidebar li.active a, #container > .spider-admin-sidebar li.active a, .spider-admin-container #sidebar li.active a, .spider-admin-container > .spider-admin-sidebar li.active a {
   text-decoration: underline;
 }
 /* line 143, ../../sass/admin.scss */
-.spider-admin-container > .spider-admin-sidebar li {
+#container #sidebar li, #container > .spider-admin-sidebar li, .spider-admin-container #sidebar li, .spider-admin-container > .spider-admin-sidebar li {
   margin-bottom: 1px;
 }
 /* line 148, ../../sass/admin.scss */
-.spider-admin-container > .spider-admin-content {
+#container #content, #container > .spider-admin-content, .spider-admin-container #content, .spider-admin-container > .spider-admin-content {
   margin-left: 240px;
 }
 
