@@ -219,7 +219,7 @@ module Spider
                     @executed_method = d_next.action.to_sym
                     @executed_method_arguments = []
                 end
-                if (@executed_method)
+                if @executed_method
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
                     @controller_action = args[0]
@@ -230,6 +230,7 @@ module Spider
                         args = [nil] if meth.arity == 1 && args.empty?
                     end
                     Spider.logger.info("Executing: #{self.class.name}##{@executed_method}.#{@request.format}")
+                    spider_main_controller_send = true
                     send(@executed_method, *args)
                 else
                     raise NotFound.new(action)

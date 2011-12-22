@@ -16,7 +16,7 @@
             <sp:yield />
         </div>
 		<div id="footer">
-			<div id="contact">
+			<div id="contact" sp:if="!@admin_email.blank?">
 				_(If you need to contact the administrator to provide additional information, you may send an e-mail to) 
 				<a href="mailto:{ @admin_email }?subject={ @email_subject }">{ @admin_email }</a>.
 			</div>
@@ -33,7 +33,7 @@
 			</div>
 			<div id="session">
 				Session:
-				<pre>{ @session }</pre>
+				<pre>{ CGI::escapeHTML(@session) }</pre>
 			</div>
 			<div id="exception_details">
 				Exception: <pre id="exception_message">{ @exception }</pre>
@@ -43,7 +43,9 @@
 				<ul>
 					<li sp:each="@backtrace |line|">
 						<a href="{ line[:link] }">{ line[:text] }</a>
-						<pre class="backtrace_info" sp:if="line[:info]">{ CGI.escapeHTML(line[:info]) }</pre>
+						<a name="{ line[:self] }" sp:tag-if="line[:first_seen]">
+							<pre class="backtrace_info" sp:if="line[:info]">{ CGI.escapeHTML(line[:info]) }</pre>
+						</a>
 						<div class="locals" sp:if="line[:locals] && !line[:locals].empty?">
 							Locals:
 							<div>
@@ -52,13 +54,16 @@
 								</span>
 							</div>
 						</div>
-						<div class="instance_vars" sp:if="line[:instance_variables] && !line[:instance_variables].empty?" class="instance_variables">
+						<div class="instance_vars" sp:if="line[:first_seen] && line[:instance_variables] && !line[:instance_variables].empty?" class="instance_variables">
 							Instance variables:
 							<div>
 								<span sp:each="line[:instance_variables] |name, val|"><span class="var-name iv-name">{ name }</span>
 									<pre class="var-value iv iv-{ line[:index] }-{ name }">{ CGI.escapeHTML(val.inspect.to_s) }</pre>
 								</span>
 							</div>
+						</div>
+						<div class="instance_vars" sp:if="!line[:first_seen]">
+							<a href="#{ line[:self] }">Instance variables</a>
 						</div>
 
 						

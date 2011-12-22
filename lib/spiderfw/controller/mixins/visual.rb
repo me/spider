@@ -249,7 +249,7 @@ module Spider; module ControllerMixins
         def try_rescue(exc)
             if exc.respond_to?(:uuid=)
                 return super if exc.uuid # Error page already outputted
-                exc.uuid = UUIDTools::UUID.random_create.to_s 
+                exc.uuid = SecureRandom.hex(12)
             end
             format = self.class.output_format(:error) || :html
             unless exc.is_a?(Spider::Controller::Maintenance) || exc.is_a?(Spider::Controller::NotFound)
@@ -355,12 +355,17 @@ module Spider; module ControllerMixins
                 return bt
             end
             context = exc.__debug_context
+            seen_obj = {}
             0.upto(Debugger.current_context.stack_size - 2) do |i|
                 begin
                     file = context.frame_file(i)
                     line = context.frame_line(i)
                     klass = context.frame_class(i)
                     method = context.frame_method(i)
+                    #break if File.basename(file) == 'controller.rb' && locals.key?("spider_main_controller_send")
+                    unless Spider.conf.get('devel.trace.show_framework')
+                        next if file.index($SPIDER_PATH) == 0
+                    end
                     args = context.frame_args(i)
                     locals = context.frame_locals(i)
                     frame_self = context.frame_self(i)
@@ -379,35 +384,34 @@ module Spider; module ControllerMixins
                         dest_str = ""
                     end
                     self_str = frame_self.is_a?(Class) ? frame_self.inspect : "#<#{frame_self.class}:#{frame_self.object_id}>"
-                    if (i == -1)
-                        info = ""
-                    else
-                        # if (frame_self == dest)
-                        #                        info = "#{dest_str}"
-                        #                    else
-                        #                        info = "#{self_str}: #{dest_str}"
-                        #                    end
-                        info = "#{self_str}: #{dest_str}"
-                        info += ".#{ex_method}("
-                        info += args.map{ |arg|
-                            val = locals[arg]
-                            arg_str = "#{arg}##{val.class}"
-                            val_str = nil
-                            if (val.is_a?(String))
-                                if (val.length > 20)
-                                    val_str = (val[0..20]+'...').inspect
-                                else
-                                    val_str = val.inspect
-                                end
-                            elsif (val.is_a?(Symbol) || val.is_a?(Fixnum) || val.is_a?(Float) || val.is_a?(BigDecimal) || val.is_a?(Date) || val.is_a?(Time))
+
+                    # if (frame_self == dest)
+                    #                        info = "#{dest_str}"
+                    #                    else
+                    #                        info = "#{self_str}: #{dest_str}"
+                    #                    end
+                    info = "#{self_str}: #{dest_str}"
+                    info += ".#{ex_method}("
+                    info += args.map{ |arg|
+                        val = locals[arg]
+                        arg_str = "#{arg}##{val.class}"
+                        val_str = nil
+                        if (val.is_a?(String))
+                            if (val.length > 20)
+                                val_str = (val[0..20]+'...').inspect
+                            else
                                 val_str = val.inspect
                             end
-                            arg_str += "=#{val_str}" if val_str
-                            arg_str
-                        }.join(', ')
-                        info += ")"
-                    end
-                    if (Spider.conf.get('devel.trace.show_instance_variables'))
+                        elsif (val.is_a?(Symbol) || val.is_a?(Fixnum) || val.is_a?(Float) || val.is_a?(BigDecimal) || val.is_a?(Date) || val.is_a?(Time))
+                            val_str = val.inspect
+                        end
+                        arg_str += "=#{val_str}" if val_str
+                        arg_str
+                    }.join(', ')
+                    info += ")"
+
+                    iv = nil
+                    if !seen_obj[frame_self.object_id] && Spider.conf.get('devel.trace.show_instance_variables')
                         iv = {}
                         frame_self.instance_variables.each{ |var| iv[var] = frame_self.instance_variable_get(var) }
                         iv.reject{ |k, v| v.nil? }
@@ -416,8 +420,11 @@ module Spider; module ControllerMixins
                     bt << {
                         :text => str, :info => info, 
                         :path => File.expand_path(file), :line => line, :method => method, :klass => klass, :locals => locals,
-                        :instance_variables => iv
+                        :self => frame_self.object_id,
+                        :instance_variables => iv,
+                        :first_seen => !seen_obj[frame_self.object_id]
                     }
+                    seen_obj[frame_self.object_id] = true
                 rescue => exc2
                 end
             end
