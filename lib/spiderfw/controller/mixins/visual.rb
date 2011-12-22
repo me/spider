@@ -45,7 +45,7 @@ module Spider; module ControllerMixins
             end
             n_route = dispatch_next(action)
             obj = n_route.obj if n_route
-            if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?(n_route.path))
+            if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?)
                 set_layout = @layout || @dispatcher_layout
                 if set_layout
                     set_layout = [set_layout] unless set_layout.is_a?(Array)
