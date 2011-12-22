@@ -61,7 +61,7 @@ module Spider; module Admin
             @scene.admin_breadcrumb << {:url => self.class.http_url, :label => _('Home')} if @scene.apps.length > 1
 
             # FIXME
-            @scene.apps.sort!{ |a,b| a[:priority] <=> b[:priority] }
+            @scene.apps.sort!{ |a,b| b[:priority] <=> a[:priority] }
         end
 
         __.html :template => 'index'
