@@ -10,6 +10,8 @@ module Spider; module Components
         i_attr_accessor :table_widget
         i_attr_accessor :form_widget
         is_attribute :allow_create, :type => Spider::Bool, :default => true
+        attribute :"new-link"
+        attribute :"edit-link"
         attr_accessor :fixed
 
         def route_widget
@@ -50,6 +52,7 @@ module Spider; module Components
             super
             transient_session[:table_params] ||= @widgets[:table].params if @widgets[:table]
             
+            @scene.new_link = attributes[:"new-link"] || widget_request_path+'/new'
             if @action == :table
                 if @widgets[:table].is_a?(Spider::Components::Table) && !@widgets[:table].is_a?(Spider::Components::SearchTable)
                     @scene.show_table_search = true
@@ -127,15 +130,20 @@ module Spider; module Components
             end
             
             super
+            if @scene._parent.admin_breadcrumb && @widgets[:form]
+                @scene._parent.admin_breadcrumb.concat(@widgets[:form].breadcrumb)
+            end
             
         end
+
         
         def after_widget(id)
             if id == :table && @widgets[:table].is_a?(Spider::Components::Table)
                 links = {}
                 table_rows = @widgets[:table].scene.data
+                link_base = attributes[:"edit-link"] || widget_request_path
                 table_rows.each_index do |i|
-                    links[i] = "#{widget_request_path}/#{Spider::HTTP.urlencode(table_rows[i][@key_element])}"
+                    links[i] = "#{link_base}/#{Spider::HTTP.urlencode(table_rows[i][@key_element])}"
                 end
                 @widgets[:table].scene.links_to_form = links
             end

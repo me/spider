@@ -27,7 +27,7 @@
                 </form>
             </div>
             <div sp:if="@action == :table && @allow_create" class="add-item">
-                <a class="add" href="{ @widget[:request_path] }/new">
+                <a class="add" href="{ @new_link }">
                     Crea nuovo
                 </a>
             </div>
