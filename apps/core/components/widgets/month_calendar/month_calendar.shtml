@@ -1,5 +1,6 @@
 <div>
     <tpl:asset type="css" src="css/month_calendar.css" />
+    <tpl:asset type="js" src="widgets/month_calendar.js" />
     <table class="{ @widget[:css_class] }">
         <thead>
             <tr>
