@@ -2154,7 +2154,7 @@ module Spider; module Model
         
         def after_save
             reset_modified_elements
-            autoload(@_saving[:prev_autoload]) if @_saving
+            self.autoload = @_saving[:prev_autoload] if @_saving
             @_saving = nil
         end
         
