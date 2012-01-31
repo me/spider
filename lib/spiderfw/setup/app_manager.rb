@@ -222,7 +222,9 @@ module Spider
                 puts "\n\n"
                 @done_tasks.each do |app, tasks|
                     next unless tasks
-                    task.print_release_notes 
+                    tasks.each do |task|
+                        task.print_release_notes 
+                    end
                 end
             end
             if options[:clear_cache]
