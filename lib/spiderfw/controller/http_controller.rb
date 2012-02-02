@@ -21,6 +21,14 @@ module Spider
             request.extend(HTTPRequest)
             super(request, response, scene)
         end
+
+        def call_before(action, *arguments)
+            if action =~ /(.+)\.(\w+)$/ # strip extension, set format
+                action = $1
+                @request.format = $2.to_sym
+            end
+            super(action, *arguments)
+        end
         
         def before(action='', *arguments)
             if (@request.env['HTTP_TRANSFER_ENCODING'] == 'Chunked' && !@request.server.supports?(:chunked_request))
@@ -94,10 +102,6 @@ module Spider
             l = $1 if l =~ /(\w\w)_+/
             FastGettext.locale = l
             FastGettext.text_domain = 'spider'
-            if (action =~ /(.+)\.(\w+)$/) # strip extension, set format
-                action = $1
-                @request.format = $2.to_sym
-            end
 #            Spider.reload_sources if Spider.conf.get('webserver.reload_sources')
             static_level = Spider.conf.get('log.static_extensions')
             if @request.format && @request.get? && static_level != true
