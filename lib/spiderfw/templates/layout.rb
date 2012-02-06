@@ -255,13 +255,13 @@ module Spider
                     FileUtils.mkdir_p(destdir)
                     dest = File.join(destdir, newname)
                     if Spider.conf.get('css.compile')
-                        compiler_class = if ass_type == :sass
-                            require 'spiderfw/templates/resources/sass'
-                            Spider::SassCompiler
-                        elsif ass_type == :less
-                            Spider::LessCompiler
-                        end
                         begin
+                            compiler_class = if ass_type == :sass
+                                require 'spiderfw/templates/resources/sass'
+                                Spider::SassCompiler
+                            elsif ass_type == :less
+                                Spider::LessCompiler
+                            end
                             compiler = compiler_class.new(ass[:app].pub_path)
                             compiler.compile(ass[:path], dest)
                         rescue Exception
