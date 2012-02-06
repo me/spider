@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'json'
 
 module Spider; module AppServer
 
@@ -9,6 +10,7 @@ module Spider; module AppServer
         __.html :template => 'app_list'
         __.json :call => :list_json
         def list(name=nil)
+            # FIXME: names, branches
             @scene.apps = AppServer.apps
         end
 
@@ -44,8 +46,11 @@ module Spider; module AppServer
             new_apps = names
             specs = {}
             while !new_apps.empty? && curr = new_apps.pop
+                curr, branch = curr.split('@')
                 raise NotFound.new("App #{curr}") unless AppServer.apps_by_id[curr]
-                spec = AppServer.apps_by_id[curr].spec 
+                a = AppServer.apps_by_id[curr]
+                spec = a.spec
+                spec = a.read_spec(branch) if branch 
                 specs[curr] = spec
                 new_apps += spec.depends.reject{ |app| specs[app] }
                 new_apps += spec.depends_optional.reject{ |app| specs[app] } unless @request.params['no_optional']

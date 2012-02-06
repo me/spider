@@ -12,8 +12,8 @@ module Spider; module AppServer
             spec = nil
             repo_branches = repo.heads.map{ |h| h.name }
             @branches = repo_branches
-            read_spec
             @repo = repo
+            read_spec
         end
 
         def read_spec(branch='master')
@@ -21,7 +21,7 @@ module Spider; module AppServer
                 next unless blob.basename =~ /\.appspec$/
                 spec = blob.data
                 @spec = Spider::App::AppSpec.eval(spec)
-                @spec.branch = branch
+                #@spec.branch = branch
                 if repo_base = Spider.conf.get('app_server.git_repo_base')
                     unless @spec.git_repo
                         @spec.git_repo(repo_base+'/'+@spec.id)
@@ -33,8 +33,10 @@ module Spider; module AppServer
                     end
                 end
                 @last_modified = repo.commits.first.authored_date # FIXME
+                @spec.app_server ||= AppServer::AppServerController.http_url
                 break
             end
+            @repo = repo
             @spec
         end
         
