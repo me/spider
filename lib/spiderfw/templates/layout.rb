@@ -370,7 +370,8 @@ module Spider
 
                     src.scan(/url\([\s"']*([^\)"'\s]*)[\s"']*\)/m).uniq.collect do |url|
                         url = url.first
-                        next if url =~ %r{^/} || url =~ %r{^[a-z]+://}
+                        next if url =~ %r{^/} || url =~ %r{^[a-z]+://} 
+                        url, cb = url.split('?', 2)
                         path = ""
                         url_src = File.expand_path(File.join(src_dir, url))
                         src_pathname = Pathname.new(url_src)
@@ -411,7 +412,11 @@ module Spider
                         else
                             Spider.logger.error("CSS referenced file not found: #{url_src}")
                         end
-                        src.gsub!(/\([\s"']*#{url}[\s"']*\)/m, "(#{new_url})")
+                        if cb
+                            url += "?#{cb}"
+                            new_url += "?#{cb}"
+                        end
+                        src.gsub!(/\([\s"']*#{Regexp.quote(url)}[\s"']*\)/m, "(#{new_url})")
                     end
                     f.write(src+"\n") 
                 end
