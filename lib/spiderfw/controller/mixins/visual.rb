@@ -228,6 +228,15 @@ module Spider; module ControllerMixins
             end
             return template
         end
+
+        def render_to_string(*args)
+            res = StringIO.new
+            $out.output_to(res) do
+                render(*args)
+            end
+            res.rewind
+            res.read
+        end
         
         def render_error(path, options)
             options[:no_prepare_scene] = true
