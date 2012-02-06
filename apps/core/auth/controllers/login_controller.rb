@@ -25,12 +25,7 @@ module Spider; module Auth
         def default_redirect
             self.class.default_redirect
         end
-        
-        def before(action='')
-            super
-            @response.headers['Content-Type'] = 'text/html;charset=UTF-8'
-        end
-        
+                
         __.html
         def index
             exception = @request.session.flash[:unauthorized_exception]
@@ -40,7 +35,7 @@ module Spider; module Auth
             render('login')
         end
         
-        def authenticate
+        def authenticate(params={})
             get_user
         end
         
@@ -55,7 +50,7 @@ module Spider; module Auth
         __.html
         def do_login
             user = authenticate
-            if (user)
+            if user
                 user.save_to_session(@request.session)
                 on_success(user)
                 unless success_redirect

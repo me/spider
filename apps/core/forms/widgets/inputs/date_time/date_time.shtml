@@ -1,4 +1,4 @@
-<div class="input">
+<div class="controls">
     <tpl:asset type="js" src="input.js" />
     <tpl:asset name="jquery-ui-datepicker" />
     <tpl:asset type="js" src="date_time.js" />

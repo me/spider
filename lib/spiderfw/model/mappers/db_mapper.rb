@@ -363,6 +363,7 @@ module Spider; module Model; module Mappers
                 next if !element || !element.type || element.integrated?
                 if !element.model?
                     field = schema.field(el)
+                    raise "Element #{el} in #{@model} does not have a schema field" unless field
                     primary_keys << field if model_pks.include?(el)
                     unless seen_fields[field.name]
                         keys << field

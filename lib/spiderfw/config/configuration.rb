@@ -139,8 +139,16 @@ module Spider
         def [](key)
             key = translate_key(key)
             val = @values[key]
+            return val unless @options[key]
             
-            if (val.nil? && @options[key] && @options[key][:params][:default])
+            if val.nil? && fallback = @options[key][:params][:fallback]
+                fallback = [fallback] unless fallback.is_a?(Array)
+                fallback.each do |fb|
+                    val = Spider.conf.get(fb)
+                    break if val
+                end
+            end
+            if val.nil? && @options[key][:params][:default]
                 default = @options[key][:params][:default]
                 val = default
                 if (default.class == Proc)
@@ -185,7 +193,8 @@ module Spider
         # Sets an allowed configuration option
         # Possible params are:
         # -:default     the default value for the option; if it is a proc, it will be called
-        # -:choiches    an array of allowed values
+        # -:fallback    like default, but use another config key instead (an array may be specified)
+        # -:choices    an array of allowed values
         # -:type        parameter type; can be one of int, string, bool
         def config_option(name, description=nil, params={}, &proc)
             name = name.to_s

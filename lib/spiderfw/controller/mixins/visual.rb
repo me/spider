@@ -24,6 +24,7 @@ module Spider; module ControllerMixins
         def before(action='', *params)
             @layout ||= self.class.get_layout(action)
             @layout ||= @dispatcher_layout
+            return super unless action_target?
             format = nil
             req_format = self.is_a?(Widget) && @is_target && @request.params['_wf'] ? @request.params['_wf'].to_sym : @request.format
             if (req_format && self.class.output_formats[@executed_method])
@@ -227,6 +228,15 @@ module Spider; module ControllerMixins
                 template.render(scene)
             end
             return template
+        end
+
+        def render_to_string(*args)
+            res = StringIO.new
+            $out.output_to(res) do
+                render(*args)
+            end
+            res.rewind
+            res.read
         end
         
         def render_error(path, options)
@@ -500,7 +510,7 @@ module Spider; module ControllerMixins
                         return nil if check_action(action, check)
                     end
                 end
-                action = (action && !action.empty?) ? action.to_sym : self.default_action
+                action = (action && !action.empty?) ? action.to_s.split('/').first.to_sym : self.default_action
                 layouts.each do |name|
                     params = @layout_params[name]
                     if (params[:for])

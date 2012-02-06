@@ -38,7 +38,8 @@
 }
 
 .spider.components.admin .spider.forms.form .fields{
-    background: #ececf6;
+    background: #F9F9F9;
+    padding: 10px 0;
 }
 
 .spider.components.admin .spider.forms.form .row.error label{

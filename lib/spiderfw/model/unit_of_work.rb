@@ -130,7 +130,7 @@ module Spider; module Model
             end
             curr = @actions[obj.object_id]
             if curr && (curr_act = curr.select{ |c| c[0] == action }).length > 0
-                curr_act.each{ |c| c[1] = params}
+                curr_act.each{ |c| c[1].merge!(params)}
                 return
             end
             if action == :delete # FIXME: abstract

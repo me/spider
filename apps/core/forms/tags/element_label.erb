@@ -1,7 +1,7 @@
 <%
 @attributes['inputs_hash'] ||= '@inputs'
 %>
-<label for="{ <%=@attributes['inputs_hash']%>[<%=@attributes['element']%>].full_id }-input">
+<label class="control-label" for="{ <%=@attributes['inputs_hash']%>[<%=@attributes['element']%>].full_id }-input">
     { <%=@attributes['inputs_hash']%>[<%=@attributes['element']%>].label }
     <em class="form_required_symbol" sp:if="<%=@attributes['required']%>">*</em>
 </label>

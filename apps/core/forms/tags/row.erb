@@ -10,6 +10,6 @@ else
     el_class = @attributes['class'] || ''
 end
 %>
-<div class="formrow <%=el_class%> { (<%=error_condition%>) ? ' error' : '' }{ (<%=required%>) ? ' required' : '' }">
+<div class="control-group <%=el_class%> { (<%=error_condition%>) ? ' error' : '' }{ (<%=required%>) ? ' required' : '' }">
     <%=@content%>
 </div>

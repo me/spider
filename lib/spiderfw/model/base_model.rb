@@ -1602,7 +1602,7 @@ module Spider; module Model
             element = self.class.elements[name]
             element.type.check(val) if (element.type.respond_to?(:check))
             if (checks = element.attributes[:check])
-                checks = {("'%s' is not in the correct format") => checks} unless checks.is_a?(Hash)
+                checks = {_("'%s' is not in the correct format") => checks} unless checks.is_a?(Hash)
                 checks.each do |msg, check|
                     test = case check
                     when Regexp

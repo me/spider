@@ -11,6 +11,7 @@ module Spider; module ControllerMixins
         def self.included(klass)
             super
             @static_content_route ||= 'public/'
+            klass.controller_actions(:serve_static)
             klass.route(@static_content_route, :serve_static, :do => lambda{ @serving_static = true })
             if (klass < Visual)
                 klass.no_layout('public')

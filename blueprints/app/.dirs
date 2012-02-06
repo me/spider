@@ -3,3 +3,4 @@ models
 public
 views
 widgets
+test/features/step_definitions

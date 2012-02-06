@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html>
-    <tpl:asset type="css" src="sass/bootstrap/bootstrap.scss" />
+    <tpl:asset name="bootstrap-sass" />
     <tpl:asset type="css" src="sass/admin.scss" />
     <head>
         <title>_(Administration)

@@ -8,6 +8,34 @@
 $base_color: #417690;
 $sidebar_color: #DFDFDF;
 
+#admin {
+    form.form-horizontal {
+
+        input,
+        textarea,
+        select,
+        .uneditable-input {
+            width: 300px;
+        }
+
+        select {
+            width: 310px;
+        }
+
+        input.btn {
+            width: auto;
+        }
+
+        .form-actions {
+            padding-left: 250px;
+        }
+        
+    }
+
+}
+
+
+
 #header{
     padding-bottom: 10px;
     background: image-url("css/header_bg.png") repeat-x scroll center top;
@@ -105,6 +133,13 @@ $sidebar_color: #DFDFDF;
                 @include opacity(0.8);
             }
         }
+    }
+}
+
+#admin-switcher-menu {
+    .section_title {
+        font-size: 14px;
+        line-height: 36px;
     }
 }
 

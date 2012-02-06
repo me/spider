@@ -1,4 +1,4 @@
-<div class="input{ @multiple ? ' multiple' : '' }">
+<div class="controls{ @multiple ? ' multiple' : '' }">
     <tpl:asset type="js" name="jquery-ui-autocomplete" />
 	<tpl:asset type="js" src="input.js" />
 	<tpl:asset type="js" src="search_select.js" />

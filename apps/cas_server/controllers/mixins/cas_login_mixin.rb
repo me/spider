@@ -95,7 +95,8 @@ module Spider; module CASServer
             return true
         end
 
-        def authenticate
+        def authenticate(params={})
+            return super if params[:ignore_cas]
             if error = validate_login_ticket(@request.params['lt'])
                 @scene.message = error
                 return nil
