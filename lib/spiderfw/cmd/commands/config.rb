@@ -43,13 +43,16 @@ class ConfigCommand < CmdParse::Command
                 print args[0]
                 print ":\n"+option[:description]+"\n" if option[:description] && !option[:description].empty?
                 puts
-                puts "#{(_('Type')+':').ljust(10)} #{option[:params][:type]}" if option[:params][:type]
+                puts "#{( _('Type') +':').ljust(10)} #{option[:params][:type]}" if option[:params][:type]
                 default_str = nil
                 if default = option[:params][:default]
                     default_str = default.is_a?(Proc) ? _('Dynamic') : default
                 end
-                puts "#{(_('Default')+':').ljust(10)} #{default_str}" if default_str
-                puts "#{(_('Choices')+':').ljust(10)} #{option[:params][:choices].join(', ')}" if option[:params][:choices]
+                puts "#{( _('Default') +':').ljust(10)} #{default_str}" if default_str
+                if choices = option[:params][:choices]
+                    choices = choices.call if choices.is_a?(Proc)
+                    puts "#{( _('Choices') +':').ljust(10)} #{choices.join(', ')}" 
+                end
             else
                 puts _("Configuration option not found")
             end
