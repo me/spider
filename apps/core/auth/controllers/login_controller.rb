@@ -40,7 +40,7 @@ module Spider; module Auth
             render('login')
         end
         
-        def authenticate
+        def authenticate(params={})
             get_user
         end
         
