@@ -30,7 +30,7 @@ module Spider; module Components
         def prepare(action='')
             @model ||= @queryset.model
             @model = const_get_full(@model) if @model.is_a?(String)
-            if params['sort']
+            if params['sort'] && params['sort'].is_a?(Hash)
                 @sort_el = params['sort'].keys.first.to_sym 
                 @sort_dir = params['sort'].values.first.to_sym
                 @page = 1
