@@ -24,6 +24,7 @@ module Spider; module ControllerMixins
         def before(action='', *params)
             @layout ||= self.class.get_layout(action)
             @layout ||= @dispatcher_layout
+            return super unless action_target?
             format = nil
             req_format = self.is_a?(Widget) && @is_target && @request.params['_wf'] ? @request.params['_wf'].to_sym : @request.format
             if (req_format && self.class.output_formats[@executed_method])
