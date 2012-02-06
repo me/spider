@@ -338,13 +338,19 @@ module Spider
             Spider.output _("Updating %s from %s") % [spec.app_id, spec.git_repo]
             options[:branch] ||= 'master'
             Dir.chdir(app_path) do
-                app_repo.fetch
-                if app_repo.is_branch?(options[:branch])
-                    app_repo.checkout(options[:branch])
-                else 
-                    app_repo.checkout("origin/#{options[:branch]}", :new_branch => options[:branch])
-                end
-                app_repo.merge("origin/#{options[:branch]}")
+                app_repo.branch('master').checkout
+            end
+            response = err = nil
+            Dir.chdir(app_path) do
+                response = `git --git-dir='#{app_path}/.git' pull origin master`
+            end
+            if response =~ /Aborting/
+                Spider.output err, :ERROR
+                raise "Unable to update"
+            end
+            Dir.chdir(app_path) do
+                app_repo.reset('HEAD', :hard => true)
+                app_repo.branch('master').checkout
             end
             # response = err = nil
             # Dir.chdir(app_path) do
