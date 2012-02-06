@@ -406,6 +406,7 @@ module Spider
                 dfnr = dfnr.respond_to?(:superclass) ? dfnr.superclass : nil
             end
             res = Spider.find_resource(type.to_sym, src, @path, search_classes)
+            raise "Resource #{src} of type #{type} not found" unless res.path
             controller = nil
             if res && res.definer
                 controller = res.definer.controller
