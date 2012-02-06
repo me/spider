@@ -128,7 +128,7 @@ module Spider
         :default => :ERROR,
         :choices => [false, :DEBUG, :WARN, :INFO, :ERROR]
     config_option 'log.non_static_extensions_list', _('Allow logging for some file extensions'), 
-        :type => Array, :default => []
+        :type => Array, :default => ['html', 'xml', 'json']
     
 
 
