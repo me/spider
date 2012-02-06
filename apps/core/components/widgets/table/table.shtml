@@ -1,5 +1,6 @@
 <div class="{ @widget[:css_class] }">
     <tpl:asset type="js" src="widgets/table.js" />
+    <tpl:asset type="css" src="css/table_base.css" />
     <table sp:if="@rows && @rows.length > 0" class="{ @widget[:css_class] }" class="bordered-table zebra-striped">
         <thead>
             <tr class="heading_row">
