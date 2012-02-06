@@ -29,18 +29,18 @@ Spider.defineWidget('Spider.Forms.HTMLArea', 'Spider.Forms.Input', {
             ['Source','-','Preview','-'],
             ['PasteFromWord','-','Print', 'SpellChecker'],
             ['RemoveFormat'],
+            ['Format'],
+            ['TextColor','BGColor'],
+            ['Maximize', 'ShowBlocks'],
             '/',
             ['Bold','Italic','Underline','Strike','-','Subscript','Superscript'],
             ['NumberedList','BulletedList','-','Outdent','Indent','Blockquote','CreateDiv'],
             ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
             ['Link','Unlink','Anchor'],
-            ['Image','Table','HorizontalRule','SpecialChar'],
-            '/',
-            ['Styles','Format','Font','FontSize'],
-            ['TextColor','BGColor'],
-            ['Maximize', 'ShowBlocks']
+            ['Image','Table','HorizontalRule','SpecialChar']
         ];
         config.toolbar = 'simple';
+        config.skin = 'BootstrapCK-Skin';
         config.filebrowserBrowseUrl = options.link_manager;
         config.filebrowserImageBrowseUrl = options.image_manager;
         config.filebrowserWindowFeatures = 'modal=yes,alwaysRaised=yes';
