@@ -183,6 +183,7 @@ module Spider
                 method = action
             end
             method = method[0..-2] if !method.blank? && method[-1].chr == '/'
+            method, rest = method.split('.', 2) if method
             method = self.class.default_action if !method || method.empty?
             return nil if method.empty?
             return [method.to_sym, additional_arguments]
@@ -202,11 +203,7 @@ module Spider
         
         def execute(action='', *arguments)
             return if @__done
-            # return if self.is_a?(Spider::Widget) # FIXME: this is obviously wrong. Widgets must override the behaviour
-            # # somewhere else, or probably just not inherit controller.
             debug("Controller #{self} executing #{action} with arguments #{arguments}")
-            # before(action, *arguments)
-            # do_dispatch(:before, action, *arguments)
             catch(:done) do
                 if can_dispatch?(:execute, action)
                     d_next = dispatch_next(action)
@@ -216,8 +213,7 @@ module Spider
                     arguments = d_next.params
                 end
                 if d_next && d_next.dest == self
-                    @executed_method = d_next.action.to_sym
-                    @executed_method_arguments = []
+                    set_executed_method(d_next.action)
                 end
                 if @executed_method
                     meth = self.method(@executed_method)
@@ -318,7 +314,8 @@ module Spider
             route = super
             return route unless route
             action = route.path.split('/').first
-            if route.nil_route && !action.blank? && self.respond_to?(action.to_sym)
+            action_method, action_params = get_action_method(action)
+            if route.nil_route && !action.blank? && self.respond_to?(action_method)
                 route.action = action
             end
             route
@@ -329,9 +326,8 @@ module Spider
         def dispatched_object(route)
             klass = route.dest
             if klass.class != Class
-                if (klass == self) # route to self
-                    @executed_method = route.action.to_sym
-                    @executed_method_arguments = []
+                if klass == self # route to self
+                    set_executed_method(route.action)
                 end
                 return klass
             end
@@ -351,12 +347,17 @@ module Spider
             @executed_method = nil
             @executed_method_arguments = nil
             if !can_dispatch?(:execute, action)
-                method, additional_arguments = get_action_method(action)
-                if (method && controller_action?(method))
-                    @executed_method = method.to_sym
-                    @executed_method_arguments = additional_arguments || []
-                end
+                set_executed_method(action)
             end
+        end
+
+        def set_executed_method(action)
+            method, additional_arguments = get_action_method(action)
+            if (method && controller_action?(method))
+                @executed_method = method.to_sym
+                @executed_method_arguments = additional_arguments || []
+            end
+            return @executed_method
         end
         
 
