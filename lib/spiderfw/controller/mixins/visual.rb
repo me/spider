@@ -509,7 +509,7 @@ module Spider; module ControllerMixins
                         return nil if check_action(action, check)
                     end
                 end
-                action = (action && !action.empty?) ? action.to_sym : self.default_action
+                action = (action && !action.empty?) ? action.to_s.split('/').first.to_sym : self.default_action
                 layouts.each do |name|
                     params = @layout_params[name]
                     if (params[:for])
