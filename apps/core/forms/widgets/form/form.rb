@@ -453,7 +453,7 @@ module Spider; module Forms
 
         def breadcrumb
             bc = []
-            if @obj
+            if !@request.post? && @obj
                 bc << {:label => @obj.to_s, :url => widget_request_path+'/'+@pk}
                 if @crud
                     sl = sub_link(@sub_element)
