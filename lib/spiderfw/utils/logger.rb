@@ -149,7 +149,7 @@ module Spider
                 tl = thread_level
                 return unless tl
                 action_i = @@levels.index(action.to_s.upcase.to_sym)
-                return action_i > tl
+                return action_i >= tl
             end
 
 
