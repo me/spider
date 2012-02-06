@@ -4,7 +4,11 @@ module Spider; module Components
         tag 'table'
  
         is_attribute :elements, :process => lambda{ |v|
-            return v.split(',').map{ |v| v.strip.to_sym } if v.is_a?(String)
+            return v.split(',').map{ |v| v.include?('.') ? v : v.strip.to_sym } if v.is_a?(String)
+            v
+        }
+        attribute :labels, :process => lambda{ |v| 
+            return v.split(',') if v.is_a?(String)
             v
         }
         i_attribute :num_elements, :default => 7, :type => Fixnum
@@ -50,9 +54,9 @@ module Spider; module Components
             session[:sort] = [@sort_el, @sort_dir] if @sort_el
             @scene.sorted = {}
             @scene.sorted[@sort_el] = @sort_dir if @sort_el
-            if (@sort_el)
+            if @sort_el
                 el = @model.elements[@sort_el]
-                if el.model? && el.storage == @model.storage
+                if el && el.model? && el.storage == @model.storage
                     s = []
                     element = @model.elements[@sort_el]
                     @model.elements[@sort_el].model.each_element do |el|                         
@@ -87,12 +91,20 @@ module Spider; module Components
         
         def run
             @elements ||= choose_elements
-            @scene.sortable = {}
-            @model.elements_array.each{ |el| @scene.sortable[el.name] = @model.mapper.sortable?(el) ? true : false }
+            @model.elements_array.each{ |el|  }
             @scene.labels = {}
-            @elements.each do |el|
+            @scene.sortable = {}
+            attr_labels = attributes[:labels] || []
+            @elements.each_index do |i|
+                el = @elements[i]
+                full = el
+                if el.is_a?(String)
+                    first, rest = el.split('.', 2)
+                    el = first.to_sym
+                end
                 raise "No element #{el} in #{@model} for table #{@id}" unless @model.elements[el]
-                @scene.labels[el] = @model.elements[el].label
+                @scene.labels[full] = attr_labels[i].blank? ? @model.elements[el].label : attr_labels[i]
+                @scene.sortable[full] = sortable?(full)
             end
             @rows = prepare_queryset(@queryset ? @queryset : @model.list)
             @rows.condition.and(self.condition) if self.condition && !self.condition.empty?
@@ -120,6 +132,10 @@ module Spider; module Components
             super
         end
         
+        def sortable?(el)
+            @model.mapper.sortable?(el) ? true : false
+        end
+       
         def prepare_queryset(qs)
             return qs
         end
@@ -129,57 +145,70 @@ module Spider; module Components
             rows.each do |row|
                 res_row = {}
                 @elements.each do |el|
-                    element = @model.elements[el]
-                    if (!row[el] && [String, Spider::DataTypes::Text].include?(element.type))
-                        row[el] = ''
-                        next
-                    end
-                    if (element.multiple?)
-                        list = "<ul>"
-                        if(row[el])
-                            row[el][0..2].each{ |sub|
-                                if sub && element.junction? && element.model.attributes[:sub_model] != @model
-                                    sub = sub.get(element.attributes[:junction_their_element]) 
-                                end
-                                sub_desc = sub.nil? ? '' : sub.to_s
-                                sub_desc ||= ''
-                                sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
-                                list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
-                            }
-                            list += "<li>...</li>" if (row[el].length > 3)
-                            list += "</ul>"
-                            res_row[el] = list
-                        end
-                    else
-                        if element.type <= Spider::Bool
-                            res_row[el] = row[el] ? _('Yes') : _('No')
-                        elsif (!row[el])
-                            res_row[el] = '' 
-                        elsif (element.type <= Date || element.type <= Time)
-                            res_row[el] = Spider::I18n.localize_date_time(@request.locale, row[el], :short)
-                        elsif (element.type <= Float || element.type <= BigDecimal)
-                            res_row[el] = Spider::I18n.localize_number(@request.locale, row[el])
-                            if element.attributes[:currency]
-                                res_row[el] = "&#{element.attributes[:currency]}; #{res_row[el]}"
-                            end
-                        elsif (row[el].respond_to?(:format))
-                            res_row[el] = row[el].format(:short)
-                        else
-                            str = row[el].to_s || ''
-                            str = str.split("\n").map{ |str_row|
-                                if str_row.length > @attributes[:max_element_length]
-                                    str_row[0..@attributes[:max_element_length]]+'...' 
-                                else
-                                    str_row
-                                end
-                            }.join("\n")
-                            res_row[el] = str
-                        end
-                    end
+                    res_row[el] = prepare_value(el, row)
                 end
                 res << res_row
             end
             return res
+        end
+
+        def prepare_value(el, row)
+            full = el; rest = nil
+            if el.is_a?(String)
+                first, rest = el.split('.', 2)
+                el = first
+            end
+            element = @model.elements[el.to_sym]
+            if !row[el] && [String, Spider::DataTypes::Text].include?(element.type)
+                return ''
+            end
+            if element.multiple?
+                list = "<ul>"
+                if row[el]
+                    row[el][0..2].each{ |sub|
+                        if sub && element.junction? && element.model.attributes[:sub_model] != @model
+                            sub = sub.get(element.attributes[:junction_their_element]) 
+                        end
+                        sub_desc = sub.nil? ? '' : sub.to_s
+                        sub_desc ||= ''
+                        sub_desc = sub_desc[0..@attributes[:max_element_length]] if sub_desc.length > @attributes[:max_element_length]
+                        list += "<li>"+sub_desc+"</li>" unless sub_desc.empty?
+                    }
+                    list += "<li>...</li>" if (row[el].length > 3)
+                    list += "</ul>"
+                    return list
+                end
+            else
+                format_value(element.type, row[el])
+            end
+        end
+
+        def format_value(type, value)
+            if type <= Spider::Bool
+                return row[el] ? _('Yes') : _('No')
+            elsif !value
+                return ''
+            elsif type <= Date || type <= Time
+                return Spider::I18n.localize_date_time(@request.locale, value, :short)
+            elsif type <= Float || type <= BigDecimal
+                str = Spider::I18n.localize_number(@request.locale, value)
+                if element.attributes[:currency]
+                    str = "&#{element.attributes[:currency]}; #{str}"
+                end
+                return str
+            elsif value.respond_to?(:format)
+                return value.format(:short)
+            else
+                str = value.to_s || ''
+                str = str.split("\n").map{ |str_row|
+                    if str_row.length > @attributes[:max_element_length]
+                        str_row[0..@attributes[:max_element_length]]+'...' 
+                    else
+                        str_row
+                    end
+                }.join("\n")
+                return str
+            end
         end
         
         
