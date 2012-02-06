@@ -89,7 +89,6 @@ $sidebar_color: #DFDFDF;
         height: 68px;
         min-width: 200px;
         margin-left: 60px;
-        background: image-url("css/noise.png") repeat-x scroll center top;
         background-color: lighten(desaturate($base_color, 30%), 55%);
 
         @include box-shadow();

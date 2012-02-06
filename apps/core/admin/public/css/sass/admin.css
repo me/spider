@@ -98,7 +98,6 @@ body:after {
   height: 68px;
   min-width: 200px;
   margin-left: 60px;
-  background: url('../../img/css/noise.png?1321971233') repeat-x scroll center top;
   background-color: #f4f5f6;
   -moz-box-shadow: 0px 0px 5px #333333;
   -webkit-box-shadow: 0px 0px 5px #333333;
@@ -122,11 +121,11 @@ body:after {
 #header #app_buttons {
   *display: inline;
 }
-/* line 100, ../../sass/admin.scss */
+/* line 99, ../../sass/admin.scss */
 #header #app_buttons a {
   color: #222222;
 }
-/* line 104, ../../sass/admin.scss */
+/* line 103, ../../sass/admin.scss */
 #header #app_buttons div {
   width: 55px;
   height: 55px;
@@ -136,7 +135,7 @@ body:after {
   float: left;
   background-color: #EEEEEE;
 }
-/* line 113, ../../sass/admin.scss */
+/* line 112, ../../sass/admin.scss */
 #header #app_buttons div img {
   margin-left: auto;
   margin-right: auto;
@@ -144,40 +143,40 @@ body:after {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
   opacity: 0.8;
 }
-/* line 120, ../../sass/admin.scss */
+/* line 119, ../../sass/admin.scss */
 #header #app_buttons div span.name {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
   opacity: 0.9;
   display: block;
   font-size: 0.8em;
 }
-/* line 127, ../../sass/admin.scss */
+/* line 126, ../../sass/admin.scss */
 #header #app_buttons a.active div {
   border: 1px solid #DDDD00;
 }
-/* line 129, ../../sass/admin.scss */
+/* line 128, ../../sass/admin.scss */
 #header #app_buttons a.active div img {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
   opacity: 0.7;
 }
-/* line 132, ../../sass/admin.scss */
+/* line 131, ../../sass/admin.scss */
 #header #app_buttons a.active div span.name {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
   opacity: 0.8;
 }
 
-/* line 140, ../../sass/admin.scss */
+/* line 139, ../../sass/admin.scss */
 #admin-switcher-menu .section_title {
   font-size: 14px;
   line-height: 36px;
 }
 
-/* line 150, ../../sass/admin.scss */
+/* line 149, ../../sass/admin.scss */
 #spider-admin .container-fluid .content {
   background-color: white;
 }
 
-/* line 157, ../../sass/admin.scss */
+/* line 156, ../../sass/admin.scss */
 #container, .spider-admin-container {
   background: url('../../img/css/side_bg.png?1321971233') repeat-y;
   position: relative;
@@ -189,7 +188,7 @@ body:after {
   overflow: hidden;
   *zoom: 1;
 }
-/* line 167, ../../sass/admin.scss */
+/* line 166, ../../sass/admin.scss */
 #container #sidebar, #container > .spider-admin-sidebar, .spider-admin-container #sidebar, .spider-admin-container > .spider-admin-sidebar {
   position: absolute;
   top: 0;
@@ -197,27 +196,27 @@ body:after {
   width: 220px;
   padding: 20px 10px;
 }
-/* line 174, ../../sass/admin.scss */
+/* line 173, ../../sass/admin.scss */
 #container #sidebar li.active a, #container > .spider-admin-sidebar li.active a, .spider-admin-container #sidebar li.active a, .spider-admin-container > .spider-admin-sidebar li.active a {
   text-decoration: underline;
 }
-/* line 178, ../../sass/admin.scss */
+/* line 177, ../../sass/admin.scss */
 #container #sidebar li, #container > .spider-admin-sidebar li, .spider-admin-container #sidebar li, .spider-admin-container > .spider-admin-sidebar li {
   margin-bottom: 1px;
 }
-/* line 183, ../../sass/admin.scss */
+/* line 182, ../../sass/admin.scss */
 #container #content, #container > .spider-admin-content, .spider-admin-container #content, .spider-admin-container > .spider-admin-content {
   margin-left: 240px;
 }
 
-/* line 188, ../../sass/admin.scss */
+/* line 187, ../../sass/admin.scss */
 .crud .table {
   width: auto;
   min-width: 400px;
 }
 
 @media screen and (max-width: 500px) {
-  /* line 197, ../../sass/admin.scss */
+  /* line 196, ../../sass/admin.scss */
   #header #main_title {
     font-size: 10px;
   }
