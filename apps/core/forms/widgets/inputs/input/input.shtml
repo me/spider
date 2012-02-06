@@ -1,3 +1,3 @@
-<div class="input">
+<div class="controls">
     { @value }
 </div>

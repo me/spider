@@ -39,6 +39,7 @@ module Spider; module Forms
         attribute :show_related, :type => TrueClass, :default => false
         i_attribute :auto_redirect, :default => false
         is_attribute :multipart, :default => false
+        is_attribute :form_css_class, :default => 'form-horizontal'
         attr_accessor :save_actions
         attr_accessor :fixed
         attr_accessor :before_save, :after_save

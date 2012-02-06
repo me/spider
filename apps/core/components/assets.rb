@@ -145,3 +145,39 @@ Spider::Template.define_named_asset 'jquery-tools-tooltip', [
 Spider::Template.define_named_asset 'less', [
      [:js, 'js/less-1.1.3.min.js', Spider::Components, {:compressed => true}]
  ]
+
+Spider::Template.define_named_asset 'bootstrap-sass', [
+    [:css, 'bootstrap/scss/bootstrap.scss', Spider::Components]
+]
+
+Spider::Template.define_named_asset 'bootstrap-alerts', [
+    [:js, 'bootstrap/js/bootstrap-alerts.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-buttons', [
+    [:js, 'bootstrap/js/bootstrap-buttons.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-dropdown', [
+    [:js, 'bootstrap/js/bootstrap-dropdown.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-modal', [
+    [:js, 'bootstrap/js/bootstrap-modal.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-popover', [
+    [:js, 'bootstrap/js//bootstrap-popover.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-scrollspy', [
+    [:js, 'bootstrap/js//bootstrap-scrollspy.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-tabs', [
+    [:js, 'bootstrap/js//bootstrap-tabs.js']
+]
+
+Spider::Template.define_named_asset 'bootstrap-twipsy', [
+    [:js, 'bootstrap/js//bootstrap-twipsy.js']
+]

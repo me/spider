@@ -28,14 +28,14 @@
 	right: 8px;
 }
 
-.spider.forms.form .formrow.error label{
+.spider.forms.form .control-group.error label{
 }
 
-.spider.forms.form .formrow.error input{
+.spider.forms.form .control-group.error input{
     background-color: #FF9999;
 }
 
-.spider.forms.form .formrow{
+.spider.forms.form .control-group{
     clear: both;
     overflow: hidden;
     margin-top: 5px;
@@ -50,12 +50,12 @@
 	margin-right: 20px;
 }
 
-.spider.forms.form .input{
+.spider.forms.form .controls{
     float: left;
     margin-bottom: 5px;
 }
 
-.spider.forms.form .input .notice{
+.spider.forms.form .controls .notice{
     margin-top: 3px;
     margin-bottom: 3px;
     font-size: .9em;

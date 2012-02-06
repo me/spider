@@ -1,4 +1,4 @@
-<div class="input">
+<div class="controls">
     <tpl:asset type="css" src="css/file_input.css" />
     <tpl:asset type="js" src="input.js" />
     <tpl:asset type="js" src="file_input.js" />

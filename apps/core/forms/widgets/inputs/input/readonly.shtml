@@ -1,5 +1,5 @@
 <sp:template>
-    <div class="input">
+    <div class="controls">
         { @formatted_value }
     </div>
     <div style="clear: both"></div>

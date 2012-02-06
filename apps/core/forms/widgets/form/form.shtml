@@ -20,7 +20,7 @@
 
 	</div>
 	<div sp:if="@action == :form">
-		<form action="{ @form_action }" method="POST" sp:attr-if="@enctype,enctype,@enctype">
+		<form action="{ @form_action }" method="POST" class="{ @form_css_class }" sp:attr-if="@enctype,enctype,@enctype">
 			<input type="hidden" name="_w{ @widget[:param] }[pk]" value="{ @pk }">
 			<sp:pass sp:each="@hidden_inputs |input|">
 				<sp:run obj="input" />
@@ -28,8 +28,8 @@
 			<div class="fields">
 				<forms:element_row sp:each="@names |element|" element="element" required="@inputs[element].required?"/>
 			</div>
-			<div class="actions">
-				<input type='submit' class="btn primary" name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
+			<div class="form-actions">
+				<input type='submit' class="btn btn-primary" name='_w{ @widget[:param] }[submit]' value='{ @submit_text }'>
 				<input type='submit' sp:if="@show_submit_and_stay" class="btn" name='_w{ @widget[:param] }[submit_and_stay]' value='{ @submit_and_stay_text }'>
 				<input type='submit' sp:if="@show_submit_and_new" class="btn" name='_w{ @widget[:param] }[submit_and_new]' value='{ @submit_and_new_text }'>
 				<input sp:each="@submit_buttons |text|" type='submit' class="btn" name='_w{ @widget[:param] }[submit]' value='{ text }'>
