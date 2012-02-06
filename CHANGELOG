@@ -1,3 +1,12 @@
+= 0.6.23
+== 6 February, 2011
+* Config options can now have a Proc for :choices; new :fallback param to reuse other config
+* Added new-link, edit-link attributes to Crud
+* Added Twitter Bootstrap 2 to core components
+* Updated CKEditor
+* Added test folder to app blueprint
+* Minor fixes
+
 = 0.6.22
 == 14 December, 2011
 * New core admin app
