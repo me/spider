@@ -108,7 +108,7 @@ module Spider
                 allowed = Spider.conf.get('log.non_static_extensions_list')
                 unless allowed.include?(@request.format.to_s)
                     Spider.logger.info("GET #{@request.path}")
-                    @logger_static_prev = Spider.logger.set_thread_level(static_level)
+                    @logger_static_prev = Spider.logger.set_request_level(static_level)
                 end
             end
             Spider::Logger.debug("REQUEST:")

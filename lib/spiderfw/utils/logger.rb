@@ -56,7 +56,7 @@ module Spider
             def send_to_loggers(action, *args, &proc)
                 return if $SAFE > 1
                 return unless @loggers
-                return if thread_level && !check_thread_level(action)
+                return if request_level && !check_request_level(action)
                 @loggers.each do |dest, logger| 
                     begin
                         logger.send(action, *args, &proc) 
@@ -135,18 +135,18 @@ module Spider
                 send_to_loggers(method, *args, &proc)
             end
 
-            def set_thread_level(level)
-                prev = Thread.current[:spider_logger_level]
-                Thread.current[:spider_logger_level] = @@levels.index(level)
+            def set_request_level(level)
+                prev = Spider.current[:spider_logger_level]
+                Spider.current[:spider_logger_level] = @@levels.index(level)
                 return prev
             end
 
-            def thread_level
-                Thread.current[:spider_logger_level]
+            def request_level
+                Spider.current[:spider_logger_level]
             end
 
-            def check_thread_level(action)
-                tl = thread_level
+            def check_request_level(action)
+                tl = request_level
                 return unless tl
                 action_i = @@levels.index(action.to_s.upcase.to_sym)
                 return action_i > tl
