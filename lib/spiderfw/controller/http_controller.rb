@@ -11,8 +11,7 @@ module Spider
         def initialize(request, response, scene=nil)
             response.status = Spider::HTTP::OK
             response.headers = {
-                'Content-Type' => 'text/plain',
-                'Connection' => 'close'
+                'Content-Type' => 'text/plain'
             }
             @previous_stdout = $stdout
             Thread.current[:stdout] = response.server_output
