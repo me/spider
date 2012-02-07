@@ -40,6 +40,7 @@ Gem::Specification.new do |s|
   s.add_dependency("bundler")
   s.add_dependency("mail")
   s.add_dependency("backports")
+  s.add_dependency("rack")
   s.add_development_dependency("rake", ["> 0.7.3"])
   s.add_development_dependency("gettext", ['>= 2.1.0'])
   s.add_development_dependency("fssm")

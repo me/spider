@@ -1,3 +1,6 @@
+require 'rack'
+require 'spiderfw/http/adapters/rack'
+
 module Spider; module HTTP
     
     class Server
@@ -33,64 +36,86 @@ module Spider; module HTTP
         
         def request_received
         end
-        
-        def self.start(server_name, port, options={})
-            servers = {
-                'webrick'   => :WEBrick,
-                'mongrel'   => :Mongrel,
-                'thin'      => :Thin
+
+        def self.get_opts(server_name, options)
+            server_name ||= Spider.conf.get('http.server')
+            options[:port] ||= Spider.conf.get('webserver.port')
+            opts = {
+                :server => server_name,
+                :Port => options[:port],
+                :config => File.join(Spider.paths[:root], 'config.ru')
             }
-            
-            start = lambda{
-                $SPIDER_WEB_SERVER = true
-                begin
-                    require 'spiderfw/init'
-                rescue Exception => exc
-                    Spider.logger.error(exc)
-                    return
+            case server_name
+            when 'thin'
+                opts[:threaded] = true unless options[:no_threads]
+                options[:daemonize] = true
+            end
+            opts[:app] = Spider::HTTP::RackApplication.new unless File.file?(opts[:config])
+            ssl_opts = nil
+            if options[:ssl]
+                require 'openssl'
+                options[:ssl_cert] ||= Spider.conf.get('orgs.default.cert')
+                options[:ssl_key] ||= Spider.conf.get('orgs.default.private_key')
+                raise "SSL Certificate not set" unless options[:ssl_cert]
+                raise "SSL Key not set" unless options[:ssl_key]
+                raise "SSL Certificate (#{options[:ssl_cert]}) not found" unless File.file?(options[:ssl_cert])
+                raise "SSL Key (#{options[:ssl_key]}) not found" unless File.file?(options[:ssl_key])
+                ssl_opts = opts.clone
+                ssl_opts[:Port] = options[:ssl]
+                private_key = OpenSSL::PKey::RSA.new(File.open(options[:ssl_key]).read)
+                certificate = OpenSSL::X509::Certificate.new(File.open(options[:ssl_cert]).read)
+                case server_name
+                when 'webrick'
+                    require 'webrick/https'
+                    ssl_opts[:SSLEnable] = true
+                    ssl_opts[:SSLVerifyClient] = ::OpenSSL::SSL::VERIFY_NONE
+                    ssl_opts[:SSLCertificate] = certificate
+                    ssl_opts[:SSLPrivateKey] = private_key
+                # when 'thin'
+                #     ssl_opts[:ssl] = true
+                #     ssl_opts[:verify_peer] = ::OpenSSL::SSL::VERIFY_NONE
+                #     ssl_opts[:ssl_key_file] = private_key
+                #     ssl_opts[:ssl_cert_file] = certificate
+                else
+                    raise "SSL not supported with #{server_name} server"
                 end
-                require 'spiderfw/controller/http_controller'
+            end
+            return [opts, ssl_opts]
+        end
+        
+        def self.start(server_name, options={})
+            start = lambda{
                 
-                port ||= Spider.conf.get('webserver.port')
-                server_name ||= Spider.conf.get('http.server')
+                
                 pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                 puts _("Using webserver %s") % server_name if options[:verbose]
-                puts _("Listening on port %s") % port if options[:verbose]
-                server = Spider::HTTP.const_get(servers[server_name]).new
+                puts _("Listening on port %s") % opts[:port] if options[:verbose]
+                rack = nil
+                ssl_rack = nil
+                server = nil
                 ssl_server = nil
+
+                require 'spiderfw/init'
                 Spider.startup
-                begin
-                    if Spider.conf.get('devel.trace.extended')
-                        require 'ruby-debug'
-                        require 'spiderfw/utils/monkey/debugger'
-                        Debugger.start
-                        Debugger.post_mortem
+                opts, ssl_opts = self.get_opts(server_name, options)
+                
+                if opts
+                    thread = Thread.new do
+                        rack = Rack::Server.start(opts)
+                        server = rack.server if rack
                     end
-                rescue Exception => exc
-                    Spider.logger.warn "Unable to start debugger"
+                    $stdout << "Spider server running on port #{opts[:Port]}\n"
                 end
                 
-                thread = Thread.new do
-                    server.start(:port => port, :cgi => options[:cgi])
-                end
-                $stdout << "Spider server running on port #{port}\n"
-                if options[:ssl]
-                    options[:ssl_cert] ||= Spider.conf.get('orgs.default.cert')
-                    options[:ssl_key] ||= Spider.conf.get('orgs.default.private_key')
-                    raise "SSL Certificate not set" unless options[:ssl_cert]
-                    raise "SSL Key not set" unless options[:ssl_key]
-                    raise "SSL Certificate (#{options[:ssl_cert]}) not found" unless File.file?(options[:ssl_cert])
-                    raise "SSL Key (#{options[:ssl_key]}) not found" unless File.file?(options[:ssl_key])
+                if ssl_opts
                     ssl_thread = Thread.new do
-                        ssl_server = Spider::HTTP.const_get(servers[server_name]).new
-                        ssl_server.start(:port => options[:ssl], :ssl => true, 
-                            :ssl_cert => options[:ssl_cert], :ssl_private_key => options[:ssl_key])
+                        ssl_rack = Rack::Server.start(ssl_opts)
+                        ssl_server = ssl_rack.server if ssl_rack
                     end
                 end
                 do_shutdown = lambda{
                     Debugger.post_mortem = false if defined?(Debugger)
-                    # debugger
-                    server.shutdown
+                    server.shutdown if server
                     ssl_server.shutdown if ssl_server
                     pid_file = File.join(Spider.paths[:var], 'run/server.pid')
                     begin
@@ -100,7 +125,7 @@ module Spider; module HTTP
                 }
                 Spider.on_shutdown(&do_shutdown)
                 
-                thread.join
+                thread.join if thread
                 ssl_thread.join if ssl_thread
             }
             if options[:daemonize]
@@ -201,7 +226,12 @@ module Spider; module HTTP
                 rd.close
                 Spider.spawner = wr
                 return unless @actions[action]
-                @actions[action].call
+                begin
+                    @actions[action].call
+                rescue Exception => exc
+                    Spider.logger.debug(exc)
+                    Process.kill 'KILL', Process.pid
+                end
             end
         end
         

@@ -20,12 +20,13 @@ module Spider; module HTTP
     
     class RackIO < ControllerIO
 
-        def initialize(response, controller_response, w)
+        def initialize(response, controller_response, w, options={})
             @response = response
             @controller_response = controller_response
             @w = w
             @headers_sent = false
             @rack_thread = Thread.current
+            @options = options
         end
 
         def write(msg)
@@ -46,7 +47,7 @@ module Spider; module HTTP
                 end
             end
             @headers_sent = true
-            @rack_thread.run if Spider.conf.get('webserver.force_threads')
+            @rack_thread.run if @options[:multithread]
         end
 
         def headers_sent?
@@ -83,10 +84,11 @@ module Spider; module HTTP
 
             w = nil
             controller_response = Spider::Response.new
-            if Spider.conf.get('webserver.force_threads')
+            multithread = env['rack.multithread'] || Spider.conf.get('webserver.force_threads')
+            if multithread
                 r, w = IO.pipe
                 rack_response_hash = {:body => r}
-                controller_response.server_output = RackIO.new(rack_response_hash, controller_response, w)
+                controller_response.server_output = RackIO.new(rack_response_hash, controller_response, w, :multithread => true)
             else
                 w = StringIO.new
                 rack_response_hash = {:body => w}
@@ -103,13 +105,12 @@ module Spider; module HTTP
                     controller.extend(Spider::FirstResponder)
                     controller.call_before(path)
                     controller.execute(path)
-                    if Spider.conf.get('webserver.force_threads')
+                    if multithread
                         w.close 
                         controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                     end
                     controller.call_after(path)
                     controller_done = true
-                    Spider::Logger.debug("Controller done")
                 rescue => exc
                     Spider.logger.debug("Error:")
                     Spider.logger.debug(exc)
@@ -117,7 +118,7 @@ module Spider; module HTTP
                     controller = nil
                 ensure
                     begin
-                        if Spider.conf.get('webserver.force_threads')
+                        if multithread
                             controller_response.server_output.send_headers unless controller_response.server_output.headers_sent?
                         else
                             controller_response.prepare_headers
@@ -134,7 +135,7 @@ module Spider; module HTTP
                         end
                         Spider.request_finished
                     ensure
-                        if Spider.conf.get('webserver.force_threads')
+                        if multithread
                            begin
                                w.close
                            rescue
@@ -146,8 +147,8 @@ module Spider; module HTTP
                 end
             end
             
-            if Spider.conf.get('webserver.force_threads')
-                controllerThread = Thread.start &run_block
+            if multithread
+                controllerThread = Thread.start(&run_block)
                 t = Time.now
                 while !controller_done && !controller_response.server_output.headers_sent? && (Time.now - t) < 60
                     Thread.stop
@@ -160,7 +161,6 @@ module Spider; module HTTP
                 run_block.call
             end
 
-            Spider.logger.debug("Rack responding")
             return [rack_response_hash[:status], rack_response_hash[:headers], rack_response_hash[:body]]
         end
         

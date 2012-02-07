@@ -43,6 +43,7 @@ class WebServerCommand < CmdParse::Command
                 @server_name = 'webrick'
             end
             options = {
+                :port => @port,
                 :verbose => $verbose,
                 :ssl => @ssl,
                 :ssl_cert => @ssl_cert,
@@ -50,7 +51,7 @@ class WebServerCommand < CmdParse::Command
                 :cgi => @cgi,
                 :daemonize => @daemonize
             }
-            Spider::HTTP::Server.start(@server_name, @port, options)
+            Spider::HTTP::Server.start(@server_name, options)
             
             
         end
