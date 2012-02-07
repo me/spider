@@ -22,8 +22,20 @@ module Spider; module ControllerMixins
         end
         
         def before(action='', *params)
-            @layout ||= self.class.get_layout(action)
-            @layout ||= @dispatcher_layout
+            unless self.respond_to?(:serving_static?) && self.serving_static?
+                @layout ||= self.class.get_layout(action)
+                @layout ||= @dispatcher_layout
+                n_route = dispatch_next(action)
+                obj = n_route.obj if n_route
+                if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?)
+                    set_layout = @layout
+                    if set_layout
+                        set_layout = [set_layout] unless set_layout.is_a?(Array)
+                        set_layout.map{ |l| self.class.load_layout(l) }
+                        obj.dispatcher_layout = set_layout
+                    end
+                end
+            end
             return super unless action_target?
             format = nil
             req_format = self.is_a?(Widget) && @is_target && @request.params['_wf'] ? @request.params['_wf'].to_sym : @request.format
@@ -44,16 +56,7 @@ module Spider; module ControllerMixins
             if Spider.runmode != 'devel' && File.exists?(File.join(Spider.paths[:tmp], 'maintenance.txt'))
                 raise Spider::Controller::Maintenance
             end
-            n_route = dispatch_next(action)
-            obj = n_route.obj if n_route
-            if obj.is_a?(Visual) && !(obj.respond_to?(:serving_static?) && obj.serving_static?)
-                set_layout = @layout || @dispatcher_layout
-                if set_layout
-                    set_layout = [set_layout] unless set_layout.is_a?(Array)
-                    set_layout.map{ |l| self.class.load_layout(l) }
-                    obj.dispatcher_layout = set_layout
-                end
-            end
+           
             super
         end
         
