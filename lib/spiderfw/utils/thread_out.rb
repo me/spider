@@ -22,13 +22,14 @@ module ThreadOut #:nodoc:
   end
   
   def self.output_to(io)
+      prev_out = Thread.current[:stdout]
       if block_given?
-          prev_out = Thread.current[:stdout]
           Thread.current[:stdout] = io
           yield
           Thread.current[:stdout] = prev_out
       else
           Thread.current[:stdout] = io
+          return prev_out
       end
   end
   

@@ -103,8 +103,8 @@ module Spider; module ControllerMixins
                 ct = ct.to_s if ct
                 ct ||= "application/octet-stream"
             end
-            @response.headers['Content-Type'] = ct
-            @response.headers['Content-Length'] = stat.size
+            @response.content_type = ct
+            @response.content_length = stat.size
             @response.headers['Last-Modified'] = mtime.httpdate
             
             if mode == 'x-sendfile'
