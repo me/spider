@@ -179,21 +179,21 @@ module Spider; module Components
                     return list
                 end
             else
-                format_value(element.type, row[el])
+                format_value(element.type, row[el], element.attributes)
             end
         end
 
-        def format_value(type, value)
+        def format_value(type, value, attributes={})
             if type <= Spider::Bool
-                return row[el] ? _('Yes') : _('No')
+                return value ? _('Yes') : _('No')
             elsif !value
                 return ''
             elsif type <= Date || type <= Time
                 return Spider::I18n.localize_date_time(@request.locale, value, :short)
             elsif type <= Float || type <= BigDecimal
                 str = Spider::I18n.localize_number(@request.locale, value)
-                if element.attributes[:currency]
-                    str = "&#{element.attributes[:currency]}; #{str}"
+                if attributes[:currency]
+                    str = "&#{attributes[:currency]}; #{str}"
                 end
                 return str
             elsif value.respond_to?(:format)
