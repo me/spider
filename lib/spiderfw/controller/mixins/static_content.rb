@@ -112,7 +112,7 @@ module Spider; module ControllerMixins
             elsif mode == 'x-accel-redirect'
                 @response.headers['X-Accel-Redirect'] = full_path
             else
-                f = File.open(full_path, 'r')
+                f = File.open(full_path, 'rb')
                 while (block = f.read(1024)) do
                     $out << block
                 end
