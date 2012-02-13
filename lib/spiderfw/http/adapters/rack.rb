@@ -112,8 +112,7 @@ module Spider; module HTTP
                     controller.call_after(path)
                     controller_done = true
                 rescue => exc
-                    Spider.logger.debug("Error:")
-                    Spider.logger.debug(exc)
+                    Spider.logger.error(exc)
                     controller.ensure if controller
                     controller = nil
                 ensure
