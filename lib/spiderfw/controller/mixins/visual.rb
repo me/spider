@@ -147,6 +147,13 @@ module Spider; module ControllerMixins
             @template = template
             return template
         end
+
+        def load_template_from_path(path, definer)
+            t = Spider::Template.new(path)
+            t.owner_class = self.class
+            t.definer_class = definer
+            t
+        end
         
         def prepare_template(template)
             template.owner = self
@@ -546,12 +553,17 @@ module Spider; module ControllerMixins
                 search_paths ||= template_paths
                 resource = Spider::Template.find_resource(name, cur_path, owner, search_paths)
                 raise "Template #{name} not found" unless resource && resource.path
-                t = Spider::Template.new(resource.path)
-                t.owner_class = self
-                t.definer_class = resource.definer
+                t = load_template_from_path(resource.path, resource.definer)
                 return t
-
             end
+
+            def load_template_from_path(path, definer)
+                t = Spider::Template.new(path)
+                t.owner_class = self
+                t.definer_class = definer
+                t
+            end
+
                         
             def template_exists?(name, paths=nil)
                 if (name[0..5] == 'SPIDER' || name[0..3] == 'ROOT')
