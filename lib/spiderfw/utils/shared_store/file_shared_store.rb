@@ -25,7 +25,7 @@ module Spider; module Utils
             path = map_path(key)
             if (File.exist?(path))
                 @sync.lock(Sync::SH)
-                f = File.new(path, 'r')
+                f = File.new(path, 'rb')
                 f.flock(File::LOCK_SH)
                 data = Marshal.restore(f.read)
                 f.flock(File::LOCK_UN)
@@ -38,7 +38,7 @@ module Spider; module Utils
         def []=(key, value)
             path = map_path(key)
             @sync.lock(Sync::EX)
-            f = File.new(path, 'w')
+            f = File.new(path, 'wb')
             f.flock(File::LOCK_EX)
             f.puts(Marshal.dump(value))
             f.flush

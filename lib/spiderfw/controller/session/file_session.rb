@@ -17,7 +17,7 @@ module Spider
                 path = "#{dir}/#{sid}"
                 
                 @sync.lock(Sync::EX)
-                f = File.new(path, 'w+')
+                f = File.new(path, 'wb+')
                 f.flock(File::LOCK_EX)
                 f.puts(Marshal.dump(data))
                 f.flush
@@ -33,7 +33,7 @@ module Spider
                 data = nil
                 if (File.exist?(path))
                     @sync.lock(Sync::SH)
-                    f = File.new(path, 'r+')
+                    f = File.new(path, 'rb+')
                     f.flock(File::LOCK_SH)
                     begin
                         data = Marshal.restore(f.read)
