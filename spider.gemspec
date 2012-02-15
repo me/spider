@@ -21,7 +21,9 @@ Gem::Specification.new do |s|
       + Dir.glob('blueprints/**/*', File::FNM_DOTMATCH) \
       + Dir.glob('data/**/*') \
       + Dir.glob('lib/**/*.rb') \
-      + Dir.glob('views/**/*')
+      + Dir.glob('views/**/*') \
+      + Dir.glob('public/**/*') \
+      + Dir.glob('templates/**/*')
 #  s.test_files = []
 #  s.rdoc_options = ["--main", "README.rdoc"]
 #  s.extra_rdoc_files = ["CHANGELOG", "LICENSE", "README.rdoc"]
