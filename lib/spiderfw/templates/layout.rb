@@ -351,8 +351,13 @@ module Spider
                     src_dir = File.dirname(path)
                     app = a[:app]
                     if app
-                        app_relative_path = a[:app].relative_path
-                        app_path = app.path
+                        if app.is_a?(Spider::Home)
+                            app_relative_path = nil
+                            app_path = app.path
+                        else
+                            app_relative_path = a[:app].relative_path
+                            app_path = app.path
+                        end
                     elsif path.index(Spider::SpiderController.pub_path) == 0
                         app_relative_path = 'spider'
                         app_path = Spider::SpiderController.pub_path
@@ -386,7 +391,7 @@ module Spider
                         
                         FileUtils.mkdir_p(File.dirname(url_dest))
                         cachebuster = Spider.conf.get('css.cachebuster')
-                        new_url = "#{app_relative_path}/#{src_rel}"
+                        new_url = app_relative_path ? "#{app_relative_path}/#{src_rel}" : src_rel
                         if File.exist?(url_src)
                             mtime = File.mtime(url_src).to_i
                             if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest).to_i
