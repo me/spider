@@ -6,7 +6,7 @@ module Sass::Plugin::Configuration
     @default_options ||= {
       :css_location       => './public/stylesheets',
       :always_update      => false,
-      :always_check       => true,
+      :always_check       => false,
       :full_exception     => true,
       :cache_location     => File.join(Spider.paths[:tmp], 'sass', '.sass_cache')
       }.freeze
@@ -62,7 +62,8 @@ module Spider
                 config = Compass::Configuration::Data.new(:spider, options)
                 Compass.add_project_configuration(config)
                 compiler = Compass::Compiler.new(work_dir, File.dirname(src), File.dirname(dest), options)
-                compiler.compile(src, dest)
+                
+                compiler.compile(src, dest) if compiler.out_of_date?
             else
                 engine = Sass::Engine.for_file(src, {})
                 output = engine.render
