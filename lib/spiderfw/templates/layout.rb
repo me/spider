@@ -111,7 +111,7 @@ module Spider
                 'css.compress'
             end
             no_compress = @scene.__is_error_page || !Spider.conf.get(compress_config) || \
-                            ass[:runtime] || ass[:if_ie_lte] || ass[:media] || (use_cdn && ass[:cdn])
+                            ass[:no_compress] || ass[:runtime] || ass[:if_ie_lte] || ass[:media] || (use_cdn && ass[:cdn])
             
             if no_compress
                 if ass[:runtime]

@@ -452,6 +452,7 @@ module Spider
                     ass[:compressed] = base_url+cpr
                 end
             end
+            ass[:no_compress] = attributes[:"no-compress"]
             ass[:copy_dir] = attributes[:copy_dir]
             ass[:copy_dir] = ass[:copy_dir] =~ /\d+/ ? ass[:copy_dir].to_i : true
             [:gettext, :media, :if_ie_lte, :cdn].each do |key|
