@@ -6,14 +6,19 @@
 %>
 <forms:row error_condition="<%=error_condition%>" required="<%=required%>" element="<%=@attributes['element']%>">
     <forms:element_label element="<%=@attributes['element']%>" required="<%=required%>" inputs_hash="<%=inputs_hash%>"/>
-    <sp:run obj="@<%=inputs_hash%>[<%=@attributes['element']%>]" widget="<%=@attributes['element']%>">
-      <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="required" value="<%=(@attributes['required']=='true')? 'true' : ''%>" />
-      <%
-        (@attributes.keys - tag_attrs).each do |k|
-      %>
-      <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="<%=k%>" value="<%=@attributes[k]%>" />
-      <%
-        end
-      %>
-    </sp:run>
+    <div class="controls">
+      <sp:run obj="@<%=inputs_hash%>[<%=@attributes['element']%>]" widget="<%=@attributes['element']%>">
+        <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="required" value="<%=(@attributes['required']=='true')? 'true' : ''%>" />
+        <%
+          (@attributes.keys - tag_attrs).each do |k|
+        %>
+        <sp:attribute widget="<%=@attributes['element'][1..-1]%>" name="<%=k%>" value="<%=@attributes[k]%>" />
+        <%
+          end
+        %>
+      </sp:run>
+      <p sp:if="!@model.elements[<%=@attributes['element']%>].attributes[:description].blank?" class="help-block">
+        { @model.elements[<%=@attributes['element']%>].attributes[:description] }
+      </p>
+    </div>
 </forms:row>
