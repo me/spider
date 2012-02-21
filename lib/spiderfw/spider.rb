@@ -840,18 +840,43 @@ module Spider
             @configuration.include_set(mode)
             if Spider.conf.get('debugger.start') || File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                 init_debug
+                debug_txt = File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt')
+                if File.exists?(debug_txt)
+                    File.delete(debug_txt)
+                end
             end
             Spider.paths[:var] = File.join(Spider.paths[:var], mode) if mode != 'production'
             Bundler.require(:default, @runmode.to_sym) if defined?(Bundler)
         end
-        
+
         def init_debug
+            if Spider.conf.get('debugger.pry')
+                begin
+                    init_pry_debug
+                rescue Exception
+                    init_ruby_debug
+                end
+            else
+                init_ruby_debug
+            end
+        end
+
+        def init_pry_debug
+            require 'pry'
+            require 'pry-nav'
+            require 'pry-stack_explorer'
+            if File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
+                require 'pry-remote'
+            end
+            Pry::Commands.alias_command "l=", "whereami"
+        end
+        
+        def init_ruby_debug
             begin
                 require 'ruby-debug'
                 if File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                     Debugger.wait_connection = true
                     Debugger.start_remote
-                    File.delete(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                 else
                     Debugger.start
                 end

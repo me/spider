@@ -79,6 +79,9 @@ module Spider
     
     config_option 'debugger.start', _("Start the debugger"), :type => Spider::DataTypes::Bool,
         :default => lambda{ ['test', 'devel'].include?(Spider.runmode) ? true : false }
+    config_option 'debugger.pry', _("User Pry for debugging"), :type => Spider::Bool, :default => lambda{
+        RUBY_VERSION_PARTS[1] == '9'
+    }
     config_option 'profiling.enable', _("Enable on-request profiling"), :type => Spider::DataTypes::Bool
     config_option 'request.mutex', _("Respond to requests sequentially"), :default => false
     
