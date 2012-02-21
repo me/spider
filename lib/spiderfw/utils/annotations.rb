@@ -50,6 +50,7 @@ module Annotations
                             kl.define_annotation(name, &proc)
                         end
                     end
+                    @annotations ||= {}
                     @annotations.each do |method, vals|
                         vals.each do |k, args|
                             args = [args] unless args.is_a?(Array)
