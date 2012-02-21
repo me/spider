@@ -235,6 +235,7 @@ module Spider
         end
         
         def call_before(action='', *arguments)
+            return if respond_to?(:serving_static?) && self.serving_static?
             @call_path = action
             before(action, *arguments)
             catch(:done) do
@@ -251,6 +252,7 @@ module Spider
 
         
         def call_after(action='', *arguments)
+            return if respond_to?(:serving_static?) && self.serving_static?
             after(action, *arguments)
             catch(:done) do
                 d_next = dispatch_next(action)
