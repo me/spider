@@ -11,7 +11,12 @@ $sidebar_color: #DFDFDF;
 #admin {
     form.form-horizontal {
 
-        input,
+        .help-block {
+            max-width: 550px;    
+        }
+        
+
+        input[type="text"],
         textarea,
         select,
         .uneditable-input {
