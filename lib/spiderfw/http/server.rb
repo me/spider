@@ -125,8 +125,11 @@ module Spider; module HTTP
                 }
                 Spider.on_shutdown(&do_shutdown)
                 
-                thread.join if thread
-                ssl_thread.join if ssl_thread
+                begin
+                    thread.join if thread
+                    ssl_thread.join if ssl_thread
+                rescue SystemExit
+                end
             }
             if options[:daemonize]
                 require 'spiderfw/init'
