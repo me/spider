@@ -6,12 +6,16 @@ gemspec :development_group => :devel
 
 gem "json", :platforms => [:mri_18, :mri_19]
 gem "mongrel", '>= 1.2.0.pre2'
-gem "ripl", :platforms => [:ruby, :mingw]
-gem "ripl-irb", :platforms => [:ruby, :mingw]
-gem "ripl-multi_line", :platforms => [:ruby, :mingw]
+gem "pry"
+gem "pry-nav"
+gem "pry-stack_explorer"
 gem "cldr", '>= 0.1.6'
-gem "ruby-debug", :group => :devel, :platforms => [:mri_18]
-gem "ruby-debug19", :group => :devel, :platforms => [:mri_19], :require => 'ruby-debug'
+gem "pry"
+gem "pry-nav"
+gem "ruby-debug", :group => :devel, :platforms => [:ruby_18, :mingw_18, :jruby]
+gem "ruby-debug-pry", :require => "ruby-debug/pry", :group => :devel, :platforms => [:ruby_18, :mingw_18]
+gem "pry-stack_explorer", :group => :devel, :platforms => [:ruby_19, :mri_19]
+gem "pry-exception_explorer", :group => :devel, :platforms => [:ruby_19, :mri_19]
 gem "ruby-prof", :group => :devel
 gem "rspec", :group => :test
 gem "cucumber", '~> 0.10.0', :group => :test
