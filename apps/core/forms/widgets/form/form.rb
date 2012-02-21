@@ -84,6 +84,7 @@ module Spider; module Forms
                     @model = @obj.class
                 end
             end
+            @scene.model = @model
             if (@elements.is_a?(String))
                 @elements = @elements.split(',').map{ |e| @model.elements[e.strip.to_sym] }.reject{ |i| i.nil? }
                 @requested_elements = @elements
