@@ -1,4 +1,4 @@
-<div class="controls">
+<sp:template>
     <tpl:asset type="js" src="input.js" />
     <tpl:asset type="js" src="select.js" />
     <tpl:asset type="js" app="core/components" src="js/jquery/plugins/bsmselect/js/jquery.bsmselect.js" if="@multiple" />
@@ -13,4 +13,4 @@
             { @data[i].to_s }
         </option>
     </select>
-</div>
+</sp:template>

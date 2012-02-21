@@ -1,4 +1,4 @@
-<div class="controls">
+<sp:template>
     <tpl:asset type="js" src="ckeditor/ckeditor.js" compressed="true" copy_dir="true"/>
     <tpl:asset type="js" src="ckeditor/adapters/jquery.js" compressed="true" />
     <tpl:asset name="jquery" />
@@ -11,4 +11,4 @@
     <div class="css" style="display:none">{ @css }</div>
     <div class="options" style="display:none">{ @options }</div>
     <textarea name="{ @name }" id="input" rows="{ @rows }" cols="{ @cols }">{ @value }</textarea>
-</div>
+</sp:template>

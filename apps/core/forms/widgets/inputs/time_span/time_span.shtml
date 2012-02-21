@@ -1,4 +1,4 @@
-<div class="controls">
+<div class="time-span-input">
     <input type="text" name="{ @name }[val]" id="input" value="{ @formatted_value }" size="8" >
     <select name="{ @name }[unit]">
         <option value="sec" sp:attr-if="(@unit == 'sec'),selected">_(Seconds)</option>

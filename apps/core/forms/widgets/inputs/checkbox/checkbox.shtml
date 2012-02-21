@@ -1,3 +1,3 @@
-<div class="controls">
+<sp:template>
     <input type="checkbox" name="{ @name }" id="input" value="1" size="{ @size }" sp:attr-if="@value,checked">
-</div>
+</sp:template>

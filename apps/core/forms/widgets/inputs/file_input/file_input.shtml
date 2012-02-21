@@ -1,4 +1,4 @@
-<div class="controls">
+<sp:template>
     <tpl:asset type="css" src="css/file_input.css" />
     <tpl:asset type="js" src="input.js" />
     <tpl:asset type="js" src="file_input.js" />
@@ -9,4 +9,4 @@
     <div class="change"><span sp:if="@value && !@value.to_s.empty?"><span class="change-label">_(Change)</span>:</span>
         <input type="file" name="{ @name }[file]" id="input" value="{ @value }" size="{ @size }">
     </div>
-</div>
+</sp:template>
