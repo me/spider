@@ -106,7 +106,7 @@ class AppCommand < CmdParse::Command
         install = CmdParse::Command.new( 'install', false )
         install.short_desc = _("Install an app")
         install.options = CmdParse::OptionParserWrapper.new do |opt|
-            opt.on("--git", _("Use git for installing apps"), "-g"){ |r| @git = true }
+            opt.on("--[no-]git", _("Use git for installing apps"), "-g"){ |r| @git = r }
             opt.on("--no-dependencies", _("Don't install other apps this one depends on"), "-d"){ |d| 
                 @no_deps = true 
             }
