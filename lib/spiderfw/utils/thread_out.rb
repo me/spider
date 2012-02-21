@@ -27,6 +27,7 @@ module ThreadOut #:nodoc:
           Thread.current[:stdout] = io
           yield
           Thread.current[:stdout] = prev_out
+          io.rewind
       else
           Thread.current[:stdout] = io
           return prev_out
