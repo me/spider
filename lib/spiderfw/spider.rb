@@ -1,6 +1,7 @@
 require 'spiderfw/env'
 
 require 'rubygems'
+require 'etc'
 require 'backports'
 require 'find'
 require 'fileutils'
@@ -129,9 +130,13 @@ module Spider
             end
             @runmode = nil
             self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
-            
             load_configuration File.join($SPIDER_PATH, 'config')
+            user_rc = File.join(Etc.getpwuid.dir, '.spider.conf.yml')
+            if File.file?(user_rc)
+                load_configuration_file(user_rc)
+            end
             load_configuration File.join(@root, 'config')
+            self.runmode ||= $SPIDER_RUNMODE if $SPIDER_RUNMODE
             Locale.default = Spider.conf.get('i18n.default_locale')
             setup_env
             @logger = Spider::Logger
@@ -559,16 +564,20 @@ module Spider
                 when /^\./
                     next
                 when /\.(yaml|yml)$/
-                    begin
-                        @configuration.load_yaml(File.join(path, f))
-                    rescue ConfigurationException => exc
-                        if exc.type == :yaml
-                            err = "Configuration file #{path+f} is not valid YAML"
-                            Spider.output(err, :ERROR)
-                        else
-                            raise
-                        end
-                    end
+                    load_configuration_file(File.join(path, f))
+                end
+            end
+        end
+
+        def load_configuration_file(file)
+            begin
+                @configuration.load_yaml(file)
+            rescue ConfigurationException => exc
+                if exc.type == :yaml
+                    err = "Configuration file #{path+f} is not valid YAML"
+                    Spider.output(err, :ERROR)
+                else
+                    raise
                 end
             end
         end
