@@ -798,6 +798,7 @@ module Spider; module Model; module Mappers
         # * final model called
         # * final element called
         def get_deep_join(dotted_element)
+        def get_deep_join(dotted_element, join_type=nil)
             #return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
             parts = dotted_element.to_s.split('.').map{ |el| el.to_sym }
             current_model = @model
@@ -811,17 +812,17 @@ module Spider; module Model; module Mappers
                 raise "Can't find element #{part} in model #{current_model}" unless el
                 next if have_references?(el) && cnt == parts.length
                 if el.integrated?
-                    joins << current_model.mapper.get_join(el.integrated_from)
+                    joins << current_model.mapper.get_join(el.integrated_from, join_type)
                     current_model = el.integrated_from.type
                     el = current_model.elements[el.integrated_from_element]
                 end
                 if el.model? && can_join?(el)
-                    joins << current_model.mapper.get_join(el)
+                    joins << current_model.mapper.get_join(el, join_type)
                     current_model = el.model
                 end
             end
             while el.integrated? && !have_references?(el)
-                joins << current_model.mapper.get_join(el.integrated_from)
+                joins << current_model.mapper.get_join(el.integrated_from, join_type)
 #                joins << current_model.integrated_from.mapper.get_join(el.integrated_from_element)
                 current_model = el.integrated_from.type
                 el = current_model.elements[el.integrated_from_element]
@@ -871,7 +872,7 @@ module Spider; module Model; module Mappers
                     joins += field.joins
                     fields << [field, direction]
                 else
-                    el_joins, el_model, el = get_deep_join(order_element)
+                    el_joins, el_model, el = get_deep_join(order_element, :left)
                     if el.model?
                         if el_model.mapper.have_references?(el) || el.model.storage != storage
                             el.model.primary_keys.each do |pk|
