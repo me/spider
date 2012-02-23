@@ -797,7 +797,6 @@ module Spider; module Model; module Mappers
         # * joins
         # * final model called
         # * final element called
-        def get_deep_join(dotted_element)
         def get_deep_join(dotted_element, join_type=nil)
             #return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
             parts = dotted_element.to_s.split('.').map{ |el| el.to_sym }
