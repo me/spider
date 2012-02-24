@@ -1,22 +1,35 @@
 module Spider; module Model
     
+    # @abstract
     # The Mapper connects a BaseModel to a Storage; it fetches data from the Storage and converts it to objects,
     # and vice versa.
-    # It is not usually called directly; the BaseModel provides methods for interacting with the mapper.
-    # Its methods may be overridden with BaseModel#with_mapper, though.
-    
+    #
+    # Each model has one instance of the mapper, retrieved by {BaseModel.mapper}. The mapper has a pointer to
+    # its model, and one to a {Storage} instance, which is shared between all models accessing the same storage.
+    #
+    # The BaseModel provides methods for interacting with the mapper; it is not usually called directly,
+    # but it can be if needed (for example, to call the {#delete_all!} method, which is not exposed on the model).
+    #
+    # 
+    # Its methods may be overridden with BaseModel.with_mapper.
     class Mapper
+        # @return [BaseModel] pointer to the model instance
         attr_reader :model
+        # @return [Storage] pointer to the Storage instance
         attr_accessor :storage
-        # Mapper type (:db, :hash, etc.)
+        # A Symbolic name for the Mapper's subclass
+        # @return [Symbol]
         attr_reader :type
 
         # Returns whether this Mapper can write to the storage.
+        # return [true]
         def self.write?
             true
         end
         
         # Takes a BaseModel class and a storage instance.
+        # @param [BaseModel] model
+        # @param [Storage] storage
         def initialize(model, storage)
             @model = model
             @storage = storage
@@ -28,12 +41,15 @@ module Spider; module Model
         
         # Configuration methods
         
-        # Sets that the given elements will not be processed.
+        # Tells to the mapper that the given elements should not be handled.
+        # @param [*Element] Elements which should not be mapped
+        # @return [void]
         def no_map(*els)
             els.each{ |el| @no_map_elements[el] = true }
         end
         
         # Returns whether the given element can be handled by the mapper.
+        # @return [bool]
         def mapped?(element)
             element = element.name if (element.is_a? Element)
             element = @model.elements[element]
@@ -43,25 +59,28 @@ module Spider; module Model
             return true
         end
         
+        # @param [Symbol|Element] element
+        # @return [bool] True if the mapper can sort by this element
         def sortable?(element)
             element = element.name if (element.is_a? Element)
             element = @model.elements[element]
             mapped?(element) || element.attributes[:sortable]
         end
         
+        # Returns the base type corresponding to a type; see {Model.base_type}
+        # @return [Class] the base type corresponding to type
         def base_type(type)
             Spider::Model.base_type(type)
         end
         
         # Utility methods
         
-        # An array of mapped elements.
-        def map_elements # :nodoc:
-            @model.elements_array.select{ |el| !@no_map_elements[el.name] }
-        end
-        
-        # Calls the given action. Used by UnitOfWork tasks.
-        def execute_action(action, object, params={}) # :nodoc:
+        # Executes the given UnitOfWork action.
+        # @param [Symbol] action
+        # @param [BaseModel] object
+        # @param [Hash] params
+         # @return [void]
+        def execute_action(action, object, params={})
             case action
             when :save
                 if params[:force] == :insert
@@ -80,7 +99,9 @@ module Spider; module Model
             end
         end
         
-        # Converts hashes and arrays to QuerySets and BaseModel instances.
+        # Converts hashes and arrays inside an object to QuerySets and BaseModel instances.
+        # @param [BaseModel] obj
+        # @return [void]
         def normalize(obj)
             obj.no_autoload do
                 @model.elements.select{ |n, el| 
@@ -103,15 +124,13 @@ module Spider; module Model
         #   Info                                                    #
         #############################################################
         
-        # Returns true if information to find the given element is accessible to the mapper.
-        # (see for example DbMapper#have_references?)
+        # @abstract
+        # Returns true if information to find the given element is accessible to the mapper
+        # (see {DbMapper#have_references?} for an implementation)
+        # @param [Symbol|Element] element
+        # @return [bool] True if the storage has a field to write the element or a reference to the element (primary keys),
+        #                false otherwise
         def have_references?(element)
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Returns true if information to find the given element is accessible to the mapper, or to an integrated model's mapper.
-        # (see for example DbMapper#someone_have_references?)
-        def someone_have_references?(element)
             raise MapperError, "Unimplemented"
         end
         
@@ -122,8 +141,12 @@ module Spider; module Model
         
         # This method is called before a save operation, normalizing and preparing the object.
         # 'mode' can be :insert or :update.
-        # This method is well suited for being overridden, to add custom preprocessing of the object; just
-        # remember to call #super, or use #before_insert and #before_update instead.
+        # This method is well suited for being overridden (with {BaseModel.with_mapper}, 
+        # to add custom preprocessing of the object; just
+        # remember to call super, or use #before_insert and #before_update instead.
+        # @param [BaseModel] obj
+        # @param [Symbol] mode :insert or :update
+        # @return [void]
         def before_save(obj, mode)
             obj.trigger(:before_save, mode)
             normalize(obj)
@@ -166,6 +189,10 @@ module Spider; module Model
             end
         end
         
+        # Saves models that obj's model extends (see {BaseModel.extend_model})
+        # @param [BaseModel] obj
+        # @param [Symbol] mode
+        # @return [void]
         def save_extended_models(obj, mode)
             if @model.extended_models
                 @model.extended_models.each do |m, el|
@@ -179,6 +206,10 @@ module Spider; module Model
             end
         end
         
+        # Saves objects integrated in obj (see {BaseModel.integrate})
+        # @param [BaseModel] obj
+        # @param [Symbol] mode
+        # @return [void]
         def save_integrated(obj, mode)
             @model.elements_array.select{ |el| !el.integrated? && el.attributes[:integrated_model] && !el.attributes[:extended_model] }.each do |el|
                 sub_obj = obj.get(el)
@@ -187,44 +218,71 @@ module Spider; module Model
         end
         
         # Hook to provide custom preprocessing. The default implementation does nothing.
+        # 
+        # If needed, override using {BaseModel.with_mapper}
+        # @param [BaseModel] obj
+        # @return [void]
         def before_insert(obj)
         end
         
         # Hook to provide custom preprocessing. The default implementation does nothing.
+        # 
+        # If needed, override using {BaseModel.with_mapper}
+        # @param [BaseModel] obj
+        # @return [void]
         def before_update(obj)
         end
         
         # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
+        # 
+        # If needed, override using {BaseModel.with_mapper}
+        # @param [QuerySet] objects
+        # @return [void]
         def before_delete(objects)
         end
         
         # Called after a succesful save. 'mode' can be :insert or :update.
+        #
+        # If needed, override using {BaseModel.with_mapper}; but make sure to call super, since this method's
+        # implementation is not empty.
+        # Otherwise, override {#save_done}
+        # @param [BaseModel] obj
+        # @param [Symbol] mode :insert or :update
+        # @return [void]
         def after_save(obj, mode)
             obj.reset_modified_elements
             save_associations(obj, mode)
             
         end
         
-        # Hook called after a succesful save: the object is not in save mode.
+        # Hook called after a succesful save, when the object is not in save mode (see {BaseModel#save_mode}) anymore.
+        # 
+        # If needed, override using {BaseModel.with_mapper}
+        # @param [BaseModel] obj
+        # @param [Symbol] mode :insert or :update
+        # @return [void]
         def save_done(obj, mode)
         end
         
         # Hook to provide custom preprocessing. Will be passed a QuerySet. The default implementation does nothing.
+        #
+        # If needed, override using {BaseModel.with_mapper}
+        # @param [QuerySet] objects
+        # @return [void]
         def after_delete(objects)
         end
         
         # Saves the object to the storage.
+        # @param [BaseModel] obj
+        # @param [Model::Request] request Save only elements in the fiven request.
+        # @return [true]
         def save(obj, request=nil)
             prev_autoload = obj.autoload?
             obj.save_mode
             storage.in_transaction
             save_mode = determine_save_mode(obj)
             before_save(obj, save_mode)
-            # @model.elements_array.select{ |el| el.attributes[:integrated_model] }.each do |el|
-            #     obj.get(el).save if obj.element_modified?(el)
-            # end
-            
-            if (save_mode == :update)
+            if save_mode == :update
                 do_update(obj)
             else
                 do_insert(obj)
@@ -241,6 +299,9 @@ module Spider; module Model
             true
         end
         
+        # Determines whether the object needs to be inserted or updated.
+        # @param [BaseModel] obj
+        # @return [Symbol] :insert or :update
         def determine_save_mode(obj)
             if @model.extended_models && !@model.extended_models.empty?
                 is_insert = false
@@ -263,6 +324,8 @@ module Spider; module Model
         
 
         # Elements that are associated to this one externally.
+        # @return [Array] An Array of elements for which the storage does not hold keys (see {#have_references?}),
+        #                 and which must be associated through other ways
         def association_elements
             return [] if Spider::Model.unit_of_work_running?
             els = @model.elements_array.select{ |el| 
@@ -271,7 +334,8 @@ module Spider; module Model
             els
         end
         
-        # Saves object associations.
+        # Saves externally associated objects (the ones corresponding to elements returned by #association_elements)
+        # @return [void]
         def save_associations(obj, mode)
             association_elements.select{ |el| obj.element_has_value?(el) }.each do |el|
                 save_element_associations(obj, el, mode)
@@ -279,6 +343,10 @@ module Spider; module Model
         end
         
         # Deletes all associations from the given object to the element.
+        # @param [BaseModel] obj
+        # @param [Element] element
+        # @param [BaseModel] associated The currently associated objects
+        # @return [void]
         def delete_element_associations(obj, element, associated=nil)
             if element.attributes[:junction]
                 condition = {element.attributes[:reverse] => obj.primary_keys}
@@ -307,6 +375,10 @@ module Spider; module Model
         end
         
         # Saves the associations from the given object to the element.
+        # @param [BaseModel] obj
+        # @param [Element] element
+        # @param [Symbol] mode :insert or :update
+        # @return [void]
         def save_element_associations(obj, element, mode)
             our_element = element.attributes[:reverse]
             val = obj.get(element)
@@ -380,6 +452,8 @@ module Spider; module Model
         end
         
         # Saves the given object and all objects reachable from it.
+        # @param [BaseModel] root The root object
+        # @return [void]
         def save_all(root)
             UnitOfWork.new do |uow|
                 uow.add(root)
@@ -388,6 +462,8 @@ module Spider; module Model
         end
         
         # Inserts the object in the storage.
+        # @param [BaseModel] obj
+        # @return [void]
         def insert(obj)
             prev_autoload = obj.save_mode()
             storage.in_transaction
@@ -399,6 +475,8 @@ module Spider; module Model
         end
         
         # Updates the object in the storage.
+        # @param [BaseModel] obj
+        # @return [void]
         def update(obj)
             prev_autoload = obj.save_mode()
             storage.in_transaction
@@ -409,15 +487,23 @@ module Spider; module Model
             obj.autoload = prev_autoload
         end
         
-        # FIXME: remove?
-        def bulk_update(values, conditon) # :nodoc:
+        # @abstract
+        # Executes a mass update for given condition.
+        # @param [Hash] values
+        # @param [Condition] condition
+        # @return [nil]
+        def bulk_update(values, conditon)
         end
         
         # Deletes an object, or objects according to a condition.
         # Will not delete with null condition (i.e. all objects) unless force is true
-        # Options can be:
-        # :keep_single_reverse: don't delete associations that have a single reverse.
-        # Useful when an object will be re-inserted with the same keys.
+        #
+        # @param [BaseModel|Condition] obj_or_condition
+        # @param [bool] force
+        # @param [Hash] options Available options:
+        #                       * :keep_single_reverse: don't delete associations that have a single reverse.
+        #                         Useful when an object will be re-inserted with the same keys.
+        # @return [void]
         def delete(obj_or_condition, force=false, options={})
             
             def prepare_delete_condition(obj)
@@ -484,56 +570,42 @@ module Spider; module Model
         end
         
         # Deletes all objects from the storage.
+        # @return [void]
         def delete_all!
             all = @model.all
             #all.fetch_window = 100
             delete(all, true)
         end
         
-        def truncate!
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Actual interaction with the storage. May be implemented by subclasses.
-        def do_delete(obj, force=false)
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Actual interaction with the storage. May be implemented by subclasses.
-        def do_insert(obj)
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Actual interaction with the storage. May be implemented by subclasses.
-        def do_update(obj)
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Actual interaction with the storage. May be implemented by subclasses.
-        def lock(obj=nil, mode=:exclusive)
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Actual interaction with the storage. May be implemented by subclasses.
-        def sequence_next(name)
-            raise MapperError, "Unimplemented"
-        end
+
         
         ##############################################################
         #   Load (and find)                                          #
         ##############################################################        
         
         # Loads an element. Other elements may be loaded as well, according to lazy groups.
+        # @param [QuerySet] objects Objects for which to load given element
+        # @param [Element] element
+        # @return [QuerySet]
         def load_element(objects, element)
             load(objects, Query.new(nil, [element.name]))
         end
         
         # Loads only the given element, ignoring lazy groups.
+        # @param [QuerySet] objects Objects for which to load given element
+        # @param [Element] element
+        # @return [QuerySet]
         def load_element!(objects, element)
             load(objects, Query.new(nil, [element.name]), :no_expand_request => true)
         end
         
         # Loads elements of given objects according to query.request.
+        #
+        # See also {#find} 
+        # @param [QuerySet] objects Objects to expand
+        # @param [Query] query
+        # @param [Hash] options
+        # @return [QuerySet]
         def load(objects, query, options={})
             objects = queryset_siblings(objects) unless objects.is_a?(QuerySet)
             request = query.request
@@ -545,6 +617,12 @@ module Spider; module Model
         end
         
         # Finds objects according to a query, merging the results into a query_set if given.
+        # 
+        # @param [Query] query
+        # @param [QuerySet] query_set QuerySet to merge results into, if given
+        # @param [Hash] options Options can be:
+        #                       * :no_expand_request: don't expand request using lazy loading groups
+        # @return [QuerySet]
         def find(query, query_set=nil, options={})
             set = nil
             Spider::Model.with_identity_mapper do |im|
@@ -621,9 +699,166 @@ module Spider; module Model
             end
             return set
         end
+
+        # Does a count query on the storage for given condition
+        # @param [Condition]
+        # @return [Fixnum]
+        def count(condition)
+            query = Query.new(condition)
+            result = fetch(query)
+            return result.length
+        end
+        
+ 
+        
+        # Returns the siblings, if any, of the object, in its ancestor QuerySet.
+        # 
+        # Siblings are objects in the same branch of the object tree.
+        # 
+        # This method is used to load related data, avoiding N+1 queries
+        # @param [BaseModel|QuerySet] obj
+        # @return [QuerySet]
+        def queryset_siblings(obj)
+            return QuerySet.new(@model, obj) unless obj._parent
+            orig_obj = obj
+            path = []
+            seen = {obj => true}
+            while (obj._parent && !seen[obj._parent])
+                path.unshift(obj._parent_element) if (obj._parent_element) # otherwise it's a query set
+                obj = obj._parent
+                seen[obj] = true
+            end
+            res = path.empty? ? obj : obj.all_children(path)
+            raise RuntimeError, "Broken object path" if (obj && !path.empty? &&  res.length < 1)
+            res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
+            res = res.select{ |obj| obj.primary_keys_set? }
+            return res
+        end
+        
+        # Prepares a value going to be bound to an insert or update statement
+        # @param [Class] type Value's type
+        # @param [Object] value
+        # @param [Symbol] save_mode :insert, :update, or generically :save
+        # @return [Object]
+         def map_save_value(type, value, save_mode=:save)
+             value = map_value(type, value, :save)
+             return @storage.value_for_save(Model.simplify_type(type), value, save_mode)
+         end
+
+        # Prepares a value for a condition.
+        # @param [Class] type Value's type
+        # @param [Object] value
+        # @param [Symbol] save_mode :insert, :update, or generically :save
+        # @return [Object]
+        def map_condition_value(type, value)
+            if value.is_a?(Range)
+                return Range.new(map_condition_value(type, value.first), map_condition_value(type, value.last))
+            end
+            return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
+            value = map_value(type, value, :condition)
+            return @storage.value_for_condition(Model.simplify_type(type), value)
+        end
+
+        # Calls {Storage#value_to_mapper}. It is repeated in Mapper for easier overriding.
+        # @param [Class] type Value's type
+        # @param [Object] value
+        # @return [Object]
+        def storage_value_to_mapper(type, value)
+            storage.value_to_mapper(type, value)
+        end
         
         
-        def merge_object(set, obj, request) # :nodoc:
+        # Converts a value into one that is accepted by the storage.
+        # @param [Class] type Value's type
+        # @param [Object] value
+        # @param [Symbol] save_mode :insert, :update, or generically :save
+        # @return [Object]
+        def map_value(type, value, mode=nil)
+            return value if value.nil?
+            if type == Spider::DataTypes::PK
+                value = value.obj if value.is_a?(Spider::DataTypes::PK)
+            elsif type < Spider::DataType
+                value = type.from_value(value) unless value.is_a?(type)
+                value = value.map(self.type)
+            elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
+                value = type.primary_keys.map{ |key| value.send(key.name) }
+            end
+            value
+        end
+        
+
+        # Converts a storage value back to the corresponding base type or DataType.
+        # @param [Class] type Value's type
+        # @param [Object] value
+        # @return [Object]
+        def map_back_value(type, value)
+            value = value[0] if value.class == Array
+            value = storage_value_to_mapper(Model.simplify_type(type), value)
+
+            if type <= Spider::DataTypes::PK
+                value = value.is_a?(Spider::DataTypes::PK) ? value.obj : value
+            elsif type < Spider::DataType && type.maps_back_to
+                type = type.maps_back_to
+            end
+            case type.name
+            when 'Fixnum'
+                return value ? value.to_i : nil
+            when 'Float'
+                return value ? value.to_f : nil
+            end
+            return nil unless value
+            case type.name
+            when 'Date', 'DateTime'
+                return type.parse(value) unless value.is_a?(Date)
+            end
+            if type < Spider::DataType && type.force_wrap?
+                value = type.from_value(value)
+            end
+            return value
+        end        
+        
+        # Unit of work
+        
+        # @abstract
+        # Returns task dependecies for the UnitOfWork. May be implemented by subclasses.
+        # @param [MapperTask] task
+        # @return [Array] Dependencies for the task
+        def get_dependencies(task)
+            return []
+        end
+        
+        # @param [BaseModel] obj
+        # @param [Symbol] action UnitOfWork action
+        # @return [Array] Objects to be added to the UnitOfWork when obj is added
+        def children_for_unit_of_work(obj, action)
+            children = []
+            obj.class.elements_array.each do |el|
+                next unless obj.element_has_value?(el)
+                next unless el.model?
+                next unless obj.element_modified?(el)
+                val = obj.get(el)
+                next unless val.modified?
+                children << val
+            end
+            children
+        end
+
+        protected
+
+        # @return [Array] An array of all elements which are handled by the mapper
+        def map_elements
+            @model.elements_array.select{ |el| !@no_map_elements[el.name] }
+        end
+
+
+        # Given a QuerySet and a model object, searches for an object with the same keys
+        # in the QuerySet; if found, merges the object, otherwise, adds the object to the set
+        #
+        # @param [QuerySet] set
+        # @param [BaseModel] obj Object to merge
+        # @param [Model::Request] request Only elements in request will be merged
+        # @return [void]
+        def merge_object(set, obj, request)
             search = {} 
             @model.primary_keys.each{ |k| search[k.name] = obj.get(k.name) }
             obj_res = set.find(search)  # FIXME: find a better way
@@ -637,8 +872,14 @@ module Spider; module Model
                 obj
             end
         end
-        
-        def find_with_superclass(query, set=nil, options={}) # :nodoc:
+
+        # Like #find, but also retrieves instances of the object's superclass (assuming it is a BaseModel as well)
+        # 
+        # @param [Query] query
+        # @param [QuerySet] set
+        # @param [Hash] options
+        # @return [QuerySet]
+        def find_with_superclass(query, set=nil, options={})
             q = query.clone
             polym_request = Request.new
             polym_condition = Condition.new
@@ -656,26 +897,12 @@ module Spider; module Model
             end
             return set
         end
-        
-        # Does a count query on the storage for given condition
-        def count(condition)
-            query = Query.new(condition)
-            result = fetch(query)
-            return result.length
-        end
-        
-        # Actual interaction with the storage. Should be implemented by subclasses.
-        def fetch(query)
-            raise MapperError, "Unimplemented"
-        end
-        
-        
-        # Transforms a Storage result into an object. Should be implemented by subclasses.
-        def map(request, result, obj_or_model)
-            raise MapperError, "Unimplemented"
-        end
-        
-        # Loads external elements, according to query,  and merges them into an object or a QuerySet
+
+
+        # Loads external elements, according to query, and merges them into an object or a QuerySet
+        # @param [QuerySet|BaseModel] objects
+        # @param [Query] query
+        # @return [QuerySet]
         def get_external(objects, query)
             objects = queryset_siblings(objects) unless objects.is_a?(QuerySet)
             return objects if objects.length < 1
@@ -711,6 +938,10 @@ module Spider; module Model
         end
         
         # Loads an external element, according to query, and merges the result into an object or QuerySet.
+        # @param [Element] element
+        # @param [Query] query
+        # @param [QuerySet] result
+        # @return [QuerySet]
         def get_external_element(element, query, objects)
 #            Spider::Logger.debug("Getting external element #{element.name} for #{@model}")
             return load_element(objects, element) if have_references?(element)
@@ -733,6 +964,10 @@ module Spider; module Model
         
         # Given the results of a query for an element, and a set of objects, associates
         # the result with the corresponding objects.
+        # @param [Element] element
+        # @param [QuerySet] objects
+        # @param [QuerySet] result
+        # @return [QuerySet]
         def associate_external(element, objects, result)
 #            result.reindex
             objects.element_loaded(element.name)
@@ -751,92 +986,15 @@ module Spider; module Model
             end
             return objects
         end
-        
-        # Returns the siblings, if any, of the object, in its ancestor QuerySet.
-        def queryset_siblings(obj)
-            return QuerySet.new(@model, obj) unless obj._parent
-            orig_obj = obj
-            path = []
-            seen = {obj => true}
-            while (obj._parent && !seen[obj._parent])
-                path.unshift(obj._parent_element) if (obj._parent_element) # otherwise it's a query set
-                obj = obj._parent
-                seen[obj] = true
-            end
-            res = path.empty? ? obj : obj.all_children(path)
-            raise RuntimeError, "Broken object path" if (obj && !path.empty? &&  res.length < 1)
-            res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
-            res = res.select{ |obj| obj.primary_keys_set? }
-            return res
-        end
-        
-        # Prepares a value going to be bound to an insert or update statement
-         def map_save_value(type, value, save_mode=:save)
-             value = map_value(type, value, :save)
-             return @storage.value_for_save(Model.simplify_type(type), value, save_mode)
-         end
 
-        # Prepares a value for a condition.
-        def map_condition_value(type, value)
-            if value.is_a?(Range)
-                return Range.new(map_condition_value(type, value.first), map_condition_value(type, value.last))
-            end
-            return value if ( type.class == Class && type.subclass_of?(Spider::Model::BaseModel) )
-            value = map_value(type, value, :condition)
-            return @storage.value_for_condition(Model.simplify_type(type), value)
-        end
-
-        def storage_value_to_mapper(type, value)
-            storage.value_to_mapper(type, value)
-        end
-        
-        
-        # Converts a value in one accepted by the storage.
-        def map_value(type, value, mode=nil)
-            return value if value.nil?
-            if type == Spider::DataTypes::PK
-                value = value.obj if value.is_a?(Spider::DataTypes::PK)
-            elsif type < Spider::DataType
-                value = type.from_value(value) unless value.is_a?(type)
-                value = value.map(self.type)
-            elsif type.class == Class && type.subclass_of?(Spider::Model::BaseModel)
-                value = type.primary_keys.map{ |key| value.send(key.name) }
-            end
-            value
-        end
-        
-
-        # Converts a storage value back to the corresponding base type or DataType.
-        def map_back_value(type, value)
-            value = value[0] if value.class == Array
-            value = storage_value_to_mapper(Model.simplify_type(type), value)
-
-            if type <= Spider::DataTypes::PK
-                value = value.is_a?(Spider::DataTypes::PK) ? value.obj : value
-            elsif type < Spider::DataType && type.maps_back_to
-                type = type.maps_back_to
-            end
-            case type.name
-            when 'Fixnum'
-                return value ? value.to_i : nil
-            when 'Float'
-                return value ? value.to_f : nil
-            end
-            return nil unless value
-            case type.name
-            when 'Date', 'DateTime'
-                return type.parse(value) unless value.is_a?(Date)
-            end
-            if type < Spider::DataType && type.force_wrap?
-                value = type.from_value(value)
-            end
-            return value
-        end        
-        
         ##############################################################
         #   Strategy                                                 #
         ##############################################################
 
+        # Ensures a Query is ready for being used by the mapper
+        # @param [Query] query
+        # @param [BaseModel] obj Optional object; if passed, will be used to ensure the Query Request corresponds to the object
+        # @return [Query] The prepared query
         def prepare_query(query, obj=nil)
             if (query.request.polymorphs?)
                 conds = split_condition_polymorphs(query.condition, query.request.polymorphs.keys) 
@@ -852,6 +1010,11 @@ module Spider; module Model
             return query
         end
         
+        # Helper method to split conditions for polymorphic elements
+        # into the correct classes
+        # @param [Condition] condition
+        # @param [Array] polymorphs Array of polymorphic model classes
+        # @return [Array] An array of conditions
         def split_condition_polymorphs(condition, polymorphs)
             conditions = {}
             return conditions if condition.polymorph && polymorphs.include?(condition.polymorph)
@@ -884,6 +1047,9 @@ module Spider; module Model
         
         
         # Normalizes a request.
+        # @param [Request] request
+        # @param [BaseModel] obj
+        # @return [void]
         def prepare_query_request(request, obj=nil)
             @model.primary_keys.each do |key|
                 request[key] = true
@@ -900,7 +1066,11 @@ module Spider; module Model
             new_requests.each{ |r| request.request(r) }
         end
         
-        # Adds lazy groups to request.
+        # Adds lazy groups to request. That is, load more data than was requested, to avoid making more
+        # trips to the storage.
+        # @param [Request] request
+        # @param [BaseModel] obj Optional model instance
+        # @return [void]
         def expand_request(request, obj=nil)
             lazy_groups = []
             request.each do |k, v|
@@ -924,6 +1094,8 @@ module Spider; module Model
         end
         
         # Preprocessing of the condition
+        # @param [Condition] condition
+        # @return [Condition] The preprocessed condition
         def preprocess_condition(condition)
             model = condition.polymorph ? condition.polymorph : @model
             condition.simplify
@@ -1044,24 +1216,85 @@ module Spider; module Model
             end
             return condition
         end
-        
-        # Returns task dependecies for the UnitOfWork. May be implemented by subclasses.
-        def get_dependencies(task)
-            return []
+
+        # @abstract
+        # Returns true if information to find the given element is accessible to the mapper, or to an integrated model's mapper
+        # (see also {#have_references?}, and  {DbMapper#someone_have_references?} for an implementation).
+        #
+        # @param [Symbol|Element] element
+        # @return [bool] True if this mapper, or an integrated model's mapper, has references, false otherwise.
+        def someone_have_references?(element)
+            raise MapperError, "Unimplemented"
+        end
+
+        # Abstract methods
+
+        # @abstract
+        # Deletes all data associated to the model from the storage
+        # @return [void]
+        def truncate!
+            raise MapperError, "Unimplemented"
         end
         
-        def children_for_unit_of_work(obj, action)
-            children = []
-            obj.class.elements_array.each do |el|
-                next unless obj.element_has_value?(el)
-                next unless el.model?
-                next unless obj.element_modified?(el)
-                val = obj.get(el)
-                next unless val.modified?
-                children << val
-            end
-            children
+        # @abstract
+        # Actual interaction with the storage. May be implemented by subclasses.
+        # @return [void]
+        def do_delete(obj, force=false)
+            raise MapperError, "Unimplemented"
         end
+        
+        # @abstract
+        # Actual interaction with the storage. May be implemented by subclasses.
+        # @return [void]
+        def do_insert(obj)
+            raise MapperError, "Unimplemented"
+        end
+        
+        # @abstract
+        # Actual interaction with the storage. May be implemented by subclasses.
+        # @return [void]
+        def do_update(obj)
+            raise MapperError, "Unimplemented"
+        end
+        
+        # @abstract
+        # Actual interaction with the storage. May be implemented by subclasses.
+        # @return [void]
+        def lock(obj=nil, mode=:exclusive)
+            raise MapperError, "Unimplemented"
+        end
+        
+        # @abstract
+        # Actual interaction with the storage. May be implemented by subclasses.
+        # @param [Symbol] name
+        # @return [void]
+        def sequence_next(name)
+            raise MapperError, "Unimplemented"
+        end
+
+        # @abstract
+        # Actual interaction with the storage. Should be implemented by subclasses.
+        # @param [Query]
+        # @return [QuerySet]
+        def fetch(query)
+            raise MapperError, "Unimplemented"
+        end
+
+        # @abstract
+        # Transforms a Storage result into an object. Should be implemented by subclasses.
+        # @return [BaseModel]
+        def map(request, result, obj_or_model)
+            raise MapperError, "Unimplemented"
+        end
+
+        # @abstract
+        # @param [Element|Symbol] element
+        # @param [Condition]
+        # @return [Fixnum] The max value for an element   
+        def max(element, condition=nil)
+            raise "Unimplemented"
+        end
+    
         
         
     end
@@ -1070,10 +1303,21 @@ module Spider; module Model
     #   MapperTask                                               #
     ##############################################################
     
-    # The MapperTask is used by the UnitOfWork.
+    # The MapperTask is used by the UnitOfWork. It represents an action that needs to be done,
+    # and allows to specify dependences between tasks
     class MapperTask
-        attr_reader :dependencies, :object, :action, :params
+        # @return [Array] Array of MapperTasks this one depends on
+        attr_reader :dependencies
+        # @return [BaseModel] The task's subject
+        attr_reader :object 
+        # @return [Symbol] The task's action
+        attr_reader :action
+        # @return [Hash] Params for the task
+        attr_reader :params
        
+        # @param [BaseModel] object The task's subject
+        # @param [Symbol] action
+        # @param [Hash] params
         def initialize(object, action, params={})
             @object = object
             @action = action
@@ -1081,17 +1325,23 @@ module Spider; module Model
             @dependencies = []
         end
         
+        # Addes a dependency to the Task
+        # @param [MapperTask] task
+        # @return [void]
         def <<(task)
             @dependencies << task
         end
         
-        def execute()
+        # Makes the objects' mapper run the task
+        # @return [void]
+        def execute
             debug_str = "Executing #{@action} on #{@object.inspect}"
             debug_str += " (#{@params.inspect})" unless @params.empty?
             Spider::Logger.debug debug_str
             @object.mapper.execute_action(@action, @object, @params)
         end
         
+        # @return [bool] True if the other task has the same object, action and params, false otherwise
         def eql?(task)
             return false unless task.class == self.class
             return false unless (task.object == self.object && task.action == self.action)
@@ -1101,10 +1351,12 @@ module Spider; module Model
             return true
         end
         
+        # @return [String] Hash for keying
         def hash
             return @object.hash + @action.hash
         end
         
+        # @return [bool] Same as #eql?
         def ===(task)
             return eql?(task)
         end
@@ -1113,6 +1365,7 @@ module Spider; module Model
         #     "#{@action} on #{@object} (#{object.class})\n"
         # end
         
+        # @return [String] A textual representation of the Task
         def inspect
             if (@action && @object)
                 str = "#{@action} on #{@object}##{@object.object_id} (#{object.class})"
@@ -1132,25 +1385,16 @@ module Spider; module Model
         
     end
     
-    ##############################################################
-    #   Aggregates                                               #
-    ##############################################################
-    
-    def max(element, condition=nil)
-        raise "Unimplemented"
-    end
-    
+ 
     
     ##############################################################
     #   Exceptions                                               #
     ##############################################################
     
     # Generic Mapper error.
-    
     class MapperError < RuntimeError; end
     
     # Generic Mapper error regarding an element.
-    
     class MapperElementError < MapperError
         def initialize(element)
             @element = element
@@ -1178,14 +1422,13 @@ module Spider; module Model
     end
     
     # A required element has no value
-    
     RequiredError = MapperElementError.create_subclass(_("Element %s is required"))
     
     # An uniqueness constraint has been violated.
-    
     NotUniqueError = MapperElementError.create_subclass(_("Another item with the same %s is already present"))
 
     
+    # Helper module to hold methods overridden by {BaseModel.with_mapper}
     module MapperIncludeModule
         
         def self.included(mod)

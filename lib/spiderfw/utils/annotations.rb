@@ -64,7 +64,8 @@ module Annotations
         super
     end
 
-    class Annotator #:nodoc:
+    # @private
+    class Annotator
 
         def initialize(owner) 
             @owner = owner

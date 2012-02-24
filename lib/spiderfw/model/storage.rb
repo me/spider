@@ -1,10 +1,17 @@
 #require 'spiderfw/model/storage/db/connectors/odbc'
 
 module Spider; module Model
-    
+
+    # The namespace for classes related to storage.
+    # 
+    # See {BaseStorage}.
     module Storage
         
         
+        # Returns an instance of a BaseStorage subclass, according to type and type-specific url
+        # @param [String] type The type of storage. Can be 'db' (for DataBase storages),
+        #                      'doc' (for Document storages), or 'stub' (for a Test stub).
+        # @param [String] url  A connection url, specific to the storage.
         def self.get_storage(type, url)
             Thread.current[:storages] ||= {}
             Thread.current[:storages][type] ||= {}

@@ -6,8 +6,7 @@ module Spider; module Model; module Storage; module Db
     
     # Represents a DB connection, and provides methods to execute structured queries on it.
     # This is the class that generates the actual SQL; vendor specific extensions may override the 
-    # generic SQL methods.
-    
+    # generic SQL methods.    
     class DbStorage < Storage::BaseStorage
         @reserved_keywords = ['from', 'order', 'where', 'to']
         @type_synonyms = {}
@@ -26,15 +25,19 @@ module Spider; module Model; module Storage; module Db
 
         class << self
             # An Array of keywords that can not be used in schema names.
+            # @return [Array]
             attr_reader :reserved_keywords
             # An Hash of DB type equivalents.
+            # @return [Hash]
             attr_reader :type_synonyms
-            # Type conversions which do not lose data. See also #safe_schema_conversion?
+            # Type conversions which do not lose data. See also {#safe_schema_conversion?}
+            # @return [Hash]
             attr_reader :safe_conversions
             # Types for which we can safely ignore length in conversions
+            # @return [Array]
             attr_reader :fixed_length_types
 
-
+            # @return [Symbol] A label for the storage's class.
             def storage_type
                 :db
             end

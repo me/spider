@@ -11,18 +11,24 @@ module Spider; module Model
     #   mh['test.name'] = 'Devilish Kitty'
     #     => {:test => {:name => 'Devilish Kitty', :color => 'black'}}
     class ModelHash < Hash
-        alias :modelhash_orig_set :[]= # :nodoc:
+        # Original hash value assignment
+        alias :modelhash_orig_set :[]=
         
+        # @param [Hash] hash A Hash to get data from
         def initialize(hash=nil)
             super()
             merge!(hash) if (hash && hash.is_a?(Hash))
         end
         
         # Returns a new instance when needed by an assignement. May be overridden by subclasses.
+        # @return [ModelHash]
         def get_deep_obj
             return self.class.new
         end
         
+        # Value assignment
+        # @param [String|Symbol|Element] key
+        # @param [Object] value
         def []=(key, val)
             if (val.is_a?(BaseModel))
                 n = self.class.new
@@ -43,6 +49,8 @@ module Spider; module Model
             end
         end
         
+        # Value retrieval
+        # @param [String|Symbol|Element] key
         def [](key)
             # TODO: deep
             key = key.name if key.is_a?(Element)

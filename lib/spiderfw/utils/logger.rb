@@ -224,7 +224,7 @@ module Spider
             end
         end
         
-        class LogDevice < Logger::LogDevice
+        class LogDevice < ::Logger::LogDevice
             
             def shift_log_period(now)
                 super

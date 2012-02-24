@@ -2,32 +2,46 @@ require 'spiderfw/model/model_hash'
 
 module Spider; module Model
     
-    # The Condition behaves like a ModelHash, and as such contains key-value pairs:
+    # The Condition behaves like a {ModelHash}, and as such contains key-value pairs:
     # a simple equality condition can be set with
     #   condition[:element_name] = value
     # The Condition object also holds comparisons: a comparison different from equality can be set with
     #   condition.set(:element_name, '>', value)
     # Finally, it contains subconditions, which can be added with
     #   conditions << subcondition
-    # Subconditions will be created automatically when using #set twice on the same element.
-    # If you want to change the condition, use #delete and set it again.
+    # Subconditions will be created automatically when using {#set} twice on the same element.
+    # If you want to change the condition, use {#delete} and set it again.
+    #
+    # Conditions also support an SQL-like block syntax for setting conditions:
+    #   books_condition = Condition.new{ |book| 
+    #    ((book.year < 1970) | (book.price > 1000)) & (book.author.name .like 'John')  
+    #   }
     # 
     # The Condition object, like the Request, doesn't hold a reference to a model; so no check will be made
     # that the conditions elements are meaningful.
     
     class Condition < Hash
         # The top level conjunction for the Condition (:or or :and; new Conditions are initialized with :or)
+        # @return [Symbol] :and | :or
         attr_accessor :conjunction
         # Polymorph model: used to tell the mapper the condition is on a subclass of the queried model.
+        # @return [Class<BaseModel]
         attr_accessor :polymorph
         # An hash of comparisons for each element name
+        # @return [Hash]
         attr_reader :comparisons
         # An Array of subconditions
+        # @return [Array]
         attr_reader :subconditions
-        attr_accessor :conjunct # :nodoc: a hack to keep track of which is the last condition in blocks
+        # @private
+        # A pointer to the last Condition used in condition blocks
+        # @return [Condition]
+        attr_accessor :conjunct 
+        # Original hash value assignment
         alias :hash_set :[]= # :nodoc:
         
         # See #ModelHash.get_deep_obj
+        # @return [Condition]
         def get_deep_obj # :nodoc:
             c = self.class.new
             c.conjunction = @conjunction
@@ -40,12 +54,18 @@ module Spider; module Model
             str += Regexp.quote(op)
         end
         
+        # @private
         # Regexp to parse comparison operators
-        def self.comparison_operators_regexp # :nodoc:
+        # @return [Regexp]
+        def self.comparison_operators_regexp
             @comparison_operators_regexp
         end
         
-        # Used by and and or methods
+        # @private
+        # Used by {Condition.and} and {Condition.or} methods
+        # @param [Symbol] conjunction
+        # @param [Condition] a
+        # @param [Condition] b
         def self.conj(conjunction, a, b) # :nodoc:
             c = Condition.new
             c.conjunction = conjunction
@@ -54,7 +74,8 @@ module Spider; module Model
         end
         
         # Instantiates a Condition with :and conjunction.
-        # See #new for arguments.
+        # See {Condition.new} for arguments.
+        # @return [Condition]
         def self.and(*params, &proc)
             c = self.new(*params, &proc)
             c.conjunction = :and
@@ -62,7 +83,8 @@ module Spider; module Model
         end
         
         # Instantiates a Condition with :or conjunction. 
-        # See #new for arguments.
+        # See {Condition.new} for arguments.
+        # @return [Condition]
         def self.or(*params, &proc)
             c = self.new(*params, &proc)
             c.conjunction = :or
@@ -70,7 +92,9 @@ module Spider; module Model
         end
         
         # Instantiates a Condition with no conjunction.
-        def self.no_conjunction(*params, &proc) # :nodoc:
+        # See {Condition.new} for arguments.
+        # @return [Condition]
+        def self.no_conjunction(*params, &proc)
             c = self.new(*params, &proc)
             c.conjunction = nil
             return c
@@ -101,12 +125,14 @@ module Spider; module Model
         #
         # Example:
         #   condition.parse_block{ (element1 == val1) & ( (element2 > 'some string') | (element3 .not nil) ) }
+        #
         # All comparisons must be parenthesized; and/or conjunctions are expressed with a single &/|.
         #
         # Available comparisions are: ==, >, <, >=, <=, .not, .like, .ilike (case insensitive like).
         #
         # _Note:_ for .like and .ilike comparisons, the SQL '%' syntax must be used.
         #
+        # @param [Proc] proc The condition block
         def parse_block(&proc)
             res = nil
             if proc.arity == 1
@@ -122,6 +148,7 @@ module Spider; module Model
             @polymorph = res.polymorph
         end
         
+        # @return [Array] An array of all conditions, expressed as [key, value, comparison]
         def conditions_array
             self.hash_clone.map do |k, v|
                 k = k.to_sym if k.respond_to?(:to_sym)
@@ -130,6 +157,7 @@ module Spider; module Model
         end
         
         # Yields each key, value and comparison.
+        # @return void
         def each_with_comparison
             self.each do |k, v|
                 k = k.to_sym if k.respond_to?(:to_sym)
@@ -138,6 +166,7 @@ module Spider; module Model
         end
         
         # Yields each key, value and comparison, for this condition and its subconditions
+        # @return [void]
         def all_each_with_comparison
             self.each_with_comparison{ |k, v, c| yield k, v, c }
             @subconditions.each do |sub|
@@ -145,11 +174,15 @@ module Spider; module Model
             end
         end
 
+        # @param [Class<BaseModel] The model on which the Condition is based on.
+        # @return [bool] True if the condition has only primary keys for the given model
         def primary_keys_only?(model)
             self.select{ |key, value| !model.elements[key] || !model.elements[key].primary_key? }.empty?
         end
         
         # Returns the result of merging the condition with another one (does not modify the original condition).
+        # @param [Condition] Condition to merge with
+        # @return [Condition] The resulting Condition
         def +(condition)
             res = self.clone
             @subconditions += condition.subconditions
@@ -160,6 +193,8 @@ module Spider; module Model
         end
         
         # Adds a subcondtion.
+        # @param [Condition] condition
+        # @return [void]
         def <<(condition)
             if (condition.class == self.class)
                 @subconditions << condition
@@ -171,7 +206,11 @@ module Spider; module Model
             end
         end
         
-        # Sets a comparison.
+        # Adds a single condition for an element
+        # @param [Symbol|String|QueryFuncs::Function] field to add the condition to
+        # @param [String] comparison: can be =, <, >, <=, >=, 'between'
+        # @param [QuerySet|Array|Range|Object] the value of the condition
+        # @return [self]
         def set(field, comparison, value)
             if value.is_a?(QuerySet)
                 value = value.to_a
@@ -188,6 +227,7 @@ module Spider; module Model
             unless field.is_a?(Spider::QueryFuncs::Function)
                 field = field.to_s
                 parts = field.split('.', 2)
+                debugger if parts[0].blank?
                 parts[0] = parts[0].to_sym
                 field = field.to_sym unless parts[1]
             end
@@ -206,10 +246,18 @@ module Spider; module Model
         end
         
         # Sets an equality comparison.
+        # 
+        # Equivalent to {#set}(key, '=', value)
+        # @param [String|Symbol|QueryFuncs::Function] key
+        # @param [Object] value
+        # @return [self]
         def []=(key, value)
             set(key, '=', value)
         end
         
+        # Gets the value of a condition
+        # @param [String|Symbol|QueryFuncs::Function] key
+        # @return [Object] value
         def [](key)
             # TODO: deep
             key = key.name if key.is_a?(Element)
@@ -218,6 +266,10 @@ module Spider; module Model
         end
         
         # Adds a range condition. This creates a subcondition with >= and <= conditions.
+        # @param [String|Symbol|QueryFuncs::Function] key
+        # @param [Object] lower
+        # @param [Object] upper
+        # @return [self]
         def range(field, lower, upper)
             c = self.class.and
             c.set(field, '>=', lower)
@@ -226,6 +278,8 @@ module Spider; module Model
         end
         
         # Deletes a field from the Condition.
+        # @param [String|Symbol|QueryFuncs::Function] key
+        # @return [Array] A pair containing the deleted value and comparison
         def delete(field)
             field = field.to_sym
             return nil unless self[field] || @comparisons[field]
@@ -235,17 +289,7 @@ module Spider; module Model
             cur
         end    
         
-        # Parses a string comparison.
-        # TODO: remove?
-        def parse_comparison(comparison) # :nodoc:
-            if (comparison =~ Regexp.new("(.+)(#{self.class.comparison_operators_regexp})(.+)"))
-                val = $3.strip
-                # strip single and double quotes
-                val = val[1..-2] if ((val[0] == ?' && val[-1] == ?') || (val[0] == ?" && val[-1] == ?") )
-                return [$1.strip, $2.strip, val]
-            end
-        end
-        
+        # @return [String] A String representation of the condition
         def inspect
             str = ""
             cnt = 0
@@ -269,6 +313,10 @@ module Spider; module Model
         # Returns the conjunction with another condition.
         # If this condition already has the required conjunction, the other will be added as a subcondition;
         # otherwise, a new condition will be created and both will be added to it.
+        # @param [Symbol] conjunction :and | :or
+        # @param [Condition] other Condition to conjuct to this
+        # @param [Proc] proc Block to create the other condition
+        # @return [Condition] The resulting Condition (self, or the new Condition created)
         def conj(conjunction, other=nil, &proc)
             self.conjunction = conjunction if (!self.conjunction)
             if (self.conjunction == conjunction)
@@ -287,14 +335,20 @@ module Spider; module Model
         end
         
         
-        # Joins the condition to another with an "or" conjunction. See #conj.
+        # Joins the condition to another with an "or" conjunction. See {#conj}.
+        # @param [Condition] other Condition to conjuct to this
+        # @param [Proc] proc Block to create the other condition
+        # @return [Condition] The resulting Condition (self, or the new Condition created)
         def or(other=nil, &proc)
             return conj(:or, other, &proc)
         end
         alias :| :or
         alias :OR :or
         
-        # Joins the condition to another with an "and" conjunction. See #conj.
+        # Joins the condition to another with an "and" conjunction. See {#conj}.
+        # @param [Condition] other Condition to conjuct to this
+        # @param [Proc] proc Block to create the other condition
+        # @return [Condition] The resulting Condition (self, or the new Condition created)
         def and(other=nil, &proc)
             return conj(:and, other, &proc)
         end
@@ -304,6 +358,7 @@ module Spider; module Model
         alias :hash_empty? :empty? # :nodoc:
         
         # True if there are no comparisons and no subconditions.
+        # @return [bool] True if the Condition is empty, false otherwise
         def empty?
             return false unless super
             @subconditions.each do |sub|
@@ -312,17 +367,23 @@ module Spider; module Model
             return true
         end
         
-        alias :hash_replace :replace  # :nodoc:
+        # Alias to the original Hash#replace
+        alias :hash_replace :replace
         
-        # Replace the content of this Condition with another one.
+        # Replace all the content of this Condition with another one.
+        # @param [Condition] other The other condition
+        # @return [self]
         def replace(other)
             hash_replace(other)
             @subconditions = other.subconditions
             @conjunction = other.conjunction
             @polymorph = other.polymorph
             @comparisons = other.comparisons
+            self
         end
         
+        # @param [Condition] other
+        # @return [bool] True if the two conditions have the same comparisions and conjunction
         def ==(other)
             return false unless other.class == self.class
             return false unless super
@@ -333,22 +394,28 @@ module Spider; module Model
             return true
         end
         
+        # @return [bool] See {#==}
         def eql?(other)
             self == other
         end
         
+        # @return [String] Keying hash
         def hash
             ([self.keys, self.values, @comparisons.values, @polymorph] + @subconditions.map{ |s| s.hash}).hash
         end
         
         # Removes duplicate subcondtions.
+        # @return self
         def uniq!
             @subconditions.uniq!
+            self
         end
         
+        # Alias for Hash#clone
         alias :hash_clone :clone
         
         # Returns a deep copy.
+        # @return [Condition] A copy of this Condition
         def clone
             c = self.class.new
             c.conjunction = @conjunction
@@ -363,6 +430,7 @@ module Spider; module Model
         end
         
         # Traverses the tree removing useless conditions.
+        # @return [self]
         def simplify
             @subconditions.each{ |sub| sub.simplify }
             if (hash_empty? && @subconditions.length == 1)
@@ -372,6 +440,7 @@ module Spider; module Model
             return self
         end
         
+        # @return [Array] An array of polymorphic conditions
         def polymorphs
             pol = []
             pol << @polymorph if @polymorph
@@ -379,6 +448,8 @@ module Spider; module Model
         end
         
         # Returns, from self and subconditions, all those who define a condition for one of the given element names.
+        # @param [*Symbol] element_names A list of element names
+        # @return [Array] An array of matching conditions
         def conditions_for(*element_names)
             conds = []
             element_names.each do |el|
@@ -390,9 +461,23 @@ module Spider; module Model
             @subconditions.map{ |s| s.conditions_for(*element_names) }.each{ |c| conds += c }
             conds
         end
+
+        private
+
+        # Parses a string comparison.
+        # TODO: remove?
+        def parse_comparison(comparison) # :nodoc:
+            if (comparison =~ Regexp.new("(.+)(#{self.class.comparison_operators_regexp})(.+)"))
+                val = $3.strip
+                # strip single and double quotes
+                val = val[1..-2] if ((val[0] == ?' && val[-1] == ?') || (val[0] == ?" && val[-1] == ?") )
+                return [$1.strip, $2.strip, val]
+            end
+        end
     
     end
     
+    # Helper module used for Condition block syntax
     module ConditionMixin # :nodoc:
         
         def __el(meth)

@@ -18,6 +18,10 @@ rescue LoadError
 end
 
 
+# The main Spider module. 
+#
+# It contains methods to manage the environment and the lifecycle of 
+# the application.
 module Spider
     
     @apps = {}; @apps_by_path = {}; @apps_by_short_name = {}; @loaded_apps = {}
@@ -29,14 +33,19 @@ module Spider
         # Everything here must be thread safe!!!
         
         # An instance of the shared logger.
+        # @return [Spider::Logger]
         attr_reader :logger
         # An hash of registered Spider::App, indexed by name.
+        # @return [Array]
         attr_reader :apps
         # An hash of registred Spider::App modules, indexed by path.
+        # @return [Hash]
         attr_reader :apps_by_path
         # An hash of registred Spider::App modules, indexed by short name (name without namespace).
+        # @return [Hash]
         attr_reader :apps_by_short_name
         # The current runmode (test, devel or production).
+        # @return [String]
         attr_reader :runmode
         # An hash of runtime paths.
         # :root::           The base runtime path.
@@ -47,19 +56,26 @@ module Spider
         # :var::            Var folder. Must be writable. Contains cache, logs, and other files written by the server.
         # :data::           Data folder. Holds static and dynamic files. Some subdirs may have to be writable.
         # :certs::          Certificates folder.
-        # ::tmp::           Temp folder. Must be writable.
-        # ::log::           Log location.
+        # :tmp::           Temp folder. Must be writable.
+        # :log::           Log location.
+        # @return [Hash]
         attr_reader :paths
         # Current Home
+        # @return [Spider::Home]
         attr_reader :home
         # Registered resource types
+        # @return [Array]
         attr_reader :resource_types
         # Main site
+        # @return [Site]
         attr_accessor :site
+
         attr_accessor :spawner
         
         # Initializes the runtime environment. This method is called when spider is required. Apps may implement
         # an app_init method, that will be called after Spider::init is done.
+        # @param [force=false] Force init, even if it is already done.
+        # @returns [true]
         def init(force=false)
             return if @init_done && !force
             
@@ -87,6 +103,8 @@ module Spider
             @init_done=true
         end
         
+        # Sets up GetText for each app, and runs app_init on them, if the app implement it.
+        # @returns [nil]
         def init_apps
             @apps.each do |name, mod|
                 repos = []
@@ -107,10 +125,15 @@ module Spider
             end
         end
         
+        # @return [TrueClass|FalseClass] True if init has already been done
         def init_done?
             @init_done
         end
         
+        # Loads configuration, sets up Locale and GetText, sets paths and the default Logger.
+        # The runmode is also set at this phase, if it is defined as $SPIDER_RUNMODE or in configuration.
+        # @param [force=false] Force init_base, even if it is already done.
+        # @returns [true]
         def init_base(force=false)
             return if @init_base_done && !force
             l = Spider.locale.to_s
@@ -143,13 +166,9 @@ module Spider
             @init_base_done = true
         end
         
-        # 
-        # def stop
-        #     @apps.each do |name, mod|
-        #         mod.app_stop if mod.respond_to?(:app_stop)
-        #     end
-        # end
-        
+
+        # Creates runtime folders: 'tmp', 'var', 'var/memory' and 'var/data'
+        # @return [void]
         def setup_env
             unless File.exists?(File.join(Spider.paths[:root], 'init.rb'))
                 raise "This command must be run from the root directory"
@@ -163,6 +182,7 @@ module Spider
 
 
         # Invoked before a long running service started. Apps may implement the app_startup method, that will be called.
+        # @return [void]
         def startup
             init
             setup_env
@@ -189,6 +209,13 @@ module Spider
             end
         end
         
+        # Called before the main process starts up.
+        # 
+        # This happens, for example, when Spider server is started from command line; the main process can then
+        # spawn other processes, as supporting listeners or workers.
+        # 
+        # Note that in some environments (e.g. Phusion Passenger) there will not be a main process, so
+        # this method will not be called.
         def main_process_startup
             if defined?(FSSM)
                 monitor = FSSM::Monitor.new
@@ -234,21 +261,27 @@ module Spider
             
         end
         
+        # @param [Proc] proc A block that will be called when #main_process_startup is run
+        # @return [Proc] The passed proc
         def on_main_process_startup(&proc)
             @main_process_startup_blocks ||= []
             @main_process_startup_blocks << proc
         end
         
+        # @return [true] True if startup has been done
         def startup_done?
             @startup_done
         end
         
+        # @param [Proc] proc A block that will be called when #shutdown is run
+        # @return [Proc] The passed proc
         def on_shutdown(&block)
             @shutdown_blocks ||= []
             @shutdown_blocks << block
         end
         
         # Invoked when a server is shutdown. Apps may implement the app_shutdown method, that will be called.        
+        # @return [void]
         def shutdown(force=false)
             unless force
                 #return unless Thread.current == Thread.main
@@ -282,10 +315,16 @@ module Spider
             end
         end
         
+        # Force shutdown, even if it has been done already
+        # @return [void]
         def shutdown!
             shutdown(true)
         end
 
+        # Adds a running thread to the application. The app will wait for running threads
+        # when shutting down.
+        # @param [Thread] thread to add
+        # @return [void]
         def add_thread(thr)
             @running_threads ||= []
             @threads_mutex ||= Mutex.new
@@ -294,12 +333,17 @@ module Spider
             end
         end
 
+        # Removes a running thread. See {add_thread}.
+        # @param [Thread] The thread to remove
+        # @return [void]
         def remove_thread(thr)
             @threads_mutex.synchronize do
                 @running_threads.delete(thr)
             end
         end
         
+        # Called when the main process is shut down. See also {main_process_startup}.
+        # @return [void]
         def main_process_shutdown
             if startup_done?
                 shutdown!
@@ -309,20 +353,29 @@ module Spider
             end
         end
         
+        # @param [Proc] proc A block that will be called when {main_process_shutdown} is run
+        # @return [Proc] The passed proc
         def on_main_process_shutdown(&block)
             @main_process_shutdown_blocks ||= []
             @main_process_shutdown_blocks << block
         end
         
-
+        # Restarts the application.
+        #
+        # Note that this actually touches the restart file (tmp/restart.txt by default), so the same
+        # effect can by achieved by manually touching the file
+        # @return [void]
         def restart!
             FileUtils.touch(@paths[:restart_file])
         end
 
+        # @return [Hash] An Hash of data local to the current request.
         def current
             Spider::Request.current
         end
         
+        # Called when a new request is started.
+        # @return [void]
         def request_started
             @request_mutex.lock if (@request_mutex)
             Spider::Request.current = {
@@ -330,26 +383,37 @@ module Spider
             }
         end
         
+        # Called when a new request is finished.
+        # @return [void]
         def request_finished
             # Spider.logger.info("Done in #{(Time.now - Spider::Request.current[:_start])*1000}ms")
             Spider::Request.reset_current
             @request_mutex.unlock if (@request_mutex)
         end
         
+        # Run a lock around requests, ensuring only one request is run at a time.
+        # This is usually not needed, except for testing and special situations.
+        # @return [void]
         def mutex_requests!
             @request_mutex = Mutex.new
         end
         
+        # @return [Mutex] The current Request Mutex, if set
         def request_mutex
             @request_mutex
         end
         
+        # Sets the current Request Mutex
+        # @param [Mutex] 
+        # @return [Mutex]
         def request_mutex=(val)
             @request_mutex = val
         end
         
         
         # Closes any open loggers, and opens new ones based on configured settings.
+        # @param [bool] force to start loggers even if already started.
+        # @return [true]
         def start_loggers(force=false)
             init_base
             return if @logger_started && !force
@@ -380,11 +444,9 @@ module Spider
             @logger_started = true
         end
         
-        def start_loggers!
-            start_loggers(false)
-        end
         
-        # Sets the default paths (see #paths).
+        # Sets the default paths (see {paths}).
+        # @return [Hash] The paths Hash
         def setup_paths(root)
             @paths[:root] = root
             @paths[:apps] = File.join(root, 'apps')
@@ -400,15 +462,18 @@ module Spider
             @paths.each do |k, path|
                 @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
             end
+            @paths
         end
 
+        # @return [Array] paths to look for apps
         def app_paths
             paths = [$SPIDER_PATHS[:core_apps]]
             paths.unshift(@paths[:apps]) if @paths[:apps]
             paths
         end
         
-        # Finds an app by name, looking in paths[:apps] and paths[:core_apps]. Returns the found path.
+        # Finds an app by name, looking in paths[:apps] and paths[:core_apps].
+        # @return [String|nil] The path of the found app, or nil if it was not found.
         def find_app(name)
             path = nil
             app_paths.each do |base|
@@ -421,6 +486,9 @@ module Spider
             return path
         end
         
+        # Finds sub-apps (apps inside another one)
+        # @param [String] name
+        # @return [Array] An Array of apps found at path name
         def find_apps(name)
             app_paths.each do |base|
                 test = File.join(base, name)
@@ -430,6 +498,9 @@ module Spider
             end
         end
         
+        # Loads the given app
+        # @param [String] name
+        # @return [void]
         def load_app(name)
             paths = find_apps(name)
             paths.each do |path|
@@ -437,6 +508,9 @@ module Spider
             end
         end
         
+        # Loads the app inside the give folder
+        # @param [String] path
+        # @return [void]
         def load_app_at_path(path)
             return if @loaded_apps[path]
             relative_path = path
@@ -451,7 +525,9 @@ module Spider
             app_files.each{ |f| require File.join(relative_path, f) if File.exist?(File.join(path, f)) }
         end
         
-        
+        # Loads a list of apps
+        # @param [*apps]
+        # @return [void]
         def load_apps(*l)
             if l.empty?
                 l = Spider.conf.get('apps')
@@ -461,12 +537,16 @@ module Spider
             end
         end
         
+        # Loads all apps inside the defined app paths (see {app_paths})
+        # @return [void]
         def load_all_apps
             find_all_apps.each do |path|
                 load_app_at_path(path)
             end
         end
         
+        # @param [Array] An Array of paths to look into. Will use {app_paths} if nil.
+        # @return [Array] An Array of paths for all found apps
         def find_all_apps(paths=nil)
             paths ||= self.app_paths
 
@@ -483,6 +563,8 @@ module Spider
             return app_paths
         end
         
+        # @param [String] path
+        # @return [Array] An array of all apps found inside path
         def find_apps_in_folder(path)
             return unless File.directory?(path)
             return [path] if File.exist?(File.join(path, '_init.rb'))
@@ -499,18 +581,30 @@ module Spider
             return found
         end
         
+        # Registers an App with Spider
+        # @param [Spider::App] mod The App module
+        # @return [void]
         def add_app(mod)
             @apps[mod.name] = mod
             @apps_by_path[mod.relative_path] = mod
             @apps_by_short_name[mod.short_name] = mod
         end
         
+        # @param [String] path_or_name
+        # @return [bool] True if there is an app at given path or with given name, False otherwise
         def app?(path_or_name)
             return true if @apps_by_path[path_or_name]
             return true if @apps_by_short_name[path_or_name]
             return false
         end
         
+        # Returns the dependencies for given apps, based on the apps' spec.
+        # 
+        # Options accepts:
+        # * :optional  whether to include optional apps in the dependencies
+        # @param [Arrray] An Array of App names
+        # @param [Hash] options 
+        # @return [Array] The dependencies for the given apps
         def get_app_deps(apps, options={})
             new_apps = apps.clone
             specs = {}
@@ -525,6 +619,8 @@ module Spider
             specs.keys
         end
         
+        # Used by configuration editor
+        #-- TODO
         def activate_apps(apps, specs=nil)
             require 'spiderfw/config/configuration_editor'
             init_base
@@ -544,6 +640,9 @@ module Spider
             editor.save
         end
         
+        # @param [Array] apps The apps to order
+        # @param [Hash] specs A Hash of the apps' {AppSpec}s, indexed by app short name
+        # @return [Array] the order in which to load apps, based on their specs.
         def apps_load_order(apps, specs)
             # TODO
             require 'spiderfw/app'
@@ -554,6 +653,10 @@ module Spider
             sort.tsort.reject{ |a| a.nil? }
         end
         
+
+        # Loads configuration YAML files found inside path
+        # @param [String] path
+        # @return [void]
         def load_configuration(path)
             return unless File.directory?(path)
             opts = File.join(path, 'options.rb')
@@ -569,6 +672,9 @@ module Spider
             end
         end
 
+        # Loads a YAML configuration file
+        # @param [String] path to the file
+        # @return [void]
         def load_configuration_file(file)
             begin
                 @configuration.load_yaml(file)
@@ -582,13 +688,16 @@ module Spider
             end
         end
         
-        # Returns the default controller.
+        # Returns the default controller Class ({SpiderController}).
+        # @return [Class]
         def controller
             require 'spiderfw/controller/spider_controller'
             SpiderController
         end
         
-        # Sets routes on the #controller for the given apps.
+        # Sets routes on the controller for the given apps.
+        # @param [Array] An array of app names to route.
+        # @return [void]
         def route_apps(*apps)
             options = {}
             if apps[-1].is_a?(Hash)
@@ -608,11 +717,18 @@ module Spider
         
         # Adds a resource type
         # name must be a symbol, extensions an array of extensions (strings, without the dot) for this resource.
-        # Options may be:
-        # :extensions   an array of possible extensions. If given, find_resource will try appending the extensions
-        #               when looking for the file.
-        # :path         the path of the resource relative to resource root; if not given, name will be used.
         # 
+        # Resources can be searched with {find_resource}. They will be searched first inside the home, then 
+        # inside the app's folder. This way, home can override app resources. See also {find_resource}.
+        # 
+        # Options may be:
+        # * :extensions   an Array of possible extensions. If given, find_resource will try appending the extensions
+        #                 when looking for the file.
+        # * :path         the path of the resource relative to resource root; if not given, name will be used.
+        # 
+        # @param [Symbol] name
+        # @param [Hash] options
+        # @return [void]
         def register_resource_type(name, options={})
             @resource_types[name] = {
                 :extensions => options[:extensions],
@@ -622,25 +738,46 @@ module Spider
         
         Spider.register_resource_type(:views, :extensions => ['shtml'])
         
+        # @return [String] $SPIDER_PATH
         def path
             $SPIDER_PATH
         end
         
+        # @return [String] '/spider'
         def relative_path
             '/spider'
         end
         
         # Returns the full path of a resource.
-        # resource_type may be :views, or any other type registered with #register_resource_type
-        # path is the path of the resource, relative to the resource folder
-        # cur_path, if provided, is the current working path
-        # owner_class, if provided, must respond to *app*
         # 
-        # Will look for the resource in the runtime root first, than in the
-        # app's :"#{resource_type}_path", and finally in the spider folder.
+        # Spider provides the following resources:
+        # * :views (:filetypes => ['.shtml'])
+        # * :js and :css (:path => 'public')
+        #
+        # Apps can define their own resource types (see {register_resource_type}).
+        #
+        # This method will look for the resource in the runtime root first, than in the
+        # app's :"#{resource_type}_path", and finally in the spider's gem folder.
+        # 
+        # For example:
+        # 
+        # find_resource(:views, 'abc/my_view', nil, [MyApp]) will look into:
+        # * /home/views/my_app/abc/my_view.shtml
+        # * /home/views/apps/my_app/views/abc/my_view.shtml
+        # * /lib/spider/views/abc/my_view.shtml
+        # 
+        # 
+        # @param [Symbol] resource_type
+        # @param [String] path
+        # @param [String] cur_path Current path: if set, will be used to resolve relative paths
+        # @param [Array] owner_classes An Array of Classes, which must respond to .app (i.e., they must belong to an App). 
+        #                              If set, will be used to determine the apps to look into.
+        # @param [Array] search_paths An Array of additional paths to look inside
+        # @return [Resource]
+
         def find_resource(resource_type, path, cur_path=nil, owner_classes=nil, search_paths=[])
             owner_classes = [owner_classes] unless owner_classes.is_a?(Enumerable)
-            # FIXME: security check for allowed paths?
+            
             def first_found(extensions, path)
                 extensions.each do |ext|
                     full = path
@@ -709,6 +846,9 @@ module Spider
             return Resource.new(path)
         end
         
+        # @param [Symbol] resource_type
+        # @param [Spider::App] the App who owns the resource
+        # @return [Array] An array of places to look for resources of type resource_type belonging to app
         def resource_search_locations(resource_type, app=nil)
             resource_config = @resource_types[resource_type]
             resource_rel_path = resource_config[:path]
@@ -736,6 +876,12 @@ module Spider
             search_locations
         end
         
+        # Returns an Array of all resources of a certain type
+        # @param [Symbol] resource_type
+        # @param [owner_class] the owner of the resource (must respond to .app)
+        # @param [String] start A subfolder to start looking from
+        # @params [Array] An array of additional places to search
+        # @return [Array] An array of resources
         def list_resources(resource_type, owner_class=nil, start=nil, search_paths = [])
             app = nil
             if owner_class <= Spider::App
@@ -765,6 +911,14 @@ module Spider
             
         end
         
+        # See also {find_resource}
+        # @param [Symbol] resource_type
+        # @param [String] path
+        # @param [String] cur_path Current path: if set, will be used to resolve relative paths
+        # @param [Array] owner_classes An Array of Classes, which must respond to .app (i.e., they must be inside an app). 
+        #                              If set, will be used to determine the apps to look into.
+        # @param [Array] search_paths An Array of additional paths to look inside
+        # @return [String|nil] the path of the found Resource, or nil if not found
         def find_resource_path(resource_type, path, cur_path=nil, owner_classes=nil, search_paths=[])
             res = find_resource(resource_type, path, cur_path, owner_classes, search_paths)
             return res ? res.path : nil
@@ -773,6 +927,12 @@ module Spider
         
         # Source file management
 
+
+        # @private
+        # Lists all sources inside a path.
+        # @param [String] path
+        # @return [void]
+        #-- TODO: fix or remove
         def sources_in_dir(path)
             loaded = []
             $".each do |file|
@@ -792,12 +952,22 @@ module Spider
             return loaded
         end
 
-        def reload_sources_in_dir(dir)
+
+        # @private
+        # Reloads all application inside a folder.
+        # @return [void]
+        #-- TODO: fix or remove
+        def relo
+            ad_sources_in_dir(dir)
             self.sources_in_dir(dir).each do |file|
                 load(file)
             end
         end
 
+        # @private
+        # Reloads all application sources.
+        # @return [void]
+        #-- TODO: fix or remove
         def reload_sources
             logger.debug("Reloading sources")
             crit = Thread.critical
@@ -812,7 +982,9 @@ module Spider
             end
             Thread.critical = crit
         end
-        
+         
+        # Terminates the current process and starts a new one
+        # @return [void]
         def respawn!
             require 'rbconfig'
             Spider.logger.info("Restarting")
@@ -834,6 +1006,12 @@ module Spider
             end
         end
         
+        # Sets the current runmode.
+        # 
+        # Note: the runmode can't be changed when set; the method will raise an error if trying to 
+        # set a runmode when one is already set.
+        # @param [String] mode
+        # @return [void]
         def runmode=(mode)
             raise "Can't change runmode" if @runmode
             @runmode = mode
@@ -849,6 +1027,7 @@ module Spider
             Bundler.require(:default, @runmode.to_sym) if defined?(Bundler)
         end
 
+        # Starts the debugger (ruby-debug, or Pry if debugger.pry configuration is true)
         def init_debug
             if Spider.conf.get('debugger.pry')
                 begin
@@ -861,6 +1040,9 @@ module Spider
             end
         end
 
+        # @private
+        # Inits the pry debugger
+        # @return [void]
         def init_pry_debug
             require 'pry'
             require 'pry-nav'
@@ -871,6 +1053,9 @@ module Spider
             Pry::Commands.alias_command "l=", "whereami"
         end
         
+        # @private
+        # Inits ruby-debug
+        # @return [void]
         def init_ruby_debug
             begin
                 require 'ruby-debug'
@@ -887,6 +1072,7 @@ module Spider
             end
         end
         
+        # @return [Locale::Tag] The current locale
         def locale
             begin
                 @current_locale = Locale.current[0]
@@ -899,6 +1085,8 @@ module Spider
             end
         end
         
+        # @param [Locale::Tag]
+        # @return [Spider::I18n::Provider] A provider for the given locale
         def i18n(l = self.locale)
             Spider::I18n.provider(l)
         end
@@ -921,10 +1109,15 @@ module Spider
             end
         end
 
+        # @return [bool] True if spider is running in interactive mode (i.e. run from the command line), false otherwise
         def interactive?
             !!$SPIDER_INTERACTIVE
         end
         
+        # Outputs a string, to the console or to log
+        # @param [String] str String to output
+        # @param [Symbol] level Log level
+        # @return [void]
         def output(str, level=:INFO)
             use_log = !Spider.interactive? && @logger_started
             if use_log

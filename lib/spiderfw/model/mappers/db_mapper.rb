@@ -4,15 +4,20 @@ require 'fileutils'
 
 module Spider; module Model; module Mappers
 
+    # This is the Mapper subclass for interacting with databases.
     class DbMapper < Spider::Model::Mapper
         include Spider::Model::Storage::Db
 
+        # @param [BaseModel] model
+        # @param [Storage]
         def initialize(model, storage)
             super
             @type = :db
         end
         
-        def self.write? #:nodoc:
+        # Is this mapper writable?
+        # @return [true]
+        def self.write?
             true
         end
         
@@ -797,6 +802,9 @@ module Spider; module Model; module Mappers
         # * joins
         # * final model called
         # * final element called
+        # @param [String] dotted_element: the element to get joins for
+        # @param [Symbol] join_type (nil, :inner, :left, :right, :outer): force a join type for all elements
+        # @return [Array] [joins, final_model, final_element]
         def get_deep_join(dotted_element, join_type=nil)
             #return [[], @model, @model.elements[dotted_element]] unless dotted_element.is_a?(String)
             parts = dotted_element.to_s.split('.').map{ |el| el.to_sym }

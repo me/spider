@@ -4,6 +4,11 @@ require 'spiderfw/model/identity_mapper'
 
 module Spider 
     
+    # Spider::Model is the namespace containing all data-related classes and modules.
+    # 
+    # In addition, it implements some helper methods.
+    #
+    # See {BaseModel} for the base class that must be subclassed by app's models.
     module Model
         
         @base_types = [
@@ -11,17 +16,23 @@ module Spider
             Spider::DataTypes::Bool, Spider::DataTypes::PK
         ]
         
-        # Base types are:
-        #
+        # Returns a list of the base types, which must be handled by all mappers.
+        # 
         # String, Spider::DataTypes::Text, Fixnum, Float, BigDecimal, Date, DateTime, Spider::DataTypes::Bool.
         #
         # These types must be handled by all mappers.
+        # @return [Array] An array of base types
         def self.base_types
             @base_types
         end
         
-        # Returns the base type corresponding to class. Will walk superclasses and DataType info until
-        # a base type is found.
+        # Returns the base type corresponding to a class.
+        #
+        # For BaseModels, the class itself will be returned; otherwise, will walk superclasses and DataType info 
+        # until one of the {Model.base_types} is found.
+        #
+        # @param [Class] class
+        # @return [Class] The Base Type
         def self.base_type(klass)
             k = klass
             while (k && !base_types.include?(k))
@@ -30,8 +41,9 @@ module Spider
             return k
         end
         
-        # TODO: remove?
-        def self.ruby_type(klass) #:nodoc:
+        # @param [Class] A DataType subclass
+        # @return [Class] The Ruby class corresponding to a Spider DataType
+        def self.ruby_type(klass)
             map_types = {
                 Spider::DataTypes::Text => String,
                 Spider::DataTypes::Bool => FalseClass,
@@ -42,8 +54,11 @@ module Spider
             return klass
         end
         
+        # @private
         # An iteration in the search for base type.
-        def self.simplify_type(klass) #:nodoc:
+        # @param [Class] class
+        # @return [Class] simplified type
+        def self.simplify_type(klass)
             map_types = {
                 
             }
@@ -56,7 +71,12 @@ module Spider
         end
 
         
-        # Returns the identity-mapped object
+        # Retrieves an object corresponding to gived values from the IdentityMapper, or puts it there if not found.
+        # @param [Class>BaseModel] The model
+        # @parm [Object] val A BaseModel instance, or a Hash of values, or a primary key for the model 
+        # @param [bool] set_loaded If true, when instantiating an object from hash values, set the values as
+        #                          if they were loaded from the storage
+        # @return [BaseModel] The object retrieved from the IdentityMapper
         def self.get(model, val=nil, set_loaded=false)
             if (val && !val.is_a?(Hash))
                 if (model.primary_keys.length == 1)
@@ -73,6 +93,10 @@ module Spider
         end
         
         # Puts an object into the IdentityMapper
+        # @param [BaseMode] object to place into the IdentityMapper
+        # @param [bool] check If true, if the object already exists in the IdentityMapper it will be merged.
+        #                     If false, if the object already exists it will be overwritten.
+        # @return [BaseModel] The object, as present in the IdentityMapper after the put
         def self.put(obj, check=false)
             if (identity_mapper)
                 return identity_mapper.put(obj, check)
@@ -81,24 +105,35 @@ module Spider
             end
         end
         
-        def self.identity_mapper #:nodoc:
+        # @return [IdentityMapper] The current IdentityMapper, if active
+        def self.identity_mapper
             Spider.current[:identity_mapper]
         end
         
-        def self.identity_mapper=(im) #:nodoc:
+        # @param [IdentityMapper] im The IdentityMapper to activate for the current request
+        # @return [IdentityMapper]
+        def self.identity_mapper=(im)
             Spider.current[:identity_mapper] = im
         end
         
+        # Starts a new Unit Of Work
+        # @return [UnitOfWork]
         def self.start_unit_of_work
             uow = UnitOfWork.new
             uow.start
         end
         
+        # Stops the current Unit Of Work
+        # @return [void]
         def self.stop_unit_of_work
             Spider.current[:unit_of_work].stop
         end
         
-        def self.unit_of_work(&proc) #:nodoc:
+        # @param [Proc] proc If supplied and no Unit Of Work is running, executes the block inside 
+        #                    a new Unit Of Work
+        # @return [UnitOfWork] the current Unit Of Work, if no block was passed; otherwise, the Unit Of Work that
+        #                      was used to run the block 
+        def self.unit_of_work(&proc)
             uow = Spider.current[:unit_of_work]
             if !uow
                 if proc
@@ -108,17 +143,28 @@ module Spider
             return uow
         end
         
-        
+        # Sets the UnitOfWork to use for the current request
+        # @param [UnitOfWork] uow
+        # @return [UnitOfWork]
         def self.unit_of_work=(uow)
             Spider.current[:unit_of_work] = uow
         end
         
+        # Executes a block inside a new Unit Of Work
+        # 
+        # **Note**: you should almost always use {Model.in_unit} instead, since 
+        # a Unit Of Work without an Identity Mapper can be problematic.
+        # @param [Proc] proc The block to execute
+        # @return [UnitOfWork] The Unit Of Work that was used to run the block
         def self.with_unit_of_work(&proc)
             with_identity_mapper do
                 return unit_of_work(&proc)
             end
         end
         
+        # Executes a block without running in Unit Of Work
+        # @param [Proc] proc The block to run without a unit of work
+        # @return [UnitOfWork] The previously active Unit Of Work (if any)
         def self.no_unit_of_work(&proc)
             uow = self.unit_of_work
             self.unit_of_work = nil
@@ -126,10 +172,14 @@ module Spider
             self.unit_of_work = uow
         end
         
+        # @return [bool] True if there is an active Unit Of Work, false otherwise
         def self.unit_of_work_running?
             self.unit_of_work && self.unit_of_work.running?
         end
         
+        # Executes a block without Identity Mapper
+        # @param [Proc] proc The block to run without the Identity Mapper
+        # @return [IdentityMapper] The previously active Identity Mapper (if any)
         def self.no_identity_mapper(&proc)
             im = self.identity_mapper
             self.identity_mapper = nil
@@ -137,6 +187,9 @@ module Spider
             self.identity_mapper = im
         end
         
+        # Executes a block without Identity Mapper and Unit Of Work
+        # @param [Proc] proc The block to run
+        # @return [UnitOfWork] The previously active Unit Of Work (if any)
         def self.no_context(&proc)
             uow = self.unit_of_work
             self.unit_of_work = nil
@@ -148,7 +201,10 @@ module Spider
             
         end
                 
-        # Executes the block in the context of the main IdentityMapper.
+        # Executes a block in the context of the current IdentityMapper, if one is active.
+        # If no IdentityMapper is running, the code is executed inside a new Identity Mapper
+        # @param [Proc] proc The block to run
+        # @return [IdentityMapper] The used Identity Mapper
         def self.with_identity_mapper(&proc)
             if identity_mapper
                 yield identity_mapper
@@ -159,6 +215,9 @@ module Spider
             end
         end
         
+        # Executes a block inside a Unit Of Work and Identity Mapper
+        # @param [Proc] proc The block to run
+        # @return [void]
         def self.in_unit(&proc)
             uow = self.unit_of_work
             self.start_unit_of_work unless uow
@@ -172,10 +231,16 @@ module Spider
             
         end
         
-        # Syncs the schema with the storage.
-        #--
-        # FIXME: this is clearly db specific. Move somewhere else.
-        def self.sync_schema(model_or_app, force=false, options={}) #:nodoc:
+        # Syncs the schema for a model, or for all models within an app, with the storage.
+        # @param [Class>BaseModel|Module>Spider::App] model_or_app
+        # @param [bool] force If true, allow operations that could cause data loss
+        # @param [Hash] options Options can be:
+        #                       * :no_sync     Don't actually run the sync, only check the operations to run
+        #                       * :drop_tables Drop unneeded tables
+        # @return [void]
+        def self.sync_schema(model_or_app, force=false, options={})
+            
+            # FIXME: this is clearly db specific. Move somewhere else.
             models = []
             mod = const_get_full(model_or_app)
             if (mod.is_a?(Module) && mod.include?(Spider::App))
@@ -215,7 +280,9 @@ module Spider
             end
         end
         
-        # Load YAML data
+        # Load YAML data to the storage
+        # @param [String] file File to load data from
+        # @param [bool] truncate If true, delete all data from the models in the file before inserting new data
         def self.load_fixtures(file, truncate=false)
             if (file =~ /\.([^\.]+)$/)
                 extension = $1
@@ -257,19 +324,23 @@ module Spider
         end
         
         # Generic Model error.
-        
         class ModelException < RuntimeError
         end
         
         # Error raised when data can't be accepted.
-        
         class FormatError < ::FormatError
-            attr_reader :element, :value
+            # @return [Element] 
+            attr_reader :element
+            # @return [Object]
+            attr_reader :value
             
             # Takes an Element, the value, and a message.
             # The message should be a format specification; it will be %'d with the value.
             #   error = FormatError.new(my_element, 3, "Element value %s is wrong.")
             #   error.to_s  => "Element value 3 is wrong."
+            # @param [Element] value
+            # @param [Object] value
+            # @param [String] message The error message
             def initialize(element, value, message)
                 @element = element
                 @message = message
@@ -287,9 +358,20 @@ module Spider
             
         end
         
+        # Error raised when data is of the wrong type
         class TypeError < ArgumentError
         end
         
+        # Sorts an Array of models, placing subclasses before superclasses.
+        # 
+        # If :association_dependencies is true, models having an association to another model will be placed after the associated
+        # model.
+        #
+        # This can be used to insert a dump of data, ensuring later models only depend on already inserted objects.
+        # @param [Array] models An array of BaseModel subclasses
+        # @param [Hash] options Options can be:
+        #                       * :association_dependencies  If true, sort associated models before the model associating them
+        # @return [Array] The sorted array
         def self.sort(models, options={})
             options = {
                 :association_dependencies => true
@@ -300,6 +382,7 @@ module Spider
         
         require 'tsort'
         
+        # Helper class from sorting models using TSort
         class Sorter
             include TSort
             
@@ -351,6 +434,7 @@ module Spider
             
         end
         
+        # Helper class for sorting models
         class SortTask
             attr_reader :model, :dependencies
             

@@ -6,6 +6,7 @@ require 'iconv'
 
 module Spider; module Model
     
+    # @abtract
     # The main class for interacting with data.
     # When not dealing with legacy storages, subclasses should use Managed instead, which provides an id and 
     # other conveniences.
@@ -50,8 +51,6 @@ module Spider; module Model
     #     => 2
     #   p salmon_lovers[0].name
     #     => 'Cat'
-    
-    
     class BaseModel
         include Spider::Logger
         include DataTypes
@@ -60,40 +59,61 @@ module Spider; module Model
         # include StateMachine
         
         # The BaseModel class itself. Used when dealing with proxy objects.
+        # @return [Class<BaseModel]
         attr_reader :model
         # An Hash of loaded elements
+        # @return [Hash]
         attr_reader :loaded_elements
+        # @private
         # Model instance or QuerySet containing the object
+        # @return [BaseModel|QuerySet]
         attr_accessor :_parent
+        # @private
         # If _parent is a model instance, which element points to this one
+        # @return [Symbol]
         attr_accessor :_parent_element
-        #
+        # @private
+        # If true, forces the mapper to check for existance of the object in the storage
+        # @return [bool]
         attr_accessor :_check_if_saved
         
+        # @private
         # If this object is used as a superclass in class_table_inheritance, points to the current subclass
+        # @return [Class<BaseModel]
         attr_accessor :_subclass_object
+        # @private
         # This object won't be put into the identity mapper
+        # @return [bool]
         attr_accessor :_no_identity_mapper
+        # @private
         # Elements that were modified since a load or a save (note: this only keeps track of changed references on the object;
         # it doesn't consider if a associated object or QuerySet has changed. Use element_modified? to get that information)
+        # @return [Array]
         attr_reader :_modified_elements
         
         class <<self
             # An Hash of model attributes. They can be used freely.
+            # @return [Hash]
             attr_reader :attributes
             # An array of element names, in definition order.
+            # @return [Array]
             attr_reader :elements_order
             # An Hash of integrated models => corresponding integrated element name.
+            # @return [Hash]
             attr_reader :integrated_models
             # An Hash of polymorphic models => polymorphic params
+            # @return [Hash]
             attr_reader :polymorphic_models
             # An Array of named sequences.
+            # @return [Array]
             attr_reader :sequences
         end
         
         
         
         # Copies this class' elements to the subclass.
+        # @param [Class<BaseModel] self
+        # @return [void]
         def self.inherited(subclass) #:nodoc:
             # FIXME: might need to clone every element
             @subclasses ||= []
@@ -112,11 +132,14 @@ module Spider; module Model
             super
         end
         
+        # All known subclasses of this model
+        # @return [Array]
         def self.subclasses
             @subclasses || []
         end
         
         # Returns the parent Spider::App of the module
+        # @return [Spider::App]
         def self.app
             return @app if @app
             app = self
@@ -197,6 +220,11 @@ module Spider; module Model
         # 
         # Other attributes may be used by DataTypes (see #DataType::ClassMethods.take_attributes), and other code.
         # See also Element.
+        # @yield If a block is given, will be called in the context of the junction model
+        # @param [Symbol] name
+        # @param [Class] type
+        # @param [Hash] attributes
+        # @return [Element]
         def self.element(name, type, attributes={}, &proc)
             name = name.to_sym
             @elements ||= {}
@@ -404,6 +432,10 @@ module Spider; module Model
         end
         
         
+        # @private
+        # Helper method that defines getter and setter for an element
+        # @param [Symbol] name Element name
+        # @return [void]
         def self.define_element_methods(name)
             ivar = :"@#{ name }"
 
@@ -524,10 +556,13 @@ module Spider; module Model
                     end
                 end
                 val
-                #extend_element(name)
             end
         end
         
+        # @private
+        # Helper method that registers an element with the model
+        # @param [Element] element
+        # @return [void]
         def self.add_element(el)
             @elements ||= {}
             @elements[el.name] = el
@@ -546,6 +581,8 @@ module Spider; module Model
         
         
         # Removes a defined element
+        # @param [Symbol|Element] element
+        # @return nil 
         def self.remove_element(el)
             return unless @elements
             el = el.name if el.is_a?(Element)
@@ -571,6 +608,9 @@ module Spider; module Model
             # end
         end
         
+        # @private
+        # Called when an element is defined
+        # @return [void]
         def self.element_defined(el)
             if (@on_element_defined && @on_element_defined[el.name])
                 @on_element_defined[el.name].each do |proc|
@@ -579,6 +619,11 @@ module Spider; module Model
             end
         end
         
+        # Registers a block that will be called whenever an element is defined.
+        # 
+        # The block will be called with the created element as an argument.
+        # @param [Symbol] element_name 
+        # @param [Proc] proc A block to execute
         def self.on_element_defined(el_name, &proc)
             @on_element_defined ||= {}
             @on_element_defined[el_name] ||= []
@@ -599,6 +644,14 @@ module Spider; module Model
         #   end
         #   p = Person.new(...)
         #   p.street == p.address.street
+        # @param [Symbol] element_name
+        # @param [Hash] params Params can be:
+        #                      * :except     Excludes some elements of the integrated model
+        #                      * :overwrite  Allows overwriting this model's elements with the integrated model's ones.
+        #                      * :keep_pks   Integrate the model's primary keys as well
+        #                      * :hidden     Set the :hidden attribute on integrated elements
+        #                      * :mapping    An Hash of new names to assign to integrated elements
+        # @return [void]
         def self.integrate(element_name, params={})
             params ||= {}
             elements[element_name].attributes[:integrated_model] = true
@@ -616,11 +669,18 @@ module Spider; module Model
             model.attributes[:integrated_from_elements] << [self, element_name]
         end
         
+        # @private
+        # Integrates a single element from a model.
+        # See {BaseModel.integrate}
+        # @param [Symbol] element_name
+        # @param [Symbol] element_element The element inside the element's model to integrate
+        # @param [Hash] params See {BaseModel.integrate}
+        # @return [void]
         def self.integrate_element(element_name, element_element, params={})
             el = element_element
             el = self.elements[element_name].model.elements[el] if el.is_a?(Symbol)
             integrated_attributes = {}
-            integrated_attributes[:primary_key] = false if params[:no_pks]
+            integrated_attributes[:primary_key] = false if params[:no_pks] # deprecated
             integrated_attributes[:hidden] = params[:hidden] unless (params[:hidden].nil?)
 
             integrated_attributes[:primary_key] = false unless (params[:keep_pks])
@@ -634,6 +694,10 @@ module Spider; module Model
             define_element_methods(name)
         end
         
+        # Undoes an integration
+        # See {BaseModel.integrate}
+        # @param [Symbol|Element] element
+        # @return [void]
         def self.remove_integrate(element_name)
             element = element_name.is_a?(Element) ? element_name : self.elements[element_name]
             model = element.model
@@ -645,8 +709,12 @@ module Spider; module Model
         
         # Sets additional attributes on the element
         #
-        # _Warning:_ for attributes which are parsed by the BaseModel during element definition,
+        # **Warning:** for attributes which are parsed by the BaseModel during element definition,
         # this will not have the desired effect; remove and redefine the element instead.
+        # 
+        # @param [Symbol] element_name
+        # @param [Hash] attributes Attributes to set
+        # @return [void]
         def self.element_attributes(element_name, attributes)
             elements[element_name].attributes = elements[element_name].attributes.merge(attributes)
             if attributes[:primary_key] && !@primary_keys.include?(elements[element_name])
@@ -658,6 +726,12 @@ module Spider; module Model
         
         # Defines a multiple element. Equivalent to calling
         #   element(name, type, :multiple => true, :association => :many, ...)
+        # See also {BaseModel.element}.
+        # @param [Symbol] name
+        # @param [Class] type
+        # @param [Hash] attributes
+        # @param [Proc] proc
+        # @return [Element]
         def self.many(name, type, attributes={}, &proc)
             attributes[:multiple] = true
             attributes[:association] ||= :many
@@ -665,7 +739,12 @@ module Spider; module Model
         end
         
         # Defines an element with choice association. Shorthand for
-        #   element(name, type, :association => :choice, ...)     
+        #   element(name, type, :association => :choice, ...)  
+        # @param [Symbol] name
+        # @param [Class] type
+        # @param [Hash] attributes
+        # @param [Proc] proc
+        # @return [Element]   
         def self.choice(name, type, attributes={}, &proc)
             attributes[:association] = :choice
             element(name, type, attributes, &proc)
@@ -678,6 +757,10 @@ module Spider; module Model
             many(name, type, attributes, &proc)
         end
         
+        # Defines an element which returns a query on another one.
+        # @param [Symbol] name Name of the new element
+        # @param [Sybmol] element_name Name of the element to run the query on
+        # @param [Hash] attributes Attributes for the new elements. Must have a :condition attribute.
         def self.element_query(name, element_name, attributes={})
             orig_element = self.elements[element_name]
             set_el_query = lambda do
@@ -704,15 +787,12 @@ module Spider; module Model
         end
         
         
-        # Saves the element definition and evals it when first needed, avoiding problems with classes not
-        # available yet when the model is defined.
-        # FIXME: remove?
-        def self.define_elements(&proc) #:nodoc:
-            @elements_definition = proc
-        end
-        
-        # Creates an inline model
-        def self.create_inline_model(name, hash, attributes={}) #:nodoc:
+        # @private
+        # Creates an element with an {InlineModel} as type.
+        # @param [Symbol] name Element name
+        # @param [Hash] hash The hash to create the inline model from 
+        # @param [Hash] attributes Attributes for the new element
+        def self.create_inline_model(name, hash, attributes={})
             model = self.const_set(Spider::Inflector.camelize(name), Class.new(InlineModel))
             model.instance_eval do
                 if attributes[:inline_model]
@@ -737,11 +817,13 @@ module Spider; module Model
         end
         
         # An array of other models this class points to.
+        # @return [Array] An array of models which are referenced by this one's elements.
         def self.submodels
             elements.select{ |name, el| el.model? }.map{ |name, el| el.model }
         end
         
         
+        # @return [void]
         def self.extend_model(model, params={}) #:nodoc:
             if (model == superclass) # first undo table per class inheritance
                 @elements = {}
@@ -778,10 +860,11 @@ module Spider; module Model
         end
         
         # Externalizes the superclass elements making the superclass an external integrated element.
-        # Parameters may be:
-        # * :name               (symbol) name of the created element
-        # * :delete_cascade     (bool) delete cascade the superclass instance. True by default.
-        # * :no_local_pk        (bool) do not define an id for this class
+        # @param [Hash] params Parameters may be:
+        #                       * :name               (symbol) name of the created element
+        #                       * :delete_cascade     (bool) delete cascade the superclass instance. True by default.
+        #                       * :no_local_pk        (bool) do not define an id for this class
+        # @return [void]
         def self.class_table_inheritance(params={})
             self.extend_model(superclass, params)
         end
