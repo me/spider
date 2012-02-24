@@ -195,15 +195,17 @@ module Spider
                         url_db_type = $1
                     end
                 end
-                ask _("Database type: "), :db_type, :choices => ['mysql', 'oracle'], \
+                ask _("Database type: "), :db_type, :choices => ['sqlite', 'mysql', 'oracle'], \
                     :default => url_db_type
                 break unless @db_type
-                db = wizard_instance(get_db_wizard(@db_type))
-                db.parse_url(conf["url"]) if conf && conf["url"] && @db_type == url_db_type
-                db.run
-                editor = Spider.config.get_editor
-                editor.set('storages', @db_label, 'url', db.get_url)
-                editor.save
+                unless @db_type == 'sqlite'
+                    db = wizard_instance(get_db_wizard(@db_type))
+                    db.parse_url(conf["url"]) if conf && conf["url"] && @db_type == url_db_type
+                    db.run
+                    editor = Spider.config.get_editor
+                    editor.set('storages', @db_label, 'url', db.get_url)
+                    editor.save
+                end
                 puts _("Configuration saved.")
             end
             
