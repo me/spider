@@ -1,5 +1,14 @@
+= 0.6.24
+== 24 February, 2012
+* Use Rack instead of custom adapters for all servers
+* Use Pry for spider console if available
+* Input widgets are no longer wrapped in divs
+* #before and #after are no longer executed for static files
+* Various fixes, some api documentation
+
+
 = 0.6.23
-== 6 February, 2011
+== 6 February, 2012
 * Config options can now have a Proc for :choices; new :fallback param to reuse other config
 * Added new-link, edit-link attributes to Crud
 * Added Twitter Bootstrap 2 to core components
