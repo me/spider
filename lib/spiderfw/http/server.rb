@@ -96,6 +96,7 @@ module Spider; module HTTP
                 ssl_server = nil
 
                 require 'spiderfw/init'
+                Spider.logger.info{ "Routes: \n"+Spider::HomeController.print_app_routes }
                 Spider.startup
                 opts, ssl_opts = self.get_opts(server_name, options)
                 
