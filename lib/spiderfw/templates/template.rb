@@ -258,7 +258,12 @@ module Spider
                 end
             end
             @compiled = self.class.cache.fetch(cache_path) do
-                compile(:mode => @mode)
+                begin
+                    compile(:mode => @mode)
+                rescue Exception => exc
+                    Spider.logger.error("Failed compilation of template #{@path}:")
+                    raise
+                end
             end
         end
         
