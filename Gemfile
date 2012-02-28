@@ -6,9 +6,6 @@ gemspec :development_group => :devel
 
 gem "json", :platforms => [:mri_18, :mri_19]
 gem "mongrel", '>= 1.2.0.pre2'
-gem "pry"
-gem "pry-nav"
-gem "pry-stack_explorer"
 gem "cldr", '>= 0.1.6'
 gem "pry"
 gem "pry-nav"
