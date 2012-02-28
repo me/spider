@@ -121,7 +121,7 @@ module Spider
             def url(action=nil)
                 u = @default_route || ''
                 u += "/#{action}" if action
-                if @default_dispatcher
+                if @default_dispatcher && @default_dispatcher != self
                     u = @default_dispatcher.url + '/' + u
                 elsif self.app
                     u = self.app.url + '/' + u
