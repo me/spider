@@ -516,6 +516,11 @@ END_OF_EVAL
             def self.parse_hash(h)
                 spec = self.new
                 h.each do |key, value|
+                    unless spec.respond_to?(:"#{key}")
+                        Spider.output("Bad spec key #{key} in:", :ERROR)
+                        Spider.output(h.inspect, :ERROR)
+                        next
+                    end
                     if value.is_a?(Array)
                         spec.send(:"#{key}", *value)
                     else
