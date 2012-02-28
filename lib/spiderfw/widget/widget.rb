@@ -16,7 +16,7 @@ module Spider
         attr_accessor :active
         
         @@common_attributes = {
-            :id => {}
+            :id => {:process => lambda{ |val| val.gsub('-', '_')}}
         }
         
         class << self
