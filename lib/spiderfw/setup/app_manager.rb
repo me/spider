@@ -125,7 +125,7 @@ module Spider
             use_git = false
             if spec.git_repo && !options[:no_git]
                 app_path = File.join(@home_path, "apps/#{spec.app_id}")
-                use_git = true if File.directory?(File.join(app_path, '.git'))
+                use_git = true if File.exists?(File.join(app_path, '.git'))
             end
             if use_git && !self.class.git_available?
                 Spider.output _("Can't update app #{spec.id} via git, since git gem is not available") % spec.app_id, :ERROR
@@ -281,11 +281,24 @@ module Spider
                      `git submodule init`
                      `git submodule update`
                      repo.add(['.gitmodules', "apps/#{spec.id}"])
-                     repo.commit(_("Added app %s") % spec.id) 
+                     begin
+                        repo.commit(_("Added app %s") % spec.id) 
+                    rescue Git::GitExecuteError => exc
+                        # If no changes added, it means the app was deleted and then reinstalled, 
+                        # no need to raise an exception
+                        raise unless exc.message =~ /no changes added/
+                    end
                  end
             else
                 Dir.chdir(File.join(@home_path, 'apps')) do
                     Git.clone(repo_url, spec.id) 
+                end
+            end
+            app_path = File.join(@home_path, "apps", spec.id)
+            if spec.branch != 'master'
+                reset_git_env
+                Dir.chdir(app_path) do
+                    `git checkout #{spec.branch}`
                 end
             end
          end
@@ -294,8 +307,7 @@ module Spider
              require 'rubygems/package'
              client = AppServerClient.new(spec.app_server)
              print _("Fetching %s from server... ") % spec.app_id
-             options[:branch] ||= 'master'
-             tmp_path = client.fetch_app(spec.app_id, options[:branch])
+             tmp_path = client.fetch_app(spec.app_id, spec.branch)
              Spider.output _("Fetched.")
              dest = File.join(@home_path, "apps/#{spec.app_id}")
              FileUtils.mkdir_p(dest)
@@ -336,9 +348,14 @@ module Spider
             app_path = File.join(@home_path, "apps", spec.id)
             app_repo = Git.open(app_path)
             Spider.output _("Updating %s from %s") % [spec.app_id, spec.git_repo]
-            options[:branch] ||= 'master'
             Dir.chdir(app_path) do
-                app_repo.branch('master').checkout
+                response = `git status`
+                unless response =~ /working directory clean/
+                    Spider.output(_("You have local modifications in the #{spec.id} app"), :ERROR)
+                    Spider.output(_("Commit them or reset repo to update"), :ERROR)
+                    exit
+                end
+                `git checkout master`
             end
             response = err = nil
             Dir.chdir(app_path) do
@@ -348,9 +365,10 @@ module Spider
                 Spider.output err, :ERROR
                 raise "Unable to update"
             end
-            Dir.chdir(app_path) do
-                app_repo.reset('HEAD', :hard => true)
-                app_repo.branch('master').checkout
+            if spec.branch != 'master'
+                Dir.chdir(app_path) do
+                    `git checkout #{spec.branch}`
+                end
             end
             # response = err = nil
             # Dir.chdir(app_path) do
@@ -473,6 +491,16 @@ module Spider
             end
             app.installed_version = app.version
             done_tasks
+        end
+
+
+        private
+
+        def reset_git_env
+            ENV['GIT_WORK_TREE'] = nil
+            ENV["GIT_INDEX_FILE"] = nil
+            ENV["GIT_WORK_TREE"] = nil
+            ENV["GIT_DIR"] = nil
         end
 
 

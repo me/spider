@@ -549,6 +549,11 @@ END_OF_EVAL
                 self.gems_optional.map{ |g| g.is_a?(Array) ? g.first : g }
             end
 
+            def branch(val=nil)
+                @branch = val if val
+                @branch
+            end
+
         end
         
         # Helper class to sort the runtime dependencies of an app using TSort.
