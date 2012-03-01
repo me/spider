@@ -109,6 +109,7 @@ module Spider::CommandLine
             install.short_desc = _("Install an app")
             install.options = CmdParse::OptionParserWrapper.new do |opt|
                 opt.on("--[no-]git", _("Use git for installing apps"), "-g"){ |r| @git = r }
+                opt.on("--rw", _("Use read-write git repository"), "-w"){ |rw| @rw = true }
                 opt.on("--no-dependencies", _("Don't install other apps this one depends on"), "-d"){ |d| 
                     @no_deps = true 
                 }
@@ -130,7 +131,8 @@ module Spider::CommandLine
                 require 'spiderfw/setup/app_manager'
                 options = {
                     :use_git => @git, :all => @all, :no_deps => @no_deps, :optional => @optional, 
-                    :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate
+                    :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate,
+                    :rw => @rw
                 }
                 options[:url] = @server_url if @server_url
                 options[:branch] = @branch if @branch

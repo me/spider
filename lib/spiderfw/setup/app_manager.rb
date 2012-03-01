@@ -267,7 +267,7 @@ module Spider
              if ::File.directory?(File.join(@home_path, '.git'))
                 repo = Git.open(@home_path)
              end
-             repo_url = spec.git_repo_rw || spec.git_repo
+             repo_url = options[:rw] ? spec.git_repo_rw : spec.git_repo
              Spider.output _("Fetching %s from %s") % [spec.app_id, repo_url]
 
              if options[:ssh_user] && repo_url =~ /ssh:\/\/([^@]+@)?(.+)/
