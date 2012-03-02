@@ -266,9 +266,14 @@ module Spider
                             compiler.compile(ass[:path], dest)
                         rescue Exception
                             if ext == '.less'
-                                Spider.logger.error("Unable to compile LESS. Please ensure you have a JS backend
-                                 (see https://github.com/sstephenson/execjs)")
-                            else
+                                msg = "Unable to compile LESS file #{ass[:path]}."
+                                msg += "Please ensure you have a JS backend (see https://github.com/sstephenson/execjs)"
+                            elsif ext == '.scss' || ext == '.sass'
+                                msg = "Unable to compile SASS file #{ass[:path]}."
+                                msg += "Please ensure that you have the 'sass' (and optionally 'compass') gems installed."
+                            end
+                            Spider.logger.error(msg)
+                            unless File.exist?(dest)
                                 raise
                             end
                         end
