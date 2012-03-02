@@ -197,7 +197,7 @@ module Spider
                 end
                 ask _("Database type: "), :db_type, :choices => ['sqlite', 'mysql', 'oracle'], \
                     :default => url_db_type
-                break unless @db_type
+                return unless @db_type
                 unless @db_type == 'sqlite'
                     db = wizard_instance(get_db_wizard(@db_type))
                     db.parse_url(conf["url"]) if conf && conf["url"] && @db_type == url_db_type
