@@ -29,6 +29,7 @@ module Spider
         attr_accessor :runtime_overrides
         attr_reader :overrides, :path, :subtemplates, :widgets, :content
         attr_accessor :asset_profiles
+        attr_accessor :subtemplate_of
         
         @@registered = {}
         @@widget_plugins = {}
@@ -260,7 +261,7 @@ module Spider
             @compiled = self.class.cache.fetch(cache_path) do
                 begin
                     compile(:mode => @mode)
-                rescue Exception => exc
+                rescue Exception
                     Spider.logger.error("Failed compilation of template #{@path}:")
                     raise
                 end
@@ -273,7 +274,7 @@ module Spider
             compiled.source_path = @path
             doc = open(@path){ |f| Hpricot.XML(f) }
             root = get_el(doc)
-            el = process_tags(root)
+            process_tags(root)
             apply_overrides(root)
             root.search('tpl:placeholder').remove # remove empty placeholders
             owner_class = @owner ? @owner.class : @owner_class
@@ -293,7 +294,6 @@ module Spider
             root.search('.to_delete').remove
             root.search('tpl:assets').each do |ass|
                 if wattr = ass.get_attribute('widgets')
-                    widgets = []
                     wattr.split(/,\s*/).each do |w|
                         w_templates = nil
                         if w =~ /(\.+)\((.+)\)/
@@ -337,6 +337,7 @@ module Spider
             compiled.block = root_block.compile(options)
             subtemplates.each do |id, sub|
                 sub.owner_class = @subtemplate_owners[id]
+                sub.subtemplate_of = options[:owner_class]
                 compiled.subtemplates[id] = sub.compile(options.merge({:mode => :widget})) # FIXME! :mode => :widget is wrong, it's just a quick kludge
                 @assets += compiled.subtemplates[id].assets
             end
@@ -515,6 +516,7 @@ module Spider
                     ext_owner = @owner.class
                     ext_app = ext_owner.app
                 end
+                @extended_app = ext_app
                 ext_search_paths = nil
                 if ext_owner && ext_owner.respond_to?(:template_paths)
                     ext_search_paths = ext_owner.template_paths
@@ -527,7 +529,6 @@ module Spider
                     assets += root.children_of_type('tpl:assets')
                 end
                 @dependencies << ext
-                tpl = Template.new(ext)
                 root = get_el(ext)
                 if ext_app.short_name != our_domain
                     root.set_attribute('tpl:text-domain', ext_app.short_name)
@@ -832,6 +833,18 @@ module Spider
             if override.name == 'tpl:delete'
                 found.remove
             else
+                td = nil
+                orig_td = nil
+                if @extended_app
+                    td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : nil
+                    orig_td = @extended_app.short_name
+                elsif @subtemplate_of
+                    td = @subtemplate_of.respond_to?(:app) ? @subtemplate_of.app.short_name : nil
+                    orig_td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : nil
+                end
+                if td && orig_td && td != orig_td
+                    override.innerHTML = '<tpl:pass tpl:text-domain="'+td+'">'+override.innerHTML+'</tpl:pass>'                
+                end
                 found.each do |f|
                     o_doc = nil
                     if override.name == 'tpl:override-content'
@@ -842,10 +855,16 @@ module Spider
                             if o_search = o.get_attribute('search')
                                 o_doc ||= Hpricot("<o>#{overridden}</o>")
                                 ovr = o_doc.root.search(o_search).to_html
-                            end 
+                            end
+                            if orig_td
+                                ovr = '<tpl:pass tpl:text-domain="'+orig_td+'">'+ovr+'</tpl:pass>'
+                            end
                             o.swap(ovr)
                         end
                     elsif override.name == 'tpl:override' || override.name == 'tpl:content'
+                        if orig_td
+                            f.set_attribute('tpl:text-domain', orig_td)
+                        end
                         overridden = f.to_html
                         parent = f.parent
                         if f == el
@@ -877,6 +896,7 @@ module Spider
                     elsif override.name == 'tpl:after'
                         f.after(override.innerHTML)
                     end
+
                 end
             end
         end
