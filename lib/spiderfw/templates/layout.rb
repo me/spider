@@ -33,7 +33,7 @@ module Spider
             assets = {:css => [], :js => []}
             compress_assets = {:js => {}, :css => {}}
             seen = {}
-            js_messages = []
+            js_translations = {}
             use_cdn = Spider.conf.get('assets.use_cdn')
             cname = File.basename(@path, '.layout.shtml')
             cname = File.basename(cname, '.shtml')
@@ -49,7 +49,7 @@ module Spider
                 
                 ass = compile_asset(ass)
 
-                res = prepare_asset(ass, compress_assets, js_messages)
+                res = prepare_asset(ass, compress_assets, js_translations)
                 assets[:css] += res[:css]
                 assets[:js] += res[:js]
 
@@ -87,18 +87,16 @@ module Spider
             @content[:yield_to] = @template
             @scene.assets = @template_assets
             @scene.extend(LayoutScene)
-            if js_messages.empty?
+            if js_translations.empty?
                 @scene.js_translations = ""
             else
-                translations = {}
-                js_messages.each{ |msg| translations[msg] = _(msg) }
-                @scene.js_translations = "var translations = #{translations.to_json}"
+                @scene.js_translations = "var translations = #{js_translations.to_json}"
             end
             
             @assets_prepared = true
         end
 
-        def prepare_asset(ass, compress_assets={}, js_messages=[])
+        def prepare_asset(ass, compress_assets={}, js_translations={})
             type = ass[:type].to_sym
             assets = {:css => [], :js => []}
             pub_dest = nil
@@ -168,7 +166,13 @@ module Spider
             if ass[:gettext] && type == :js
                 msg_path = asset_gettext_messages_file(ass[:path])
                 if File.exists?(msg_path)
-                    js_messages += JSON.parse(File.read(msg_path))
+                    js_messages = JSON.parse(File.read(msg_path))
+                    Spider::GetText.in_domain(ass[:app].short_name) do
+                        js_messages.each{ |msg|
+                            next if js_translations.key?(msg)
+                            js_translations[msg] = _(msg) 
+                        }
+                    end
                 else
                     Spider.logger.warn("Javascript Gettext file #{msg_path} not found")
                 end
