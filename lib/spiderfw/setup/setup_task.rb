@@ -142,7 +142,7 @@ module Spider
         def warn(msg)
             puts msg
             print "\n"+_("Press any key to continue ")
-            $stdin.getch
+            $stdin.getc
             print "\n"
         end
 
