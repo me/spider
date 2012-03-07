@@ -190,6 +190,7 @@ module Spider::CommandLine
                 opt.on("--no-clear-cache", _("Don't clear cache"), "-C"){ |c| @no_clear_cache = true }
                 opt.on("--no-restart", _("Don't restart the server after the udpate"), "-R"){ |r| @no_restart = true }
                 opt.on("--branch [BRANCH]", _("Install app from specific branch"), "-b"){ |b| @branch = b }
+                opt.on("--no-rollback", _("Don't rollback if update fails")){ |rb| @no_rollback = rb }
             end
             update.set_execution_block do |args|
                 $SPIDER_INTERACTIVE = true
@@ -201,7 +202,7 @@ module Spider::CommandLine
                 options = {
                     :no_git => @no_git, :all => @all, :no_deps => @no_deps, :no_optional => @no_optional, 
                     :no_gems => @no_gems, :no_optional_gems => @no_optional_gems, :no_activate => @no_activate,
-                    :clear_cache => !@no_clear_cache, :restart => !@no_restart
+                    :clear_cache => !@no_clear_cache, :restart => !@no_restart, :no_rollback => @no_rollback
                 }
                 options[:url] = @server_url if @server_url
                 options[:branch] = @branch if @branch

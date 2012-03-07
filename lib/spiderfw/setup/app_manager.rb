@@ -90,8 +90,8 @@ module Spider
                     do_update(spec, options)
                 end
                 post_update(specs[:update], options)
-            rescue => exc
-                rollback_update
+            rescue
+                rollback_update unless options[:no_rollback]
                 raise
             end
             unless options[:no_activate]
