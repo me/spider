@@ -3,7 +3,7 @@ Spider.defineWidget('Spider.Forms.Select', 'Spider.Forms.Input', {
 	autoInit: true,
 	
 	ready: function(){
-        var sel = this.el.find('select');
+        var sel = this.el;
 		if (sel.is('select[multiple]')){
             sel.attr('title', 'Aggiungi...');
 		    sel.bsmSelect({
