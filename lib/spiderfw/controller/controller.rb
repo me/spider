@@ -18,6 +18,7 @@ require 'spiderfw/utils/annotations'
 module Spider
     
     class Controller
+        include App::AppClass
         include Dispatcher
         include Logger
         include ControllerMixins
@@ -38,15 +39,6 @@ module Spider
                 'index'
             end
             
-            def app
-                return @app if @app
-                @app ||= self.parent_module
-                while @app && !@app.include?(Spider::App) && @app != Object
-                    @app = @app.parent_module
-                end
-                @app = nil if @app && !@app.include?(Spider::App)
-                return @app
-            end
             
             def template_path
                 return nil unless self.app
