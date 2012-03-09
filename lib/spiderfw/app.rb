@@ -228,6 +228,12 @@ module Spider
                 end
             end
 
+            def route_path(action='')
+                path = Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
+                action = action[1..-1] if action[0].chr == '/'
+                [path, action].reject{ |p| p.blank? }.join('/')
+            end
+
 
             # Convenience method: since all classes inside the app have an #app method,
             # the App itself has it too

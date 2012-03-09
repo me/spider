@@ -62,7 +62,8 @@ module Spider
             return nil if obj == self && route_action == action # short circuit
             meth_action = route_action.length > 0 ? route_action : obj.class.default_action
             begin
-                if (obj.class.dispatch_methods && obj.class.dispatch_methods[method])
+                # Apply dispatch methods (see {Controller.before})
+                if obj.class.dispatch_methods && obj.class.dispatch_methods[method]
                     obj.class.dispatch_methods[method].each do |dm|
                         conditions, d_method, params = dm
                         test = check_action(route_action, conditions)
@@ -71,6 +72,7 @@ module Spider
                     end
                 end
                 res = obj.send(method, route_action, *(new_arguments))
+                # Call, for example, before_my_method
                 unless meth_action.empty?
                     meth_action = meth_action[0..-2] if meth_action[-1].chr == '/'
                     meth_action = meth_action.split('/', 2)[0]
