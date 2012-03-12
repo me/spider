@@ -1113,8 +1113,8 @@ module Spider; module Model
                         rescue TypeError => exc
                             raise TypeError, "Can't convert #{v} to #{element.type} for element #{k} (#{exc.message})"
                         end
-                    elsif element.type == DateTime && v && !v.is_a?(Date) && !v.is_a?(Time)
-                        v = DateTime.parse(v)
+                    elsif [DateTime, Date].include?(element.type) && v && !v.is_a?(Date) && !v.is_a?(Time)
+                        v = element.type.parse(v)
                         changed_v = true
                     elsif element.model? && v.is_a?(Spider::Model::Condition)
                         unless v.primary_keys_only?(element.model)
