@@ -159,13 +159,20 @@ module Spider
                     end
                 when Proc
                     res = try.call(path, self)
-                    if (res)
-                        if (res.is_a?(Array))
+                    if res
+                        if res.is_a?(Array)
                             action = res[0]
                             params = res[1]
                             matched = res[1]
                         else
                             action = res
+                        end
+                    end
+                when Symbol
+                    if Spider::HTTP::METHODS.include?(try)
+                        if @request.http_method == try
+                            action = path
+                            matched = nil
                         end
                     end
                 end
