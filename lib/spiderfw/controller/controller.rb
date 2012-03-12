@@ -143,7 +143,18 @@ module Spider
                 end
                 u
             end
-            alias :url :route_path
+
+            # Returns the full URL for the Controller
+            # The Controller's implementation returns the route_path.
+            #
+            # However, the HTTPMixin will override this method to return a full http url;
+            # other mixins can override the method in different ways.
+            # @param [String] action Additional action to get path for
+            # @return [String] The canonical URL for this controller
+            def url(action=nil)
+                route_path(action)
+            end
+            alias :route_url :url
             
             
         end
