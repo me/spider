@@ -242,7 +242,8 @@ module Spider
         # dispatch to any route
         # @return [bool] True if the controller is the final target
         def action_target?
-            !@dispatch_next[@call_path] || @dispatch_next[@call_path].dest == self
+            !@dispatch_next[@call_path] || @dispatch_next[@call_path].dest == self \
+            || @dispatch_next[@call_path].dest == self.class
         end
         
         # @return [bool] false if the target of the call is a widget, true otherwise
@@ -421,6 +422,9 @@ module Spider
                     set_executed_method(route.action)
                 end
                 return klass
+            elsif klass == self.class
+                self.set_action(route.action)
+                return self
             end
             obj = klass.new(@request, @response, @scene)
             obj.dispatch_action = route.matched || ''
@@ -447,7 +451,7 @@ module Spider
         # @return [Symbol] The executed_method
         def set_executed_method(action)
             method, additional_arguments = get_action_method(action)
-            if (method && controller_action?(method))
+            if method && controller_action?(method)
                 @executed_method = method.to_sym
                 @executed_method_arguments = additional_arguments || []
             end
