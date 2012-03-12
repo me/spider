@@ -467,7 +467,7 @@ module Spider; module ControllerMixins
                     @output_formats[method] << format
                     @output_format_params[method] ||= {}
                     @output_format_params[method][format] = params
-                    controller_actions(method)
+                    controller_action(method, params)
                     return format
                 end
                 return @default_output_format unless @output_formats[method] && @output_formats[method][0]
