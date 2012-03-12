@@ -39,9 +39,9 @@ module Spider; module ControllerMixins
             return super unless action_target?
             format = nil
             req_format = self.is_a?(Widget) && @is_target && @request.params['_wf'] ? @request.params['_wf'].to_sym : @request.format
-            if (req_format && self.class.output_formats[@executed_method])
+            if req_format && self.class.output_formats[@executed_method]
                 format = req_format if self.class.output_format?(@executed_method, req_format)
-                if (format)
+                if format
                     format_params = self.class.output_format_params(@executed_method, format)
                 end
                 if @executed_method && !format || (format_params && format_params[:widgets] && !target_mode?)
@@ -50,6 +50,11 @@ module Spider; module ControllerMixins
             end
             format ||= self.class.output_format(@executed_method)
             format_params ||= self.class.output_format_params(@executed_method, format)
+            
+            unless !format_params || format_params[:method].blank?
+                format_params[:method] = [format_params[:method]] unless format_params[:method].is_a?(Enumerable)
+                raise Forbidden unless format_params[:method].include?(@request.http_method)
+            end
             output_format_headers(format)
             @executed_format = format
             @executed_format_params = format_params
@@ -100,7 +105,7 @@ module Spider; module ControllerMixins
             @is_target = false if target_mode? && !self.is_a?(Spider::Widget)
             if (self.is_a?(Widget) && @is_target && @request.params['_wp'])
                 params = @request.params['_wp']
-            elsif (@visual_params.is_a?(Hash) && @visual_params[:params])
+            elsif @visual_params.is_a?(Hash) && @visual_params[:params]
                 p_first, p_rest = action.split('/')
                 params = format_params[:params].call(p_rest) if p_rest
             end
