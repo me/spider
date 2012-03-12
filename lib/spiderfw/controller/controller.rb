@@ -94,6 +94,13 @@ module Spider
                 end
                 @controller_actions
             end
+
+            def controller_action(method, params)
+                @controller_actions ||= []
+                @controller_actions << method
+                @controller_action_params ||= {}
+                @controller_action_params[method] = params
+            end
             
             # @return [bool] true if the method is a controller action
             def controller_action?(method)
@@ -159,7 +166,7 @@ module Spider
             
         end
         
-        define_annotation(:action) { |k, m| k.controller_actions(m) }
+        define_annotation(:action) { |k, m, params| k.controller_action(m, params) }
         
         # @return [Spider::Request]
         attr_reader :request
