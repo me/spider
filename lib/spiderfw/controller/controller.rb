@@ -206,7 +206,7 @@ module Spider
         end
         
         # @return [String] The actual action path used to reach this Controller
-        def call_path
+        def request_path
             act = @dispatch_action || ''
             if (@dispatch_previous)
                 prev = @dispatch_previous.call_path 
@@ -214,7 +214,7 @@ module Spider
             end
             return ('/'+act).gsub(/\/+/, '/').sub(/\/$/, '')
         end
-        alias :request_path  :call_path
+        alias :call_path :request_path
         
         # Returns the method to call on the controller given an action, and the arguments
         # that should be passed to it.
