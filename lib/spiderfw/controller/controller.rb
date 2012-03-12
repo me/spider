@@ -277,7 +277,6 @@ module Spider
                 if @executed_method
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
-                    @controller_action = args[0]
                     arity = meth.arity
                     unless arity == -1
                         arity = (-arity + 1) if arity < 0
@@ -398,6 +397,7 @@ module Spider
             }
             scene.controller = {
                 :request_path => request_path,
+                :route_path => route_path,
                 :class => self.class
             }
             scene.content = {}
