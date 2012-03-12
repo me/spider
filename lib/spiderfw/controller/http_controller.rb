@@ -43,10 +43,12 @@ module Spider
                 @request.params = Spider::HTTP.parse_query(@request.env['QUERY_STRING'])
                 @request.get = @request.params
             end
-            if @request.env['REQUEST_METHOD'] == 'POST' && @request.env['HTTP_CONTENT_TYPE']
+            if ['POST', 'PUT', 'DELETE'].include?(@request.env['REQUEST_METHOD']) && @request.env['HTTP_CONTENT_TYPE']
                 if @request.env['HTTP_CONTENT_TYPE'].include?('application/x-www-form-urlencoded')
-                    @request.post = Spider::HTTP.parse_query(@request.read_body)
-                    @request.params.merge!(@request.post)
+                    data = Spider::HTTP.parse_query(@request.read_body)
+                    req_meth = @request.env['REQUEST_METHOD'].downcase
+                    @request.send(:"#{req_meth}=", data)
+                    @request.params.merge!(@request.send(:"#{req_meth}"))
                 elsif @request.env['HTTP_CONTENT_TYPE'] =~ Spider::HTTP::MULTIPART_REGEXP
                     multipart_params, multipart_files = Spider::HTTP.parse_multipart(@request.body, $1, @request.env['CONTENT_LENGTH'].to_i)
                     @request.params.merge!(multipart_params)
@@ -176,7 +178,7 @@ module Spider
         end
         
         module HTTPRequest
-            attr_accessor :http_method, :http_host, :domain, :port, :post, :get
+            attr_accessor :http_method, :http_host, :domain, :port, :post, :get, :put, :delete
             
             # Returns PATH_INFO reversing any proxy mappings if needed.
             def path
@@ -228,6 +230,10 @@ module Spider
             def get
                 @get ||= {}
             end
+
+            def put
+                @put ||= {}
+            end
             
             def post?
                 self.http_method == :POST
@@ -235,6 +241,14 @@ module Spider
             
             def get?
                 self.http_method == :GET
+            end
+
+            def put?
+                self.http_method == :PUT
+            end
+
+            def delete?
+                self.http_method == :DELETE
             end
             
         end

@@ -15,6 +15,11 @@ module Spider
         FILENAME_REGEX     = /Content-Disposition:.* filename="?([^\";]*)"?/ni.freeze
         CRLF               = "\r\n".freeze
         EOL                = CRLF
+
+        METHODS = [
+            :GET, :POST, :PUT, :DELETE, :HEAD, :TRACE, :CONNECT,
+            :PROPFIND, :PROPPATCH, :MKCOL, :COPY, :MOVE, :LOCK, :UNLOCK
+        ]
         
         module StatusCodes
         
