@@ -212,13 +212,14 @@ module Spider; module ControllerMixins
             end
             
             
-            def http_url(action=nil)
-                return nil unless Spider.site
+            def url(action=nil)
+                return super unless Spider.site
                 u = "http://#{Spider.site.domain}"
                 u += ":#{Spider.site.port}" unless Spider.site.port == 80
-                u += HTTPMixin.reverse_proxy_mapping(self.url(action))
+                u += HTTPMixin.reverse_proxy_mapping(super(action))
                 u
             end
+            alias :http_url :url
             
         end
         
