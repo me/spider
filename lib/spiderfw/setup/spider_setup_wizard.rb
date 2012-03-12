@@ -69,7 +69,7 @@ module Spider
 
                 print prompt
             
-                res = $stdin.gets.strip
+                res = $stdin.gets.strip.downcase
                 
                 good = true
                 if options[:type] == Spider::Bool
