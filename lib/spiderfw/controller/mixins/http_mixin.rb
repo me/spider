@@ -242,7 +242,10 @@ module Spider; module ControllerMixins
                 u += HTTPMixin.reverse_proxy_mapping(super(action))
                 u
             end
-            alias :http_url :url
+
+            def http_url(action=nil)
+                url(action)
+            end
             
         end
         
