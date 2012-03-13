@@ -398,7 +398,6 @@ module Spider
             }
             scene.controller = {
                 :request_path => request_path,
-                :route_path => route_path,
                 :class => self.class
             }
             scene.content = {}
