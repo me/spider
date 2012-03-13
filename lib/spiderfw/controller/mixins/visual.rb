@@ -197,7 +197,7 @@ module Spider; module ControllerMixins
                 template._widget_action = @request.params['_action']
             else
                 template._action_to = options[:action_to]
-                template._action = @controller_action
+                template._action = @current_action
             end
             return template
         end

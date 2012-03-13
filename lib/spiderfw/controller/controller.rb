@@ -277,6 +277,7 @@ module Spider
                 if @executed_method
                     meth = self.method(@executed_method)
                     args = arguments + @executed_method_arguments
+                    @current_action = action
                     arity = meth.arity
                     unless arity == -1
                         arity = (-arity + 1) if arity < 0
