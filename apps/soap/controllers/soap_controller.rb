@@ -14,10 +14,13 @@ module Spider
         include Soap
         include HTTPMixin
         
-        options[:allow_content_encoding_gzip] = true
 
         class <<self
             attr_accessor :soap_methods, :soap_types
+
+            def soap_options
+                @options ||= {:allow_content_encoding_gzip => true}
+            end
             
             # Returns the currently used soap registry
             def soap_registry
@@ -219,7 +222,7 @@ module Spider
         end
 
         def encode_gzip?
-            self.class.options[:allow_content_encoding_gzip] and defined?(::Zlib) and
+            self.class.soap_options[:allow_content_encoding_gzip] and defined?(::Zlib) and
             @request.env['HTTP_ACCEPT_ENCODING'] and
             @request.env['HTTP_ACCEPT_ENCODING'].split(/,\s*/).include?('gzip')
         end
