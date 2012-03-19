@@ -17,7 +17,7 @@
           end
         %>
       </sp:run>
-      <p sp:if="!@model.elements[<%=@attributes['element']%>].attributes[:description].blank?" class="help-block">
+      <p sp:if="@model.elements[<%=@attributes['element']%>] && !@model.elements[<%=@attributes['element']%>].attributes[:description].blank?" class="help-block">
         { @model.elements[<%=@attributes['element']%>].attributes[:description] }
       </p>
     </div>
