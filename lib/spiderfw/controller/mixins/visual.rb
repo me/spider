@@ -197,7 +197,11 @@ module Spider; module ControllerMixins
                 template._widget_action = @request.params['_action']
             else
                 template._action_to = options[:action_to]
-                template._action = @current_action
+                template_action = @current_action.to_s.split('/')
+                if template_action.first == @executed_method.to_s
+                    template_action = template_action[1..-1]
+                end
+                template._action = template_action.join('/')
             end
             return template
         end
