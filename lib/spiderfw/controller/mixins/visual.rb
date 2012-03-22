@@ -51,9 +51,9 @@ module Spider; module ControllerMixins
             format ||= self.class.output_format(@executed_method)
             format_params ||= self.class.output_format_params(@executed_method, format)
             
-            unless !format_params || format_params[:method].blank?
-                format_params[:method] = [format_params[:method]] unless format_params[:method].is_a?(Enumerable)
-                raise Forbidden unless format_params[:method].include?(@request.http_method)
+            unless !format_params || format_params[:http_method].blank?
+                format_params[:http_method] = [format_params[:http_method]] unless format_params[:http_method].is_a?(Enumerable)
+                raise Forbidden unless format_params[:http_method].include?(@request.http_method)
             end
             output_format_headers(format)
             @executed_format = format
