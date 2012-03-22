@@ -1,3 +1,10 @@
+= 0.6.25
+== 07 March, 2012
+* Fixed error when starting irb console
+* Dashes in widget ids are now replaced by underscores automatically (to allow widget paths)
+* Fixes in app install
+* Fixed GetText domain setting in overrides and JavaScript
+
 = 0.6.24
 == 24 February, 2012
 * Use Rack instead of custom adapters for all servers

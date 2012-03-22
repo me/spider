@@ -228,6 +228,12 @@ module Spider
                 end
             end
 
+            def route_path(action='')
+                path = Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
+                action = action[1..-1] if action[0].chr == '/'
+                [path, action].reject{ |p| p.blank? }.join('/')
+            end
+
 
             # Convenience method: since all classes inside the app have an #app method,
             # the App itself has it too
@@ -599,6 +605,34 @@ END_OF_EVAL
             
             include TSort
             
+        end
+
+        # This module is included Controller and BaseModel, and provides the
+        # app method, returning the class' app.
+        module AppClass
+
+            def self.included(klass)
+                klass.extend(ClassMethods)
+            end
+
+            # @return [App] The app to which the object's class belongs
+            def app
+                return self.class.app
+            end
+
+            module ClassMethods
+
+                # @return [App] The app to which the class belongs
+                def app
+                    return @app if @app
+                    @app ||= self.parent_module
+                    while @app && !@app.include?(Spider::App) && @app != Object
+                        @app = @app.parent_module
+                    end
+                    @app = nil if @app && !@app.include?(Spider::App)
+                    return @app
+                end
+            end
         end
         
     end

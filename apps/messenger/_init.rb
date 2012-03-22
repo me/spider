@@ -31,6 +31,7 @@ end
     require File.join('apps/messenger/backends/sms/', backend)
 end
 
+Spider.register_resource_type(:sms, :extensions => ['erb'], :path => 'templates/sms')
 
 Spider::Admin.register_app(Spider::Messenger, Spider::Messenger::AdminController, {
     :icon => 'app_icon.png', :priority => 1

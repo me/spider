@@ -12,6 +12,11 @@ module Spider; module ControllerMixins
             klass.extend(ClassMethods)
         end
         
+        # Sets the headers to redirect the browser to the given url, and calls
+        # {Controller#done} to terminate the execution of the Controller chain
+        # @param [String] url
+        # @param [Fixnum] code HTTP status to send
+        # @return void
         def redirect(url, code=Spider::HTTP::SEE_OTHER)
             debug "REDIRECTING TO #{url}"
             @request.session.persist if @request.session # It might be too late afterwards
@@ -22,30 +27,35 @@ module Spider; module ControllerMixins
             done
         end
         
-        def self.reverse_proxy_mapping(url)
-            return '' unless url
+        # Takes a url path that the framework would accept, and transforms it
+        # into the url path the webserver would send, given the settings in http.proxy_mapping
+        # @param [Strint] url_path
+        # @return [String] The transformed url path
+        def self.reverse_proxy_mapping(url_path)
+            return '' unless url_path
             if (maps = Spider.conf.get('http.proxy_mapping'))
                 maps.each do |proxy, spider|
                     spider ||= ''
-                    return proxy + url[spider.length..-1] if (spider == "" || url[0..spider.length-1] == spider)
+                    return proxy + url_path[spider.length..-1] if (spider == "" || url_path[0..spider.length-1] == spider)
                 end
             end
-            return url
+            return url_path
         end
         
         # Returns the http path used to call the current controller & action.
         # Reverses any proxy mappings to the Controller#request_path.
+        # @return [String]
         def request_path
             HTTPMixin.reverse_proxy_mapping(super)
         end
         
-        # Returns the request_path prefixed with http:// and the current host.
+        # @return [String] the request_path prefixed with http:// and the current host.
         def request_url
             return request_path unless @request.env['HTTP_HOST']
             'http://'+@request.env['HTTP_HOST']+request_path
         end
         
-        # Returns the request_url with query params, if any
+        # @return [String] the request_url with query params, if any
         def request_full_url
             url = request_url
             if (@request.env['QUERY_STRING'] && !@request.env['QUERY_STRING'].empty?)
@@ -54,11 +64,18 @@ module Spider; module ControllerMixins
             return url
         end
         
-        def self.output_charset(val)
+        # Sets or returns the charset for the controller
+        # @param [String|nil] The charset
+        # @return [String] The charset in use
+        def self.output_charset(val=nil)
             @output_charset = val if val
             @output_charset || Spider.conf.get('http.charset')
         end
         
+        # Sets a Content type
+        # @param [String|Symbol] Content type, or a symbol representing it
+        #                        (Can be :text, :json, :js, :javascript, :html, :xml)
+        # @return [String] The value of the "Content-Type" header
         def content_type(ct)
             if ct.is_a?(Symbol)
                 ct = {
@@ -73,6 +90,9 @@ module Spider; module ControllerMixins
             @response.headers["Content-Type"] = "#{ct};charset=utf-8"
         end
         
+        # 
+        # @param [String] action
+        # @param [*Object] arguments
         def before(action='', *arguments)
             return super if self.is_a?(Spider::Widget)
              # FIXME: the Spider::Widget check
@@ -89,13 +109,16 @@ module Spider; module ControllerMixins
             super
         end
         
+        # @return [String] the base URL to which the installation responds
         def self.base_url
             HTTPMixin.reverse_proxy_mapping("")
         end
         
+        # @return [String] the base URL to which the installation responds
         def base_url
             HTTPMixin.base_url
         end
+
 
         def prepare_scene(scene)
             scene = super
@@ -212,12 +235,16 @@ module Spider; module ControllerMixins
             end
             
             
-            def http_url(action=nil)
-                return nil unless Spider.site
+            def url(action=nil)
+                return super unless Spider.site
                 u = "http://#{Spider.site.domain}"
                 u += ":#{Spider.site.port}" unless Spider.site.port == 80
-                u += HTTPMixin.reverse_proxy_mapping(self.url(action))
+                u += HTTPMixin.reverse_proxy_mapping(super(action))
                 u
+            end
+
+            def http_url(action=nil)
+                url(action)
             end
             
         end

@@ -52,6 +52,7 @@ module Spider; module Model
     #   p salmon_lovers[0].name
     #     => 'Cat'
     class BaseModel
+        include App::AppClass
         include Spider::Logger
         include DataTypes
         include Spider::QueryFuncs
@@ -136,17 +137,6 @@ module Spider; module Model
         # @return [Array]
         def self.subclasses
             @subclasses || []
-        end
-        
-        # Returns the parent Spider::App of the module
-        # @return [Spider::App]
-        def self.app
-            return @app if @app
-            app = self
-            while app && !app.include?(Spider::App)
-                app = app.parent_module
-            end
-            @app = app
         end
         
         

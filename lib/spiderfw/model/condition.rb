@@ -110,6 +110,9 @@ module Spider; module Model
             @comparisons = {}
             @subconditions = []
             params.reject!{ |p| p.nil? }
+            if params[0].is_a?(Proc)
+                params[0] = params[0].call
+            end
             if (params.length == 1 && params[0].is_a?(Hash) && !params[0].is_a?(Condition))
                 params[0].each do |k, v|
                     set(k, '=', v)
@@ -193,14 +196,14 @@ module Spider; module Model
         end
         
         # Adds a subcondtion.
-        # @param [Condition] condition
+        # @param [Condition|Hash|Proc|String] condition
         # @return [void]
         def <<(condition)
-            if (condition.class == self.class)
+            if condition.class == self.class
                 @subconditions << condition
-            elsif (condition.is_a?(Hash))
+            elsif condition.is_a?(Hash) || condition.is_a?(Proc)
                 @subconditions << self.class.new(condition)
-            elsif (condition.class == String)
+            elsif condition.class == String
                 key, val, comparison = parse_comparison(condition)
                 set(key, val, comparison)
             end

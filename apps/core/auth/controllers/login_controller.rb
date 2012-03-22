@@ -5,6 +5,8 @@ module Spider; module Auth
     class LoginController < Spider::Controller
         include HTTPMixin
         include Visual
+
+        layout 'login'
         
         def self.default_redirect
             nil

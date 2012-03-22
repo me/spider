@@ -17,9 +17,13 @@ module Spider; module Model
             Thread.current[:storages][type] ||= {}
             return Thread.current[:storages][type][url] if Thread.current[:storages][type][url]
             klass = nil
-            matches = url.match(/^(.+?):\/\/(.+)/)
-            adapter = matches[1]
-            rest = matches[2]
+            begin
+                matches = url.match(/^(.+?):\/\/(.+)/)
+                adapter = matches[1]
+                rest = matches[2]
+            rescue => exc
+                Spider.output _("The connection string %s is not correct") % url, :error
+            end
             if adapter =~ /(.+):(.+)/
                 connector = $1
                 adapter = $2

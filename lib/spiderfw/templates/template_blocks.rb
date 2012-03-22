@@ -37,6 +37,8 @@ module Spider
                 block = :Run
             elsif el.name == 'sp:yield'
                 block = :Yield
+            elsif !skip_attributes && el.has_attribute?('tpl:text-domain')
+                block = :TextDomain    
             elsif el.name == 'sp:pass' || el.name == 'tpl:pass' || el.name == 'sp:template'
                 block = :Pass
             elsif el.name == 'sp:debugger'
@@ -45,8 +47,6 @@ module Spider
                 block = :ParentContext
             elsif el.name == 'sp:recurse'
                 block = :Recurse
-            elsif !skip_attributes && el.has_attribute?('tpl:text-domain')
-                block = :TextDomain    
             elsif Spider::Template.registered?(el.name)
                 klass = Spider::Template.get_registered_class(el.name)
                 if klass < ::Spider::Widget

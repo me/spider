@@ -75,7 +75,7 @@ module Spider; module Auth
         def try_rescue(exc)
             if (exc.is_a?(Unauthorized))
                 base = @current_require[:redirect] ? @current_require[:redirect] : Spider::Auth.request_url+'/login/'
-                base = request_path+'/'+base unless base[0].chr == '/'
+                base = self.class.url+'/'+base unless base[0].chr == '/'
                 base += '?'
                 redir_url = base + 'redirect='+URI.escape(@request.path)
                 @request.session.flash[:unauthorized_exception] = {:class => exc.class.name, :message => exc.message}

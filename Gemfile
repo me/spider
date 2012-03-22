@@ -19,6 +19,7 @@ gem "cucumber", '~> 0.10.0', :group => :test
 gem "capybara", :group => :test
 gem "culerity", :group => :test
 gem "yui-compressor", :group => :production
+gem "git", :group => :devel
 
 if RUBY_PLATFORM =~ /darwin/
   gem "rb-fsevent", :group => :devel, :platforms => [:mri]

@@ -50,6 +50,13 @@ module Spider
                 end
                 @controller_actions
             end
+
+            def controller_action(method, params)
+                @controller_actions ||= []
+                @controller_actions << method
+                @controller_action_params ||= {}
+                @controller_action_params[method] = params
+            end
             
             def controller_action?(method)
                 @controller_actions && @controller_actions.include?(method)

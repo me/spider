@@ -689,6 +689,19 @@ jQuery.parseISODate = function(iso){
     else return null;
 };
 
+// Same as toISOString, but without time, and ignoring timezone
+Date.prototype.toISODate = (function(){
+    function t(i){return i<10?"0"+i:i;};
+    return function(){
+        return "".concat(
+            this.getFullYear(), "-",
+            t(this.getMonth() + 1), "-",
+            t(this.getDate())
+        );
+    };
+})();
+
+
 if (!Date.prototype.toISOString){
     Date.prototype.toISOString = (function(){
         function t(i){return i<10?"0"+i:i;};
