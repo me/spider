@@ -133,6 +133,7 @@ module Spider
                 try, dest, options = route
                 action = nil
                 nil_route = false
+                next if options[:http_method] && @request.http_method != options[:http_method]
                 case try
                 when true, nil
                     action = path
