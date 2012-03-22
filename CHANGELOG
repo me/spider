@@ -1,3 +1,11 @@
+== 0.6.26
+* Added --no-rollback option to app update
+* Routes by HTTP methods, as a main test or as :http_method option; 
+* Refactored Controller#url and related methods
+* Fixed Etc.getpwuid error on Windows
+* Condition#initialize now accepts a Proc, which must return the argument
+* Various minor fixes
+
 = 0.6.25
 == 07 March, 2012
 * Fixed error when starting irb console
