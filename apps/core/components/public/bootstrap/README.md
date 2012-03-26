@@ -9,7 +9,6 @@ The `scss` version is actively maintained while the `sass` is a converted from t
 
 Developers
 ----------
-
 <a href="http://compass-style.org/">Compass</a> - author and compile `sass` and `scss` files.
 
 Authors
@@ -23,6 +22,6 @@ Authors
 _Looking for co-authors who can help with development of the Compass version._
 
 Copyright, license _et al_
--------------------------
+--------------------------
 
 Please refer to the original <a href="https://github.com/twitter/bootstrap#readme">Readme for Twitter Bootstrap</a> for Copyright, license and everything else.
