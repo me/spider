@@ -405,7 +405,8 @@ module Spider
             ass[:app] = asset_owner.app if asset_owner.respond_to?(:app)
             # FIXME! @definer_class is not correct for Spider::HomeController
             raise "Asset type not given for #{src}" unless type
-            search_classes = [asset_owner, @definer_class]
+            search_classes = [asset_owner]
+            search_classes << @definer_class if @definer_class
             dfnr = @definer_class.superclass if @definer_class && @definer_class.respond_to?(:superclass)
             while dfnr && dfnr < Spider::Widget
                 search_classes << dfnr
