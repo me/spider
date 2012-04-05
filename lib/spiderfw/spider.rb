@@ -196,8 +196,6 @@ module Spider
                 if domain = Spider.conf.get('site.domain')
                     ssl_port = Spider.conf.get('site.ssl') ? Spider.conf.get('site.ssl_port') : nil
                     Spider.site = Site.new(domain, Spider.conf.get('site.port'), ssl_port)
-                elsif File.exists?(Site.cache_file)
-                    Spider.site = Site.load_cache
                 end
             end
             if Spider.conf.get('request.mutex')
