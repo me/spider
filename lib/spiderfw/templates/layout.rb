@@ -268,12 +268,12 @@ module Spider
                             end
                             compiler = compiler_class.new(ass[:app].pub_path)
                             compiler.compile(ass[:path], dest)
-                        rescue Exception
+                        rescue Exception => exc
                             if ext == '.less'
                                 Spider.logger.error("Unable to compile LESS. Please ensure you have a JS backend
                                  (see https://github.com/sstephenson/execjs)")
                             else
-                                raise
+                                Spider.logger.error(exc)
                             end
                         end
                     end
