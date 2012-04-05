@@ -156,10 +156,10 @@ module Spider
             load_configuration File.join($SPIDER_PATH, 'config')
             begin
                 user_rc = File.join(Etc.getpwuid.dir, '.spider.conf.yml')
+                if File.file?(user_rc)
+                    load_configuration_file(user_rc)
+                end
             rescue NoMethodError # No getpwuid under windows
-            end
-            if File.file?(user_rc)
-                load_configuration_file(user_rc)
             end
             load_configuration File.join(@root, 'config')
             self.runmode ||= $SPIDER_RUNMODE if $SPIDER_RUNMODE
