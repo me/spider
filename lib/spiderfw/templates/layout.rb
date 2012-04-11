@@ -277,7 +277,7 @@ module Spider
                                 msg += "Please ensure that you have the 'sass' (and optionally 'compass') gems installed."
                             end
                             Spider.logger.error(msg)
-                            if File.exist?(dest)
+                            if Spider.runmode == "production" && File.exist?(dest)
                                 Spider.logger.error(exc)
                             else
                                 raise
