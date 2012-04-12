@@ -403,7 +403,7 @@ module Spider
                         FileUtils.mkdir_p(File.dirname(url_dest))
                         cachebuster = Spider.conf.get('css.cachebuster')
                         new_url = app_relative_path ? "#{app_relative_path}/#{src_rel}" : src_rel
-                        if File.exist?(url_src)
+                        if File.file?(url_src)
                             mtime = File.mtime(url_src).to_i
                             if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest).to_i
                                 if cachebuster == :soft
