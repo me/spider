@@ -183,8 +183,7 @@ module Spider; module Forms
         
         def run
             #Spider::Logger.debug("FORM EXECUTING")
-            if (@obj)
-                
+            if @obj && @pk
                 @scene.form_desc = @model.label.downcase+' '+ (@obj.to_s || '')
                 if (@action == :sub)
                     
