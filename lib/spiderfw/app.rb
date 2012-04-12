@@ -231,6 +231,16 @@ module Spider
                 end
             end
 
+            # @return [String] The path to the apps' container (the home or the Spider lib)
+            def base_path
+                if Spider.paths[:apps] && @path.index(Spider.paths[:apps])
+                    Spider.paths[:apps]
+                else
+                    $SPIDER_PATH
+                end
+            end
+
+
             def route_path(action='')
                 path = Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)
                 action = action[1..-1] if action[0].chr == '/'
