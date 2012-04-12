@@ -71,6 +71,8 @@ module Spider
             attr_reader :gettext_extensions
             # @return [Array] Additional GetText parasers to use
             attr_reader :gettext_parsers
+            # @return [String] Gettext domain of the app. Defaults to the app short name
+            attr_reader :gettext_domain
             
 
             # Initializes missing variables to default variables.
@@ -98,6 +100,7 @@ module Spider
                 @gettext_parsers ||= []
                 @gettext_dirs ||= ['lib','bin','controllers','models','views','widgets','public']
                 @gettext_extensions ||= ['rb','rhtml','shtml','js']
+                @gettext_domain ||= @short_name
                 
                 find_tags
             end
