@@ -1414,7 +1414,9 @@ module Spider; module Model
             @msg
         end
         def message
-            _(self.class.msg) % @element.label
+            Spider::GetText.in_domain('spider') do
+                _(self.class.msg) % @element.label
+            end
         end
         def to_s
             self.class.name.to_s + " " + message
