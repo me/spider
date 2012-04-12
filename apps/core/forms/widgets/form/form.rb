@@ -27,8 +27,12 @@ module Spider; module Forms
         i_attribute :widget_types
         i_attribute :read_only
         i_attribute :disabled
-        attribute :save_submit_text, :default => lambda{ _('Save') }
-        attribute :insert_submit_text, :default => lambda{ _('Insert') }
+        attribute :save_submit_text, :default => lambda{ 
+            Spider::GetText.in_domain(Spider::Forms.gettext_domain) { _('Save')  } 
+        }
+        attribute :insert_submit_text, :default => lambda{ 
+            Spider::GetText.in_domain(Spider::Forms.gettext_domain) { _('Insert')  } 
+        }
         is_attribute :show_submit_and_new, :default => false
         is_attribute :show_submit_and_stay, :default => false
         is_attribute :show_additional_buttons, :default => false
@@ -190,8 +194,10 @@ module Spider; module Forms
                 @scene.submit_text = @attributes[:insert_submit_text]
             end
             @scene.obj = obj
-            @scene.submit_and_new_text = @attributes[:submit_and_new_text] % @scene.submit_text
-            @scene.submit_and_stay_text = @attributes[:submit_and_stay_text] % @scene.submit_text
+            Spider::GetText.in_domain(Spider::Forms.gettext_domain){
+                @scene.submit_and_new_text = @attributes[:submit_and_new_text] % @scene.submit_text
+                @scene.submit_and_stay_text = @attributes[:submit_and_stay_text] % @scene.submit_text
+            }
             @scene.submit_buttons = @save_actions.keys
             @scene.enctype = 'multipart/form-data' if @multipart
             super
