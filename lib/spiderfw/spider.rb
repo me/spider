@@ -111,8 +111,8 @@ module Spider
                 if File.directory?(File.join(mod.path, 'po'))
                     repos <<  FastGettext::TranslationRepository.build(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
                 end
-                home_pot = File.join(Spider.paths[:root], 'po', "#{mod.short_name}.pot")
-                home_locale = File.join(Spider.paths[:root], 'data', 'locale')
+                home_pot = File.join(mod.base_path, 'po', "#{mod.short_name}.pot")
+                home_locale = File.join(mod.base_path, 'data', 'locale')
                 if File.file?(home_pot) && File.directory?(home_locale)
                     repos << FastGettext::TranslationRepository.build(mod.short_name, :path => home_locale)
                 end
