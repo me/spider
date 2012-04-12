@@ -2,7 +2,7 @@
     _(Queues):
     <ul>
         <li sp:each="@queues |name|">
-            <a href="{ @controller[:url] }/{ name }">{ @queue_info[name][:label] }</a>:
+            <a href="{ @controller[:request_url] }/{ name }">{ @queue_info[name][:label] }</a>:
             <ul>
                 <li>_(Sent messages): <span class="label success">{ @queue_info[name][:sent] }</span></li>
                 <li>_(Queued messages): <span class="label warning">{ @queue_info[name][:queued] }</span></li>
