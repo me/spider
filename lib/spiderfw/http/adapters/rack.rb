@@ -111,7 +111,7 @@ module Spider; module HTTP
                     end
                     controller.call_after(path)
                     controller_done = true
-                rescue => exc
+                rescue Exception => exc
                     Spider.logger.error(exc)
                     controller.ensure if controller
                     controller = nil
