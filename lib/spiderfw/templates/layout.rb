@@ -268,7 +268,7 @@ module Spider
                             end
                             compiler = compiler_class.new(ass[:app].pub_path)
                             compiler.compile(ass[:path], dest)
-                        rescue Exception
+                        rescue Exception => exc
                             if ext == '.less'
                                 msg = "Unable to compile LESS file #{ass[:path]}."
                                 msg += "Please ensure you have a JS backend (see https://github.com/sstephenson/execjs)"
@@ -277,7 +277,9 @@ module Spider
                                 msg += "Please ensure that you have the 'sass' (and optionally 'compass') gems installed."
                             end
                             Spider.logger.error(msg)
-                            unless File.exist?(dest)
+                            if Spider.runmode == "production" && File.exist?(dest)
+                                Spider.logger.error(exc)
+                            else
                                 raise
                             end
                         end
@@ -401,7 +403,7 @@ module Spider
                         FileUtils.mkdir_p(File.dirname(url_dest))
                         cachebuster = Spider.conf.get('css.cachebuster')
                         new_url = app_relative_path ? "#{app_relative_path}/#{src_rel}" : src_rel
-                        if File.exist?(url_src)
+                        if File.file?(url_src)
                             mtime = File.mtime(url_src).to_i
                             if cachebuster && File.exist?(url_dest) && mtime > File.mtime(url_dest).to_i
                                 if cachebuster == :soft

@@ -19,10 +19,11 @@ module Spider
         end
 
         def self.allowed_users
-            users = [Spider::Auth::SuperUser]
+            users = []
             @apps.each do |name, app|
                 users += app[:options][:users] if app[:options][:users]
             end
+            users << Spider::Auth::SuperUser
             users.uniq
         end
         

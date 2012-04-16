@@ -172,6 +172,8 @@ module Spider
                 Spider.logger.error("Not found: #{exc.path}")
             elsif exc.is_a?(Spider::Controller::Forbidden)
                 Spider.logger.warn("Forbidden: #{exc.message}")
+            elsif exc.is_a?(Errno::EPIPE)
+                Spider.logger.warn("Broken pipe")
             else
                 super
             end

@@ -111,8 +111,8 @@ module Spider
                 if File.directory?(File.join(mod.path, 'po'))
                     repos <<  FastGettext::TranslationRepository.build(mod.short_name, :path => File.join(mod.path, 'data', 'locale'))
                 end
-                home_pot = File.join(Spider.paths[:root], 'po', "#{mod.short_name}.pot")
-                home_locale = File.join(Spider.paths[:root], 'data', 'locale')
+                home_pot = File.join(mod.base_path, 'po', "#{mod.short_name}.pot")
+                home_locale = File.join(mod.base_path, 'data', 'locale')
                 if File.file?(home_pot) && File.directory?(home_locale)
                     repos << FastGettext::TranslationRepository.build(mod.short_name, :path => home_locale)
                 end
@@ -156,10 +156,10 @@ module Spider
             load_configuration File.join($SPIDER_PATH, 'config')
             begin
                 user_rc = File.join(Etc.getpwuid.dir, '.spider.conf.yml')
+                if File.file?(user_rc)
+                    load_configuration_file(user_rc)
+                end
             rescue NoMethodError # No getpwuid under windows
-            end
-            if File.file?(user_rc)
-                load_configuration_file(user_rc)
             end
             load_configuration File.join(@root, 'config')
             self.runmode ||= $SPIDER_RUNMODE if $SPIDER_RUNMODE
@@ -196,8 +196,6 @@ module Spider
                 if domain = Spider.conf.get('site.domain')
                     ssl_port = Spider.conf.get('site.ssl') ? Spider.conf.get('site.ssl_port') : nil
                     Spider.site = Site.new(domain, Spider.conf.get('site.port'), ssl_port)
-                elsif File.exists?(Site.cache_file)
-                    Spider.site = Site.load_cache
                 end
             end
             if Spider.conf.get('request.mutex')

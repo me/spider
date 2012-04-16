@@ -79,7 +79,7 @@
   text-align: center;
   background: $grayDarker;
   border: 3px solid $white;
-  @include border-radius(20px);
+  @include border-radius(23px);
   @include opacity(50);
 
   // we can't have this transition here

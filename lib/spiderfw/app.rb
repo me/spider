@@ -71,6 +71,8 @@ module Spider
             attr_reader :gettext_extensions
             # @return [Array] Additional GetText parasers to use
             attr_reader :gettext_parsers
+            # @return [String] Gettext domain of the app. Defaults to the app short name
+            attr_reader :gettext_domain
             
 
             # Initializes missing variables to default variables.
@@ -98,6 +100,7 @@ module Spider
                 @gettext_parsers ||= []
                 @gettext_dirs ||= ['lib','bin','controllers','models','views','widgets','public']
                 @gettext_extensions ||= ['rb','rhtml','shtml','js']
+                @gettext_domain ||= @short_name
                 
                 find_tags
             end
@@ -227,6 +230,16 @@ module Spider
                     return @path[$SPIDER_PATHS[:core_apps].length+1..-1]
                 end
             end
+
+            # @return [String] The path to the apps' container (the home or the Spider lib)
+            def base_path
+                if Spider.paths[:apps] && @path.index(Spider.paths[:apps])
+                    Spider.paths[:apps]
+                else
+                    $SPIDER_PATH
+                end
+            end
+
 
             def route_path(action='')
                 path = Spider::ControllerMixins::HTTPMixin.reverse_proxy_mapping('/'+@route_url)

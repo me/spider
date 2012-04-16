@@ -495,7 +495,7 @@ module Spider
             add_overrides overrides
             our_domain = nil
             if @definer_class
-                our_domain = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+                our_domain = @definer_class.respond_to?(:app) ? @definer_class.app.gettext_domain : 'spider'
             end
             @overrides += orig_overrides
             if root.name == 'tpl:extend'
@@ -531,8 +531,8 @@ module Spider
                 end
                 @dependencies << ext
                 root = get_el(ext)
-                if ext_app.short_name != our_domain
-                    root.set_attribute('tpl:text-domain', ext_app.short_name)
+                if ext_app.gettext_domain != our_domain
+                    root.set_attribute('tpl:text-domain', ext_app.gettext_domain)
                 end
                 root.children_of_type('tpl:asset').each do |ass|
                     ass_src = ass.get_attribute('src')
@@ -575,7 +575,7 @@ module Spider
                         end
                     end
                     incl_el.search('.to_delete').remove
-                    td = resource.definer.respond_to?(:app) ? resource.definer.app.short_name : 'spider'
+                    td = resource.definer.respond_to?(:app) ? resource.definer.app.gettext_domain : 'spider'
                     if td != our_domain
                         incl_el.set_attribute('tpl:text-domain', td)
                     end
@@ -697,7 +697,7 @@ module Spider
         def render(scene=nil)
             prev_domain = nil
             if @definer_class
-                td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : 'spider'
+                td = @definer_class.respond_to?(:app) ? @definer_class.app.gettext_domain : 'spider'
                 prev_domain = Spider::GetText.set_domain(td)
             end
             scene ||= @scene
@@ -837,11 +837,11 @@ module Spider
                 td = nil
                 orig_td = nil
                 if @extended_app
-                    td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : nil
-                    orig_td = @extended_app.short_name
+                    td = @definer_class.respond_to?(:app) ? @definer_class.app.gettext_domain : nil
+                    orig_td = @extended_app.gettext_domain
                 elsif @subtemplate_of
-                    td = @subtemplate_of.respond_to?(:app) ? @subtemplate_of.app.short_name : nil
-                    orig_td = @definer_class.respond_to?(:app) ? @definer_class.app.short_name : nil
+                    td = @subtemplate_of.respond_to?(:app) ? @subtemplate_of.app.gettext_domain : nil
+                    orig_td = @definer_class.respond_to?(:app) ? @definer_class.app.gettext_domain : nil
                 end
                 if td && orig_td && td != orig_td
                     override.innerHTML = '<tpl:pass tpl:text-domain="'+td+'">'+override.innerHTML+'</tpl:pass>'                

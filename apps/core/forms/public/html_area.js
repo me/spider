@@ -46,10 +46,11 @@ Spider.defineWidget('Spider.Forms.HTMLArea', 'Spider.Forms.Input', {
         config.filebrowserWindowFeatures = 'modal=yes,alwaysRaised=yes';
         config.fullPage = options.full_page;
         
-        this.textarea.ckeditor(config);
-        this.ckeditor = this.textarea.ckeditorGet();
-        
-        if (css){ this.ckeditor.addCss(css); }
+        var self = this;
+        this.textarea.ckeditor(function(){
+            self.ckeditor = this;
+            if (css){ this.ckeditor.addCss(css); }
+        }, config);
         
 	}
 });

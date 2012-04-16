@@ -21,7 +21,7 @@ module Spider; module AppServer
                 next unless blob.basename =~ /\.appspec$/
                 spec = blob.data
                 @spec = Spider::App::AppSpec.eval(spec)
-                #@spec.branch = branch
+                @spec.branch = branch
                 if repo_base = Spider.conf.get('app_server.git_repo_base')
                     unless @spec.git_repo
                         @spec.git_repo(repo_base+'/'+@spec.id)

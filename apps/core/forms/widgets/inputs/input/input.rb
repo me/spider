@@ -92,7 +92,9 @@ module Spider; module Forms
         def check
             #debugger
             if required? && !has_value?
-                add_error( _("%s is required") % self.label )
+                Spider::GetText.in_domain(self.class.app.gettext_domain){
+                    add_error( _("%s is required") % self.label )    
+                }
             end
         end
         

@@ -234,7 +234,14 @@ module Spider; module Model
                                 if pos == 1
                                     tree_insert_node_first(el, obj, parent)
                                 else
-                                    tree_insert_node_right(el, obj, sub[pos-2])
+                                    sibling_i = pos-2
+                                    sub.each_index do |i|
+                                        if sub[i] == obj
+                                            sibling_i += 1 if i <= sibling_i
+                                            break
+                                        end
+                                    end
+                                    tree_insert_node_right(el, obj, sub[sibling_i])
                                 end
                             else
                                 tree_insert_node_under(el, obj, parent)
@@ -294,6 +301,9 @@ module Spider; module Model
                 bulk_update({right_el => QueryFuncs::Expression.new(":#{right_el}+#{diff}")}, condition)
                 condition = Condition.new.set(left_el, '>=', left)
                 bulk_update({left_el => QueryFuncs::Expression.new(":#{left_el}+#{diff}")}, condition)
+                obj.get(tree_el).each do |child|
+                    child.save
+                end
             end
             
             def tree_assign_values(tree_el, obj, left)

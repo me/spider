@@ -22,6 +22,10 @@ module Spider
     
     class SassCompiler
 
+        def self.options
+            @options ||= {:load_paths => []}
+        end
+
         def initialize(base_path)
             @base_path = base_path
         end
@@ -43,6 +47,13 @@ module Spider
                 src_dir = src_dir
                 # dest_dir = File.dirname(dest)
 
+                sass_options = Compass.sass_engine_options.merge({
+                    :cache_location => File.join(work_dir, '.sass_cache')
+                })
+                Spider.apps.each do |name, app|
+                    sass_options[:load_paths] << Sass::Importers::Filesystem.new(app.pub_path)
+                end
+
                 options = {
                     :project_path => @base_path,
                     :css_dir => 'css', 
@@ -54,11 +65,10 @@ module Spider
                     :javascripts_dir => 'js',
                     :relative_assets => true,
                     :line_comments => Spider.runmode == 'devel' ? true : false,
-                    :sass => Compass.sass_engine_options.merge({
-                        :cache_location => File.join(work_dir, '.sass_cache')
-                    }),
+                    :sass => sass_options,
                     :css_filename => dest
                 }
+                
                 config = Compass::Configuration::Data.new(:spider, options)
                 Compass.add_project_configuration(config)
                 compiler = Compass::Compiler.new(work_dir, File.dirname(src), File.dirname(dest), options)

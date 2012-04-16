@@ -222,10 +222,12 @@ module Spider
             uow = self.unit_of_work
             self.start_unit_of_work unless uow
             self.with_identity_mapper do
-                yield Spider::Model.unit_of_work
-                unless uow
-                    self.unit_of_work.commit
-                    self.stop_unit_of_work 
+                begin
+                    yield Spider::Model.unit_of_work
+                
+                    self.unit_of_work.commit unless uow
+                ensure
+                    self.stop_unit_of_work unless uow
                 end
             end
             

@@ -1,8 +1,8 @@
-Spider.Sortable = Spider.Plugin.extend({	
+Spider.Sortable = Spider.Plugin.extend({
     makeSortable: function(options){
-        var options = $.extend({
+        options = $.extend({
             listSelector: '>ul',
-            items: '>li',			
+            items: '>li',
             update: this.handleSort.bind(this),
             receive: this.handleReceive.bind(this),
             onSort: function(){},
@@ -145,7 +145,7 @@ Spider.Sortable = Spider.Plugin.extend({
             }
             else realPos = parseInt(item.prev().find('> .sort-pos').text(), 10) + 1;
             return realPos;
-        } 
+        }
         return cnt;
     },
 
