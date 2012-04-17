@@ -441,14 +441,14 @@ module Spider; module Model
                 element = self.class.elements[name]
                 raise "Internal error! Element method #{name} exists, but element not found" unless element
                 return element.attributes[:fixed] if element.attributes[:fixed]
-                if (element.integrated?)
+                if element.integrated?
                     integrated = get(element.integrated_from.name)
                     return integrated.send(element.integrated_from_element) if integrated
                     return nil
                 end
                 if element_has_value?(name) || element_loaded?(name)
                     val = instance_variable_get(ivar)
-                    val.set_parent(self, name) if val && element.model? && !val._parent # FIXME!!!
+                    val.set_parent(self, name) if val && element.model?
                     return val
                 end
 
@@ -472,7 +472,7 @@ module Spider; module Model
                     end
                     val = element.model.new(val) if element.model? && !val.is_a?(BaseModel)
                 end
-                val.set_parent(self, name) if element.model? && val && val.respond_to?(:parent) && !val._parent # FIXME!!!
+                val.set_parent(self, name) if element.model? && val && val.respond_to?(:parent)
                 return val
             end
 
