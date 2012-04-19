@@ -29,26 +29,17 @@ module Spider; module Messenger; module Backends; module SMS
                 cnt = 0
                 index = 1
                 mes = ""
-                text.strip.split.each { |str|
-                    #str = Spider::Messenger::Mobyt.transforma_accentate(stringa)
-                    cnt += str.size + 1
-                    if cnt > 153
-                        testi["#{index}"] = mes
-                        mes = ""
-                        cnt = str.size + 1
-                        index += 1
-                    end
-                    mes << str.strip + " "                     
+                (text + " ").scan(/.{1,153}\s/).map{ |s|
+                    testi[index] = s
+                    index += 1 
                 }
-                testi["#{index}"] = mes
                 tot_testi = testi.size
+                #tolgo lo spazio che era stato aggiunto al testo nell'ultimo messaggio
+                testi[tot_testi] = testi[tot_testi].strip
                 #invio sms con testi in hash testi
-                testi.each_pair{ |key,testo|
-                    #p key.to_i
-                    #p testo
+                testi.each{ |key,testo|
                     # udh=aabbcc: aa=id sequenza, bb=tot messaggi, cc=id del messaggio nella sequenza
-                    udh = "010"+tot_testi.to_s+"0"+key
-                    #p udh   
+                    udh = "010"+tot_testi.to_s+"0"+key.to_s  
                     uri_params = Spider::Messenger::Mobyt.parametri(username,password,to,from,testo,operation,udh)
                     response = Spider::Messenger::Mobyt.do_post_request(uri, uri_params)
                     Spider::Messenger::Mobyt.check_response_http(response)
