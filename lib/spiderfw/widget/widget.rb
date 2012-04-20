@@ -419,7 +419,7 @@ module Spider
         def load_widgets(template=@template)
             if self.class.scene_attributes
                 self.class.scene_attributes.each do |name|
-                    @scene[name] = instance_variable_get("@#{name}")
+                    @scene[name] = instance_variable_get("@#{name}") || attributes[name]
                 end
             end
             template.request = @request
@@ -756,7 +756,7 @@ module Spider
         def set_scene_vars(scene)
             if self.class.scene_attributes # Repeat for new instance variables
                 self.class.scene_attributes.each do |name|
-                    @scene[name] = instance_variable_get("@#{name}")
+                    @scene[name] = instance_variable_get("@#{name}") || attributes[name]
                 end
             end
         end
