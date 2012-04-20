@@ -194,6 +194,7 @@ module Spider
             # *<tpl:delete />* removes the found nodes
             # *<tpl:before />* inserts the given content before the found nodes
             # *<tpl:after />* inserts the given content after the found nodes
+            # *<tpl:content name="content-name" />* replaces a <tpl:placeholder> with the same name
             def override_tags
                 @@overrides
             end
