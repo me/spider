@@ -398,7 +398,7 @@ module Spider; module Forms
                 rescue => exc
                     if exc.is_a?(Spider::Model::MapperElementError)
                         Spider::Logger.error(exc)
-                        exc_element =  exc.element.name
+                        exc_element =  exc.element.is_a?(Spider::Model::Element) ? exc.element.name : exc_element
                         add_error(exc.message, exc_element, exc)
                     else
                         raise

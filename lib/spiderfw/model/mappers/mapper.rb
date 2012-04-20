@@ -168,10 +168,10 @@ module Spider; module Model
                         obj.set(el, set_data)
                     end
                 end
-                if (!el.integrated? && el.required? && (mode == :insert || obj.element_modified?(el)) && !obj.element_has_value?(el))
-                    raise RequiredError.new(el) 
+                if !el.integrated? && el.required? && (mode == :insert || obj.element_modified?(el)) && !obj.element_has_value?(el)
+                    raise RequiredError.new(el)
                 end
-                if (el.unique? && !el.integrated? && obj.element_modified?(el) && curr_val = obj.get(el))
+                if el.unique? && !el.integrated? && obj.element_modified?(el) && curr_val = obj.get(el)
                     existent = @model.where(el.name => curr_val)
                     if (mode == :insert && existent.length > 0) || (mode == :update && existent.length > 1)
                         raise NotUniqueError.new(el)
@@ -1421,7 +1421,8 @@ module Spider; module Model
         end
         def message
             Spider::GetText.in_domain('spider') do
-                _(self.class.msg) % @element.label
+                element = @element.is_a?(Element) ? @element.label : @element
+                _(self.class.msg) % element
             end
         end
         def to_s
