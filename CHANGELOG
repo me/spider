@@ -4,6 +4,10 @@
 * Refactored Controller#url and related methods
 * Fixed Etc.getpwuid error on Windows
 * Condition#initialize now accepts a Proc, which must return the argument
+* Fixed SASS files not being skipped in production
+* Removed caching of Spider.site
+* Jquery UI nested sortable fix
+* Runmode from config now always takes lowest precedence
 * Various minor fixes
 
 = 0.6.25
