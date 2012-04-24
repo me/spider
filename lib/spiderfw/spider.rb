@@ -152,7 +152,6 @@ module Spider
                 load_configuration(File.join(path, 'config'))
             end
             @runmode = nil
-            self.runmode = $SPIDER_RUNMODE if $SPIDER_RUNMODE
             load_configuration File.join($SPIDER_PATH, 'config')
             begin
                 user_rc = File.join(Etc.getpwuid.dir, '.spider.conf.yml')
@@ -162,7 +161,7 @@ module Spider
             rescue NoMethodError # No getpwuid under windows
             end
             load_configuration File.join(@root, 'config')
-            self.runmode ||= $SPIDER_RUNMODE if $SPIDER_RUNMODE
+            self.runmode = $SPIDER_RUNMODE || 'devel'
             Locale.default = Spider.conf.get('i18n.default_locale')
             setup_env
             @logger = Spider::Logger

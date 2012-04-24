@@ -1,7 +1,7 @@
 module Spider
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
-        :action => Proc.new{ |option| $SPIDER_RUNMODE = option }
+        :action => Proc.new{ |option| $SPIDER_RUNMODE ||= option }
     )
     
     config_option('apps', _('Apps to load'), :type => Array, :yaml_style => :inline)
