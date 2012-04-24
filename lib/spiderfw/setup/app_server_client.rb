@@ -13,7 +13,7 @@ module Spider
         end
         
         def specs(branch=nil)
-            load_specs(branch) unless @specs
+            load_specs unless @specs
             @specs
         end
         
