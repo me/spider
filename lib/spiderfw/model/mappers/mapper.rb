@@ -1335,7 +1335,7 @@ module Spider; module Model
         # Makes the objects' mapper run the task
         # @return [void]
         def execute
-            debug_str = "Executing #{@action} on #{@object.inspect}"
+            debug_str = "Executing #{@action} on #{@object.class}(#{@object.primary_keys.inspect})"
             debug_str += " (#{@params.inspect})" unless @params.empty?
             Spider::Logger.debug debug_str
             @object.mapper.execute_action(@action, @object, @params)
