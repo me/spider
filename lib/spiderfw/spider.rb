@@ -1081,8 +1081,12 @@ module Spider
                 # so use cached locale if Locale.current fails
                 l = @current_locale
                 l ||= Locale::Tag.parse(Spider.conf.get('locale')) if Spider.conf.get('locale')
-                l ||= Locale::Tag.parse('en')
+                l ||= Locale::Tag.parse(Spider.conf.get('i18n.default_locale'))
             end
+        end
+
+        def locale=(val)
+            Locale.current = Locale::Tag.parse(val)
         end
         
         # @param [Locale::Tag]
