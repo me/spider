@@ -22,7 +22,7 @@ Spider.defineWidget('Spider.Forms.HTMLArea', 'Spider.Forms.Input', {
         }
         options = $.parseJSON($('.options', this.el).text());
         var config = {
-            extraPlugins : 'autogrow'
+            // extraPlugins : 'autogrow'
         };
         config.toolbar_simple =
         [
