@@ -196,7 +196,7 @@ module Spider
         
         def all_assets
             tpl_assets = @template.is_a?(Layout) ? @template.all_assets : @template.assets
-            assets = tpl_assets + self.assets
+            assets = self.assets + tpl_assets
             if @only_asset_profiles
                 assets = assets.select{ |ass| ass[:profiles] && !(ass[:profiles] & @only_asset_profiles).empty? }
             end
