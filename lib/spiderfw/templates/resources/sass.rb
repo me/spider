@@ -90,8 +90,7 @@ module Spider
                 config = Compass::Configuration::Data.new(:spider, options)
                 Compass.add_project_configuration(config)
                 compiler = Compass::Compiler.new(work_dir, File.dirname(src), File.dirname(dest), options)
-                
-                compiler.compile(src, dest) if compiler.out_of_date?
+                compiler.run
             else
                 engine = Sass::Engine.for_file(src, {})
                 output = engine.render
