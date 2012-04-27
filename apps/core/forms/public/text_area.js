@@ -4,5 +4,5 @@ Spider.defineWidget('Spider.Forms.TextArea', 'Spider.Forms.Input', {
 	
 	ready: function(){
 		this.el.autogrow();
-	}    
+	}
 });
