@@ -35,8 +35,6 @@ module Spider
         # 
         module ClassMethods
             
-            # @return [String] unique identifier for the app
-            attr_reader :id
             # @return [String] filesystem path of the app
             attr_reader :path
             # @return [String] path of the 'public' folder
