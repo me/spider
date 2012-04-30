@@ -51,7 +51,6 @@ module Spider; module Messenger; module Backends; module SMS
                     key = key.to_s.rjust(2, '0')
                     # udh=aabbcc: aa=id sequenza, bb=tot messaggi, cc=id del messaggio nella sequenza
                     udh = "#{sequence_index}#{tot_testi}#{key}"  
-                    puts "*******#{udh}"
                     uri_params = Spider::Messenger::Mobyt.parametri(username,password,to,from,testo,operation,udh)
                     response = Spider::Messenger::Mobyt.do_post_request(uri, uri_params)
                     Spider::Messenger::Mobyt.check_response_http(response)
