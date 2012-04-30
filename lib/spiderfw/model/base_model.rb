@@ -2180,6 +2180,7 @@ module Spider; module Model
         def insert!
             mapper.insert(self)
             after_save
+            self
         end
         
         # Updates the object in the storage
@@ -2190,11 +2191,13 @@ module Spider; module Model
                 before_save
                 update!
             end
+            self
         end
         
         def update!
             mapper.update(self)
             after_save
+            self
         end
         
         def unit_of_work_available?
@@ -2209,11 +2212,13 @@ module Spider; module Model
                 before_delete
                 delete!
             end
+            nil
         end
         
         def delete!
             mapper.delete(self)
             after_delete
+            nil
         end
         
         def before_delete

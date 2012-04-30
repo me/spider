@@ -232,7 +232,9 @@ Spider.Widget = Class.extend({
 			}
 			e.preventDefault();
 			var a = $(e.target);
-			var url = w.urlToAction($(this).attr('href'));
+			var href = $(this).attr('href');
+			if (!href) return true;
+			var url = w.urlToAction(href);
 			if (options.before) options.before();
 			w.setLoading();
 			$.ajax({

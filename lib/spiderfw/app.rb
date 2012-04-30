@@ -256,14 +256,40 @@ module Spider
             end
             
             # Require files inside the App's path
-            # @param [file1,file2...] files to require
+            #
+            # Can accept either a list of files to require, relative to the app's path; or, a Hash
+            # containing arrays for keys corresponding to folders inside app (e.g. :models, :controllers)
+            #
+            # If an Hash is provided, will load files in the order :lib, :models, :widgets, :controllers, followed
+            # by any additional keys, in the order they are defined in the Hash (under Ruby 1.9.x), or in random order (Ruby 1.8.x)
+            # @param [Hash|file1,file2,...] files to require
             # @return [nil]
             def req(*list)
-                list.each do |file|
-                    require File.join(@path, file)
+                do_require = lambda{ |f| 
+                    Kernel.require File.join(@path, f) 
+                }
+                if list.first.is_a?(Hash)
+                    hash = list.first
+                    load_keys = ([:lib, :models, :widgets, :controllers] + hash.keys).uniq
+                    load_keys.each do |k|
+                        if hash[k].is_a?(Array)
+                            hash[k].each{ |file| 
+                                if k == :widgets
+                                    file = File.join(file, file)
+                                end
+                                file = File.join(k.to_s, file)
+                                do_require.call(file) 
+                            }
+                        end
+                    end
+                else
+                    list.each do |file|
+                        do_require.call(file)
+                    end
                 end
             end
-            
+
+            alias :app_require :req            
 
             
             # Returns the currently installed version of an app

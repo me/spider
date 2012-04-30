@@ -1,7 +1,7 @@
 module Spider
 
     config_option('runmode', "production, test, devel", :default => 'devel', :choices => ['production', 'test', 'devel'],
-        :action => Proc.new{ |option| $SPIDER_RUNMODE = option }
+        :action => Proc.new{ |option| $SPIDER_RUNMODE ||= option }
     )
     
     config_option('apps', _('Apps to load'), :type => Array, :yaml_style => :inline)
@@ -85,9 +85,10 @@ module Spider
     config_option 'profiling.enable', _("Enable on-request profiling"), :type => Spider::DataTypes::Bool
     config_option 'request.mutex', _("Respond to requests sequentially"), :default => false
     
-    config_option 'locale', _("The locale to use") do |val|
-        Spider.locale = Locale.new(val)
-    end
+    config_option 'locale', _("The locale to use"), :process => lambda{ |val|
+        Spider.locale = val
+        val
+    }
     config_option 'i18n.rails_path', _("Path where rails-style locales are found"), :default => lambda{ Spider.paths[:root]+'/locales' }
     config_option 'i18n.default_locale', _("Fallback locale"), :default => 'en'
  

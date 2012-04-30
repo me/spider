@@ -73,7 +73,7 @@ module Spider; module I18n
             time_format = @cldr.calendar.timeformats[options[:calendar].to_sym][format.to_s].dup
             date_format = @cldr.calendar.dateformats[options[:calendar].to_sym][format.to_s].dup
             if (options[:return] == :datetime)
-                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_s][format.to_s]
+                dt_f = @cldr.calendar.datetimeformats[options[:calendar].to_sym][format.to_s]
                 format_string = dt_f.sub('{1}', date_format).sub('{0}', time_format)
                 klass = DateTime
             elsif (options[:return] == :date)

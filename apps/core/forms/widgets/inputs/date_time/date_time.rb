@@ -17,7 +17,7 @@ module Spider; module Forms
             when :date then Date
             when :time then Time
             else 
-                DateTime
+                ::DateTime
             end
             begin
                 return klass.lparse(val, :short)

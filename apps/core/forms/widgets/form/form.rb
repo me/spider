@@ -368,8 +368,7 @@ module Spider; module Forms
                 end
             end
             if inputs_done && !@error
-                if (@free_keys)
-                    # FIXME: lock!
+                if @free_keys
                     save_mode = obj.in_storage? ? :update : :insert
                 else
                     save_mode = obj.primary_keys_set? ? :update : :insert
@@ -377,6 +376,8 @@ module Spider; module Forms
                 before_save(obj, save_mode)
                 @before_save.call(obj, save_mode) if @before_save
                 trigger(:before_save, obj)
+            end
+            if inputs_done && !@error
                 begin
                     save_mode == :update ? obj.update : obj.insert
                     #debug("SAVED")

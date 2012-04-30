@@ -14,6 +14,8 @@ gem "ruby-debug-pry", :require => "ruby-debug/pry", :group => :devel, :platforms
 gem "pry-stack_explorer", :group => :devel, :platforms => [:ruby_19, :mri_19]
 gem "pry-exception_explorer", :group => :devel, :platforms => [:ruby_19, :mri_19]
 gem "ruby-prof", :group => :devel
+gem "sass", :group => :devel
+gem "compass", :group => :devel
 gem "rspec", :group => :test
 gem "cucumber", '~> 0.10.0', :group => :test
 gem "capybara", :group => :test

@@ -299,6 +299,12 @@ module Spider; module Model
         def delete_at(index)
             @objects.delete_at(index)
         end
+
+        # Deletes every element for which block evaluates to true
+        # @return [nil]
+        def delete_if(&proc)
+            @objects.delete_if(&proc)
+        end
         
         # Removes the given object from the QuerySet
         # @param [BaseModel] obj

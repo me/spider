@@ -19,6 +19,21 @@ require 'sass'
 
 
 module Spider
+
+    class SassAppImporter < Sass::Importers::Filesystem
+
+        def _find(dir, name, options)
+            Spider.apps_by_path.each do |app_name, mod|
+                if name.index(app_name) == 0 && File.directory?(File.join(dir, app_name))
+                    rel_path = name[app_name.length+1..-1]
+                    name = File.join(app_name, 'public', rel_path)
+                    return super(dir, name, options)
+                end
+            end
+            return super
+        end
+
+    end
     
     class SassCompiler
 
@@ -50,8 +65,11 @@ module Spider
                 sass_options = Compass.sass_engine_options.merge({
                     :cache_location => File.join(work_dir, '.sass_cache')
                 })
-                Spider.apps.each do |name, app|
-                    sass_options[:load_paths] << Sass::Importers::Filesystem.new(app.pub_path)
+                # Spider.apps.each do |name, app|
+                #     sass_options[:load_paths] << Sass::Importers::Filesystem.new(app.pub_path)
+                # end
+                Spider.app_paths.each do |path|
+                    sass_options[:load_paths] << SassAppImporter.new(path)
                 end
 
                 options = {

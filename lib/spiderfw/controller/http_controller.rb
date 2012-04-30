@@ -97,7 +97,11 @@ module Spider
             end
             Locale.clear
             Locale.init(:driver => :cgi)
-            Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
+            if Spider.conf.get('locale')
+                Spider.locale = Spider.conf.get('locale')
+            else
+                Locale.set_request(@request.params['lang'], @request.cookies['lang'], @request.env['HTTP_ACCEPT_LANGUAGE'], @request.env['HTTP_ACCEPT_CHARSET'])
+            end
             @request.locale = Locale.current[0]
             l = @request.locale.to_s
             l = $1 if l =~ /(\w\w)_+/
