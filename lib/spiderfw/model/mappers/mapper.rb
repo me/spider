@@ -729,7 +729,14 @@ module Spider; module Model
                 seen[obj] = true
             end
             res = path.empty? ? obj : obj.all_children(path)
-            raise RuntimeError, "Broken object path" if (obj && !path.empty? &&  res.length < 1)
+            if obj && !path.empty? &&  res.length < 1
+                if Spider.runmode == 'production'
+                    Spider.logger.error("Internal error: broken object path")
+                    res = [orig_obj]
+                else
+                    raise RuntimeError, "Internal error: broken object path"
+                end
+            end
             res = QuerySet.new(@model, res) unless res.is_a?(QuerySet)
             res = res.select{ |obj| obj.primary_keys_set? }
             return res
