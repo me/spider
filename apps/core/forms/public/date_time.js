@@ -13,7 +13,6 @@ Spider.defineWidget('Spider.Forms.DateTime', {
             if (cl.substr(0, 10) == 'year-range'){
                 var range = cl.substr(11).split('-');
                 conf.yearRange = range[0].replace("m", "-")+":"+range[1].replace('p', '+');
-                a = 3;
             }
         }
 		if (this.input.is('.date')) this.input.datepicker(conf);
