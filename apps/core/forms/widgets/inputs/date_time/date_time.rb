@@ -8,7 +8,7 @@ module Spider; module Forms
         i_attr_accessor :lformat, :type => Symbol, :default => :short
         attribute :"change-month", :type => Spider::Bool, :default => false
         attribute :"change-year", :type => Spider::Bool, :default => false
-        attribute :"year-range", :type => String, :default => "150:10"
+        attribute :"year-range", :type => String, :default => "m150:p10"
         
         def prepare_value(val)
             return val if val.respond_to?(:strftime)
