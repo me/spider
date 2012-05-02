@@ -40,7 +40,7 @@ module Spider::CommandLine
                     mod = model_or_app.is_a?(Module) ? model_or_app : const_get_full(model_or_app)
                     if (mod.is_a?(Module) && mod.include?(Spider::App))
                         mod.models.each do |m|
-                            unless @non_managed || m < Spider::Model::Managed
+                            unless @non_managed || m < Spider::Model::Managed || m.storage.instance_name == 'default'
                                 unless m < Spider::Model::InlineModel || m.attributes[:sub_model]
                                     Spider.logger.warn("Skipping #{m} because it's non managed (use -m to override)")
                                 end
@@ -49,7 +49,7 @@ module Spider::CommandLine
                             models << m
                         end
                     elsif (mod.subclass_of?(Spider::Model::BaseModel))
-                        if @non_managed || mod < Spider::Model::Managed
+                        if @non_managed || mod < Spider::Model::Managed || m.storage.instance_name == 'default'
                             models << mod
                         else
                             Spider.logger.warn("Skipping #{mod} because it's non managed (use -m to override)")
