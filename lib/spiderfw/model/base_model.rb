@@ -1968,7 +1968,7 @@ module Spider; module Model
         
         # Returns true if no element has a value
         def empty?
-            return @_has_values
+            return !@_has_values
         end
         
         # Sets all values of obj on the current object
