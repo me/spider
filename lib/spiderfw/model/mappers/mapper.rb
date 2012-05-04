@@ -338,7 +338,7 @@ module Spider; module Model
         # @return [void]
         def save_associations(obj, mode)
             association_elements.select{ |el| obj.element_has_value?(el) }.each do |el|
-                save_element_associations(obj, el, mode)
+                save_element_associations(obj, el, mode) if obj.element_modified?(el)
             end
         end
         
