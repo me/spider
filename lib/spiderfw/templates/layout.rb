@@ -15,7 +15,7 @@ module Spider
         end
         
         def render(*args)
-            $PUB_URL = Spider::HomeController.pub_url
+            $PUB_URL = Spider.home.controller.pub_url
             prepare_assets unless @assets_prepared
             super
         end
@@ -67,7 +67,7 @@ module Spider
             assets[:js].each do |ass|
                 if ass[:cpr]
                     compressed = compress_javascript(ass)
-                    @template_assets[:js] << Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+compressed
+                    @template_assets[:js] << Spider.home.controller.pub_url+'/'+COMPILED_FOLDER+'/'+compressed
                 else
                     ass[:src] = ass[:cdn] if ass[:cdn] && use_cdn
                     @template_assets[:js] << ass[:src]
@@ -76,7 +76,7 @@ module Spider
             assets[:css].each do |ass|
                 if ass[:cpr]
                     compressed = compress_css(ass)
-                    @template_assets[:css] << Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+compressed
+                    @template_assets[:css] << Spider.home.controller.pub_url+'/'+COMPILED_FOLDER+'/'+compressed
                 else
                     ass[:src] = ass[:cdn] if ass[:cdn] && use_cdn
                     is_dyn = ass[:if_ie_lte] || ass[:media] || ass[:rel]
@@ -151,7 +151,7 @@ module Spider
                         end
                         src = name
                     end
-                    ass[:src] = Spider::HomeController.pub_url+'/'+COMPILED_FOLDER+'/'+src
+                    ass[:src] = Spider.home.controller.pub_url+'/'+COMPILED_FOLDER+'/'+src
                     assets[type] << ass
                 else # needs compression
                     name = ass[:compress] || @cname
@@ -209,7 +209,7 @@ module Spider
         COMPILED_FOLDER = '_c'
 
         def self.compiled_folder_path
-             File.join(Spider::HomeController.pub_path, COMPILED_FOLDER)
+             File.join(Spider.home.controller.pub_path, COMPILED_FOLDER)
         end
         
         def asset_gettext_messages_file(path)

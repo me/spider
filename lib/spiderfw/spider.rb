@@ -191,6 +191,7 @@ module Spider
             if Spider.conf.get('template.cache.reload_on_restart')
                 FileUtils.touch("#{Spider.paths[:tmp]}/templates_reload.txt")
             end
+            check_clear_caches
             unless Spider.runmode == 'test'
                 if domain = Spider.conf.get('site.domain')
                     ssl_port = Spider.conf.get('site.ssl') ? Spider.conf.get('site.ssl_port') : nil
@@ -223,7 +224,6 @@ module Spider
                 monitor.path(Spider.paths[:tmp], 'restart.txt') do
                     create { |base, relative| Process.kill 'HUP', $$ }
                     update { |base, relative| Process.kill 'HUP', $$ }            
-
                 end
 
                 if Spider.conf.get('template.cache.use_fssm')
@@ -373,6 +373,33 @@ module Spider
         def current
             Spider::Request.current
         end
+
+
+       def check_clear_caches
+            if File.exists?(Spider.paths[:clear_file])
+                stat = File.stat(Spider.paths[:clear_file])
+                last_reset_file = File.join(Spider.paths[:var], 'cache_cleared')
+                last_stat = File.exists?(last_reset_file) ? File.stat(last_reset_file) : nil
+                if !last_stat || stat.mtime > last_stat.mtime
+                    Spider.clear_caches!
+                end
+            end
+        end
+
+        def clear_caches!
+            Spider.logger.info("Clearing caches")
+            FileUtils.touch(File.join(Spider.paths[:var], 'cache_cleared'))
+            Dir.new(Spider::Layout.compiled_folder_path).each do |entry|
+                next if ['.', '..'].include?(entry)
+                ::FileUtils.rm_rf(File.join(Spider::Layout.compiled_folder_path, entry))
+            end
+            FileUtils.rm_rf(Spider::Template.cache_path)
+        end
+
+        def multithread?
+            return false if $SPIDER_SINGLE_THREADED || Spider.current[:multithread] == false
+            return true
+        end
         
         # Called when a new request is started.
         # @return [void]
@@ -459,6 +486,7 @@ module Spider
             @paths[:data] = File.join(root, 'data')
             @paths[:log] = File.join(@paths[:var], 'log')
             @paths[:restart_file] = File.join(@paths[:tmp], 'restart.txt')
+            @paths[:clear_file] = File.join(@paths[:tmp], 'clear.txt')
             @paths.each do |k, path|
                 @paths[k] = File.expand_path(File.readlink(path)) if File.symlink?(path)
             end
