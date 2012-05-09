@@ -250,9 +250,8 @@ module Spider; module Model
         # @param [Symbol] mode :insert or :update
         # @return [void]
         def after_save(obj, mode)
-            obj.reset_modified_elements
             save_associations(obj, mode)
-            
+            obj.reset_modified_elements
         end
         
         # Hook called after a succesful save, when the object is not in save mode (see {BaseModel#save_mode}) anymore.
