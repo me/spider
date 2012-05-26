@@ -1,0 +1,16 @@
+<sp:template>
+qui ci andrà la checkbox list
+    <!--- 
+    <select name="{ @value_param }" id="input" sp:attr-if="@multiple,multiple" title="">
+        
+        <option sp:if="@blank_option"> </option>
+        <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@selected[values[i]],selected">
+            <tpl:pass sp:if="@tree_depth">
+                { "-"*(@data[i].get(@tree_depth)||0) }
+            </tpl:pass>
+            { @data[i].to_s }
+        </option>
+    </select>
+    -->
+
+</sp:template>

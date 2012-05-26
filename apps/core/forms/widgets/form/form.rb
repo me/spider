@@ -97,6 +97,18 @@ module Spider; module Forms
             @model.each_element do |el|
                 @labels[el.name] = el.label
             end
+            #passo nome_elemento: full_class nella stringa
+            #es tariffa: Spider::Forms::CheckboxList
+            wt_string = @widget_types
+            if @widget_types.is_a?(String)
+                @widget_types = {}
+                parts = wt_string.split(/\s*,\s*/)
+                parts.each do |part|
+                    el_id, class_name = part.split(/\s*:\s+/)
+                    @widget_types[el_id] = class_name
+                end
+            end
+
             wt = @widget_types || {}
             @widget_types = {}
             wt.each do |key, value|
