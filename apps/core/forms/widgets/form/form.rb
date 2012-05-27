@@ -301,7 +301,7 @@ module Spider; module Forms
             input = create_widget(type, el.name)
             input.css_classes << "el-#{el.name}"
             case type.name
-            when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
+            when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect', 'Spider::Forms::CheckboxList'
                 input.multiple = true if el.multiple?
                 input.model = el.type if input.respond_to?(:model)
                 input.condition = el.attributes[:choice_condition] || el.condition
