@@ -97,6 +97,18 @@ module Spider; module Forms
             @model.each_element do |el|
                 @labels[el.name] = el.label
             end
+            #passo nome_elemento: full_class nella stringa
+            #es tariffa: Spider::Forms::CheckboxList
+            wt_string = @widget_types
+            if @widget_types.is_a?(String)
+                @widget_types = {}
+                parts = wt_string.split(/\s*,\s*/)
+                parts.each do |part|
+                    el_id, class_name = part.split(/\s*:\s+/)
+                    @widget_types[el_id] = class_name
+                end
+            end
+
             wt = @widget_types || {}
             @widget_types = {}
             wt.each do |key, value|
@@ -289,7 +301,7 @@ module Spider; module Forms
             input = create_widget(type, el.name)
             input.css_classes << "el-#{el.name}"
             case type.name
-            when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect'
+            when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect', 'Spider::Forms::CheckboxList'
                 input.multiple = true if el.multiple?
                 input.model = el.type if input.respond_to?(:model)
                 input.condition = el.attributes[:choice_condition] || el.condition

@@ -1,0 +1,11 @@
+<sp:template>
+<!---     
+    <select name="{ @value_param }" id="input" sp:attr-if="@multiple,multiple" title="">
+        <option sp:each_index="@data |i|" value="{ @values[i] }" sp:attr-if="@selected[values[i]],selected">
+            { @data[i].to_s }
+        </option>
+    </select>
+-->    
+    <input sp:each="@data |voce|" type="checkbox" name="{ voce.to_s }" value="1"> { voce.to_s }
+    <br/>
+</sp:template>
