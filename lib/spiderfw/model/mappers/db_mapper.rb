@@ -464,7 +464,7 @@ module Spider; module Model; module Mappers
                 has_join = false
                 cur.each do |cur_join|
                     if (cur_join[:keys] == join[:keys] && cur_join[:conditions] == join[:conditions])
-                        cur_join[:type] = :left if join[:type] == :left
+                        cur_join[:type] = :left if join[:type] == :left && !join[:order]
                         has_join = true
                         break
                     end
@@ -880,6 +880,9 @@ module Spider; module Model; module Mappers
                     fields << [field, direction]
                 else
                     el_joins, el_model, el = get_deep_join(order_element, :left)
+                    el_joins.each do |el_j|
+                        el_j[:order] = true
+                    end
                     if el.model?
                         if el_model.mapper.have_references?(el) || el.model.storage != storage
                             el.model.primary_keys.each do |pk|

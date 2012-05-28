@@ -45,9 +45,12 @@ module Spider
         
         class << self
             
+            def cache_path
+                File.join(Spider.paths[:var], 'cache', 'templates')
+            end
             # Returns the class TemplateCache instance
             def cache
-                @@cache ||= TemplateCache.new(File.join(Spider.paths[:var], 'cache', 'templates'))
+                @@cache ||= TemplateCache.new(self.cache_path)
             end
             
             # Sets allowed blocks

@@ -1621,7 +1621,7 @@ module Spider; module Model
                 when 'String'
                 when 'Spider::DataTypes::Text'
                     value = value.to_s
-                when 'Fixnum'
+                when 'Fixnum', 'Spider::DataTypes::PK'
                     value = value.to_i
                 end
             end
