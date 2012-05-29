@@ -302,7 +302,7 @@ module Spider; module Forms
             input.css_classes << "el-#{el.name}"
             case type.name
             when 'Spider::Forms::Select', 'Spider::Forms::SearchSelect', 'Spider::Forms::CheckboxList'
-                input.multiple = true if el.multiple?
+                input.multiple = true if el.multiple? and type.name != 'Spider::Forms::CheckboxList'
                 input.model = el.type if input.respond_to?(:model)
                 input.condition = el.attributes[:choice_condition] || el.condition
             end
