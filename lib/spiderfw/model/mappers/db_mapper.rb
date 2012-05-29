@@ -1198,7 +1198,7 @@ module Spider; module Model; module Mappers
                             column_type = element.attributes[:db_column_type] || storage_column_type(key_storage_type, key_attributes)
                             unless column
                                 column_name = element.attributes[:db_column_name] || @storage.column_name("#{element.name}_#{key.name}")
-                                column_attributes = @storage.column_attributes(key_type, key_attributes)
+                                column_attributes = @storage.column_attributes(base_type(key_type), key_attributes)
                                 column = Field.new(schema.table, column_name, column_type, column_attributes)
                             end
                             column.type ||= column_type

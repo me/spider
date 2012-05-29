@@ -38,19 +38,22 @@ module Spider::CommandLine
                 req_models.each do |model_or_app|
                     models = []
                     mod = model_or_app.is_a?(Module) ? model_or_app : const_get_full(model_or_app)
+
                     if mod.is_a?(Module) && mod.include?(Spider::App)
                         mod.models.each do |m|
-                            unless @non_managed || m < Spider::Model::Managed || m.storage.instance_name == 'default'
+                            storage_instance = m.storage.respond_to?(:instance_name) ? m.storage.instance_name : nil
+                            if @non_managed || m < Spider::Model::Managed #|| storage_instance == 'default'
+                                models << m
+                            else
                                 unless m < Spider::Model::InlineModel || m.attributes[:sub_model]
                                     Spider.logger.warn("Skipping #{m} because it's non managed (use -m to override)")
                                 end
                                 next
                             end
-                            models << m
                         end
                     elsif mod.subclass_of?(Spider::Model::BaseModel)
                         storage_instance = mod.storage.respond_to?(:instance_name) ? mod.storage.instance_name : nil
-                        if @non_managed || mod < Spider::Model::Managed || storage_instance == 'default'
+                        if @non_managed || mod < Spider::Model::Managed #|| storage_instance == 'default'
                             models << mod
                         else
                             Spider.logger.warn("Skipping #{mod} because it's non managed (use -m to override)")
