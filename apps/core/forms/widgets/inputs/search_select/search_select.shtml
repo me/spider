@@ -20,7 +20,7 @@
         </option>
     </select>
     <div sp:if="@value_desc" class="value-desc{ (@clear ? ' changing' : '') }">
-        <tpl:pass sp:if="@clear">({ @value_desc })</tpl:pass>
+        <tpl:pass sp:if="@clear && !@value_desc.blank?">({ @value_desc })</tpl:pass>
         <tpl:pass sp:if="!@clear">{ @value_desc }</tpl:pass>
         <span sp:if="!@next_step">
 			<span class="change_action">
