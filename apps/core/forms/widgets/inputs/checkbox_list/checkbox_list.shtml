@@ -1,5 +1,5 @@
 <sp:template>
-    <input sp:each_index="@data |i|" type="checkbox" name="{ @name }[{ @values[i] }]" value="1" 
+    <input sp:each_index="@data |i|" type="checkbox" name="{ @name }[val][{ @values[i] }]" value="1" 
     sp:attr-if="@selected[@values[i]],checked"> { @data[i].to_s }
     <br/>
 </sp:template>

@@ -12,8 +12,9 @@ module Spider; module Forms
         end
         
         def prepare_value(p)
+            return @value unless p['val']
             qs = Spider::Model::QuerySet.static(@model)
-            p.each do |key, value|
+            p['val'].each do |key, value|
                 if value == '1'
                     obj = @model.new(str_to_pks(key))
                     qs << obj
