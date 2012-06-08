@@ -54,13 +54,15 @@ module Spider; module Messenger
             end
 
             if html
-                mail.text_part do
-                    body text
-                end
                 mail.html_part do
                     content_type 'text/html; charset=UTF-8'
                     body html
-                end
+                end 
+            end  
+            if attachments && !attachments.empty?
+                mail.text_part do
+                    body text
+                end       
             else
                 mail.body = text
             end
