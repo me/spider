@@ -222,56 +222,60 @@ module Spider; module Model; module Storage; module Db
                 query_finished
                 release if curr[:conn] && !in_transaction?
             end
-         end
+        end
          
-         def prepare(sql)
-             debug("mysql preparing: #{sql}")
-             return curr[:stmt] = connection.prepare(sql)
-         end
+        def prepare(sql)
+            debug("mysql preparing: #{sql}")
+            return curr[:stmt] = connection.prepare(sql)
+        end
 
-         def execute_statement(stmt, *bind_vars)
-             stmt.execute(*bind_vars)
+        def execute_statement(stmt, *bind_vars)
+            stmt.execute(*bind_vars)
+        end
+         
+        def total_rows
+            return curr[:total_rows]
+        end
+         
+        def prepare_value(type, value)
+            value = super(type, value)
+            return value unless value
+            case type.name
+            when 'String'
+                return value.to_s
+            when 'Date'
+                return value.strftime("%Y-%m-%d")
+            when 'DateTime'
+                return value.strftime("%Y-%m-%dT%H:%M:%S")
+            when 'Time'
+                return value.strftime("%H:%M:%S")
+            when 'Fixnum'
+                return value.to_i
+            end
+            return value
          end
          
-         def total_rows
-             return curr[:total_rows]
-         end
+        def value_to_mapper(type, value)
+            return unless value
+            begin
+                case type.name
+                when 'DateTime'
+                    @@time_offset ||= DateTime.now.offset
+                    return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second, @@time_offset)
+                when 'Date'
+                    return type.civil(value.year, value.month, value.day)
+                when 'Time'
+                    return type.local(2000, 1, 1, value.hour, value.minute, value.second)
+                end
+                return super(type, value)    
+            rescue 
+                return nil    
+            end 
+        end
          
-         def prepare_value(type, value)
-             value = super(type, value)
-             return value unless value
-             case type.name
-             when 'String'
-                 return value.to_s
-             when 'Date'
-                 return value.strftime("%Y-%m-%d")
-             when 'DateTime'
-                 return value.strftime("%Y-%m-%dT%H:%M:%S")
-             when 'Time'
-                 return value.strftime("%H:%M:%S")
-             when 'Fixnum'
-                 return value.to_i
-             end
-             return value
-         end
-         
-         def value_to_mapper(type, value)
-             return unless value
-             case type.name
-             when 'DateTime'
-                 @@time_offset ||= DateTime.now.offset
-                 return type.civil(value.year, value.month, value.day, value.hour, value.minute, value.second, @@time_offset)
-             when 'Date'
-                 return type.civil(value.year, value.month, value.day)
-             when 'Time'
-                 return type.local(2000, 1, 1, value.hour, value.minute, value.second)
-             end
-             return super(type, value)
-         end
-         
-         def last_insert_id
-             curr[:last_insert_id]
-         end
+        def last_insert_id
+            curr[:last_insert_id]
+        end
          
          ##############################################################
          #   SQL methods                                              #
