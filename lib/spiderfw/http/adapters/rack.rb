@@ -84,7 +84,11 @@ module Spider; module HTTP
 
             w = nil
             controller_response = Spider::Response.new
-            multithread = env['rack.multithread'] || Spider.conf.get('webserver.force_threads')
+            if RUBY_PLATFORM =~ /mingw32/
+                multithread = false
+            else    
+                multithread = env['rack.multithread'] || Spider.conf.get('webserver.force_threads')
+            end
             if multithread
                 r, w = IO.pipe
                 rack_response_hash = {:body => r}
