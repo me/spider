@@ -1,3 +1,7 @@
+== 0.6.27
+* Clear caches when tmp/clear.txt touched
+* Bugfixes
+
 == 0.6.26
 * Added --no-rollback option to app update
 * Routes by HTTP methods, as a main test or as :http_method option; 
