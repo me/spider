@@ -351,7 +351,7 @@ module Spider; module Model; module Storage; module Db
                     if (func_el.is_a?(Spider::QueryFuncs::Function))
                         function(func_el)
                     else
-                        func.mapper_fields[func_el]
+                        func.mapper_fields[func_el.to_s]
                     end
                 }
                 "CONCAT(#{fields.map{ |f| "COALESCE(#{f}, '')" }.join(', ')})"
