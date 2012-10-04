@@ -145,7 +145,7 @@ module Spider
                         test_path = path.downcase
                         try.downcase!
                     end
-		    if (test_path == try || (test_path[0..(try.length-1)] == try && (try.last == '/' || test_path[try.length].chr == '/'))) 	
+		    if (test_path == try || (test_path[0..(try.length-1)] == try && (try[-1].chr == '/' || test_path[try.length].chr == '/'))) 	
 			action = path[(try.length)..-1]
                         matched = try
                     end
