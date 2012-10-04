@@ -256,7 +256,8 @@ module Spider
                 unless (options[:no_sync])
                     Spider::Logger.debug("SYNCING #{m}")
                     m.mapper.sync_schema(force, options) if m.mapper.respond_to?(:sync_schema)
-                end
+		    m.after_sync if m.respond_to?(:after_sync)	
+		end
                 if (options[:drop_tables] && m.mapper.respond_to?(:schema))
                     storages << m.mapper.storage unless storages.include?(m.mapper.storage)
                     tables += m.mapper.schema.get_schemas.keys
