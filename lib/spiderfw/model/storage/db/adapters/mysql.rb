@@ -342,17 +342,23 @@ module Spider; module Model; module Storage; module Db
             nil # done in add field or alter field
         end
          
-         def function(func)
-             return super unless func.func_name == :concat
-             fields = func.elements.map{ |func_el|
-                 if (func_el.is_a?(Spider::QueryFuncs::Function))
-                     function(func_el)
-                 else
-                     func.mapper_fields[func_el]
-                 end
-             }
-             return "CONCAT(#{fields.map{ |f| "COALESCE(#{f}, '')" }.join(', ')})"
-         end
+        def function(func)
+            case func.func_name
+            when :rownum
+                "if(@rn, @rn:=@rn+1, @rn:=1)-1"
+            when :concat
+                fields = func.elements.map{ |func_el|
+                    if (func_el.is_a?(Spider::QueryFuncs::Function))
+                        function(func_el)
+                    else
+                        func.mapper_fields[func_el.to_s]
+                    end
+                }
+                "CONCAT(#{fields.map{ |f| "COALESCE(#{f}, '')" }.join(', ')})"
+            else
+                super
+            end
+        end
          
          ##############################################################
          #   Methods to get information from the db                   #
@@ -521,14 +527,6 @@ module Spider; module Model; module Storage; module Db
              return db_attributes
          end
          
-         def function(func)
-             case func.func_name
-             when :rownum
-                 "if(@rn, @rn:=@rn+1, @rn:=1)-1"
-             else
-                 super
-             end
-         end
          
          def schema_field_int_equal?(current, field)
              # FIXME
