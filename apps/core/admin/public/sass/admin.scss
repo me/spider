@@ -106,8 +106,9 @@ $sidebar_color: #DFDFDF;
         }
 
         div{
-            width: 55px;
-            height: 55px;
+            min-width: 55px;
+            padding: 2px;
+	    height: 55px;
             margin: 5px;
             border: 1px solid #BBBBBB;
             text-align: center;

@@ -13,12 +13,12 @@ body:after {
   clear: both;
 }
 
-/* line 27, icons */
+/* line 42, icons/*.png */
 .icons-sprite, .icons-logout, #header #admin_controls .logout_link {
-  background: url('../../img/icons-s845a69dd9f.png') no-repeat;
+  background: url('../../img/icons-s8b18557db6.png') no-repeat;
 }
 
-/* line 60, ../../../../../../../../../../Users/cerebus/.rbenv/versions/1.8.7-p352/lib/ruby/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+/* line 60, ../../../../../../../../../../Users/user1/.rbenv/versions/1.8.7-p358/lib/ruby/gems/1.8/gems/compass-0.12.2/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .icons-logout, #header #admin_controls .logout_link {
   background-position: 0 0;
 }
@@ -50,7 +50,7 @@ body:after {
 /* line 44, ../../sass/admin.scss */
 #header {
   padding-bottom: 10px;
-  background: url('../../img/css/header_bg.png?1321971233') repeat-x scroll center top;
+  background: url('../../img/css/header_bg.png?1342865158') repeat-x scroll center top;
   background-color: #417690;
   position: relative;
   border-bottom: 2px solid #555555;
@@ -103,26 +103,21 @@ body:after {
   min-width: 200px;
   margin-left: 60px;
   background-color: #f4f5f6;
-  -moz-box-shadow: 0px 0px 5px #333333;
   -webkit-box-shadow: 0px 0px 5px #333333;
-  -o-box-shadow: 0px 0px 5px #333333;
+  -moz-box-shadow: 0px 0px 5px #333333;
   box-shadow: 0px 0px 5px #333333;
-  -moz-border-radius: 1px;
   -webkit-border-radius: 1px;
-  -o-border-radius: 1px;
+  -moz-border-radius: 1px;
   -ms-border-radius: 1px;
-  -khtml-border-radius: 1px;
+  -o-border-radius: 1px;
   border-radius: 1px;
   overflow: hidden;
   *zoom: 1;
-  display: -moz-inline-box;
-  -moz-box-orient: vertical;
+  display: -moz-inline-stack;
   display: inline-block;
   vertical-align: middle;
   *vertical-align: auto;
-}
-/* line 7, ../../../../../../../../../../Users/cerebus/.rbenv/versions/1.8.7-p352/lib/ruby/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/css3/_inline-block.scss */
-#header #app_buttons {
+  zoom: 1;
   *display: inline;
 }
 /* line 104, ../../sass/admin.scss */
@@ -131,7 +126,8 @@ body:after {
 }
 /* line 108, ../../sass/admin.scss */
 #header #app_buttons div {
-  width: 55px;
+  min-width: 55px;
+  padding: 2px;
   height: 55px;
   margin: 5px;
   border: 1px solid #BBBBBB;
@@ -139,7 +135,7 @@ body:after {
   float: left;
   background-color: #EEEEEE;
 }
-/* line 117, ../../sass/admin.scss */
+/* line 118, ../../sass/admin.scss */
 #header #app_buttons div img {
   margin-left: auto;
   margin-right: auto;
@@ -147,42 +143,42 @@ body:after {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
   opacity: 0.8;
 }
-/* line 124, ../../sass/admin.scss */
+/* line 125, ../../sass/admin.scss */
 #header #app_buttons div span.name {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
   opacity: 0.9;
   display: block;
   font-size: 0.8em;
 }
-/* line 131, ../../sass/admin.scss */
+/* line 132, ../../sass/admin.scss */
 #header #app_buttons a.active div {
   border: 1px solid #DDDD00;
 }
-/* line 133, ../../sass/admin.scss */
+/* line 134, ../../sass/admin.scss */
 #header #app_buttons a.active div img {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
   opacity: 0.7;
 }
-/* line 136, ../../sass/admin.scss */
+/* line 137, ../../sass/admin.scss */
 #header #app_buttons a.active div span.name {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
   opacity: 0.8;
 }
 
-/* line 144, ../../sass/admin.scss */
+/* line 145, ../../sass/admin.scss */
 #admin-switcher-menu .section_title {
   font-size: 14px;
   line-height: 36px;
 }
 
-/* line 154, ../../sass/admin.scss */
+/* line 155, ../../sass/admin.scss */
 #spider-admin .container-fluid .content {
   background-color: white;
 }
 
-/* line 161, ../../sass/admin.scss */
+/* line 162, ../../sass/admin.scss */
 #container, .spider-admin-container {
-  background: url('../../img/css/side_bg.png?1321971233') repeat-y;
+  background: url('../../img/css/side_bg.png?1342865158') repeat-y;
   position: relative;
   min-width: 940px;
   padding-left: 20px;
@@ -192,7 +188,7 @@ body:after {
   overflow: hidden;
   *zoom: 1;
 }
-/* line 171, ../../sass/admin.scss */
+/* line 172, ../../sass/admin.scss */
 #container #sidebar, #container > .spider-admin-sidebar, .spider-admin-container #sidebar, .spider-admin-container > .spider-admin-sidebar {
   position: absolute;
   top: 0;
@@ -200,27 +196,27 @@ body:after {
   width: 220px;
   padding: 20px 10px;
 }
-/* line 178, ../../sass/admin.scss */
+/* line 179, ../../sass/admin.scss */
 #container #sidebar li.active a, #container > .spider-admin-sidebar li.active a, .spider-admin-container #sidebar li.active a, .spider-admin-container > .spider-admin-sidebar li.active a {
   text-decoration: underline;
 }
-/* line 182, ../../sass/admin.scss */
+/* line 183, ../../sass/admin.scss */
 #container #sidebar li, #container > .spider-admin-sidebar li, .spider-admin-container #sidebar li, .spider-admin-container > .spider-admin-sidebar li {
   margin-bottom: 1px;
 }
-/* line 187, ../../sass/admin.scss */
+/* line 188, ../../sass/admin.scss */
 #container #content, #container > .spider-admin-content, .spider-admin-container #content, .spider-admin-container > .spider-admin-content {
   margin-left: 240px;
 }
 
-/* line 192, ../../sass/admin.scss */
+/* line 193, ../../sass/admin.scss */
 .crud .table {
   width: auto;
   min-width: 400px;
 }
 
 @media screen and (max-width: 500px) {
-  /* line 201, ../../sass/admin.scss */
+  /* line 202, ../../sass/admin.scss */
   #header #main_title {
     font-size: 10px;
   }

@@ -109,7 +109,7 @@ module Spider
         end
 
         def dispatcher_get_route(path)
-            route = get_route(path)
+	    route = get_route(path)
             return route if !route || route.obj
             obj = dispatched_object(route)
             obj.dispatch_previous = self if obj.respond_to?(:dispatch_previous=) && obj != self
@@ -124,13 +124,13 @@ module Spider
         
         # Looks in defined routes, and returns the first matching Route for path.
         def get_route(path)
-            path ||= ''
+	    path ||= ''
             r = routes + self.class.routes
             if nil_route = self.class.nil_route
                 r << [nil, nil_route[0], nil_route[1]]
             end
             r.each do |route|
-                try, dest, options = route
+		try, dest, options = route
                 action = nil
                 nil_route = false
                 next if options[:http_method] && @request.http_method != options[:http_method]
@@ -145,8 +145,8 @@ module Spider
                         test_path = path.downcase
                         try.downcase!
                     end
-                    if (test_path[0..(try.length-1)] == try)
-                        action = path[(try.length)..-1]
+		    if (test_path == try || (test_path[0..(try.length-1)] == try && (try[-1].chr == '/' || test_path[try.length].chr == '/'))) 	
+			action = path[(try.length)..-1]
                         matched = try
                     end
                 when Regexp
