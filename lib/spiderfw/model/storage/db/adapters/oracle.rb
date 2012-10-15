@@ -130,7 +130,7 @@ module Spider; module Model; module Storage; module Db
                      end
                      field_expr = field.is_a?(FieldExpression) ? field.expression : field.to_s
                      
-                     unless query[:keys].include?(field) || field.is_a?(FieldExpression)
+                     unless field.is_a?(FieldFunction) || field.is_a?(FieldExpression) || query[:keys].include?(field)
                         transformed = "O#{replace_cnt += 1}"
                         query[:order_replacements][field.to_s] = transformed
 
