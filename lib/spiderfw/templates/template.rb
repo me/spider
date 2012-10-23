@@ -569,7 +569,14 @@ module Spider
                                 ass.set_attribute('home', 'true')
                             else
                             # ass.set_attribute('src', "/#{resource.definer.relative_path}/#{ass_src}")
-                                ass.set_attribute('app', resource.definer.relative_path)
+                                res_rel_path = if resource.definer.respond_to?(:app)
+                                    resource.definer.app.relative_path
+                                elsif resource.definer.respond_to?(:relative_path)
+                                    resource.definer.relative_path
+                                else
+                                    nil
+                                end
+                                ass.set_attribute('app', res_rel_path) if res_rel_path
                             end
                         end
                         assets_html += ass.to_html 
