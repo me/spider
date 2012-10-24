@@ -24,7 +24,7 @@ module Spider; module Forms
         is_attribute :form_action
         i_attr_accessor :model
         i_attr_accessor :elements
-        i_attribute :widget_types
+        i_attr_accessor :widget_types
         i_attribute :read_only
         i_attribute :disabled
         attribute :save_submit_text, :default => lambda{ 
