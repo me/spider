@@ -99,7 +99,7 @@ module Spider; module Forms
         end
         
         def obj_to_key_str(obj)
-            @model.primary_keys.map{|k| obj.get(k) }.join(',')
+            obj.primary_keys.join(',')
         end
         
         def str_to_pks(val)
