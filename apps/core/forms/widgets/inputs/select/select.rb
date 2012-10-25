@@ -66,11 +66,11 @@ module Spider; module Forms
             if @value
                 val = @multiple ? @value : [@value]
                 val.each do |v|
-                    @scene.selected[@model.primary_keys.map{|k| v.get(k) }.join(',')] = true
+                    @scene.selected[obj_to_key_str(v)] = true
                 end
             end
             @scene.data.each_index do |i|
-                @scene.values[i] = @model.primary_keys.map{|k| @scene.data[i][k] }.join(',')
+                @scene.values[i] = obj_to_key_str(@scene.data[i])
             end
             super
         end
@@ -99,14 +99,12 @@ module Spider; module Forms
         end
         
         def obj_to_key_str(obj)
-            obj.primary_keys.join(',')
+            obj.keys_string
         end
         
         def str_to_pks(val)
-            if (val.is_a?(String))
-                parts = val.split(',')
-                pk = {}
-                @model.primary_keys.each{ |k| pk[k.name] = parts.shift}
+            if val.is_a?(String)
+                @model.split_keys_string(val)
             else
                 pk = val
             end
