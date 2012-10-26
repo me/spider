@@ -103,12 +103,7 @@ module Spider; module Forms
         end
         
         def str_to_pks(val)
-            if val.is_a?(String)
-                @model.split_keys_string(val)
-            else
-                pk = val
-            end
-            return pk
+            val.is_a?(String) ? @model.split_keys_string(val) : val
         end
         
         def connection_condition
