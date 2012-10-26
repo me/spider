@@ -77,14 +77,14 @@ module Spider; module Forms
 
         
         def value=(val)
-            if (val.nil? || (val.is_a?(String) && val.empty?))
+            if val.blank?
                 @value = nil
                 return
             end
-            if (val.is_a?(@model) || val.is_a?(Spider::Model::QuerySet))
+            if val.is_a?(@model) || val.is_a?(Spider::Model::QuerySet)
                 return super
             else
-                if (@multiple)
+                if @multiple
                     val = [val] unless val.is_a?(Array)
                     qs = Spider::Model::QuerySet.static(@model)
                     val.each do |v|
@@ -112,7 +112,7 @@ module Spider; module Forms
         end
         
         def connection_condition
-            if (@connections && @form)
+            if @connections && @form
                 conn_cond = Spider::Model::Condition.and
                 conn_param = params['connected'] || {}
                 @connections.each do |el, conn|
