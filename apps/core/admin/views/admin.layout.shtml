@@ -8,6 +8,7 @@
         </title>
         <tpl:output-assets type="css" />
         <tpl:output-assets type="js" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     </head>
     <body id="spider-admin">
         <div id="header">
