@@ -1,5 +1,6 @@
 Spider::Template.define_named_asset 'jquery', [
-     [:js, 'js/jquery/jquery-1.5.2.js', Spider::Components, {:cdn => 'https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js'}]
+#   [:js, 'js/jquery/jquery-1.5.2.js', Spider::Components, {:cdn => 'https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js'}]
+    [:js, 'js/jquery/jquery-1.8.3.js', Spider::Components, {:cdn => 'https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js'}]
  ]
 
 Spider::Template.define_named_asset 'spider', [
@@ -151,33 +152,38 @@ Spider::Template.define_named_asset 'bootstrap-sass', [
 ]
 
 Spider::Template.define_named_asset 'bootstrap-alerts', [
-    [:js, 'bootstrap/js/bootstrap-alerts.js']
+    [:js, 'bootstrap/js/bootstrap-alerts.js', Spider::Components]
 ]
 
 Spider::Template.define_named_asset 'bootstrap-buttons', [
-    [:js, 'bootstrap/js/bootstrap-buttons.js']
+    [:js, 'bootstrap/js/bootstrap-buttons.js', Spider::Components]
 ]
 
 Spider::Template.define_named_asset 'bootstrap-dropdown', [
-    [:js, 'bootstrap/js/bootstrap-dropdown.js']
+    [:js, 'bootstrap/js/bootstrap-dropdown.js', Spider::Components]
 ]
 
 Spider::Template.define_named_asset 'bootstrap-modal', [
-    [:js, 'bootstrap/js/bootstrap-modal.js']
+    [:js, 'bootstrap/js/bootstrap-modal.js', Spider::Components]
 ]
 
+Spider::Template.define_named_asset 'bootstrap-tooltip', [
+    [:js, 'bootstrap/js/bootstrap-tooltip.js', Spider::Components]
+]
+
+
 Spider::Template.define_named_asset 'bootstrap-popover', [
-    [:js, 'bootstrap/js//bootstrap-popover.js']
+    [:js, 'bootstrap/js/bootstrap-popover.js', Spider::Components]
 ]
 
 Spider::Template.define_named_asset 'bootstrap-scrollspy', [
-    [:js, 'bootstrap/js//bootstrap-scrollspy.js']
+    [:js, 'bootstrap/js/bootstrap-scrollspy.js', Spider::Components]
 ]
 
 Spider::Template.define_named_asset 'bootstrap-tabs', [
-    [:js, 'bootstrap/js//bootstrap-tabs.js']
+    [:js, 'bootstrap/js/bootstrap-tabs.js', Spider::Components]
 ]
 
 Spider::Template.define_named_asset 'bootstrap-twipsy', [
-    [:js, 'bootstrap/js//bootstrap-twipsy.js']
+    [:js, 'bootstrap/js/bootstrap-twipsy.js', Spider::Components]
 ]
