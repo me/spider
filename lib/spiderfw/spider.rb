@@ -1086,7 +1086,11 @@ module Spider
         # @return [void]
         def init_ruby_debug
             begin
-                require 'ruby-debug'
+                begin
+		   require 'ruby-debug'
+		rescue
+		   require 'debugger'
+		end
                 if File.exists?(File.join($SPIDER_RUN_PATH,'tmp', 'debug.txt'))
                     Debugger.wait_connection = true
                     Debugger.start_remote
