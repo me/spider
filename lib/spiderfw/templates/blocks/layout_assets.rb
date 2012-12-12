@@ -8,10 +8,10 @@ module Spider; module TemplateBlocks
             init = ""
             c = ""
             type = @el.get_attribute('type') || 'nil'
-            prefix = @el.has_attribute?('prefix')
+            prefix = @el.get_attribute('prefix')
             c += "output_assets"
             c+= "(:#{type}"
-            c += ", :prefix => '#{prefix}" if prefix
+            c += ", :prefix => '#{prefix}'" if prefix
             c += ")"
             c += "\n"
             return CompiledBlock.new(init, c)
