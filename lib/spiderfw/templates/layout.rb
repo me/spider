@@ -481,11 +481,13 @@ module Spider
             end
         end
         
-        def output_assets(type=nil)
+        def output_assets(type=nil, options={})
             types = type ? [type] : self.assets.keys
             if types.include?(:js)
                 self.assets[:js].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
+                    src = ass[:src]
+                    src = "#{options[:prefix]}#{ass[:src]}" if options[:prefix]
                     $out << "<script type=\"text/javascript\" src=\"#{ass[:src]}\"></script>\n"
                 end
                 unless @not_first_js
