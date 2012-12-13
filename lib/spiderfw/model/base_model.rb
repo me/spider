@@ -2426,7 +2426,7 @@ module Spider; module Model
                     val ? "#{name.to_json}: #{val.to_json}" : nil
                 else
                     val = get(name)
-                    if (el.type == 'text' || el.type == 'longText')
+                    if (el.type == String || el.type == Text)
                         val = ic.iconv(val + ' ')[0..-2]
                     end
                     val = val.to_json
