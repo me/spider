@@ -487,7 +487,7 @@ module Spider
                 self.assets[:js].each do |ass|
                     ass = {:src => ass} if ass.is_a?(String)
                     src = ass[:src]
-                    src = "#{options[:prefix]}#{ass[:src]}" if options[:prefix]
+                    src = "#{options[:prefix]}#{ass[:src]}" if options[:prefix] && !src =~ /^http/
                     $out << "<script type=\"text/javascript\" src=\"#{src}\"></script>\n"
                 end
                 unless @not_first_js
@@ -506,7 +506,7 @@ module Spider
                     ass = {:src => ass} if ass.is_a?(String)
                     rel = ass[:rel] || 'stylesheet'
                     src = ass[:src]
-                    src = "#{options[:prefix]}#{ass[:src]}" if options[:prefix]
+                    src = "#{options[:prefix]}#{ass[:src]}" if options[:prefix] && !src =~ /^http/
                     link = "<link rel=\"#{rel}\" type=\"text/css\" href=\"#{src}\""
                     link += " media=\"#{ass[:media]}\"" if ass[:media]
                     link += ">\n"
