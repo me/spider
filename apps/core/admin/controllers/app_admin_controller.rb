@@ -13,7 +13,8 @@ module Spider; module Admin
             unless check_action(action, :login)
                 our_app = Spider::Admin.apps[self.class.app.short_name]
                 raise "Admin #{self.class.app.short_name} not configured" unless our_app
-                user_classes = our_app[:options][:users] || Spider::Admin.base_allowed_users
+                user_classes = our_app[:options][:users] || []
+                user_classes += Spider::Admin.base_allowed_users
                 unless user_classes.include?(@request.user.class)
                     raise Spider::Auth::Unauthorized.new(_("User not authorized to access this application"))
                 end
