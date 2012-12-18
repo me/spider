@@ -10,7 +10,7 @@ module Spider
             @apps[mod.short_name] = {
                 :module => mod,
                 :controller => controller,
-                :options => options
+                :options => options || {}
             }
 
             Admin::AdminController.route mod.short_name, controller, :do => lambda{ |app_name|
@@ -23,8 +23,12 @@ module Spider
             @apps.each do |name, app|
                 users += app[:options][:users] if app[:options][:users]
             end
-            users << Spider::Auth::SuperUser
+            users += self.base_allowed_users
             users.uniq
+        end
+
+        def self.base_allowed_users
+            [Spider::Auth::SuperUser]
         end
         
         

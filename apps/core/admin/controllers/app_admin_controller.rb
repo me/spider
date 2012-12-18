@@ -10,10 +10,10 @@ module Spider; module Admin
             @_did_breadcrumb = true
             super
             our_app = Spider::Admin.apps[self.class.app.short_name]
-            if our_app[:options][:users]
-                unless our_app[:options][:users].include?(@request.user.class)
-                    raise Unauthorized.new(_("User not authorized to access this application"))
-                end
+            raise "Admin #{self.class.app.short_name} not configured" unless our_app
+            user_classes = our_app[:options][:users] || Spider::Admin.base_allowed_users
+            unless user_classes.include?(@request.user.class)
+                raise Unauthorized.new(_("User not authorized to access this application"))
             end
             if our_app[:options][:check]
                 unless our_app[:options][:check].call(@request.user)
