@@ -1,6 +1,7 @@
 module Spider; module Admin
 
     class AppAdminController < Spider::PageController
+        include Spider::Auth::AuthHelper
 
         def before(action='', *params)
             @scene.admin_breadcrumb ||= []
