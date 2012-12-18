@@ -30,7 +30,13 @@ module Spider; module Admin
         include StaticContent
 
         def self.auth_require_users
-            [[Spider::Admin.allowed_users, {:unless => [:login], :redirect => 'login'}]]
+            users = super
+            params = {:unless => [:login], :redirect => 'login'}
+            if users.empty?
+                [[Spider::Admin.allowed_users, params]]
+            else
+                users.map{ |u| [u[0], params.merge(u[1])]}
+            end
         end
         
         route 'login', LoginController
