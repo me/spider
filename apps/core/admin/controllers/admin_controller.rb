@@ -48,10 +48,18 @@ module Spider; module Admin
             return if serving_static?(action)
             return unless @request.user
             @scene.username = @request.user.username
+            our_app = Spider::Admin.apps[self.app.short_name]
+            if our_app[:options][:users]
+                unless our_app[:options][:users].include?(@request.user.class)
+                    raise Unauthorized.new(_("User not authorized to access this application"))
+            if our_app[:options][:check]
+                unless our_app[:options][:check].call(@request.user)
+                    raise Unauthorized.new(_("User not authorized to access this application"))
             @scene.apps = []
             Admin.apps.each do |short_name, app|
                 unless @request.user.superuser?
                     next if app[:options][:users] && !app[:options][:users].include?(@request.user.class)
+                    next if app[:options][:check] && !app[:options][:check].call(@request.user)
                 end
                 url = self.class.http_url(short_name)
                 @scene.apps << {
