@@ -9,6 +9,17 @@ module Spider; module Admin
             end
             @_did_breadcrumb = true
             super
+            our_app = Spider::Admin.apps[self.app.short_name]
+            if our_app[:options][:users]
+                unless our_app[:options][:users].include?(@request.user.class)
+                    raise Unauthorized.new(_("User not authorized to access this application"))
+                end
+            end
+            if our_app[:options][:check]
+                unless our_app[:options][:check].call(@request.user)
+                    raise Unauthorized.new(_("User not authorized to access this application"))
+                end
+            end
         end
 
     end
