@@ -103,7 +103,7 @@ module Spider; module Model
                @elements[name].attributes[:queryset_module] = qs_module
                
                def extend_queryset(qs)
-                   super
+		   super
                    @elements.each do |name, el|
                        qs_module = el.attributes[:queryset_module]
                        qs.extend(qs_module) if qs_module
@@ -111,7 +111,6 @@ module Spider; module Model
                end
                
                (class << self; self; end).instance_eval do
-                   
                    define_method("#{name}_roots") do
                        QuerySet.autoloading(self).send("#{name}_roots")
                    end
@@ -120,9 +119,9 @@ module Spider; module Model
                        QuerySet.autoloading(self).send("#{name}_leafs")
                       
                    end
-                   
-                   define_method("#{name}_all") do
-                       qs = QuerySet.static(self)
+                   #TODO:la condizione non viene gestita
+                   define_method("#{name}_all") do |condition|
+		       qs = QuerySet.static(self)
                        self.send("#{name}_roots").each do |root|
                            ta = root.tree_all(name)
                            qs += ta if ta
