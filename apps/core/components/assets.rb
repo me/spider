@@ -26,7 +26,7 @@ Spider::Template.define_named_asset 'spider-utils', [
 # jQuery UI
 
 Spider::Template.define_runtime_asset 'jquery-ui-datepicker-locale' do |request, response, scene|
-    Spider::Components.pub_url+"/js/jquery/jquery-ui-1.8.11/ui/i18n/jquery.ui.datepicker-#{request.locale.language}.js"
+    Spider::Components.pub_url+"/js/jquery/jquery-ui-1.9.2/ui/i18n/jquery.ui.datepicker-#{request.locale.language}.js"
 end
 
 Spider::Template.define_named_asset 'jquery-ui', [
@@ -39,80 +39,93 @@ Spider::Template.define_named_asset 'jquery-ui', [
 
 
 Spider::Template.define_named_asset 'jquery-ui-core', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.core.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.widget.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.mouse.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.position.js', Spider::Components],
-    [:css, 'js/jquery/jquery-ui-1.8.11/css/Aristo/jquery-ui.custom.css', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.core.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.widget.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.mouse.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.position.js', Spider::Components],
+    [:css, 'js/jquery/jquery-ui-1.9.2/css/Aristo/jquery-ui.custom.css', Spider::Components]
 ], :depends => ['jquery']
 
 Spider::Template.define_named_asset 'jquery-ui-draggable', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.draggable.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.draggable.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-droppable', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.droppable.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.droppable.js', Spider::Components]
 ], :depends => ['jquery-ui-draggable']
 
 Spider::Template.define_named_asset 'jquery-ui-resizable', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.resizable.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.resizable.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-selectable', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.selectable.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.selectable.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-sortable', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.sortable.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.sortable.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-accordion', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.accordion.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.accordion.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-autocomplete', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.autocomplete.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.autocomplete.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-button', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.button.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.button.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-dialog', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.dialog.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.dialog.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-slider', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.slider.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.slider.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-tabs', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.tabs.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.tabs.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-datepicker', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.datepicker.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.datepicker.js', Spider::Components],
     [:js, 'jquery-ui-datepicker-locale', :runtime]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-ui-progressbar', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.ui.progressbar.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.progressbar.js', Spider::Components]
+], :depends => ['jquery-ui-core']
+
+Spider::Template.define_named_asset 'jquery-ui-menu', [
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.menu.js', Spider::Components]
+], :depends => ['jquery-ui-core']
+
+Spider::Template.define_named_asset 'jquery-ui-spinner', [
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.spinner.js', Spider::Components]
+], :depends => ['jquery-ui-core']
+
+Spider::Template.define_named_asset 'jquery-ui-tooltip', [
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.tooltip.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 Spider::Template.define_named_asset 'jquery-effects', [
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.core.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.blind.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.bounce.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.clip.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.drop.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.explode.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.fold.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.highlight.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.pulsate.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.scale.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.shake.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.slide.js', Spider::Components],
-    [:js, 'js/jquery/jquery-ui-1.8.11/ui/jquery.effects.transfer.js', Spider::Components]
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-blind.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-bounce.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-clip.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-drop.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-explode.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-fade.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-fold.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-highlight.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-pulsate.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-scale.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-shake.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-slide.js', Spider::Components],
+    [:js, 'js/jquery/jquery-ui-1.9.2/ui/jquery.ui.effect-transfer.js', Spider::Components]
 ], :depends => ['jquery-ui-core']
 
 # jQuery Tools (http://flowplayer.org/tools/)
