@@ -70,11 +70,11 @@ Spider.Sortable = Spider.Plugin.extend({
     handleSort: function(e, ui){
         if (ui.sender) return; // handled by handleReceive
         if (!$.contains(this.listEl.get(0), ui.item.get(0))) return; // handled by handleReceive
-        var mySortable = this.listEl.data('sortable');
+        var mySortable = this.listEl.data('sortable') || this.listEl.data('uiSortable');
         var realTarget = null;
         ui.item.parents().each(function(){
             var $this = $(this);
-            var s = $this.data('sortable');
+            var s = $this.data('sortable') || $this.data('uiSortable');
             if (s){
                 if (s != mySortable) realTarget = $this;
                 return false;
@@ -86,7 +86,7 @@ Spider.Sortable = Spider.Plugin.extend({
         }
         var pos = this.findLiPosition(ui.item);
         if (pos == -1) return;
-        if (this.listEl.data('sortable').fromOutside){ // hack to work around strange jquery ui behaviour...
+        if (mySortable.fromOutside){ // hack to work around strange jquery ui behaviour...
             return this.acceptFromSender(null, ui.item, pos);
         }
         this.remote('sort', this.getSortItemId(ui.item), pos, this.sortableOptions.onSort.bind(this));
