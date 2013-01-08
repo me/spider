@@ -183,7 +183,9 @@
      * Select the first item of the new select
      */
     selectFirstItem: function() {
-      $('option:eq(0)', this.$select).attr('selected', 'selected');
+      setTimeout(function(){
+        $('option:eq(0)', this.$select).attr('selected', 'selected');
+      }, 1000);
     },
 
     /**
