@@ -18,7 +18,7 @@ if ( $.ui.version ) {
 }
 
 $.extend( $.ui, {
-	version: "@VERSION",
+	version: "1.8.11",
 
 	keyCode: {
 		ALT: 18,

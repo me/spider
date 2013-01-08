@@ -22,7 +22,7 @@ if ( $.ui.version ) {
 }
 
 $.extend( $.ui, {
-	version: "@VERSION",
+	version: "1.9.2",
 
 	keyCode: {
 		BACKSPACE: 8,
