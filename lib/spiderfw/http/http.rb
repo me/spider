@@ -253,7 +253,7 @@ module Spider
           content_length -= boundary_size
           status = input.read(boundary_size)
           raise ArgumentError, "bad content body:\n'#{status}' should == '#{boundary + EOL}'"  unless status == boundary + EOL
-          rx = /(?:#{EOL})?#{Regexp.quote(boundary,'n')}(#{EOL}|--)/
+          rx = /(?:#{EOL})?#{Regexp.quote(boundary)}(#{EOL}|--)/
           files = []
           loop {
             head = nil
