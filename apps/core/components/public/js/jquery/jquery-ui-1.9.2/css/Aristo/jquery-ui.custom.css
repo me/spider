@@ -361,15 +361,19 @@ input.ui-button:active { background: url(images/button_bg.png) 0px bottom repeat
 
 /* === IE6 AND IE7 BUTTON WIDTH FIX === */
 .ui-button { *display: inline !important; }
-
-.ui-state-default .ui-button-text { background: url(images/button_bg.png) 0px 0px repeat-x !important; color: #4f4f4f; border-color: #b6b6b6; }
-.ui-state-hover .ui-button-text { background: url(images/button_bg.png) 0px 0px repeat-x !important; color: #313131; border-color: #9d9d9d; -moz-box-shadow: 0 0 6px rgba(0, 0, 0, 0.3); -webkit-box-shadow: 0px 0px 8px rgba(212,212,212,1); box-shadow: 0px 0px 8px rgba(212,212,212,1); }
-.ui-state-active .ui-button-text { background: url(images/button_bg.png) 0px bottom repeat-x !important; color: #4f4f4f; border-color: #b6b6b6; }
+/* .ui-state-default .ui-button-text { background: url(images/button_bg.png) 0px 0px repeat-x !important; color: #4f4f4f; border-color: #b6b6b6; }
+ */
+/* modifica per bottone con 'x' per uscire dal dialog jquery-ui */
+.ui-state-default .ui-button-text { height: 4px; background: url(images/button_bg.png) 0px 0px repeat-x !important; color: #4f4f4f; border: none; }
+.ui-state-hover .ui-button-text { height: 4px; background: url(images/button_bg.png) 0px 0px repeat-x !important; color: #313131; border-color: #9d9d9d; -moz-box-shadow: 0 0 6px rgba(0, 0, 0, 0.3); -webkit-box-shadow: 0px 0px 8px rgba(212,212,212,1); box-shadow: 0px 0px 8px rgba(212,212,212,1); }
+.ui-state-active .ui-button-text { height: 4px; background: url(images/button_bg.png) 0px bottom repeat-x !important; color: #4f4f4f; border-color: #b6b6b6; }
 
 /*button text element */
 .ui-button .ui-button-text { display: block; line-height: 1.4; font-weight: bold; font-size: 14px; text-shadow: 0px 1px 0px rgba(255,255,255,0.8); }
 .ui-button-text-only .ui-button-text { padding: 5px 12px; }
-.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 5px; text-indent: -9999999px; }
+/*.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 5px; text-indent: -9999999px; }*/
+/* modifica per bottone con 'x' per uscire dal dialog jquery-ui */
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 7px; text-indent: -9999999px; }
 .ui-button-text-icon .ui-button-text, .ui-button-text-icons .ui-button-text { padding: 5px 12px 5px 25px; }
 .ui-button-text-icons .ui-button-text { padding-right: 1.8em; }
 /* no icon support for input elements, provide padding by default */
@@ -402,7 +406,10 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 .ui-dialog .ui-dialog-titlebar { padding: .5em 1em .3em; position: relative; border-width: 0px 0px 1px 0px; border-color: #979797; background: url(images/the_gradient.gif) 0px 0px repeat-x; -moz-border-radius: 0px; -webkit-border-radius: 0px; border-radius: 0px; }
 .ui-dialog .ui-dialog-title { float: left; margin: .1em 16px .2em 0; font-size: 13px; color: #000000; text-shadow: 0px 1px 0px rgba(255,255,255,0.8); } 
 .ui-dialog .ui-dialog-titlebar-close { position: absolute; right: 6px; top: 50%; width: 16px; margin: -9px 0 0 0; height: 16px; }
-.ui-dialog .ui-dialog-titlebar-close span { display: block; margin: 1px; background: url(images/icon_sprite.png) 0px -16px no-repeat; }
+/*.ui-dialog .ui-dialog-titlebar-close span { display: block; margin: 1px; background: url(images/icon_sprite.png) 0px -16px no-repeat; } */
+/* modifica fatta per tasto 'x' per chiudere il dialog di jquery-ui*/
+.ui-dialog .ui-dialog-titlebar-close span { display: block; background: url(images/icon_sprite.png) 0px -15px no-repeat; }
+
 .ui-dialog-titlebar .ui-state-hover { -moz-border-radius: 0px; -webkit-border-radius: 0px; border-radius: 0px; border: 0px none; background: transparent; }
 .ui-dialog .ui-dialog-titlebar-close.ui-state-hover span { background-position: -16px -16px ; }
 .ui-dialog .ui-dialog-titlebar-close:hover, .ui-dialog .ui-dialog-titlebar-close:focus { padding: 0; }

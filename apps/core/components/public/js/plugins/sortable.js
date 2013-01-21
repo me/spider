@@ -62,7 +62,7 @@ Spider.Sortable = Spider.Plugin.extend({
     disableSortable: function(){
         if (this.listEl){
             this.listEl.css('min-height', this.prevMinHeight);
-            if (this.listEl.data('sortable') || this.listEl.data('uiSortable')) this.listEl.sortable('destroy')
+            if (this.listEl.data('sortable') || this.listEl.data('uiSortable')) this.listEl.sortable('destroy');
         }
     },
 	
