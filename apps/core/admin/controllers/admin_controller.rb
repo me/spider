@@ -50,9 +50,9 @@ module Spider; module Admin
             @scene.username = @request.user.username
             @scene.apps = []
             Admin.apps.each do |short_name, app|
-                unless @request.user.superuser?
-                    next if app[:options][:users] && !app[:options][:users].include?(@request.user.class)
-                    next if app[:options][:check] && !app[:options][:check].call(@request.user)
+                unless @request.users.any?{ |u| u.superuser? }
+                    next if app[:options][:users] && (app[:options][:users] & (@request.users.map{ |u| u.class})).empty?
+                    next if app[:options][:check] && !@request.users.any?{ |u| app[:options][:check].call(u) }
                 end
                 url = self.class.http_url(short_name)
                 @scene.apps << {

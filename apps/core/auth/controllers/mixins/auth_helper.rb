@@ -40,11 +40,16 @@ module Spider; module Auth
                 user = nil
                 unauthorized_exception = nil
                 requested_class = nil
+                users = {} 
+		klasses.uniq.each do |klass|
+                    user = klass.restore(@request)
+                    @request.security[:users] << user if user
+                    users[klass] = user
+                end
                 klasses.each do |klass|
                     requested_class = klass
-                    user = klass.restore(@request)
+                    user = users[klass]
                     if user
-                        @request.security[:users] << user
                         if params[:authentication]
                             user = nil unless user.authenticated?(params[:authentication])
                         elsif (params[:check])
@@ -94,6 +99,10 @@ module Spider; module Auth
             end
             def user=(val)
                 @user = val
+            end
+
+            def users
+                security[:users]
             end
             
             def auth(user_class)
